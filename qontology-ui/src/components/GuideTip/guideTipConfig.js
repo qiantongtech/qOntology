@@ -92,7 +92,7 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'om/semantic/dataType.list': {
-        title: '数据类型',
+        title: '业务数据类型',
         content: '维护当前项目版本的业务数据类型，配置基础类型及单位、小数位数、日期格式或枚举，供对象属性和属性范围公理引用。',
         type: 'remind',
         version: '1.0'
@@ -110,7 +110,7 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'om/object/relation.list': {
-        title: '对象关系',
+        title: '对象类型关系',
         content: '定义对象类型之间的业务联系，配置起点类型、终点类型及可逆关系，并关联建模目标，明确业务对象之间的语义关联。',
         type: 'remind',
         version: '1.0'
