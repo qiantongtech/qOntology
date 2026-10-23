@@ -212,7 +212,7 @@ qOntology 规划 **开源版** 与 **专业版**。开源版聚焦领域建模�
 
 <table>
   <tr>
-    <td width="220" rowspan="6" valign="top">
+    <td width="220" rowspan="6" valign="middle">
       <img src=".gitee/wechat-qr.jpg" width="200" alt="微信二维码">
     </td>
     <td><b>开源版品牌定制授权</b>咨询：👉 微信扫码联系</td>
