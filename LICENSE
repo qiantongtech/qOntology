@@ -1,0 +1,22 @@
+# Open Source License
+
+qOntology is made available under the Apache License 2.0, subject to the following additional conditions specific to qOntology:
+
+For the purpose of this License, "qOntology" refers to the entire software project, including but not limited to its frontend, backend, API, and related documentation in whole or in part.
+
+For the purpose of this License, "Producer" refers to Jiangsu Qiantong Technology Co., Ltd.
+
+1. You may use qOntology for commercial purposes, provided that you do not remove, hide, or modify the qOntology logo, copyright notices, license notices, or attribution information displayed in qOntology.
+
+If you wish to remove, hide, obscure, replace, or modify such logo, copyright notices, license notices, or attribution information, including but not limited to white-label use, OEM distribution, rebranding, or presenting qOntology as another product, you must obtain a separate commercial license from the Producer.
+
+2. As a contributor, you should agree that:
+
+a. The Producer can adjust the open-source agreement to be more strict or relaxed as deemed necessary.
+b. Your contributed code may be used for commercial purposes, including but not limited to its cloud business operations.
+
+Apart from the specific conditions mentioned above, all other rights and restrictions follow the Apache License 2.0. Detailed information about the Apache License 2.0 can be found at http://www.apache.org/licenses/LICENSE-2.0.
+
+The interactive design of this product is protected by appearance patent.
+
+© 2025 Jiangsu Qiantong Technology Co., Ltd

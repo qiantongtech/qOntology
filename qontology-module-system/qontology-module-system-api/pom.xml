@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+
+  This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+
+  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+  You may use qOntology for commercial purposes, but you may not remove, hide,
+  modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
+
+  White-label use, OEM distribution, rebranding, or presenting qOntology as
+  another product requires separate commercial authorization from
+  Jiangsu Qiantong Technology Co., Ltd.
+
+  Business License: https://community.qontology.ai/business/policy.html
+  See the LICENSE file in the project root for full license information.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>qontology-module-system</artifactId>
+        <groupId>tech.qiantong</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>qontology-module-system-api</artifactId>
+
+    <description>
+        system-api系统模块
+    </description>
+
+    <dependencies>
+        <!-- 核心领域对象与基础能力 -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-core</artifactId>
+        </dependency>
+
+
+        <!-- 代码生成-->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-generator</artifactId>
+        </dependency>
+
+        <!-- 通用工具-->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-mybatis</artifactId>
+            <version>${qontology.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>

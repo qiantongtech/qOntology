@@ -1,0 +1,1043 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix ont: <https://qontology.com/ontology/supply-chain#> .
+
+ont: rdf:type owl:Ontology .
+ont: rdfs:label "供应链采购与仓储协同本体" .
+ont: owl:versionInfo "v1.0.0" .
+ont: dct:identifier "1" .
+
+ont:dataTypeCategory rdf:type owl:AnnotationProperty .
+
+ont:type_1 rdf:type owl:Class .
+ont:type_1 rdfs:label "组织" .
+ont:type_1 rdfs:comment "具有明确职责和管理结构的业务主体，可承担采购、供应、物流和业务单据管理等活动。" .
+
+ont:type_2 rdf:type owl:Class .
+ont:type_2 rdfs:label "供应商" .
+ont:type_2 rdfs:comment "向企业提供物料或服务的组织，负责采购订单中约定物料的供应。" .
+ont:type_2 rdfs:subClassOf ont:type_1 .
+
+ont:type_3 rdf:type owl:Class .
+ont:type_3 rdfs:label "采购方" .
+ont:type_3 rdfs:comment "负责采购物料、下达采购订单并接收货物的组织。" .
+ont:type_3 rdfs:subClassOf ont:type_1 .
+
+ont:type_4 rdf:type owl:Class .
+ont:type_4 rdfs:label "物流服务商" .
+ont:type_4 rdfs:comment "提供运输、配送及相关物流服务的组织，承担出库发货的运输任务。" .
+ont:type_4 rdfs:subClassOf ont:type_1 .
+
+ont:type_5 rdf:type owl:Class .
+ont:type_5 rdfs:label "物料" .
+ont:type_5 rdfs:comment "生产经营活动中采购、储存、使用或销售的实物资源。" .
+
+ont:type_6 rdf:type owl:Class .
+ont:type_6 rdfs:label "原材料" .
+ont:type_6 rdfs:comment "用于生产加工的基础材料，需要维护材料类别、牌号、纯度和质量标准等信息。" .
+ont:type_6 rdfs:subClassOf ont:type_5 .
+
+ont:type_7 rdf:type owl:Class .
+ont:type_7 rdfs:label "零部件" .
+ont:type_7 rdfs:comment "用于组成设备或产品的部件，需要维护规格型号、图号和质量要求等信息。" .
+ont:type_7 rdfs:subClassOf ont:type_5 .
+
+ont:type_8 rdf:type owl:Class .
+ont:type_8 rdfs:label "成品" .
+ont:type_8 rdfs:comment "完成生产加工并可交付使用的产品，可以通过组成关系追溯其零部件。" .
+ont:type_8 rdfs:subClassOf ont:type_5 .
+
+ont:type_9 rdf:type owl:Class .
+ont:type_9 rdfs:label "采购订单" .
+ont:type_9 rdfs:comment "记录采购物料、供应商、采购金额和交货约定的业务单据。" .
+
+ont:type_10 rdf:type owl:Class .
+ont:type_10 rdfs:label "入库单" .
+ont:type_10 rdfs:comment "记录物料接收、验收及入库情况的业务单据，用于到货核对和仓储追溯。" .
+
+ont:type_11 rdf:type owl:Class .
+ont:type_11 rdfs:label "出库单" .
+ont:type_11 rdfs:comment "记录物料出库和发货信息的业务单据，用于追溯物料流向、承运主体及收货方。" .
+
+ont:attribute_1 rdf:type owl:DatatypeProperty .
+ont:attribute_1 rdfs:label "组织编码" .
+ont:attribute_1 rdfs:comment "组织的唯一业务编码" .
+ont:attribute_1 rdfs:domain ont:type_1 .
+ont:attribute_1 ont:dataTypeCategory "1" .
+
+ont:attribute_2 rdf:type owl:DatatypeProperty .
+ont:attribute_2 rdfs:label "组织名称" .
+ont:attribute_2 rdfs:comment "组织对外使用的正式名称" .
+ont:attribute_2 rdfs:domain ont:type_1 .
+ont:attribute_2 ont:dataTypeCategory "1" .
+
+ont:attribute_3 rdf:type owl:DatatypeProperty .
+ont:attribute_3 rdfs:label "组织类别" .
+ont:attribute_3 rdfs:comment "组织所属业务类别" .
+ont:attribute_3 rdfs:domain ont:type_1 .
+ont:attribute_3 ont:dataTypeCategory "1" .
+
+ont:attribute_4 rdf:type owl:DatatypeProperty .
+ont:attribute_4 rdfs:label "统一社会信用代码" .
+ont:attribute_4 rdfs:comment "组织依法登记的统一社会信用代码" .
+ont:attribute_4 rdfs:domain ont:type_1 .
+ont:attribute_4 ont:dataTypeCategory "1" .
+
+ont:attribute_5 rdf:type owl:DatatypeProperty .
+ont:attribute_5 rdfs:label "组织简称" .
+ont:attribute_5 rdfs:comment "组织日常使用的简称" .
+ont:attribute_5 rdfs:domain ont:type_1 .
+ont:attribute_5 ont:dataTypeCategory "1" .
+
+ont:attribute_6 rdf:type owl:DatatypeProperty .
+ont:attribute_6 rdfs:label "注册地址" .
+ont:attribute_6 rdfs:comment "组织依法登记的注册地址" .
+ont:attribute_6 rdfs:domain ont:type_1 .
+ont:attribute_6 ont:dataTypeCategory "1" .
+
+ont:attribute_7 rdf:type owl:DatatypeProperty .
+ont:attribute_7 rdfs:label "办公地址" .
+ont:attribute_7 rdfs:comment "组织实际办公所在地" .
+ont:attribute_7 rdfs:domain ont:type_1 .
+ont:attribute_7 ont:dataTypeCategory "1" .
+
+ont:attribute_8 rdf:type owl:DatatypeProperty .
+ont:attribute_8 rdfs:label "负责人" .
+ont:attribute_8 rdfs:comment "组织业务负责人姓名" .
+ont:attribute_8 rdfs:domain ont:type_1 .
+ont:attribute_8 ont:dataTypeCategory "1" .
+
+ont:attribute_9 rdf:type owl:DatatypeProperty .
+ont:attribute_9 rdfs:label "联系电话" .
+ont:attribute_9 rdfs:comment "组织对外联系电话" .
+ont:attribute_9 rdfs:domain ont:type_1 .
+ont:attribute_9 ont:dataTypeCategory "1" .
+
+ont:attribute_10 rdf:type owl:DatatypeProperty .
+ont:attribute_10 rdfs:label "电子邮箱" .
+ont:attribute_10 rdfs:comment "组织公共联系邮箱" .
+ont:attribute_10 rdfs:domain ont:type_1 .
+ont:attribute_10 ont:dataTypeCategory "1" .
+
+ont:attribute_11 rdf:type owl:DatatypeProperty .
+ont:attribute_11 rdfs:label "成立日期" .
+ont:attribute_11 rdfs:comment "组织依法成立的日期" .
+ont:attribute_11 rdfs:domain ont:type_1 .
+ont:attribute_11 ont:dataTypeCategory "1" .
+
+ont:attribute_12 rdf:type owl:DatatypeProperty .
+ont:attribute_12 rdfs:label "供应商编码" .
+ont:attribute_12 rdfs:comment "供应商的唯一业务编码" .
+ont:attribute_12 rdfs:domain ont:type_2 .
+ont:attribute_12 ont:dataTypeCategory "1" .
+
+ont:attribute_13 rdf:type owl:DatatypeProperty .
+ont:attribute_13 rdfs:label "供应商名称" .
+ont:attribute_13 rdfs:comment "供应商登记名称" .
+ont:attribute_13 rdfs:domain ont:type_2 .
+ont:attribute_13 ont:dataTypeCategory "1" .
+
+ont:attribute_14 rdf:type owl:DatatypeProperty .
+ont:attribute_14 rdfs:label "供应商类别" .
+ont:attribute_14 rdfs:comment "供应商提供产品或服务的类别" .
+ont:attribute_14 rdfs:domain ont:type_2 .
+ont:attribute_14 ont:dataTypeCategory "1" .
+
+ont:attribute_15 rdf:type owl:DatatypeProperty .
+ont:attribute_15 rdfs:label "统一社会信用代码" .
+ont:attribute_15 rdfs:comment "供应商依法登记的统一社会信用代码" .
+ont:attribute_15 rdfs:domain ont:type_2 .
+ont:attribute_15 ont:dataTypeCategory "1" .
+
+ont:attribute_16 rdf:type owl:DatatypeProperty .
+ont:attribute_16 rdfs:label "合作状态" .
+ont:attribute_16 rdfs:comment "供应商当前合作状态" .
+ont:attribute_16 rdfs:domain ont:type_2 .
+ont:attribute_16 ont:dataTypeCategory "1" .
+
+ont:attribute_17 rdf:type owl:DatatypeProperty .
+ont:attribute_17 rdfs:label "风险评分" .
+ont:attribute_17 rdfs:comment "供应商综合风险评估分值" .
+ont:attribute_17 rdfs:domain ont:type_2 .
+ont:attribute_17 ont:dataTypeCategory "1" .
+
+ont:attribute_18 rdf:type owl:DatatypeProperty .
+ont:attribute_18 rdfs:label "供应范围" .
+ont:attribute_18 rdfs:comment "供应商能够提供的物料或服务范围" .
+ont:attribute_18 rdfs:domain ont:type_2 .
+ont:attribute_18 ont:dataTypeCategory "1" .
+
+ont:attribute_19 rdf:type owl:DatatypeProperty .
+ont:attribute_19 rdfs:label "联系人" .
+ont:attribute_19 rdfs:comment "供应商业务联系人姓名" .
+ont:attribute_19 rdfs:domain ont:type_2 .
+ont:attribute_19 ont:dataTypeCategory "1" .
+
+ont:attribute_20 rdf:type owl:DatatypeProperty .
+ont:attribute_20 rdfs:label "联系电话" .
+ont:attribute_20 rdfs:comment "供应商业务联系电话" .
+ont:attribute_20 rdfs:domain ont:type_2 .
+ont:attribute_20 ont:dataTypeCategory "1" .
+
+ont:attribute_21 rdf:type owl:DatatypeProperty .
+ont:attribute_21 rdfs:label "结算方式" .
+ont:attribute_21 rdfs:comment "供应商约定的货款结算方式" .
+ont:attribute_21 rdfs:domain ont:type_2 .
+ont:attribute_21 ont:dataTypeCategory "1" .
+
+ont:attribute_22 rdf:type owl:DatatypeProperty .
+ont:attribute_22 rdfs:label "合作开始日期" .
+ont:attribute_22 rdfs:comment "首次建立合作关系的日期" .
+ont:attribute_22 rdfs:domain ont:type_2 .
+ont:attribute_22 ont:dataTypeCategory "1" .
+
+ont:attribute_23 rdf:type owl:DatatypeProperty .
+ont:attribute_23 rdfs:label "采购方编码" .
+ont:attribute_23 rdfs:comment "采购方的唯一业务编码" .
+ont:attribute_23 rdfs:domain ont:type_3 .
+ont:attribute_23 ont:dataTypeCategory "1" .
+
+ont:attribute_24 rdf:type owl:DatatypeProperty .
+ont:attribute_24 rdfs:label "采购方名称" .
+ont:attribute_24 rdfs:comment "采购方登记名称" .
+ont:attribute_24 rdfs:domain ont:type_3 .
+ont:attribute_24 ont:dataTypeCategory "1" .
+
+ont:attribute_25 rdf:type owl:DatatypeProperty .
+ont:attribute_25 rdfs:label "统一社会信用代码" .
+ont:attribute_25 rdfs:comment "采购方依法登记的统一社会信用代码" .
+ont:attribute_25 rdfs:domain ont:type_3 .
+ont:attribute_25 ont:dataTypeCategory "1" .
+
+ont:attribute_26 rdf:type owl:DatatypeProperty .
+ont:attribute_26 rdfs:label "采购区域" .
+ont:attribute_26 rdfs:comment "采购方负责的采购区域" .
+ont:attribute_26 rdfs:domain ont:type_3 .
+ont:attribute_26 ont:dataTypeCategory "1" .
+
+ont:attribute_27 rdf:type owl:DatatypeProperty .
+ont:attribute_27 rdfs:label "采购部门" .
+ont:attribute_27 rdfs:comment "负责采购业务的部门名称" .
+ont:attribute_27 rdfs:domain ont:type_3 .
+ont:attribute_27 ont:dataTypeCategory "1" .
+
+ont:attribute_28 rdf:type owl:DatatypeProperty .
+ont:attribute_28 rdfs:label "采购负责人" .
+ont:attribute_28 rdfs:comment "采购业务负责人姓名" .
+ont:attribute_28 rdfs:domain ont:type_3 .
+ont:attribute_28 ont:dataTypeCategory "1" .
+
+ont:attribute_29 rdf:type owl:DatatypeProperty .
+ont:attribute_29 rdfs:label "联系电话" .
+ont:attribute_29 rdfs:comment "采购业务联系电话" .
+ont:attribute_29 rdfs:domain ont:type_3 .
+ont:attribute_29 ont:dataTypeCategory "1" .
+
+ont:attribute_30 rdf:type owl:DatatypeProperty .
+ont:attribute_30 rdfs:label "电子邮箱" .
+ont:attribute_30 rdfs:comment "采购业务联系邮箱" .
+ont:attribute_30 rdfs:domain ont:type_3 .
+ont:attribute_30 ont:dataTypeCategory "1" .
+
+ont:attribute_31 rdf:type owl:DatatypeProperty .
+ont:attribute_31 rdfs:label "收货地址" .
+ont:attribute_31 rdfs:comment "采购方默认收货地址" .
+ont:attribute_31 rdfs:domain ont:type_3 .
+ont:attribute_31 ont:dataTypeCategory "1" .
+
+ont:attribute_32 rdf:type owl:DatatypeProperty .
+ont:attribute_32 rdfs:label "结算方式" .
+ont:attribute_32 rdfs:comment "采购方约定的货款结算方式" .
+ont:attribute_32 rdfs:domain ont:type_3 .
+ont:attribute_32 ont:dataTypeCategory "1" .
+
+ont:attribute_33 rdf:type owl:DatatypeProperty .
+ont:attribute_33 rdfs:label "合作状态" .
+ont:attribute_33 rdfs:comment "采购方当前业务合作状态" .
+ont:attribute_33 rdfs:domain ont:type_3 .
+ont:attribute_33 ont:dataTypeCategory "1" .
+
+ont:attribute_34 rdf:type owl:DatatypeProperty .
+ont:attribute_34 rdfs:label "服务商编码" .
+ont:attribute_34 rdfs:comment "物流服务商的唯一业务编码" .
+ont:attribute_34 rdfs:domain ont:type_4 .
+ont:attribute_34 ont:dataTypeCategory "1" .
+
+ont:attribute_35 rdf:type owl:DatatypeProperty .
+ont:attribute_35 rdfs:label "服务商名称" .
+ont:attribute_35 rdfs:comment "物流服务商登记名称" .
+ont:attribute_35 rdfs:domain ont:type_4 .
+ont:attribute_35 ont:dataTypeCategory "1" .
+
+ont:attribute_36 rdf:type owl:DatatypeProperty .
+ont:attribute_36 rdfs:label "统一社会信用代码" .
+ont:attribute_36 rdfs:comment "物流服务商依法登记的统一社会信用代码" .
+ont:attribute_36 rdfs:domain ont:type_4 .
+ont:attribute_36 ont:dataTypeCategory "1" .
+
+ont:attribute_37 rdf:type owl:DatatypeProperty .
+ont:attribute_37 rdfs:label "运输方式" .
+ont:attribute_37 rdfs:comment "物流服务商支持的运输方式" .
+ont:attribute_37 rdfs:domain ont:type_4 .
+ont:attribute_37 ont:dataTypeCategory "1" .
+
+ont:attribute_38 rdf:type owl:DatatypeProperty .
+ont:attribute_38 rdfs:label "服务区域" .
+ont:attribute_38 rdfs:comment "物流服务商能够覆盖的运输区域" .
+ont:attribute_38 rdfs:domain ont:type_4 .
+ont:attribute_38 ont:dataTypeCategory "1" .
+
+ont:attribute_39 rdf:type owl:DatatypeProperty .
+ont:attribute_39 rdfs:label "运输资质" .
+ont:attribute_39 rdfs:comment "物流服务商持有的运输资质" .
+ont:attribute_39 rdfs:domain ont:type_4 .
+ont:attribute_39 ont:dataTypeCategory "1" .
+
+ont:attribute_40 rdf:type owl:DatatypeProperty .
+ont:attribute_40 rdfs:label "联系人" .
+ont:attribute_40 rdfs:comment "物流业务联系人姓名" .
+ont:attribute_40 rdfs:domain ont:type_4 .
+ont:attribute_40 ont:dataTypeCategory "1" .
+
+ont:attribute_41 rdf:type owl:DatatypeProperty .
+ont:attribute_41 rdfs:label "联系电话" .
+ont:attribute_41 rdfs:comment "物流业务联系电话" .
+ont:attribute_41 rdfs:domain ont:type_4 .
+ont:attribute_41 ont:dataTypeCategory "1" .
+
+ont:attribute_42 rdf:type owl:DatatypeProperty .
+ont:attribute_42 rdfs:label "车辆数量" .
+ont:attribute_42 rdfs:comment "物流服务商可投入的车辆数量" .
+ont:attribute_42 rdfs:domain ont:type_4 .
+ont:attribute_42 ont:dataTypeCategory "1" .
+
+ont:attribute_43 rdf:type owl:DatatypeProperty .
+ont:attribute_43 rdfs:label "货损率" .
+ont:attribute_43 rdfs:comment "统计周期内的货损比例" .
+ont:attribute_43 rdfs:domain ont:type_4 .
+ont:attribute_43 ont:dataTypeCategory "1" .
+
+ont:attribute_44 rdf:type owl:DatatypeProperty .
+ont:attribute_44 rdfs:label "合作状态" .
+ont:attribute_44 rdfs:comment "物流服务商当前合作状态" .
+ont:attribute_44 rdfs:domain ont:type_4 .
+ont:attribute_44 ont:dataTypeCategory "1" .
+
+ont:attribute_45 rdf:type owl:DatatypeProperty .
+ont:attribute_45 rdfs:label "物料编码" .
+ont:attribute_45 rdfs:comment "物料的唯一业务编码" .
+ont:attribute_45 rdfs:domain ont:type_5 .
+ont:attribute_45 ont:dataTypeCategory "1" .
+
+ont:attribute_46 rdf:type owl:DatatypeProperty .
+ont:attribute_46 rdfs:label "物料名称" .
+ont:attribute_46 rdfs:comment "物料业务名称" .
+ont:attribute_46 rdfs:domain ont:type_5 .
+ont:attribute_46 ont:dataTypeCategory "1" .
+
+ont:attribute_47 rdf:type owl:DatatypeProperty .
+ont:attribute_47 rdfs:label "物料类别" .
+ont:attribute_47 rdfs:comment "物料所属业务分类" .
+ont:attribute_47 rdfs:domain ont:type_5 .
+ont:attribute_47 ont:dataTypeCategory "1" .
+
+ont:attribute_48 rdf:type owl:DatatypeProperty .
+ont:attribute_48 rdfs:label "规格型号" .
+ont:attribute_48 rdfs:comment "物料规格及型号" .
+ont:attribute_48 rdfs:domain ont:type_5 .
+ont:attribute_48 ont:dataTypeCategory "1" .
+
+ont:attribute_49 rdf:type owl:DatatypeProperty .
+ont:attribute_49 rdfs:label "计量单位" .
+ont:attribute_49 rdfs:comment "物料数量计量单位" .
+ont:attribute_49 rdfs:domain ont:type_5 .
+ont:attribute_49 ont:dataTypeCategory "1" .
+
+ont:attribute_50 rdf:type owl:DatatypeProperty .
+ont:attribute_50 rdfs:label "品牌" .
+ont:attribute_50 rdfs:comment "物料所属品牌" .
+ont:attribute_50 rdfs:domain ont:type_5 .
+ont:attribute_50 ont:dataTypeCategory "1" .
+
+ont:attribute_51 rdf:type owl:DatatypeProperty .
+ont:attribute_51 rdfs:label "产地" .
+ont:attribute_51 rdfs:comment "物料生产来源地" .
+ont:attribute_51 rdfs:domain ont:type_5 .
+ont:attribute_51 ont:dataTypeCategory "1" .
+
+ont:attribute_52 rdf:type owl:DatatypeProperty .
+ont:attribute_52 rdfs:label "采购单价" .
+ont:attribute_52 rdfs:comment "物料参考采购单价" .
+ont:attribute_52 rdfs:domain ont:type_5 .
+ont:attribute_52 ont:dataTypeCategory "1" .
+
+ont:attribute_53 rdf:type owl:DatatypeProperty .
+ont:attribute_53 rdfs:label "最低库存" .
+ont:attribute_53 rdfs:comment "物料安全库存下限" .
+ont:attribute_53 rdfs:domain ont:type_5 .
+ont:attribute_53 ont:dataTypeCategory "1" .
+
+ont:attribute_54 rdf:type owl:DatatypeProperty .
+ont:attribute_54 rdfs:label "存储条件" .
+ont:attribute_54 rdfs:comment "物料存放所需的环境条件" .
+ont:attribute_54 rdfs:domain ont:type_5 .
+ont:attribute_54 ont:dataTypeCategory "1" .
+
+ont:attribute_55 rdf:type owl:DatatypeProperty .
+ont:attribute_55 rdfs:label "物料状态" .
+ont:attribute_55 rdfs:comment "物料当前启用或停用状态" .
+ont:attribute_55 rdfs:domain ont:type_5 .
+ont:attribute_55 ont:dataTypeCategory "1" .
+
+ont:attribute_56 rdf:type owl:DatatypeProperty .
+ont:attribute_56 rdfs:label "原材料编码" .
+ont:attribute_56 rdfs:comment "原材料的唯一业务编码" .
+ont:attribute_56 rdfs:domain ont:type_6 .
+ont:attribute_56 ont:dataTypeCategory "1" .
+
+ont:attribute_57 rdf:type owl:DatatypeProperty .
+ont:attribute_57 rdfs:label "原材料名称" .
+ont:attribute_57 rdfs:comment "原材料业务名称" .
+ont:attribute_57 rdfs:domain ont:type_6 .
+ont:attribute_57 ont:dataTypeCategory "1" .
+
+ont:attribute_58 rdf:type owl:DatatypeProperty .
+ont:attribute_58 rdfs:label "材料类别" .
+ont:attribute_58 rdfs:comment "原材料所属材料类别" .
+ont:attribute_58 rdfs:domain ont:type_6 .
+ont:attribute_58 ont:dataTypeCategory "1" .
+
+ont:attribute_59 rdf:type owl:DatatypeProperty .
+ont:attribute_59 rdfs:label "材料牌号" .
+ont:attribute_59 rdfs:comment "原材料牌号及等级" .
+ont:attribute_59 rdfs:domain ont:type_6 .
+ont:attribute_59 ont:dataTypeCategory "1" .
+
+ont:attribute_60 rdf:type owl:DatatypeProperty .
+ont:attribute_60 rdfs:label "规格" .
+ont:attribute_60 rdfs:comment "原材料尺寸或包装规格" .
+ont:attribute_60 rdfs:domain ont:type_6 .
+ont:attribute_60 ont:dataTypeCategory "1" .
+
+ont:attribute_61 rdf:type owl:DatatypeProperty .
+ont:attribute_61 rdfs:label "计量单位" .
+ont:attribute_61 rdfs:comment "原材料数量计量单位" .
+ont:attribute_61 rdfs:domain ont:type_6 .
+ont:attribute_61 ont:dataTypeCategory "1" .
+
+ont:attribute_62 rdf:type owl:DatatypeProperty .
+ont:attribute_62 rdfs:label "纯度" .
+ont:attribute_62 rdfs:comment "原材料主要成分的纯度" .
+ont:attribute_62 rdfs:domain ont:type_6 .
+ont:attribute_62 ont:dataTypeCategory "1" .
+
+ont:attribute_63 rdf:type owl:DatatypeProperty .
+ont:attribute_63 rdfs:label "密度" .
+ont:attribute_63 rdfs:comment "原材料单位体积的质量" .
+ont:attribute_63 rdfs:domain ont:type_6 .
+ont:attribute_63 ont:dataTypeCategory "1" .
+
+ont:attribute_64 rdf:type owl:DatatypeProperty .
+ont:attribute_64 rdfs:label "原产地" .
+ont:attribute_64 rdfs:comment "原材料的生产来源地" .
+ont:attribute_64 rdfs:domain ont:type_6 .
+ont:attribute_64 ont:dataTypeCategory "1" .
+
+ont:attribute_65 rdf:type owl:DatatypeProperty .
+ont:attribute_65 rdfs:label "存储条件" .
+ont:attribute_65 rdfs:comment "原材料存放所需的环境条件" .
+ont:attribute_65 rdfs:domain ont:type_6 .
+ont:attribute_65 ont:dataTypeCategory "1" .
+
+ont:attribute_66 rdf:type owl:DatatypeProperty .
+ont:attribute_66 rdfs:label "质量标准" .
+ont:attribute_66 rdfs:comment "原材料适用的质量标准" .
+ont:attribute_66 rdfs:domain ont:type_6 .
+ont:attribute_66 ont:dataTypeCategory "1" .
+
+ont:attribute_67 rdf:type owl:DatatypeProperty .
+ont:attribute_67 rdfs:label "零部件编码" .
+ont:attribute_67 rdfs:comment "零部件的唯一业务编码" .
+ont:attribute_67 rdfs:domain ont:type_7 .
+ont:attribute_67 ont:dataTypeCategory "1" .
+
+ont:attribute_68 rdf:type owl:DatatypeProperty .
+ont:attribute_68 rdfs:label "零部件名称" .
+ont:attribute_68 rdfs:comment "零部件业务名称" .
+ont:attribute_68 rdfs:domain ont:type_7 .
+ont:attribute_68 ont:dataTypeCategory "1" .
+
+ont:attribute_69 rdf:type owl:DatatypeProperty .
+ont:attribute_69 rdfs:label "零部件类别" .
+ont:attribute_69 rdfs:comment "零部件所属功能类别" .
+ont:attribute_69 rdfs:domain ont:type_7 .
+ont:attribute_69 ont:dataTypeCategory "1" .
+
+ont:attribute_70 rdf:type owl:DatatypeProperty .
+ont:attribute_70 rdfs:label "规格型号" .
+ont:attribute_70 rdfs:comment "零部件规格及型号" .
+ont:attribute_70 rdfs:domain ont:type_7 .
+ont:attribute_70 ont:dataTypeCategory "1" .
+
+ont:attribute_71 rdf:type owl:DatatypeProperty .
+ont:attribute_71 rdfs:label "图号" .
+ont:attribute_71 rdfs:comment "零部件对应的设计图纸编号" .
+ont:attribute_71 rdfs:domain ont:type_7 .
+ont:attribute_71 ont:dataTypeCategory "1" .
+
+ont:attribute_72 rdf:type owl:DatatypeProperty .
+ont:attribute_72 rdfs:label "材质" .
+ont:attribute_72 rdfs:comment "零部件采用的主要材质" .
+ont:attribute_72 rdfs:domain ont:type_7 .
+ont:attribute_72 ont:dataTypeCategory "1" .
+
+ont:attribute_73 rdf:type owl:DatatypeProperty .
+ont:attribute_73 rdfs:label "计量单位" .
+ont:attribute_73 rdfs:comment "零部件数量计量单位" .
+ont:attribute_73 rdfs:domain ont:type_7 .
+ont:attribute_73 ont:dataTypeCategory "1" .
+
+ont:attribute_74 rdf:type owl:DatatypeProperty .
+ont:attribute_74 rdfs:label "重量" .
+ont:attribute_74 rdfs:comment "零部件单件重量" .
+ont:attribute_74 rdfs:domain ont:type_7 .
+ont:attribute_74 ont:dataTypeCategory "1" .
+
+ont:attribute_75 rdf:type owl:DatatypeProperty .
+ont:attribute_75 rdfs:label "尺寸精度" .
+ont:attribute_75 rdfs:comment "零部件加工的尺寸精度要求" .
+ont:attribute_75 rdfs:domain ont:type_7 .
+ont:attribute_75 ont:dataTypeCategory "1" .
+
+ont:attribute_76 rdf:type owl:DatatypeProperty .
+ont:attribute_76 rdfs:label "质保期限" .
+ont:attribute_76 rdfs:comment "零部件约定的质量保证期限" .
+ont:attribute_76 rdfs:domain ont:type_7 .
+ont:attribute_76 ont:dataTypeCategory "1" .
+
+ont:attribute_77 rdf:type owl:DatatypeProperty .
+ont:attribute_77 rdfs:label "质量标准" .
+ont:attribute_77 rdfs:comment "零部件适用的质量标准" .
+ont:attribute_77 rdfs:domain ont:type_7 .
+ont:attribute_77 ont:dataTypeCategory "1" .
+
+ont:attribute_78 rdf:type owl:DatatypeProperty .
+ont:attribute_78 rdfs:label "成品编码" .
+ont:attribute_78 rdfs:comment "成品的唯一业务编码" .
+ont:attribute_78 rdfs:domain ont:type_8 .
+ont:attribute_78 ont:dataTypeCategory "1" .
+
+ont:attribute_79 rdf:type owl:DatatypeProperty .
+ont:attribute_79 rdfs:label "成品名称" .
+ont:attribute_79 rdfs:comment "成品业务名称" .
+ont:attribute_79 rdfs:domain ont:type_8 .
+ont:attribute_79 ont:dataTypeCategory "1" .
+
+ont:attribute_80 rdf:type owl:DatatypeProperty .
+ont:attribute_80 rdfs:label "成品型号" .
+ont:attribute_80 rdfs:comment "成品产品型号" .
+ont:attribute_80 rdfs:domain ont:type_8 .
+ont:attribute_80 ont:dataTypeCategory "1" .
+
+ont:attribute_81 rdf:type owl:DatatypeProperty .
+ont:attribute_81 rdfs:label "品牌" .
+ont:attribute_81 rdfs:comment "成品所属品牌" .
+ont:attribute_81 rdfs:domain ont:type_8 .
+ont:attribute_81 ont:dataTypeCategory "1" .
+
+ont:attribute_82 rdf:type owl:DatatypeProperty .
+ont:attribute_82 rdfs:label "规格" .
+ont:attribute_82 rdfs:comment "成品外形或包装规格" .
+ont:attribute_82 rdfs:domain ont:type_8 .
+ont:attribute_82 ont:dataTypeCategory "1" .
+
+ont:attribute_83 rdf:type owl:DatatypeProperty .
+ont:attribute_83 rdfs:label "计量单位" .
+ont:attribute_83 rdfs:comment "成品数量计量单位" .
+ont:attribute_83 rdfs:domain ont:type_8 .
+ont:attribute_83 ont:dataTypeCategory "1" .
+
+ont:attribute_84 rdf:type owl:DatatypeProperty .
+ont:attribute_84 rdfs:label "生产批次" .
+ont:attribute_84 rdfs:comment "成品对应的生产批次编号" .
+ont:attribute_84 rdfs:domain ont:type_8 .
+ont:attribute_84 ont:dataTypeCategory "1" .
+
+ont:attribute_85 rdf:type owl:DatatypeProperty .
+ont:attribute_85 rdfs:label "生产日期" .
+ont:attribute_85 rdfs:comment "成品完成生产的日期" .
+ont:attribute_85 rdfs:domain ont:type_8 .
+ont:attribute_85 ont:dataTypeCategory "1" .
+
+ont:attribute_86 rdf:type owl:DatatypeProperty .
+ont:attribute_86 rdfs:label "保质期限" .
+ont:attribute_86 rdfs:comment "成品约定的有效保存期限" .
+ont:attribute_86 rdfs:domain ont:type_8 .
+ont:attribute_86 ont:dataTypeCategory "1" .
+
+ont:attribute_87 rdf:type owl:DatatypeProperty .
+ont:attribute_87 rdfs:label "质量等级" .
+ont:attribute_87 rdfs:comment "成品经过检验确认的质量等级" .
+ont:attribute_87 rdfs:domain ont:type_8 .
+ont:attribute_87 ont:dataTypeCategory "1" .
+
+ont:attribute_88 rdf:type owl:DatatypeProperty .
+ont:attribute_88 rdfs:label "成品状态" .
+ont:attribute_88 rdfs:comment "成品当前可销售或停用状态" .
+ont:attribute_88 rdfs:domain ont:type_8 .
+ont:attribute_88 ont:dataTypeCategory "1" .
+
+ont:attribute_89 rdf:type owl:DatatypeProperty .
+ont:attribute_89 rdfs:label "订单编号" .
+ont:attribute_89 rdfs:comment "采购订单的唯一业务编号" .
+ont:attribute_89 rdfs:domain ont:type_9 .
+ont:attribute_89 ont:dataTypeCategory "1" .
+
+ont:attribute_90 rdf:type owl:DatatypeProperty .
+ont:attribute_90 rdfs:label "订单日期" .
+ont:attribute_90 rdfs:comment "采购订单正式签发日期" .
+ont:attribute_90 rdfs:domain ont:type_9 .
+ont:attribute_90 ont:dataTypeCategory "1" .
+
+ont:attribute_91 rdf:type owl:DatatypeProperty .
+ont:attribute_91 rdfs:label "采购类别" .
+ont:attribute_91 rdfs:comment "采购订单所属采购类别" .
+ont:attribute_91 rdfs:domain ont:type_9 .
+ont:attribute_91 ont:dataTypeCategory "1" .
+
+ont:attribute_92 rdf:type owl:DatatypeProperty .
+ont:attribute_92 rdfs:label "采购部门" .
+ont:attribute_92 rdfs:comment "发起采购订单的部门名称" .
+ont:attribute_92 rdfs:domain ont:type_9 .
+ont:attribute_92 ont:dataTypeCategory "1" .
+
+ont:attribute_93 rdf:type owl:DatatypeProperty .
+ont:attribute_93 rdfs:label "采购负责人" .
+ont:attribute_93 rdfs:comment "负责订单执行的采购人员" .
+ont:attribute_93 rdfs:domain ont:type_9 .
+ont:attribute_93 ont:dataTypeCategory "1" .
+
+ont:attribute_94 rdf:type owl:DatatypeProperty .
+ont:attribute_94 rdfs:label "采购总金额" .
+ont:attribute_94 rdfs:comment "采购订单约定的含税总金额" .
+ont:attribute_94 rdfs:domain ont:type_9 .
+ont:attribute_94 ont:dataTypeCategory "1" .
+
+ont:attribute_95 rdf:type owl:DatatypeProperty .
+ont:attribute_95 rdfs:label "币种" .
+ont:attribute_95 rdfs:comment "采购订单金额使用的币种" .
+ont:attribute_95 rdfs:domain ont:type_9 .
+ont:attribute_95 ont:dataTypeCategory "1" .
+
+ont:attribute_96 rdf:type owl:DatatypeProperty .
+ont:attribute_96 rdfs:label "约定交货日期" .
+ont:attribute_96 rdfs:comment "采购订单约定的到货日期" .
+ont:attribute_96 rdfs:domain ont:type_9 .
+ont:attribute_96 ont:dataTypeCategory "1" .
+
+ont:attribute_97 rdf:type owl:DatatypeProperty .
+ont:attribute_97 rdfs:label "交货地址" .
+ont:attribute_97 rdfs:comment "采购订单约定的交货地址" .
+ont:attribute_97 rdfs:domain ont:type_9 .
+ont:attribute_97 ont:dataTypeCategory "1" .
+
+ont:attribute_98 rdf:type owl:DatatypeProperty .
+ont:attribute_98 rdfs:label "结算方式" .
+ont:attribute_98 rdfs:comment "采购订单约定的付款结算方式" .
+ont:attribute_98 rdfs:domain ont:type_9 .
+ont:attribute_98 ont:dataTypeCategory "1" .
+
+ont:attribute_99 rdf:type owl:DatatypeProperty .
+ont:attribute_99 rdfs:label "订单状态" .
+ont:attribute_99 rdfs:comment "采购订单当前执行状态" .
+ont:attribute_99 rdfs:domain ont:type_9 .
+ont:attribute_99 ont:dataTypeCategory "1" .
+
+ont:attribute_100 rdf:type owl:DatatypeProperty .
+ont:attribute_100 rdfs:label "入库单号" .
+ont:attribute_100 rdfs:comment "入库单的唯一业务编号" .
+ont:attribute_100 rdfs:domain ont:type_10 .
+ont:attribute_100 ont:dataTypeCategory "1" .
+
+ont:attribute_101 rdf:type owl:DatatypeProperty .
+ont:attribute_101 rdfs:label "入库日期" .
+ont:attribute_101 rdfs:comment "物料实际办理入库的日期" .
+ont:attribute_101 rdfs:domain ont:type_10 .
+ont:attribute_101 ont:dataTypeCategory "1" .
+
+ont:attribute_102 rdf:type owl:DatatypeProperty .
+ont:attribute_102 rdfs:label "仓库编码" .
+ont:attribute_102 rdfs:comment "接收入库物料的仓库编码" .
+ont:attribute_102 rdfs:domain ont:type_10 .
+ont:attribute_102 ont:dataTypeCategory "1" .
+
+ont:attribute_103 rdf:type owl:DatatypeProperty .
+ont:attribute_103 rdfs:label "仓库名称" .
+ont:attribute_103 rdfs:comment "接收入库物料的仓库名称" .
+ont:attribute_103 rdfs:domain ont:type_10 .
+ont:attribute_103 ont:dataTypeCategory "1" .
+
+ont:attribute_104 rdf:type owl:DatatypeProperty .
+ont:attribute_104 rdfs:label "库位" .
+ont:attribute_104 rdfs:comment "入库物料的存放库位" .
+ont:attribute_104 rdfs:domain ont:type_10 .
+ont:attribute_104 ont:dataTypeCategory "1" .
+
+ont:attribute_105 rdf:type owl:DatatypeProperty .
+ont:attribute_105 rdfs:label "到货批次" .
+ont:attribute_105 rdfs:comment "本次入库对应的到货批次" .
+ont:attribute_105 rdfs:domain ont:type_10 .
+ont:attribute_105 ont:dataTypeCategory "1" .
+
+ont:attribute_106 rdf:type owl:DatatypeProperty .
+ont:attribute_106 rdfs:label "入库数量" .
+ont:attribute_106 rdfs:comment "本次入库确认的物料数量" .
+ont:attribute_106 rdfs:domain ont:type_10 .
+ont:attribute_106 ont:dataTypeCategory "1" .
+
+ont:attribute_107 rdf:type owl:DatatypeProperty .
+ont:attribute_107 rdfs:label "计量单位" .
+ont:attribute_107 rdfs:comment "本次入库数量使用的计量单位" .
+ont:attribute_107 rdfs:domain ont:type_10 .
+ont:attribute_107 ont:dataTypeCategory "1" .
+
+ont:attribute_108 rdf:type owl:DatatypeProperty .
+ont:attribute_108 rdfs:label "验收结果" .
+ont:attribute_108 rdfs:comment "入库物料的验收结论" .
+ont:attribute_108 rdfs:domain ont:type_10 .
+ont:attribute_108 ont:dataTypeCategory "1" .
+
+ont:attribute_109 rdf:type owl:DatatypeProperty .
+ont:attribute_109 rdfs:label "验收人员" .
+ont:attribute_109 rdfs:comment "负责本次验收的人员姓名" .
+ont:attribute_109 rdfs:domain ont:type_10 .
+ont:attribute_109 ont:dataTypeCategory "1" .
+
+ont:attribute_110 rdf:type owl:DatatypeProperty .
+ont:attribute_110 rdfs:label "入库状态" .
+ont:attribute_110 rdfs:comment "入库单当前业务处理状态" .
+ont:attribute_110 rdfs:domain ont:type_10 .
+ont:attribute_110 ont:dataTypeCategory "1" .
+
+ont:attribute_111 rdf:type owl:DatatypeProperty .
+ont:attribute_111 rdfs:label "出库单号" .
+ont:attribute_111 rdfs:comment "出库单的唯一业务编号" .
+ont:attribute_111 rdfs:domain ont:type_11 .
+ont:attribute_111 ont:dataTypeCategory "1" .
+
+ont:attribute_112 rdf:type owl:DatatypeProperty .
+ont:attribute_112 rdfs:label "出库日期" .
+ont:attribute_112 rdfs:comment "物料实际办理出库的日期" .
+ont:attribute_112 rdfs:domain ont:type_11 .
+ont:attribute_112 ont:dataTypeCategory "1" .
+
+ont:attribute_113 rdf:type owl:DatatypeProperty .
+ont:attribute_113 rdfs:label "仓库编码" .
+ont:attribute_113 rdfs:comment "发出物料的仓库编码" .
+ont:attribute_113 rdfs:domain ont:type_11 .
+ont:attribute_113 ont:dataTypeCategory "1" .
+
+ont:attribute_114 rdf:type owl:DatatypeProperty .
+ont:attribute_114 rdfs:label "仓库名称" .
+ont:attribute_114 rdfs:comment "发出物料的仓库名称" .
+ont:attribute_114 rdfs:domain ont:type_11 .
+ont:attribute_114 ont:dataTypeCategory "1" .
+
+ont:attribute_115 rdf:type owl:DatatypeProperty .
+ont:attribute_115 rdfs:label "库位" .
+ont:attribute_115 rdfs:comment "本次出库物料所在库位" .
+ont:attribute_115 rdfs:domain ont:type_11 .
+ont:attribute_115 ont:dataTypeCategory "1" .
+
+ont:attribute_116 rdf:type owl:DatatypeProperty .
+ont:attribute_116 rdfs:label "出库用途" .
+ont:attribute_116 rdfs:comment "本次出库的业务用途" .
+ont:attribute_116 rdfs:domain ont:type_11 .
+ont:attribute_116 ont:dataTypeCategory "1" .
+
+ont:attribute_117 rdf:type owl:DatatypeProperty .
+ont:attribute_117 rdfs:label "出库数量" .
+ont:attribute_117 rdfs:comment "本次出库确认的物料数量" .
+ont:attribute_117 rdfs:domain ont:type_11 .
+ont:attribute_117 ont:dataTypeCategory "1" .
+
+ont:attribute_118 rdf:type owl:DatatypeProperty .
+ont:attribute_118 rdfs:label "计量单位" .
+ont:attribute_118 rdfs:comment "本次出库数量使用的计量单位" .
+ont:attribute_118 rdfs:domain ont:type_11 .
+ont:attribute_118 ont:dataTypeCategory "1" .
+
+ont:attribute_119 rdf:type owl:DatatypeProperty .
+ont:attribute_119 rdfs:label "收货地址" .
+ont:attribute_119 rdfs:comment "本次发货的最终收货地址" .
+ont:attribute_119 rdfs:domain ont:type_11 .
+ont:attribute_119 ont:dataTypeCategory "1" .
+
+ont:attribute_120 rdf:type owl:DatatypeProperty .
+ont:attribute_120 rdfs:label "经办人员" .
+ont:attribute_120 rdfs:comment "负责办理本次出库的人员姓名" .
+ont:attribute_120 rdfs:domain ont:type_11 .
+ont:attribute_120 ont:dataTypeCategory "1" .
+
+ont:attribute_121 rdf:type owl:DatatypeProperty .
+ont:attribute_121 rdfs:label "出库状态" .
+ont:attribute_121 rdfs:comment "出库单当前业务处理状态" .
+ont:attribute_121 rdfs:domain ont:type_11 .
+ont:attribute_121 ont:dataTypeCategory "1" .
+
+ont:relation_1 rdf:type owl:ObjectProperty .
+ont:relation_1 rdfs:label "管理" .
+ont:relation_1 rdfs:comment "组织负责采购订单的维护、审批协调和业务管理。" .
+ont:relation_1 rdfs:domain ont:type_1 .
+ont:relation_1 rdfs:range ont:type_9 .
+
+ont:relation_1_inverse rdf:type owl:ObjectProperty .
+ont:relation_1_inverse rdfs:label "由组织管理" .
+ont:relation_1_inverse owl:inverseOf ont:relation_1 .
+ont:relation_1_inverse rdfs:domain ont:type_9 .
+ont:relation_1_inverse rdfs:range ont:type_1 .
+
+ont:relation_2 rdf:type owl:ObjectProperty .
+ont:relation_2 rdfs:label "提供" .
+ont:relation_2 rdfs:comment "供应商向企业提供生产经营所需的物料。" .
+ont:relation_2 rdfs:domain ont:type_2 .
+ont:relation_2 rdfs:range ont:type_5 .
+
+ont:relation_2_inverse rdf:type owl:ObjectProperty .
+ont:relation_2_inverse rdfs:label "由供应商提供" .
+ont:relation_2_inverse owl:inverseOf ont:relation_2 .
+ont:relation_2_inverse rdfs:domain ont:type_5 .
+ont:relation_2_inverse rdfs:range ont:type_2 .
+
+ont:relation_3 rdf:type owl:ObjectProperty .
+ont:relation_3 rdfs:label "下达" .
+ont:relation_3 rdfs:comment "采购方根据采购需求下达采购订单。" .
+ont:relation_3 rdfs:domain ont:type_3 .
+ont:relation_3 rdfs:range ont:type_9 .
+
+ont:relation_3_inverse rdf:type owl:ObjectProperty .
+ont:relation_3_inverse rdfs:label "由采购方下达" .
+ont:relation_3_inverse owl:inverseOf ont:relation_3 .
+ont:relation_3_inverse rdfs:domain ont:type_9 .
+ont:relation_3_inverse rdfs:range ont:type_3 .
+
+ont:relation_4 rdf:type owl:ObjectProperty .
+ont:relation_4 rdfs:label "指定供应商" .
+ont:relation_4 rdfs:comment "采购订单指定承担本次供货任务的供应商。" .
+ont:relation_4 rdfs:domain ont:type_9 .
+ont:relation_4 rdfs:range ont:type_2 .
+
+ont:relation_4_inverse rdf:type owl:ObjectProperty .
+ont:relation_4_inverse rdfs:label "承接采购订单" .
+ont:relation_4_inverse owl:inverseOf ont:relation_4 .
+ont:relation_4_inverse rdfs:domain ont:type_2 .
+ont:relation_4_inverse rdfs:range ont:type_9 .
+
+ont:relation_5 rdf:type owl:ObjectProperty .
+ont:relation_5 rdfs:label "采购物料" .
+ont:relation_5 rdfs:comment "采购订单记录本次需要采购的物料。" .
+ont:relation_5 rdfs:domain ont:type_9 .
+ont:relation_5 rdfs:range ont:type_5 .
+
+ont:relation_5_inverse rdf:type owl:ObjectProperty .
+ont:relation_5_inverse rdfs:label "关联采购订单" .
+ont:relation_5_inverse owl:inverseOf ont:relation_5 .
+ont:relation_5_inverse rdfs:domain ont:type_5 .
+ont:relation_5_inverse rdfs:range ont:type_9 .
+
+ont:relation_6 rdf:type owl:ObjectProperty .
+ont:relation_6 rdfs:label "对应采购订单" .
+ont:relation_6 rdfs:comment "入库单关联本次到货对应的采购订单。" .
+ont:relation_6 rdfs:domain ont:type_10 .
+ont:relation_6 rdfs:range ont:type_9 .
+
+ont:relation_6_inverse rdf:type owl:ObjectProperty .
+ont:relation_6_inverse rdfs:label "关联入库单" .
+ont:relation_6_inverse owl:inverseOf ont:relation_6 .
+ont:relation_6_inverse rdfs:domain ont:type_9 .
+ont:relation_6_inverse rdfs:range ont:type_10 .
+
+ont:relation_7 rdf:type owl:ObjectProperty .
+ont:relation_7 rdfs:label "记录入库物料" .
+ont:relation_7 rdfs:comment "入库单记录实际验收并办理入库的物料。" .
+ont:relation_7 rdfs:domain ont:type_10 .
+ont:relation_7 rdfs:range ont:type_5 .
+
+ont:relation_7_inverse rdf:type owl:ObjectProperty .
+ont:relation_7_inverse rdfs:label "入库记录于" .
+ont:relation_7_inverse owl:inverseOf ont:relation_7 .
+ont:relation_7_inverse rdfs:domain ont:type_5 .
+ont:relation_7_inverse rdfs:range ont:type_10 .
+
+ont:relation_8 rdf:type owl:ObjectProperty .
+ont:relation_8 rdfs:label "记录出库物料" .
+ont:relation_8 rdfs:comment "出库单记录本次办理出库和发货的物料。" .
+ont:relation_8 rdfs:domain ont:type_11 .
+ont:relation_8 rdfs:range ont:type_5 .
+
+ont:relation_8_inverse rdf:type owl:ObjectProperty .
+ont:relation_8_inverse rdfs:label "出库记录于" .
+ont:relation_8_inverse owl:inverseOf ont:relation_8 .
+ont:relation_8_inverse rdfs:domain ont:type_5 .
+ont:relation_8_inverse rdfs:range ont:type_11 .
+
+ont:relation_9 rdf:type owl:ObjectProperty .
+ont:relation_9 rdfs:label "承运" .
+ont:relation_9 rdfs:comment "物流服务商承担出库单对应发货物料的运输。" .
+ont:relation_9 rdfs:domain ont:type_4 .
+ont:relation_9 rdfs:range ont:type_11 .
+
+ont:relation_9_inverse rdf:type owl:ObjectProperty .
+ont:relation_9_inverse rdfs:label "由物流服务商承运" .
+ont:relation_9_inverse owl:inverseOf ont:relation_9 .
+ont:relation_9_inverse rdfs:domain ont:type_11 .
+ont:relation_9_inverse rdfs:range ont:type_4 .
+
+ont:relation_10 rdf:type owl:ObjectProperty .
+ont:relation_10 rdfs:label "指定收货方" .
+ont:relation_10 rdfs:comment "出库单指定接收本次发货物料的采购方。" .
+ont:relation_10 rdfs:domain ont:type_11 .
+ont:relation_10 rdfs:range ont:type_3 .
+
+ont:relation_10_inverse rdf:type owl:ObjectProperty .
+ont:relation_10_inverse rdfs:label "关联收货出库单" .
+ont:relation_10_inverse owl:inverseOf ont:relation_10 .
+ont:relation_10_inverse rdfs:domain ont:type_3 .
+ont:relation_10_inverse rdfs:range ont:type_11 .
+
+ont:relation_11 rdf:type owl:ObjectProperty .
+ont:relation_11 rdfs:label "组成" .
+ont:relation_11 rdfs:comment "零部件通过装配构成成品，用于产品结构追溯。" .
+ont:relation_11 rdfs:domain ont:type_7 .
+ont:relation_11 rdfs:range ont:type_8 .
+
+ont:relation_11_inverse rdf:type owl:ObjectProperty .
+ont:relation_11_inverse rdfs:label "包含零部件" .
+ont:relation_11_inverse owl:inverseOf ont:relation_11 .
+ont:relation_11_inverse rdfs:domain ont:type_8 .
+ont:relation_11_inverse rdfs:range ont:type_7 .
+
+ont:term_1 rdf:type owl:NamedIndividual .
+ont:term_1 rdf:type skos:Concept .
+ont:term_1 rdfs:label "组织" .
+ont:term_1 rdfs:comment "具有明确职责、管理结构和业务边界的业务主体，可承担采购、供应、物流及内部管理等活动。" .
+ont:term_1 skos:prefLabel "组织"@zh .
+ont:term_1 skos:prefLabel "Organization"@en .
+ont:term_1 skos:altLabel "机构" .
+ont:term_1 skos:altLabel "单位" .
+ont:term_1 skos:notation "ORG" .
+ont:term_1 dct:source "企业基础信息管理" .
+
+ont:term_2 rdf:type owl:NamedIndividual .
+ont:term_2 rdf:type skos:Concept .
+ont:term_2 rdfs:label "供应商" .
+ont:term_2 rdfs:comment "向企业提供原材料、零部件、设备或服务的组织，是采购订单中的供货责任主体。" .
+ont:term_2 skos:prefLabel "供应商"@zh .
+ont:term_2 skos:prefLabel "Supplier"@en .
+ont:term_2 skos:altLabel "供货商" .
+ont:term_2 skos:altLabel "供应单位" .
+ont:term_2 skos:notation "SUP" .
+ont:term_2 dct:source "供应商管理" .
+
+ont:term_3 rdf:type owl:NamedIndividual .
+ont:term_3 rdf:type skos:Concept .
+ont:term_3 rdfs:label "采购方" .
+ont:term_3 rdfs:comment "发起采购需求、下达采购订单并接收采购物料的组织。" .
+ont:term_3 skos:prefLabel "采购方"@zh .
+ont:term_3 skos:prefLabel "Purchaser"@en .
+ont:term_3 skos:altLabel "采购单位" .
+ont:term_3 skos:altLabel "买方" .
+ont:term_3 skos:notation "PUR" .
+ont:term_3 dct:source "采购业务管理" .
+
+ont:term_4 rdf:type owl:NamedIndividual .
+ont:term_4 rdf:type skos:Concept .
+ont:term_4 rdfs:label "物流服务商" .
+ont:term_4 rdfs:comment "承担物料运输、配送及相关物流服务的组织，可作为出库单对应运输任务的承运主体。" .
+ont:term_4 skos:prefLabel "物流服务商"@zh .
+ont:term_4 skos:prefLabel "Logistics Service Provider"@en .
+ont:term_4 skos:altLabel "承运商" .
+ont:term_4 skos:altLabel "运输服务商" .
+ont:term_4 skos:notation "LSP" .
+ont:term_4 dct:source "物流业务管理" .
+
+ont:term_5 rdf:type owl:NamedIndividual .
+ont:term_5 rdf:type skos:Concept .
+ont:term_5 rdfs:label "物料" .
+ont:term_5 rdfs:comment "企业生产经营过程中采购、存储、使用或销售的实物资源，包括原材料、零部件和成品。" .
+ont:term_5 skos:prefLabel "物料"@zh .
+ont:term_5 skos:prefLabel "Material"@en .
+ont:term_5 skos:altLabel "材料" .
+ont:term_5 skos:altLabel "物资" .
+ont:term_5 skos:notation "MAT" .
+ont:term_5 dct:source "物料管理" .
+
+ont:term_6 rdf:type owl:NamedIndividual .
+ont:term_6 rdf:type skos:Concept .
+ont:term_6 rdfs:label "原材料" .
+ont:term_6 rdfs:comment "用于生产加工的基础材料，通过加工或装配形成零部件、半成品或成品。" .
+ont:term_6 skos:prefLabel "原材料"@zh .
+ont:term_6 skos:prefLabel "Raw Material"@en .
+ont:term_6 skos:altLabel "原料" .
+ont:term_6 skos:altLabel "生产材料" .
+ont:term_6 skos:notation "RAW" .
+ont:term_6 dct:source "生产物料管理" .
+
+ont:term_7 rdf:type owl:NamedIndividual .
+ont:term_7 rdf:type skos:Concept .
+ont:term_7 rdfs:label "零部件" .
+ont:term_7 rdfs:comment "用于组成设备或产品的独立部件，具有明确的规格型号、设计图号和质量要求。" .
+ont:term_7 skos:prefLabel "零部件"@zh .
+ont:term_7 skos:prefLabel "Component"@en .
+ont:term_7 skos:altLabel "部件" .
+ont:term_7 skos:altLabel "零件" .
+ont:term_7 skos:notation "COMP" .
+ont:term_7 dct:source "产品结构管理" .
+
+ont:term_8 rdf:type owl:NamedIndividual .
+ont:term_8 rdf:type skos:Concept .
+ont:term_8 rdfs:label "成品" .
+ont:term_8 rdfs:comment "完成规定生产工序并满足交付要求的产品，可由多个零部件装配组成。" .
+ont:term_8 skos:prefLabel "成品"@zh .
+ont:term_8 skos:prefLabel "Finished Product"@en .
+ont:term_8 skos:altLabel "产成品" .
+ont:term_8 skos:altLabel "最终产品" .
+ont:term_8 skos:notation "FG" .
+ont:term_8 dct:source "生产及销售管理" .
+
+ont:term_9 rdf:type owl:NamedIndividual .
+ont:term_9 rdf:type skos:Concept .
+ont:term_9 rdfs:label "采购订单" .
+ont:term_9 rdfs:comment "记录采购方、供应商、采购物料及交货约定的业务单据，是采购执行和到货核对的依据。" .
+ont:term_9 skos:prefLabel "采购订单"@zh .
+ont:term_9 skos:prefLabel "Purchase Order"@en .
+ont:term_9 skos:altLabel "采购单" .
+ont:term_9 skos:altLabel "订购单" .
+ont:term_9 skos:notation "PO" .
+ont:term_9 dct:source "采购业务管理" .
+
+ont:term_10 rdf:type owl:NamedIndividual .
+ont:term_10 rdf:type skos:Concept .
+ont:term_10 rdfs:label "入库单" .
+ont:term_10 rdfs:comment "记录物料接收、验收和入库信息的业务单据，可关联采购订单及本次到货物料。" .
+ont:term_10 skos:prefLabel "入库单"@zh .
+ont:term_10 skos:prefLabel "Goods Receipt Note"@en .
+ont:term_10 skos:altLabel "收货单" .
+ont:term_10 skos:altLabel "入库凭证" .
+ont:term_10 skos:notation "GRN" .
+ont:term_10 dct:source "仓储业务管理" .
+
+ont:term_11 rdf:type owl:NamedIndividual .
+ont:term_11 rdf:type skos:Concept .
+ont:term_11 rdfs:label "出库单" .
+ont:term_11 rdfs:comment "记录物料出库、发货用途及数量的业务单据，可关联收货方和物流服务商。" .
+ont:term_11 skos:prefLabel "出库单"@zh .
+ont:term_11 skos:prefLabel "Goods Issue Note"@en .
+ont:term_11 skos:altLabel "发货单" .
+ont:term_11 skos:altLabel "出库凭证" .
+ont:term_11 skos:notation "GIN" .
+ont:term_11 dct:source "仓储及物流管理" .
+

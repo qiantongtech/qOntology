@@ -1,0 +1,43 @@
+#Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+#
+#This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+#
+#qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+#You may use qOntology for commercial purposes, but you may not remove, hide,
+#modify, or replace the qOntology logo, copyright notices, license notices,
+#or attribution information without a separate commercial license.
+#
+#White-label use, OEM distribution, rebranding, or presenting qOntology as
+#another product requires separate commercial authorization from
+#Jiangsu Qiantong Technology Co., Ltd.
+#
+#Business License: https://community.qontology.ai/business/policy.html
+#See the LICENSE file in the project root for full license information.
+
+
+graphis:
+  #项目初期确定使用的图数据库，目前支持neo4j和arangodb两个数据库，两者切换数据源，数据并不会进行迁移。
+  type: neo4j
+
+#arangodb配置、host连接方式
+arangodb:
+  host: env.qiantong.tech
+  port: 50012
+  database: qknow
+  user: qknow
+  password: InC3tmU4bijT4vkl
+
+#neo4j配置方式
+neo4j:
+  uri: bolt://127.0.0.1:7687
+  user: neo4j
+  password: password
+
+# 日志
+logging:
+  level:
+    org:
+#      neo4j.driver: DEBUG
+      springframework.data.neo4j: DEBUG
+    com.arangodb.internal:
+        net.Communication: DEBUG

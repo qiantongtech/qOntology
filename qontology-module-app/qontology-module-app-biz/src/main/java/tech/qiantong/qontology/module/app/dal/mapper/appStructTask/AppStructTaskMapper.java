@@ -1,0 +1,70 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qknow.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+package tech.qiantong.qontology.module.app.dal.mapper.appStructTask;
+
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.springframework.data.neo4j.repository.query.Query;
+import tech.qiantong.qontology.module.app.dal.dataobject.appStructTask.AppStructTaskDO;
+import java.util.Arrays;
+import com.github.yulichang.base.MPJBaseMapper;
+import tech.qiantong.qontology.core.page.PageResult;
+import java.util.HashSet;
+import java.util.Set;
+import tech.qiantong.qontology.module.app.controller.admin.appStructTask.vo.AppStructTaskPageReqVO;
+import tech.qiantong.qontology.mybatis.core.mapper.BaseMapperX;
+import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
+
+import jakarta.websocket.server.PathParam;
+
+/**
+ * 结构化抽取任务Mapper接口
+ *
+ * @author qknow
+ * @date 2025-02-25
+ */
+public interface AppStructTaskMapper extends BaseMapperX<AppStructTaskDO> {
+
+    /** 按查询条件分页获取映射或任务列表。 */
+    default PageResult<AppStructTaskDO> selectPage(AppStructTaskPageReqVO reqVO) {
+        // 定义排序的字段（防止 SQL 注入，与数据库字段名称一致）
+        Set<String> allowedColumns = new HashSet<>(Arrays.asList("id", "publish_time","create_time", "update_time"));
+
+        // 构造动态查询条件
+        return selectPage(reqVO, new LambdaQueryWrapperX<AppStructTaskDO>()
+                .eqIfPresent(AppStructTaskDO::getWorkspaceId, reqVO.getWorkspaceId())
+                .eqIfPresent(AppStructTaskDO::getId, reqVO.getId())
+                .likeIfPresent(AppStructTaskDO::getName, reqVO.getName())
+                .eqIfPresent(AppStructTaskDO::getStatus, reqVO.getStatus())
+                .eqIfPresent(AppStructTaskDO::getPublishStatus, reqVO.getPublishStatus())
+                .eqIfPresent(AppStructTaskDO::getPublishTime, reqVO.getPublishTime())
+                .eqIfPresent(AppStructTaskDO::getPublisherId, reqVO.getPublisherId())
+                .eqIfPresent(AppStructTaskDO::getPublishBy, reqVO.getPublishBy())
+                .eqIfPresent(AppStructTaskDO::getDatasourceId, reqVO.getDatasourceId())
+                .likeIfPresent(AppStructTaskDO::getDatasourceName, reqVO.getDatasourceName())
+                .eqIfPresent(AppStructTaskDO::getCreateTime, reqVO.getCreateTime())
+                .betweenIfPresent(AppStructTaskDO::getCreateTime, reqVO.getParamByKey("beginCreateTime"), reqVO.getParamByKey("endCreateTime"))
+                // 如果 reqVO.getName() 不为空，则添加 name 的精确匹配条件（name = '<name>'）
+                // .likeIfPresent(AppStructTaskDO::getName, reqVO.getName())
+                // 按照 createTime 字段降序排序
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns));
+    }
+
+}
+

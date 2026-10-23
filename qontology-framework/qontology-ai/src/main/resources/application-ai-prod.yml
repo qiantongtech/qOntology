@@ -1,0 +1,35 @@
+# Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+#
+# This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+#
+# qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+# You may use qOntology for commercial purposes, but you may not remove, hide,
+# modify, or replace the qOntology logo, copyright notices, license notices,
+# or attribution information without a separate commercial license.
+#
+# White-label use, OEM distribution, rebranding, or presenting qOntology as
+# another product requires separate commercial authorization from
+# Jiangsu Qiantong Technology Co., Ltd.
+#
+# Business License: https://community.qontology.ai/business/policy.html
+# See the LICENSE file in the project root for full license information.
+
+
+# AI 模块配置（生产环境）
+qontology:
+  ai:
+    # 是否启用 AI 模块
+    enabled: true
+    # 单次调用超时时间
+    timeout: 180s
+    # 通义同步 HTTP 读取超时，小于治理预算，避免两层同时超时
+    http-read-timeout: 150s
+    # 最大调用次数（含首次）；长耗时抽取不自动重复提交
+    max-attempts: 1
+    # 向量存储类型：memory 内存存储、weaviate（生产环境推荐）
+    vector-store: weaviate
+    # Weaviate 向量存储配置（vector-store=weaviate 时生效）
+    weaviate:
+      host: weaviate:8080
+      apiKey: WVF5YThaHlkYwhGUSmCRgsX3tD5ngdN8pkih
+      className: SpringAiWeaviate # 必须是大驼

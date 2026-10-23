@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+
+  This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+
+  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+  You may use qOntology for commercial purposes, but you may not remove, hide,
+  modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
+
+  White-label use, OEM distribution, rebranding, or presenting qOntology as
+  another product requires separate commercial authorization from
+  Jiangsu Qiantong Technology Co., Ltd.
+
+  Business License: https://community.qontology.ai/business/policy.html
+  See the LICENSE file in the project root for full license information.
+-->
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.system.mapper.SysRoleDeptMapper">
+
+	<resultMap type="SysRoleDept" id="SysRoleDeptResult">
+		<result property="roleId"     column="role_id"      />
+		<result property="deptId"     column="dept_id"      />
+	</resultMap>
+
+	<delete id="deleteRoleDeptByRoleId" parameterType="Long">
+		delete from system_role_dept where role_id=#{roleId}
+	</delete>
+
+	<select id="selectCountRoleDeptByDeptId" resultType="Integer">
+	    select count(1) from system_role_dept where dept_id=#{deptId}
+	</select>
+
+	<delete id="deleteRoleDept" parameterType="Long">
+ 		delete from system_role_dept where role_id in
+ 		<foreach collection="array" item="roleId" open="(" separator="," close=")">
+ 			#{roleId}
+        </foreach>
+ 	</delete>
+
+	<insert id="batchRoleDept">
+		insert into system_role_dept(role_id, dept_id) values
+		<foreach item="item" index="index" collection="list" separator=",">
+			(#{item.roleId},#{item.deptId})
+		</foreach>
+	</insert>
+
+</mapper>

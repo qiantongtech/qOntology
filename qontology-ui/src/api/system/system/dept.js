@@ -1,0 +1,70 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+import request from '@/utils/request.js';
+
+// 查询部门列表
+export function listDept(query) {
+    return request({
+        url: '/system/dept/list',
+        method: 'get',
+        params: query
+    });
+}
+
+// 查询部门列表（排除节点）
+export function listDeptExcludeChild(deptId) {
+    return request({
+        url: '/system/dept/list/exclude/' + deptId,
+        method: 'get'
+    });
+}
+
+// 查询部门详细
+export function getDept(deptId) {
+    return request({
+        url: '/system/dept/' + deptId,
+        method: 'get'
+    });
+}
+
+// 新增部门
+export function addDept(data) {
+    return request({
+        url: '/system/dept',
+        method: 'post',
+        data: data
+    });
+}
+
+// 修改部门
+export function updateDept(data) {
+    return request({
+        url: '/system/dept',
+        method: 'put',
+        data: data
+    });
+}
+
+// 删除部门
+export function delDept(deptId) {
+    return request({
+        url: '/system/dept/' + deptId,
+        method: 'delete'
+    });
+}

@@ -1,0 +1,196 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+import auth from '@/plugins/auth';
+import router, { constantRoutes, dynamicRoutes } from '@/router';
+import { getRouters } from '@/api/system/menu.js';
+import Layout from '@/layout/index';
+import ParentView from '@/components/ParentView';
+import InnerLink from '@/layout/components/InnerLink';
+
+// 匹配views里面所有的.vue文件
+const modules = import.meta.glob('./../../views/**/*.vue');
+
+const usePermissionStore = defineStore('permission', {
+    state: () => ({
+        routes: [],
+        addRoutes: [],
+        defaultRoutes: [],
+        topbarRouters: [],
+        sidebarRouters: []
+    }),
+    actions: {
+        setRoutes(routes) {
+            this.addRoutes = routes;
+            this.routes = constantRoutes.concat(routes);
+        },
+        setDefaultRoutes(routes) {
+            this.defaultRoutes = constantRoutes.concat(routes);
+        },
+        setTopbarRoutes(routes) {
+            this.topbarRouters = routes;
+        },
+        setSidebarRouters(routes) {
+            this.sidebarRouters = routes;
+        },
+        generateRoutes: function (roles) {
+            return new Promise((resolve) => {
+                // 向后端请求路由数据
+                getRouters().then((res) => {
+                    // 数据库中若保留旧业务菜单，只展示当前前端仍有页面的菜单。
+                    const data = setActiveMenu(filterAvailableRoutes(res.data));
+                    const sdata = JSON.parse(JSON.stringify(data));
+                    const rdata = JSON.parse(JSON.stringify(data));
+                    const defaultData = JSON.parse(JSON.stringify(data));
+                    const sidebarRoutes = filterAsyncRouter(sdata);
+                    const rewriteRoutes = filterAsyncRouter(rdata, false, true);
+                    const defaultRoutes = filterAsyncRouter(defaultData);
+                    const asyncRoutes = filterDynamicRoutes(dynamicRoutes);
+                    asyncRoutes.forEach((route) => {
+                        router.addRoute(route);
+                    });
+                    this.setRoutes(rewriteRoutes);
+                    this.setSidebarRouters(constantRoutes.concat(sidebarRoutes));
+                    this.setDefaultRoutes(sidebarRoutes);
+                    this.setTopbarRoutes(defaultRoutes);
+                    resolve(rewriteRoutes);
+                });
+            });
+        }
+    }
+});
+
+function filterAvailableRoutes(routes) {
+    return routes.filter((route) => {
+        // 首页使用前端固定路由，过滤后台旧配置，避免重复菜单和路由覆盖。
+        if (['system/index', 'system/index.vue'].includes(route.component)
+            || ['/index', '/dashboard'].includes(route.path)) {
+            return false;
+        }
+        if (route.children?.length) {
+            route.children = filterAvailableRoutes(route.children);
+        }
+        if (route.component && !['Layout', 'ParentView', 'InnerLink'].includes(route.component)) {
+            return Boolean(loadView(route.component));
+        }
+        return Boolean(route.children?.length);
+    });
+}
+
+// 遍历后台传来的路由字符串，转换为组件对象
+function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
+    return asyncRouterMap.filter((route) => {
+        if (type && route.children) {
+            route.children = filterChildren(route.children);
+        }
+        if (route.component) {
+            // Layout ParentView 组件特殊处理
+            if (route.component === 'Layout') {
+                route.component = Layout;
+            } else if (route.component === 'ParentView') {
+                route.component = ParentView;
+            } else if (route.component === 'InnerLink') {
+                route.component = InnerLink;
+            } else {
+                route.component = loadView(route.component);
+            }
+        }
+        if (route.children != null && route.children && route.children.length) {
+            route.children = filterAsyncRouter(route.children, route, type);
+        } else {
+            delete route['children'];
+            delete route['redirect'];
+        }
+        return true;
+    });
+}
+
+function filterChildren(childrenMap, lastRouter = false) {
+    var children = [];
+    childrenMap.forEach((el, index) => {
+        if (el.children && el.children.length) {
+            if (el.component === 'ParentView' && !lastRouter) {
+                el.children.forEach((c) => {
+                    c.path = el.path + '/' + c.path;
+                    if (c.children && c.children.length) {
+                        children = children.concat(filterChildren(c.children, c));
+                        return;
+                    }
+                    children.push(c);
+                });
+                return;
+            }
+        }
+        if (lastRouter) {
+            el.path = lastRouter.path + '/' + el.path;
+            if (el.children && el.children.length) {
+                children = children.concat(filterChildren(el.children, el));
+                return;
+            }
+        }
+        children = children.concat(el);
+    });
+    return children;
+}
+// 设置activeMenu, 解决:${参数}菜单无法高亮
+function setActiveMenu(data, parentPath = '') {
+    data.forEach((route) => {
+        if (route.children && route.children.length) {
+            if (route.path.indexOf('/') === route.path.length - 1) {
+                setActiveMenu(route.children, parentPath + route.path);
+            } else {
+                setActiveMenu(route.children, parentPath + route.path + '/');
+            }
+        }
+        route.meta = {
+            ...route.meta,
+            activeMenu: parentPath + route.path
+        };
+    });
+    return data;
+}
+
+// 动态路由遍历，验证是否具备权限
+export function filterDynamicRoutes(routes) {
+    const res = [];
+    routes.forEach((route) => {
+        if (route.permissions) {
+            if (auth.hasPermiOr(route.permissions)) {
+                res.push(route);
+            }
+        } else if (route.roles) {
+            if (auth.hasRoleOr(route.roles)) {
+                res.push(route);
+            }
+        }
+    });
+    return res;
+}
+
+export const loadView = (view) => {
+    let res;
+    for (const path in modules) {
+        const dir = path.split('views/')[1].split('.vue')[0];
+        if (dir === view) {
+            res = () => modules[path]();
+        }
+    }
+    return res;
+};
+
+export default usePermissionStore;

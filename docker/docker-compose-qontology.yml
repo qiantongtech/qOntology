@@ -1,0 +1,47 @@
+# Copyright © 2026-present Jiangsu Qiantong Technology Co., Ltd.
+#
+# This file is part of qOntology Module Platform (Open Source Edition).
+#
+# qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+# You may use qOntology for commercial purposes, but you may not remove, hide,
+# modify, or replace the qOntology logo, copyright notices, license notices,
+# or attribution information without a separate commercial license.
+#
+# White-label use, OEM distribution, rebranding, or presenting qOntology as
+# another product requires separate commercial authorization from
+# Jiangsu Qiantong Technology Co., Ltd.
+#
+# Business License: `https://qontology.tech/`
+# See the LICENSE file in the project root for full license information.
+
+
+services:
+  # qOntology 后端服务
+  qontology-api:
+    privileged: true
+    image: ${QONTOLOGY_HUB}/qontology-server-ce:${QONTOLOGY_VERSION}
+    restart: always
+    profiles: ["all",  "qontology", "base" ]
+    env_file: .env
+    environment:
+      - TZ=Asia/Shanghai
+      - SPRING_CONFIG_LOCATION=file:/usr/app/jar/
+      - SPRING_CONFIG_NAME=application
+    # ports:
+    #  - "18888:8080"
+    mac_address: 28-C5-D2-B7-FC-F7
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./qOntology/server/logs:/usr/app/jar/logs
+      - ./qOntology/server/upload:/usr/app/jar/upload
+      - ./qOntology/server/application-prod.yml:/usr/app/jar/application-prod.yml
+      - ./qOntology/server/application.yml:/usr/app/jar/application.yml
+    depends_on:
+      redis:
+        condition: service_healthy
+      mysql57:
+        condition: service_healthy
+    networks:
+      - qontology_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

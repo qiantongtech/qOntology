@@ -1,0 +1,299 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+#app {
+
+  .main-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: padding-left .28s;
+    padding-left: $base-sidebar-width;
+    overflow: hidden;
+  }
+
+  .sidebarHide {
+    padding-left: 0!important;
+    .app-main{
+        width: 100%;
+    }
+  }
+
+  .sidebar-container {
+    -webkit-transition: width .28s;
+    transition: width 0.28s;
+    width: $base-sidebar-width !important;
+    // background-color: transparent !important;
+    height: 100%;
+    position: fixed;
+    font-size: 0px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1001;
+    overflow: hidden;
+    -webkit-box-shadow: 2px 0 6px rgba(0,21,41,.35);
+    box-shadow: 2px 0 6px rgba(0,21,41,.35);
+    // background: url(@/assets/system/images/layout/sidebar_bg.png) no-repeat center center;
+    // background-size: cover;
+
+    &.navbar-logo{
+        box-shadow: none;
+    }
+
+    // reset element-ui css
+    .horizontal-collapse-transition {
+      transition: 0s width ease-in-out, 0s padding-left ease-in-out, 0s padding-right ease-in-out;
+    }
+
+    .scrollbar-wrapper {
+      overflow-x: hidden !important;
+    }
+
+    .el-scrollbar__bar.is-vertical {
+      right: 0px;
+    }
+
+    .el-scrollbar {
+      height: 100%;
+    }
+
+    &.has-logo {
+      .el-scrollbar {
+        height: calc(100% - 50px);
+      }
+    }
+
+    .is-horizontal {
+      display: none;
+    }
+
+    a {
+      display: inline-block;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .svg-icon {
+      margin-right: 16px;
+    }
+
+    .el-menu {
+      border: none;
+      height: 100%;
+      width: 100% !important;
+
+      .nest-menu{
+        & > .el-sub-menu > .el-sub-menu__title .menu-title {
+            padding-left: 30px;
+        }
+        &>a{
+            // padding: 0 10px 0 10px;
+        }
+        .el-menu-item{
+            .menu-title{
+                padding-left: 30px;
+            }
+        }
+      }
+    }
+
+    .el-menu-item, .menu-title {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    .el-menu-item .el-menu-tooltip__trigger {
+      display: inline-block !important;
+    }
+
+    // menu hover
+    .sub-menu-title-noDropdown,
+    .el-sub-menu__title ,.submenu-title-noDropdown {
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.00) !important;
+        color: #ffffff;
+      }
+    }
+
+    & .theme-dark .is-active > .el-sub-menu__title {
+      color: $base-menu-color-active !important;
+      background-color: $base-menu-color-sub-active !important;
+    }
+
+    & .nest-menu .el-sub-menu>.el-sub-menu__title,
+    & .el-sub-menu .el-menu-item {
+      min-width: var(--base-sidebar-width) !important;
+
+      &:hover {
+        //background-color: rgba(0, 0, 0, 0.06) !important;
+      }
+    }
+
+    & .theme-dark .nest-menu .el-sub-menu>.el-sub-menu__title,
+    & .theme-dark .el-sub-menu .el-menu-item {
+      //background-color: $base-sub-menu-background !important;
+
+      &:hover {
+        color: #ffffff;
+        //background-color: $base-sub-menu-hover !important;
+      }
+    }
+
+    & .theme-dark .nest-menu .el-sub-menu>.el-sub-menu__title,
+    & .theme-dark .el-sub-menu .el-menu-item {
+      &:hover span {
+        color: #ffffff;
+      }
+    }
+    & .theme-dark .el-sub-menu.is-active {
+      background-color: #0c2135 !important;
+    }
+  }
+
+  .el-menu--collapse .el-menu .el-sub-menu {
+    min-width: $base-sidebar-width !important;
+  }
+
+  // 桌面端收起菜单时，侧栏和内容区必须使用相同的宽度。
+  .hideSidebar:not(.mobile) {
+    .sidebar-container {
+      width: 60px !important;
+    }
+
+    .main-container {
+      padding-left: 60px;
+    }
+
+    .sub-menu-title-noDropdown {
+      padding: 0 !important;
+      position: relative;
+
+      .el-tooltip {
+        padding: 0 !important;
+
+        .svg-icon {
+          margin-left: 20px;
+        }
+      }
+    }
+
+    .el-sub-menu {
+      overflow: hidden;
+
+      > .el-sub-menu__title {
+        padding: 0 !important;
+
+        .svg-icon {
+          margin-left: 20px;
+        }
+      }
+    }
+
+    .el-menu--collapse .el-sub-menu > .el-sub-menu__title {
+      > span,
+      > i {
+        display: inline-block;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+        visibility: hidden;
+      }
+    }
+  }
+
+  .sidebarHide{
+     .hamburger-container{
+        display: none;
+    }
+  }
+
+  // mobile responsive
+  .mobile {
+    .main-container {
+      padding-left: 0px;
+    }
+
+    .sidebar-container {
+      transition: transform .28s;
+      width: $base-sidebar-width !important;
+    }
+
+    &.hideSidebar {
+      .sidebar-container {
+        pointer-events: none;
+        transition-duration: 0.3s;
+        transform: translate3d(-$base-sidebar-width, 0, 0);
+      }
+    }
+
+    //  .sidebarHide .fixed-header .navbar{
+    //   margin-left: 0;
+    // }
+
+    // &.big-logo .sidebarHide .fixed-header .navbar{
+    //   margin-left: 210px !important;
+    // }
+  }
+
+  .withoutAnimation {
+
+    .main-container,
+    .sidebar-container {
+      transition: none;
+    }
+  }
+}
+
+// when menu collapsed
+.el-menu--vertical {
+  &>.el-menu {
+    .svg-icon {
+      margin-right: 16px;
+    }
+  }
+
+  .nest-menu .el-sub-menu>.el-sub-menu__title,
+  .el-menu-item {
+    &:hover {
+      // you can use $sub-menuHover
+      color: #ffffff;
+      background-color: rgba(0, 0, 0, 0.06) !important;
+    }
+  }
+
+  // the scroll bar appears when the sub-menu is too long
+  >.el-menu--popup {
+    max-height: 100vh;
+    overflow-y: hidden;
+
+    &::-webkit-scrollbar-track-piece {
+      background: #d3dce6;
+    }
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #99a9bf;
+      border-radius: 20px;
+    }
+  }
+}

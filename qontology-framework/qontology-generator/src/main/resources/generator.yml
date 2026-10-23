@@ -1,0 +1,27 @@
+# Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+#
+# This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+#
+# qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+# You may use qOntology for commercial purposes, but you may not remove, hide,
+# modify, or replace the qOntology logo, copyright notices, license notices,
+# or attribution information without a separate commercial license.
+#
+# White-label use, OEM distribution, rebranding, or presenting qOntology as
+# another product requires separate commercial authorization from
+# Jiangsu Qiantong Technology Co., Ltd.
+#
+# Business License: https://community.qontology.ai/business/policy.html
+# See the LICENSE file in the project root for full license information.
+
+
+# 代码生成
+gen:
+  # 作者
+  author: qOntology
+  # 默认生成包路径 system 需改成自己的模块名称 如 system monitor tool
+  packageName: tech.qiantong.qontology.module.[moduleName]
+  # 自动去除表前缀，默认是false
+  autoRemovePre: false
+  # 表前缀（生成类名不会包含表前缀，多个用逗号分隔）
+  tablePrefix: sys_

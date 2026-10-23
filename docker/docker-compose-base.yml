@@ -1,0 +1,142 @@
+# Copyright © 2026-present Jiangsu Qiantong Technology Co., Ltd.
+#
+# This file is part of qOntology Module Platform (Open Source Edition).
+#
+# qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+# You may use qOntology for commercial purposes, but you may not remove, hide,
+# modify, or replace the qOntology logo, copyright notices, license notices,
+# or attribution information without a separate commercial license.
+#
+# White-label use, OEM distribution, rebranding, or presenting qOntology as
+# another product requires separate commercial authorization from
+# Jiangsu Qiantong Technology Co., Ltd.
+#
+# Business License: `https://qontology.tech/`
+# See the LICENSE file in the project root for full license information.
+
+
+services:
+  redis:
+    image: redis:6-alpine
+    profiles: ["all", "base"]
+    env_file: .env
+    restart: always
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:-tF0cC3aE2tD2hK0dA0oT}
+#    volumes:
+#      # Mount the redis data directory to the container.
+#      - ./redis/data:/data
+    # Set the redis password when startup redis server.
+    command: redis-server --requirepass ${REDIS_PASSWORD:-tF0cC3aE2tD2hK0dA0oT}
+    ports:
+      - "${EXPOSE_REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: [ 'CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-tF0cC3aE2tD2hK0dA0oT}', 'ping' ]
+    networks:
+      - qontology_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  nginx:
+    image: nginx:1.24.0
+    restart: always
+    profiles: ["all", "base"]
+    env_file: .env
+    ports:
+      - '${EXPOSE_NGINX_PORT:-80}:${NGINX_PORT:-80}'
+    networks:
+      - qontology_net
+    volumes:
+      - ./qOntology/nginx/dist:/usr/share/nginx
+      - ./qOntology/nginx/logs:/var/log/nginx
+      - ./qOntology/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./qOntology/nginx/sites/:/etc/nginx/http_vhost/:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  #MySQL主库
+  mysql57:
+    image: mysql:5.7
+    profiles: ["all", "base"]
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD:  ${MYSQL_ROOT_PASSWORD:-lJ7gP0cA5dD2dA1hA3bJ}   # ← 修改成你的
+      TZ: "Asia/Shanghai"                          # 如需改时区请改
+    ports:
+      - "33067:3306"
+    volumes:
+      - ./qOntology/mysql/conf.d/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      - ./qOntology/mysql/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - qontology_net
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-plJ7gP0cA5dD2dA1hA3bJ" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  neo4j:
+    image: neo4j:4.4.40
+    profiles: ["all", "base"]
+    restart: always
+    ports:
+      - "17474:7474"
+      - "17687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/InC3tmU4bijT4vkl
+    volumes:
+      - ./qOntology/neo4j/data:/data
+      - ./qOntology/neo4j/logs:/logs
+      - ./qOntology/neo4j/conf:/var/lib/neo4j/conf
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "InC3tmU4bijT4vkl", "RETURN 1;"]
+      interval: 30s      # 每 30 秒检查一次
+      timeout: 10s       # 超过 10 秒算失败
+      retries: 5         # 连续失败 5 次算 unhealthy
+      start_period: 40s  # 容器启动后等待 40 秒再开始检测
+    networks:
+      - qontology_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  kkfileview:
+    image: keking/kkfileview:latest
+    profiles: [ "all", "base" ]
+    restart: always
+    ports:
+      - "8017:8012"
+    environment:
+      - TZ=Asia/Shanghai
+      - KK_FILE_PREVIEW_HOST=0.0.0.0
+      - KK_FILE_PREVIEW_PORT=8012
+      # JVM内存，office转码耗内存，给‑Xmx1g，根据机器调整，最低512m
+      - JAVA_OPTS=-Xms512m -Xmx1024m -Dfile.encoding=UTF‑8
+      - SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=100MB
+      - SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=100MB
+      - FILE_UPLOAD_PATH=/opt/kkfileview/files/
+      - OFFICE_PDF_WATERMARK_TEXT=
+      - OFFICE_PICTURE_WATERMARK_TEXT=
+      - ALLOW_EMPTY_FILENAME=true
+      - TRUST_HOST=false
+      # 允许预览通过 192.168.x.x 等内网地址访问的文件。
+      # 仅应在可信内网环境中关闭该限制，公网开放会增加 SSRF 风险。
+      - KK_BLOCK_PRIVATE_NETWORK=false
+      # 与 Nginx 的同源反向代理路径保持一致，确保静态资源地址包含 /kkfileview 前缀。
+      - SERVER_SERVLET_CONTEXT_PATH=/kkfileview
+    volumes:
+      - ./qOntology/kkfileview/files:/opt/kkfileview/files/
+      - ./qOntology/kkfileview/logs:/opt/kkfileview/logs/
+    healthcheck:
+      # 使用 kkFileView 根路径进行健康检查。
+      test: [ "CMD-SHELL", "curl -fs http://127.0.0.1:8012/kkfileview/ || exit 1" ]
+      interval: 30s
+      timeout: 15s
+      retries: 6
+      start_period: 120s   # office组件初始化慢，启动宽限期拉长到2分钟
+    networks:
+      - qontology_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

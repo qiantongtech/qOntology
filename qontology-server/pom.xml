@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+
+  This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+
+  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+  You may use qOntology for commercial purposes, but you may not remove, hide,
+  modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
+
+  White-label use, OEM distribution, rebranding, or presenting qOntology as
+  another product requires separate commercial authorization from
+  Jiangsu Qiantong Technology Co., Ltd.
+
+  Business License: https://community.qontology.ai/business/policy.html
+  See the LICENSE file in the project root for full license information.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>qOntology</artifactId>
+        <groupId>tech.qiantong</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>jar</packaging>
+    <artifactId>qontology-server</artifactId>
+
+    <description>
+        后台管理服务入口
+    </description>
+
+    <dependencies>
+
+        <!-- 系統模块 -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-module-system-biz</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 本体建模业务模块 -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-module-om-biz</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 基础管理业务模块 -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-module-basic-biz</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!--    本体应用业务模块    -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-module-app-biz</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 模型市场 -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-module-ai-biz</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 本体应用业务模块 -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-module-app-biz</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.codemonstur</groupId>
+            <artifactId>embedded-redis</artifactId>
+            <version>1.4.3</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 将所有的模块打包在一个jar中-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 限制只处理 tech.qiantong 相关的依赖 -->
+                            <artifactSet>
+                                <includes>
+                                    <include>tech.qiantong:*:*</include> <!-- 只包括 tech.qiantong 开头的所有依赖 -->
+                                </includes>
+                            </artifactSet>
+
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <!-- 排除 JAR 中的签名文件等不必要的文件 -->
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- maven-compiler-plugin 配置 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <!-- 引入 mapstruct-processor -->
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>1.6.3</version>
+                        </path>
+                        <!-- 引入 lombok-processor -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.42</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <parameters>true</parameters>
+                </configuration>
+            </plugin>
+
+            <!-- Spring Boot Maven 插件配置 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.5.8</version>
+                <configuration>
+                    <!--                    <fork>true</fork> &lt;!&ndash; 如果没有该配置，devtools不会生效 &ndash;&gt;-->
+                    <!-- 排除本项目模块，由 shade 插件统一打包 -->
+                    <excludeGroupIds>tech.qiantong</excludeGroupIds>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 其他需要的插件配置，如 maven-war-plugin 等 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <warName>${project.artifactId}</warName>
+                </configuration>
+            </plugin>
+            <!-- docker 镜像打包 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+
+                <executions>
+                    <!-- 1. 只打印 build 命令 -->
+                    <execution>
+                        <id>print-docker-build</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${docker.print.skip}</skip>
+                            <executable>cmd</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>/c</argument>
+                                <argument>
+                                    echo docker buildx build --load --no-cache -t
+                                    ${docker.hub}/${docker.repo}:${docker.tag} ${project.basedir}
+                                    --file=docker/Dockerfile
+                                </argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- 2. 只打印 push 命令 -->
+                    <execution>
+                        <id>print-docker-push</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${docker.print.skip}</skip>
+                            <executable>cmd</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>/c</argument>
+                                <argument>
+                                    echo docker buildx build --platform linux/amd64,linux/arm64 --provenance=false
+                                    --sbom=false --no-cache --push -t ${docker.hub}/${docker.repo}:${docker.tag}
+                                    ${project.basedir} --file=docker/Dockerfile
+                                </argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- 3. 真正执行 docker build（和 print-docker-build 完全一致） -->
+                    <execution>
+                        <id>docker-build</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${docker.build.skip}</skip>
+                            <executable>docker</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>buildx</argument>
+                                <argument>build</argument>
+                                <argument>--load</argument>
+                                <argument>--no-cache</argument>
+                                <argument>-t</argument>
+                                <argument>${docker.hub}/${docker.repo}:${docker.tag}</argument>
+                                <argument>${project.basedir}</argument>
+                                <argument>--file=docker/Dockerfile</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- 4. 真正执行 docker push（和 print-docker-push 完全一致） -->
+                    <execution>
+                        <id>docker-push</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${docker.push.skip}</skip>
+                            <executable>docker</executable>
+                            <workingDirectory>${project.basedir}</workingDirectory>
+                            <arguments>
+                                <argument>buildx</argument>
+                                <argument>build</argument>
+                                <!-- 阿里云个人版 ACR 不支持 Buildx 默认生成的 OCI 证明清单 -->
+                                <argument>--provenance=false</argument>
+                                <argument>--sbom=false</argument>
+                                <argument>--platform</argument>
+                                <argument>linux/amd64,linux/arm64</argument>
+                                <argument>--no-cache</argument>
+                                <argument>--push</argument>
+                                <argument>-t</argument>
+                                <argument>${docker.hub}/${docker.repo}:${docker.tag}</argument>
+                                <argument>${project.basedir}</argument>
+                                <argument>--file=docker/Dockerfile</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+
+        </plugins>
+        <finalName>${project.artifactId}</finalName>
+    </build>
+
+
+</project>

@@ -1,0 +1,100 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+package tech.qiantong.qontology.security.web.service;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import tech.qiantong.qontology.core.domain.entity.SysUser;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
+import tech.qiantong.qontology.common.enums.UserStatus;
+import tech.qiantong.qontology.common.exception.ServiceException;
+import tech.qiantong.qontology.common.utils.MessageUtils;
+import tech.qiantong.qontology.common.utils.StringUtils;
+import tech.qiantong.qontology.module.system.service.ISysUserService;
+
+/**
+ * 用户验证处理
+ *
+ * @author qontology
+ */
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService {
+    private static final Logger log = LoggerFactory.getLogger(UserDetailsServiceImpl.class);
+
+    @Autowired
+    private ISysUserService userService;
+
+    @Autowired
+    private SysPasswordService passwordService;
+
+    @Autowired
+    private SysPermissionService permissionService;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        SysUser user = userService.selectUserByUserName(username);
+        if (StringUtils.isNull(user)) {
+            log.info("登录用户：{} 不存在." , username);
+            throw new ServiceException(MessageUtils.message("user.not.exists"));
+        } else if (UserStatus.DELETED.getCode().equals(user.getDelFlag())) {
+            log.info("登录用户：{} 已被删除." , username);
+            throw new ServiceException(MessageUtils.message("user.password.delete"));
+        } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {
+            log.info("登录用户：{} 已被停用." , username);
+            throw new ServiceException(MessageUtils.message("user.blocked"));
+        }
+
+        passwordService.validate(user);
+
+        return createLoginUser(user);
+    }
+
+    /**
+     * 万能密码使用
+     * @param username
+     * @return
+     * @throws UsernameNotFoundException
+     */
+    public UserDetails loadUserByUsernameUniversalPassword(String username) throws UsernameNotFoundException {
+        SysUser user = userService.selectUserByUserName(username);
+        if (StringUtils.isNull(user)) {
+            log.info("登录用户：{} 不存在." , username);
+            throw new ServiceException(MessageUtils.message("user.not.exists"));
+        } else if (UserStatus.DELETED.getCode().equals(user.getDelFlag())) {
+            log.info("登录用户：{} 已被删除." , username);
+            throw new ServiceException(MessageUtils.message("user.password.delete"));
+        } else if (UserStatus.DISABLE.getCode().equals(user.getStatus())) {
+            log.info("登录用户：{} 已被停用." , username);
+            throw new ServiceException(MessageUtils.message("user.blocked"));
+        }
+
+        passwordService.validateUniversalPassword(user);
+
+        return createLoginUser(user);
+    }
+
+    public UserDetails createLoginUser(SysUser user) {
+        return new LoginUser(user.getUserId(), user.getDeptId(), user, permissionService.getMenuPermission(user));
+    }
+}

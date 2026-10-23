@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+
+  This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
+
+  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+  You may use qOntology for commercial purposes, but you may not remove, hide,
+  modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
+
+  White-label use, OEM distribution, rebranding, or presenting qOntology as
+  another product requires separate commercial authorization from
+  Jiangsu Qiantong Technology Co., Ltd.
+
+  Business License: https://community.qontology.ai/business/policy.html
+  See the LICENSE file in the project root for full license information.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>qontology-module-ai</artifactId>
+        <groupId>tech.qiantong</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>qontology-module-ai-biz</artifactId>
+
+    <description>
+        ai模块
+    </description>
+
+    <dependencies>
+        <!-- 核心模块 config-->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-config</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 系統模块 websocket-->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-websocket</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 系统模块 qontology-security -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-security</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 系统模块 mybatis -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-mybatis</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 系统模块 redis -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-redis</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- 通用工具-->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-common</artifactId>
+        </dependency>
+
+        <!-- 文件上传-->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-file</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <!-- AI -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-ai</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-module-ai-api</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

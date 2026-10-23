@@ -1,0 +1,66 @@
+######################################################################
+# Build Tools
+
+.gradle
+/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+target/
+target-*/
+!.mvn/wrapper/maven-wrapper.jar
+
+######################################################################
+# IDE
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+
+### IntelliJ IDEA ###
+/.idea/
+*.iws
+*.iml
+*.ipr
+
+### JRebel ###
+rebel.xml
+
+### NetBeans ###
+nbproject/private/
+build/*
+nbbuild/
+dist/
+!*/qontology-ui/dist/
+!*/qontology-ui/node_modules/
+/qontology-ui/dist/
+/qontology-ui/node_modules/
+!*/resources/static
+nbdist/
+.nb-gradle/
+
+######################################################################
+# Others
+*.log
+*.xml.versionsBackup
+*.swp
+
+!*/build/*.java
+!*/build/*.html
+!*/build/*.xml
+
+### 组件库编译后的文件 ###
+storybook-static/
+
+### Mac ###
+.DS_Store
+
+# 忽略 upload 目录下的所有内容
+/upload/
+
+# 忽略 codex 产生的文件
+/docs/
+.trae

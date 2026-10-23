@@ -1,0 +1,81 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+package ${packageName}.api.${moduleName}.dto;
+
+#foreach ($import in $importList)
+import ${import};
+#end
+import lombok.*;
+#if($table.crud || $table.sub)
+#elseif($table.tree)
+#end
+
+/**
+ * ${functionName} DTO 对象 ${tableName}
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+@Data
+public class ${ClassName}RespDTO {
+
+    private static final long serialVersionUID = 1L;
+
+#foreach ($column in $columns)
+#if(!$table.isSuperColumn($column.javaField) && $column.javaField != "creatorId" && $column.javaField != "updatorId")
+    /** $column.columnComment */
+    #if($column.javaField == "id")
+    private $column.javaType $column.javaField;
+
+    #elseif($column.javaField == "delFlag")
+    private $column.javaType $column.javaField;
+
+    #else
+#if($column.list)
+#set($parentheseIndex=$column.columnComment.indexOf("（"))
+#if($parentheseIndex != -1)
+#set($comment=$column.columnComment.substring(0, $parentheseIndex))
+#else
+#set($comment=$column.columnComment)
+#end
+#end
+    private $column.javaType $column.javaField;
+
+    #end
+#end
+#end
+#if($table.sub)
+    /** $table.subTable.functionName信息 */
+    private List<${subClassName}> ${subclassName}List;
+
+#end
+
+#if($table.sub)
+    public List<${subClassName}> get${subClassName}List()
+    {
+        return ${subclassName}List;
+    }
+
+    public void set${subClassName}List(List<${subClassName}> ${subclassName}List)
+    {
+        this.${subclassName}List = ${subclassName}List;
+    }
+
+#end
+}

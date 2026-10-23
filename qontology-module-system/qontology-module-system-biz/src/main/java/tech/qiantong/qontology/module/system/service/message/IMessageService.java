@@ -1,0 +1,92 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+package tech.qiantong.qontology.module.system.service.message;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.pagehelper.PageInfo;
+import tech.qiantong.qontology.core.page.PageResult;
+import tech.qiantong.qontology.module.system.controller.admin.system.message.vo.MessagePageReqVO;
+import tech.qiantong.qontology.module.system.controller.admin.system.message.vo.MessageSaveReqVO;
+import tech.qiantong.qontology.module.system.convert.message.MessageConvert;
+import tech.qiantong.qontology.module.system.dal.dataobject.message.MessageDO;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * 消息Service接口
+ *
+ * @author qontology
+ * @date 2024-10-31
+ */
+public interface IMessageService extends IService<MessageDO> {
+
+    default PageResult<MessageDO> getMessagePage(MessagePageReqVO message) {
+        QueryWrapper<MessageDO> queryWrapper = new QueryWrapper<>(MessageConvert.INSTANCE.convertToDO(message));
+        // 添加时间范围查询条件
+        if (message.getStartTime() != null && message.getEndTime() != null) {
+            queryWrapper.ge("DATE(create_time)", message.getStartTime()); // >= 起始时间
+            queryWrapper.le("DATE(create_time)", message.getEndTime()); // <= 结束时间
+        }
+        List<MessageDO> list = list(queryWrapper);
+
+        return new PageResult(list, new PageInfo(list).getTotal());
+    }
+
+    /**
+     * 通过模版向某一个用户发送消息
+     * @param templateId 模版id
+     * @param messageSaveReqVO 消息创建
+     * @param entity 实体对象
+     * @return 是否发送成功
+     */
+    public Boolean send(Long templateId, MessageSaveReqVO messageSaveReqVO, Object entity);
+
+    /**
+     * 查询消息数量
+     * @param message 查询条件
+     * @return 数量
+     */
+    public Long getNum(MessagePageReqVO message);
+
+    /**
+     * 设置已读
+     * @param id 消息id
+     * @return 是否成功
+     */
+    public Boolean read(Long id);
+
+    /**
+     * 全部已读
+     * @param receiverId 接收人id
+     * @param category 消息类型
+     * @param module 消息模块
+     * @return 是否成功
+     */
+    public Boolean readAll(Long receiverId, Integer category, Integer module);
+
+    /**
+     * 更新接收人未读消息
+     *
+     * @param receiverId 接收人id
+     */
+    public void getReceiverWDNum(Long receiverId);
+
+}

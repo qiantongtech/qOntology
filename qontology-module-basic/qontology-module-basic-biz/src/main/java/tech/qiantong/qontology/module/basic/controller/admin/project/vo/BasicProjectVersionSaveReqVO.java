@@ -1,0 +1,69 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+package tech.qiantong.qontology.module.basic.controller.admin.project.vo;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.util.Date;
+import tech.qiantong.qontology.core.domain.BaseEntity;
+
+/**
+ * 项目版本 创建/修改 Request VO basic_project_version
+ *
+ * @author qOntology
+ * @date 2026-10-12
+ */
+@Schema(description = "项目版本 Response VO")
+@Data
+public class BasicProjectVersionSaveReqVO extends BaseEntity {
+
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = "ID")
+    private Long id;
+
+    @Schema(description = "项目id", example = "")
+    @NotNull(message = "项目id不能为空")
+    private Long projectId;
+
+    @Schema(description = "版本号", example = "")
+    @NotBlank(message = "版本号不能为空")
+    private String version;
+
+    @Schema(description = "描述", example = "")
+    @NotBlank(message = "描述不能为空")
+    @Size(max = 256, message = "描述长度不能超过256个字符")
+    private String description;
+
+    @Schema(description = "基准版本", example = "")
+    @NotBlank(message = "基准版本不能为空")
+    @Size(max = 128, message = "基准版本长度不能超过128个字符")
+    private String baseVersion;
+
+    @Schema(description = "备注", example = "")
+    @NotBlank(message = "备注不能为空")
+    @Size(max = 512, message = "备注长度不能超过512个字符")
+    private String remark;
+
+
+}

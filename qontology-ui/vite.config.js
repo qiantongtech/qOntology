@@ -1,0 +1,101 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+import { defineConfig, loadEnv } from 'vite';
+import path from 'path';
+import createVitePlugins from './vite/plugins';
+
+// https://vitejs.dev/config/
+export default defineConfig(({ mode, command }) => {
+    const env = loadEnv(mode, process.cwd());
+    const { VITE_APP_ENV } = env;
+    return {
+        // 部署生产环境和开发环境下的URL。
+        // 默认情况下，vite 会假设你的应用是被部署在一个域名的根路径上
+        base: VITE_APP_ENV === 'production' ? '/' : '/',
+        plugins: createVitePlugins(env, command === 'build'),
+        build: {
+            rollupOptions: {
+                input: {
+                    main: path.resolve(__dirname, 'index.html')
+                    // nested: path.resolve(__dirname, "login/index.html"),
+                },
+                output: {
+                    manualChunks(id) {
+                        if (id.includes('node_modules')) {
+                            return id.toString().split('node_modules/')[1].split('/')[0].toString();
+                        }
+                    }
+                }
+            }
+        },
+        resolve: {
+            // https://cn.vitejs.dev/config/#resolve-alias
+            alias: {
+                // 设置路径
+                '~': path.resolve(__dirname, './'),
+                // 设置别名
+                '@': path.resolve(__dirname, './src')
+            },
+            // https://cn.vitejs.dev/config/#resolve-extensions
+            extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue']
+        },
+        // vite 相关配置
+        server: {
+            port: 80,
+            host: true,
+            open: true,
+            proxy: {
+                // https://cn.vitejs.dev/config/#server-proxy
+                '/dev-api': {
+                    target: 'http://localhost:8099',
+                    changeOrigin: true,
+                    rewrite: (p) => p.replace(/^\/dev-api/, '')
+                },
+                '/v3/api-docs': {
+                    target: 'http://localhost:8099',
+                    changeOrigin: true,
+                    rewrite: (p) => p.replace('', '')
+                },
+                // 本地开发时将同源预览路径转发到 kkFileView 容器。
+                // kkFileView 自身配置了 /kkfileview context-path，因此保留路径前缀。
+                '/kkfileview': {
+                    target: 'http://localhost:28012',
+                    changeOrigin: true
+                }
+            }
+        },
+        //fix:error:stdin>:7356:1: warning: "@charset" must be the first rule in the file
+        css: {
+            postcss: {
+                plugins: [
+                    {
+                        postcssPlugin: 'internal:charset-removal',
+                        AtRule: {
+                            charset: (atRule) => {
+                                if (atRule.name === 'charset') {
+                                    atRule.remove();
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    };
+});

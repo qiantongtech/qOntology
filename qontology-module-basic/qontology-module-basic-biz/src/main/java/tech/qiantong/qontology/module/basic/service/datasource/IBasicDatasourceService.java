@@ -1,0 +1,154 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+package tech.qiantong.qontology.module.basic.service.datasource;
+
+import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.extension.service.IService;
+import tech.qiantong.qontology.common.database.DbQuery;
+import tech.qiantong.qontology.common.database.constants.DbQueryProperty;
+import tech.qiantong.qontology.common.database.core.DbColumn;
+import tech.qiantong.qontology.common.database.core.DbTable;
+import tech.qiantong.qontology.core.domain.AjaxResult;
+import tech.qiantong.qontology.core.page.PageResult;
+import tech.qiantong.qontology.module.basic.api.dto.datasource.DatasourceCreaTeTableReqDTO;
+import tech.qiantong.qontology.module.basic.api.dto.model.BasicModelColumnReqDTO;
+import tech.qiantong.qontology.module.basic.controller.admin.datasource.vo.BasicDatasourcePageReqVO;
+import tech.qiantong.qontology.module.basic.controller.admin.datasource.vo.BasicDatasourceRespVO;
+import tech.qiantong.qontology.module.basic.controller.admin.datasource.vo.BasicDatasourceSaveReqVO;
+import tech.qiantong.qontology.module.basic.controller.admin.datasource.vo.BasicSearchTablePageReqVO;
+import tech.qiantong.qontology.module.basic.dal.dataobject.datasource.BasicDatasourceDO;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 数据源Service接口
+ *
+ * @author lhs
+ * @date 2025-01-21
+ */
+public interface IBasicDatasourceService extends IService<BasicDatasourceDO> {
+
+    /**
+     * 获得数据源分页列表
+     *
+     * @param pageReqVO 分页请求
+     * @return 数据源分页列表
+     */
+    PageResult<BasicDatasourceDO> getDmDatasourcePage(BasicDatasourcePageReqVO pageReqVO);
+
+    List<BasicDatasourceDO> getDaDatasourceList(BasicDatasourcePageReqVO pageReqVO);
+
+
+    /**
+     * 查询数据资产的数据源连接信息
+     *
+     * @param daAsset 数据资产
+     * @return 数据源连接信息
+     */
+    List<BasicDatasourceDO> getDataSourceByAsset(BasicDatasourceRespVO daAsset);
+
+
+    /**
+     * 创建数据源
+     *
+     * @param createReqVO 数据源信息
+     * @return 数据源编号
+     */
+    Long createDaDatasource(BasicDatasourceSaveReqVO createReqVO);
+
+    /**
+     * 更新数据源
+     *
+     * @param updateReqVO 数据源信息
+     */
+    int updateDaDatasource(BasicDatasourceSaveReqVO updateReqVO);
+
+    /**
+     * 删除数据源
+     *
+     * @param idList 数据源编号
+     */
+    int removeDaDatasource(Collection<Long> idList);
+
+    /**
+     * 获得数据源详情
+     *
+     * @param id 数据源编号
+     * @return 数据源
+     */
+    BasicDatasourceDO getDaDatasourceById(Long id);
+
+    /**
+     * 获得全部数据源列表
+     *
+     * @return 数据源列表
+     */
+    List<BasicDatasourceDO> getDaDatasourceList();
+
+    /**
+     * 获得全部数据源 Map
+     *
+     * @return 数据源 Map
+     */
+    Map<Long, BasicDatasourceDO> getDaDatasourceMap();
+
+    AjaxResult clientsTest(Long id);
+
+    /**
+     * 获取数据库表信息
+     *
+     * @param dmSearchTablePageReqVo 数据源
+     * @return
+     */
+    List<DbTable> getDbTables(BasicSearchTablePageReqVO dmSearchTablePageReqVo);
+
+    /**
+     * 获取数据库
+     * 表的字段信息
+     *
+     * @param id        数据源id
+     * @param tableName 表名称
+     * @return
+     */
+    List<DbColumn> getDbTableColumns(Long id, String tableName);
+
+
+    /**
+     * 获取数据表里面的数据字段
+     *
+     * @param jsonObject 数据源id和数据表
+     * @return
+     */
+    List<BasicModelColumnReqDTO> getColumnsList(JSONObject jsonObject);
+
+    /**
+     * 建表工具方法
+     *
+     * @param datasourceCreaTeTableReqDTO 单表
+     * @return
+     */
+    boolean creaDatasourceTeTable(DatasourceCreaTeTableReqDTO datasourceCreaTeTableReqDTO);
+
+    boolean creaDatasourceTeTable(DbQuery dbQuery, DbQueryProperty dbQueryProperty, DatasourceCreaTeTableReqDTO datasourceCreaTeTableReqDTO);
+
+
+    DatasourceCreaTeTableReqDTO createTaskTempTable(Map<String, Object> map);
+}

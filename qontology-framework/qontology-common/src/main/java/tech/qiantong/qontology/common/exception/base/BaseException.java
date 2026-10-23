@@ -1,0 +1,115 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+package tech.qiantong.qontology.common.exception.base;
+
+import tech.qiantong.qontology.common.utils.MessageUtils;
+import tech.qiantong.qontology.common.utils.StringUtils;
+
+/**
+ * 基础异常
+ *
+ * @author qontology
+ */
+public class BaseException extends RuntimeException
+{
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 所属模块
+     */
+    private String module;
+
+    /**
+     * 错误码
+     */
+    private String code;
+
+    /**
+     * 错误码对应的参数
+     */
+    private Object[] args;
+
+    /**
+     * 错误消息
+     */
+    private String defaultMessage;
+
+    public BaseException(String module, String code, Object[] args, String defaultMessage)
+    {
+        this.module = module;
+        this.code = code;
+        this.args = args;
+        this.defaultMessage = defaultMessage;
+    }
+
+    public BaseException(String module, String code, Object[] args)
+    {
+        this(module, code, args, null);
+    }
+
+    public BaseException(String module, String defaultMessage)
+    {
+        this(module, null, null, defaultMessage);
+    }
+
+    public BaseException(String code, Object[] args)
+    {
+        this(null, code, args, null);
+    }
+
+    public BaseException(String defaultMessage)
+    {
+        this(null, null, null, defaultMessage);
+    }
+
+    @Override
+    public String getMessage()
+    {
+        String message = null;
+        if (!StringUtils.isEmpty(code))
+        {
+            message = MessageUtils.message(code, args);
+        }
+        if (message == null)
+        {
+            message = defaultMessage;
+        }
+        return message;
+    }
+
+    public String getModule()
+    {
+        return module;
+    }
+
+    public String getCode()
+    {
+        return code;
+    }
+
+    public Object[] getArgs()
+    {
+        return args;
+    }
+
+    public String getDefaultMessage()
+    {
+        return defaultMessage;
+    }
+}
