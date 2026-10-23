@@ -404,7 +404,7 @@ function handleRemove() {
 }
 
 function routeTo(link, row) {
-  link = "/system/ai/modelMarket/detail";
+  link = "/basic/llm/modelMarket/detail";
   if (link !== "" && link.indexOf("http") !== -1) {
     window.location.href = link;
     return;

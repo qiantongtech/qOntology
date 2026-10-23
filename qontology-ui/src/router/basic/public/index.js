@@ -32,6 +32,20 @@ export default [
                 permissions: ['basic:enumeration:data:list'],
                 name: 'BasicEnumData',
                 meta: { title: '枚举数据', activeMenu: '/basic/basicEnum' }
+            },
+            {
+                path: 'llm/modelMarket/detail',
+                hidden: true,
+                component: () => import('@/views/ai/modelMarket/detail/index.vue'),
+                name: 'ModelMarketDetail',
+                meta: { title: '模型详情', activeMenu: '/basic/llm/modelMarket' }
+            },
+            {
+                path: 'llm/myModel/detail',
+                hidden: true,
+                component: () => import('@/views/ai/modelMarket/detail/index.vue'),
+                name: 'myModelDetail',
+                meta: { title: '模型详情', activeMenu: '/basic/llm/myModel' }
             }
         ]
     },

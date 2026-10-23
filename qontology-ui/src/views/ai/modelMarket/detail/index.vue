@@ -161,13 +161,13 @@ function tabChange() {
 
 function handleReturn() {
   const path = route.path;
-  if (path.indexOf("/system/ai/myModel/detail") > -1) {
+  if (path.indexOf("/basic/llm/myModel/detail") > -1) {
     proxy.$router.push({
-      path: "/system/ai/myModel",
+      path: "/basic/llm/myModel",
     });
   } else {
     proxy.$router.push({
-      path: "/system/ai/modelMarket",
+      path: "/basic/llm/modelMarket",
     });
   }
 }

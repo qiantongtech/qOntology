@@ -89,6 +89,7 @@
             class="card-bottom-operation"
             type="primary"
             @click="handleUpdate(item)"
+            :disabled="!userStore.roles.includes('admin')"
             v-hasPermi="['ai:modelMarket:key:edit']"
           >
             <div class="card-bottom-icon">
@@ -101,7 +102,7 @@
             class="card-bottom-operation"
             type="primary"
             @click="routeTo('', item)"
-            :disabled="item.status === 0"
+            :disabled="item.status === 0 || !userStore.roles.includes('admin')"
             v-hasPermi="['ai:modelMarket:key:query']"
           >
             <div class="card-bottom-icon">
@@ -120,6 +121,8 @@ import ollama from "@/assets/ai/ollama.svg";
 import tongyi from "@/assets/ai/tongyi.svg";
 import deepseek from "@/assets/ai/deepseek.svg";
 import openai from "@/assets/ai/chatgpt.svg";
+import useUserStore from "@/store/system/user";
+const userStore = useUserStore();
 
 const { proxy } = getCurrentInstance();
 

@@ -403,7 +403,7 @@ function handleRemove() {
 }
 
 function routeTo(link, row) {
-  link = "/system/ai/myModel/detail";
+  link = "/basic/llm/myModel/detail";
   if (link !== "" && link.indexOf("http") !== -1) {
     window.location.href = link;
     return;
