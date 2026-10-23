@@ -64,3 +64,7 @@ storybook-static/
 # 忽略 codex 产生的文件
 /docs/
 .trae
+
+# 忽略neo4j产生的大文件
+**/transactions/
+**/neostore.transaction.db.0
