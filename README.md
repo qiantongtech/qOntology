@@ -208,7 +208,20 @@ qOntology 采用前后端分离架构，后端基于 JDK 17 与 Spring Boot 3.5.
 
 qOntology 规划 **开源版** 与 **专业版**。开源版聚焦领域建模、基础质量验证、轻量数据映射、样例预览和标准格式导出；专业版扩展可视化建模、运行时对象、动作、函数及本体驱动的业务能力。
 
-👉 如需 **品牌定制授权** 或 **咨询专业版**，[<u>点击此处</u>](https://qm.qq.com/q/KPe3zhgdqk) 添加吴大同 QQ 或 **扫下方二维码**。
+👉 如需 **品牌定制授权** 或 **咨询专业版**，请使用微信扫描下方二维码联系
+
+<div style="margin-top:20px;margin-bottom:60px;height:150px;">
+    <img class="border" src=".gitee/wechat-qr.jpg" style="width: 200px; float: left; cursor: zoom-in;margin-right: 20px;" photo-swipe="">
+    <div style="float:left;padding-top:1px;">
+        <div style="padding-top:10px;"><b><mark>开源版品牌定制授权</mark>咨询：</b>👉 微信扫码联系</div>
+        <div style="padding-top:10px;"><b><mark>专业版 / 教育版合作</mark>咨询：</b>👉 微信扫码联系</div>
+        <div style="padding-top:10px;"><b>企鹅交流：</b> <a href="https://qm.qq.com/q/KPe3zhgdqk" target="_blank">👉 点此加入 QQ 交流群</a> </div>
+        <div style="padding-top:10px;"><b>公司名称：</b><a href="https://qiantong.tech/" target="_blank">江苏千桐科技有限公司</a></div>
+        <div style="padding-top:10px;"><b>联系邮箱：</b>sales@qiantong.tech</div>
+        <div style="padding-top:10px;"><b>联系地址：</b>南京市栖霞区金港科创园 / 郑州市高新区大科园西区</div>
+    </div>
+</div>
+<div style="clear:both;"></div>
 
 ## 👥 QQ交流群
 
