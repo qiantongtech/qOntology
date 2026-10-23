@@ -5,7 +5,8 @@
  <img src="https://img.shields.io/badge/Vue-3.x-blue.svg" alt="Vue">
  <img src="https://img.shields.io/badge/license-Apache--2.0-green" alt="License">
  <img src="https://img.shields.io/badge/qOntology-Ontology%20Engineering-blue.svg" alt="qOntology">
- <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt=""/>
+
+[//]: # ( <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt=""/>)
  <img src="https://img.shields.io/github/stars/qiantongtech/qOntology?label=Github%20Stars" alt=""/>
 </p>
 
