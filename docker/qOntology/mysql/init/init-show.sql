@@ -130,7 +130,7 @@ CREATE TABLE `app_attribute_mapping`  (
                                           `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
                                           `remark` varchar(512) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注',
                                           PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '属性映射' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 25 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '属性映射' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of app_attribute_mapping
@@ -157,6 +157,8 @@ INSERT INTO `app_attribute_mapping` VALUES (19, 1001, 10, 'basic_project', '项�
 INSERT INTO `app_attribute_mapping` VALUES (20, 1001, 10, 'basic_project', '项目管理', 'name', '项目名称', 109, '供应商名称', 0, 0, '吴同', 2, '2026-10-23 11:14:59', '吴同', 2, '2026-10-23 11:14:59', NULL);
 INSERT INTO `app_attribute_mapping` VALUES (21, 1001, 11, 'basic_project', '项目管理', 'id', 'ID', 110, '供应商编码', 0, 0, '吴同', 2, '2026-10-23 11:14:59', '吴同', 2, '2026-10-23 11:14:59', NULL);
 INSERT INTO `app_attribute_mapping` VALUES (22, 1001, 11, 'basic_project', '项目管理', 'name', '项目名称', 109, '供应商名称', 0, 0, '吴同', 2, '2026-10-23 11:14:59', '吴同', 2, '2026-10-23 11:14:59', NULL);
+INSERT INTO `app_attribute_mapping` VALUES (23, 1001, 12, 'system_user', '用户信息表', 'user_id', '用户ID', 110, '供应商编码', 0, 0, '吴同', 2, '2026-10-23 16:26:46', '吴同', 2, '2026-10-23 16:26:46', NULL);
+INSERT INTO `app_attribute_mapping` VALUES (24, 1001, 12, 'system_user', '用户信息表', 'nick_name', '用户昵称', 109, '供应商名称', 0, 0, '吴同', 2, '2026-10-23 16:26:46', '吴同', 2, '2026-10-23 16:26:46', NULL);
 
 -- ----------------------------
 -- Table structure for app_relation_mapping
@@ -243,7 +245,7 @@ CREATE TABLE `app_schema_mapping`  (
                                        `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
                                        `remark` varchar(512) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注',
                                        PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '对象类型映射' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '对象类型映射' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of app_schema_mapping
@@ -259,6 +261,7 @@ INSERT INTO `app_schema_mapping` VALUES (8, 1001, 8, 'basic_project', '项目管
 INSERT INTO `app_schema_mapping` VALUES (9, 1001, 9, 'basic_project', '项目管理', 'name', 'id', NULL, NULL, 10, '供应商', 0, 0, '吴同', 2, '2026-10-23 11:14:59', '吴同', 2, '2026-10-23 11:14:59', NULL);
 INSERT INTO `app_schema_mapping` VALUES (10, 1001, 10, 'basic_project', '项目管理', 'name', 'id', NULL, NULL, 10, '供应商', 0, 0, '吴同', 2, '2026-10-23 11:14:59', '吴同', 2, '2026-10-23 11:14:59', NULL);
 INSERT INTO `app_schema_mapping` VALUES (11, 1001, 11, 'basic_project', '项目管理', 'name', 'id', NULL, NULL, 10, '供应商', 0, 0, '吴同', 2, '2026-10-23 11:14:59', '吴同', 2, '2026-10-23 11:14:59', NULL);
+INSERT INTO `app_schema_mapping` VALUES (12, 1001, 12, 'system_user', '用户信息表', 'nick_name', 'user_id', NULL, NULL, 10, '供应商', 0, 0, '吴同', 2, '2026-10-23 16:26:46', '吴同', 2, '2026-10-23 16:26:46', NULL);
 
 -- ----------------------------
 -- Table structure for app_struct_task
@@ -293,7 +296,7 @@ CREATE TABLE `app_struct_task`  (
                                     `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
                                     `remark` varchar(512) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注',
                                     PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '结构化抽取任务' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '结构化抽取任务' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of app_struct_task
@@ -309,6 +312,7 @@ INSERT INTO `app_struct_task` VALUES (8, 1001, 1, '供应链采购与仓储协�
 INSERT INTO `app_struct_task` VALUES (9, 1001, 1, '供应链采购与仓储协同本体', 1, 'v1.0.0', '质检单据抽取任务', 2, 0, NULL, NULL, NULL, 0, '0 0 0 * * ?', 1, 1, '测试数据', '从来料质检单抽取质检单号、物料、检验结果、不合格原因、检验人，建立质检实体，关联入库、采购订单数据。', 0, 0, '吴同', 2, '2026-10-23 11:02:39', '吴同', 2, '2026-10-23 11:14:59', '从来料质检单抽取质检单号、物料、检验结果、不合格原因、检验人，建立质检实体，关联入库、采购订单数据。');
 INSERT INTO `app_struct_task` VALUES (10, 1001, 1, '供应链采购与仓储协同本体', 1, 'v1.0.0', '库位信息抽取任务', 2, 0, NULL, NULL, NULL, 0, '0 0 0 * * ?', 1, 1, '测试数据', '从仓库库位档案抽取仓库、库区、库位编码、库位类型、存储限制信息，构建仓储空间实体，支撑仓储位置关系图谱。', 0, 0, '吴同', 2, '2026-10-23 11:02:40', '吴同', 2, '2026-10-23 11:14:59', '从仓库库位档案抽取仓库、库区、库位编码、库位类型、存储限制信息，构建仓储空间实体，支撑仓储位置关系图谱。');
 INSERT INTO `app_struct_task` VALUES (11, 1001, 1, '供应链采购与仓储协同本体', 1, 'v1.0.0', '供应商履约评价抽取任务', 2, 0, NULL, NULL, NULL, 0, '0 0 0 * * ?', 1, 1, '测试数据', '从供应商履约评价记录中抽取交付准时率、质量合格率、异常扣分、评价等级等信息，构建供应商评价实体，支撑供应商信用知识图谱。', 0, 0, '吴同', 2, '2026-10-23 11:02:41', '吴同', 2, '2026-10-23 11:14:59', '从供应商履约评价记录中抽取交付准时率、质量合格率、异常扣分、评价等级等信息，构建供应商评价实体，支撑供应商信用知识图谱。');
+INSERT INTO `app_struct_task` VALUES (12, 1001, 1, '供应链采购与仓储协同本体', 1, 'v1.0.0', '供应链采购人员数据抽取', 2, 0, NULL, NULL, NULL, 0, '0 0 0 * * ?', 1, 1, '测试数据', '从表抽取采购人员内容并结构化输出，支撑采购人员信息核查与管理分析。', 0, 0, '吴同', 2, '2026-10-23 16:26:46', '吴同', 2, '2026-10-23 16:27:10', NULL);
 
 -- ----------------------------
 -- Table structure for app_task_log
@@ -336,11 +340,13 @@ CREATE TABLE `app_task_log`  (
                                  PRIMARY KEY (`id`) USING BTREE,
                                  INDEX `idx_app_task_log_task`(`task_id`, `task_type`) USING BTREE,
                                  INDEX `idx_app_task_log_start_time`(`start_time`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '抽取任务执行日志' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '抽取任务执行日志' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of app_task_log
 -- ----------------------------
+INSERT INTO `app_task_log` VALUES (1, 1001, 12, 0, '供应链采购人员数据抽取', 1, '', '2026-10-23 16:47:45', '2026-10-23 16:47:45', 1, 0, '吴同', 2, '2026-10-23 16:47:45', NULL, NULL, '2026-10-23 16:47:44', NULL);
+
 
 -- ----------------------------
 -- Table structure for app_task_log_detail
@@ -362,11 +368,13 @@ CREATE TABLE `app_task_log_detail`  (
                                         `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
                                         PRIMARY KEY (`id`) USING BTREE,
                                         INDEX `idx_app_task_log_detail_log`(`log_id`, `create_time`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '抽取任务执行日志详情' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '抽取任务执行日志详情' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of app_task_log_detail
 -- ----------------------------
+INSERT INTO `app_task_log_detail` VALUES (1, 1001, 1, '结构化抽取开始，读取表映射、属性映射和对象类型关系映射', 1, 0, NULL, NULL, '2026-10-23 16:47:45', NULL, NULL, '2026-10-23 16:47:45', NULL);
+INSERT INTO `app_task_log_detail` VALUES (2, 1001, 1, '结构化实体及关系已保存到 Neo4j', 1, 0, NULL, NULL, '2026-10-23 16:47:45', NULL, NULL, '2026-10-23 16:47:45', NULL);
 
 -- ----------------------------
 -- Table structure for app_unstruct_task
