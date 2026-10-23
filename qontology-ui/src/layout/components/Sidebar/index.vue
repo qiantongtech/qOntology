@@ -163,7 +163,7 @@ const displayLogo = computed(() => {
 
 const handleFAQ = () => {
   window.open(
-    "https://community.qontology.ai/docs/start/introduction.html",
+    "https://gitee.com/qiantongtech/qOntology/blob/develop/QUICKSTART.md",
     "_blank"
   );
 };
@@ -171,7 +171,7 @@ const handleAbout = () => {
   window.open("https://qiantong.tech/", "_blank");
 };
 const handleHelp = () => {
-  window.open("https://community.qontology.ai", "_blank");
+  window.open("https://gitee.com/qiantongtech/qOntology/issues", "_blank");
 };
 </script>
 
