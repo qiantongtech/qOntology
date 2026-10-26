@@ -5,8 +5,7 @@
  <img src="https://img.shields.io/badge/Vue-3.x-blue.svg" alt="Vue">
  <img src="https://img.shields.io/badge/license-Apache--2.0-green" alt="License">
  <img src="https://img.shields.io/badge/qOntology-Ontology%20Engineering-blue.svg" alt="qOntology">
-
-[//]: # ( <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt=""/>)
+ <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt="Gitee Stars"/>
  <img src="https://img.shields.io/github/stars/qiantongtech/qOntology?label=Github%20Stars" alt=""/>
 </p>
 
@@ -264,5 +263,13 @@ qOntology 规划 **开源版** 与 **专业版**。开源版聚焦领域建模�
     <tr>
         <td><img src=".gitee/system/objectType.png" alt="本体建模－对象类型" width="400"/></td>
         <td><img src=".gitee/system/objectRelation.png" alt="本体建模－对象关系" width="400"/></td>
+    </tr>
+    <tr>
+        <td><img src=".gitee/system/knowledgeGraph.png" alt="本体应用－知识图谱" width="400"/></td>
+        <td><img src=".gitee/system/unstructuredExtraction.png" alt="本体应用－非结构化抽取" width="400"/></td>
+    </tr>
+    <tr>
+        <td><img src=".gitee/system/structuredExtraction.png" alt="本体应用－结构化抽取" width="400"/></td>
+        <td><img src=".gitee/system/extractionLog.png" alt="本体应用－抽取日志" width="400"/></td>
     </tr>
 </table>

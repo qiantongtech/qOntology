@@ -251,4 +251,12 @@ First, add **Wu Datong on QQ** ([<u>click here to add</u>](https://qm.qq.com/q/K
         <td><img src=".gitee/system/objectType.png" alt="Ontology Modeling - Object Types" width="400"/></td>
         <td><img src=".gitee/system/objectRelation.png" alt="Ontology Modeling - Object Relationships" width="400"/></td>
     </tr>
+    <tr>
+        <td><img src=".gitee/system/knowledgeGraph.png" alt="Ontology Applications - Knowledge Graph" width="400"/></td>
+        <td><img src=".gitee/system/unstructuredExtraction.png" alt="Ontology Applications - Unstructured Extraction" width="400"/></td>
+    </tr>
+    <tr>
+        <td><img src=".gitee/system/structuredExtraction.png" alt="Ontology Applications - Structured Extraction" width="400"/></td>
+        <td><img src=".gitee/system/extractionLog.png" alt="Ontology Applications - Extraction Logs" width="400"/></td>
+    </tr>
 </table>

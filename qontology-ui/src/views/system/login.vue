@@ -34,7 +34,7 @@
         <div class="greeting">
           <div class="entry_period">亲爱的朋友，{{ greetingsTitle }}！</div>
           <div class="entry_greeting">
-            🌟 qOntology 本体工程平台，以本体统一语义，让领域知识可关联、可复用。
+            🌟 以本体统一语义，让领域知识可关联、可复用。
           </div>
         </div>
         <div class="login-panel">
@@ -315,8 +315,8 @@ const greetingsTitle = ref("");
 const captchaEnabled = ref(true);
 const codeFlag = ref(false);
 const loginForm = ref({
-  username: "",
-  password: "",
+  username: "qOntology",
+  password: "qOntology123",
   rememberMe: false,
   code: "",
   uuid: "",
