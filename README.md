@@ -7,6 +7,9 @@
  <img src="https://img.shields.io/badge/qOntology-Ontology%20Engineering-blue.svg" alt="qOntology">
  <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt="Gitee Stars"/>
  <img src="https://img.shields.io/github/stars/qiantongtech/qOntology?label=Github%20Stars" alt=""/>
+<a href="https://atomgit.com/qiantongtech/qOntology">
+  <img src="https://atomgit.com/qiantongtech/qOntology/star/badge.svg" alt="AtomGit Star"/>
+</a>
 </p>
 
 <p align="center">
