@@ -43,7 +43,7 @@ public interface BasicProjectVersionMapper extends BaseMapperX<BasicProjectVersi
         // 构造动态查询条件
         return selectPage(reqVO, new LambdaQueryWrapperX<BasicProjectVersionDO>()
                 .eqIfPresent(BasicProjectVersionDO::getProjectId, reqVO.getProjectId())
-                .eqIfPresent(BasicProjectVersionDO::getVersion, reqVO.getVersion())
+                .likeIfPresent(BasicProjectVersionDO::getVersion, reqVO.getVersion())
                 .eqIfPresent(BasicProjectVersionDO::getDescription, reqVO.getDescription())
                 .eqIfPresent(BasicProjectVersionDO::getBaseVersion, reqVO.getBaseVersion())
                 .eqIfPresent(BasicProjectVersionDO::getCreateTime, reqVO.getCreateTime())
