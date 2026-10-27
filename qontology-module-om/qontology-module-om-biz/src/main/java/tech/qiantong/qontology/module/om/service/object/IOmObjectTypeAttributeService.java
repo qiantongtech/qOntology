@@ -18,13 +18,13 @@
 
 package tech.qiantong.qontology.module.om.service.object;
 
-import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeEnumOptionRespVO;
-import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmAttributeBusinessTypeOptionRespVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import tech.qiantong.qontology.core.page.PageResult;
+import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeEnumOptionRespVO;
+import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmAttributeBusinessTypeOptionRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeAttributePageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeAttributeSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttributeDO;
@@ -36,6 +36,7 @@ import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttri
  * @date 2026-10-13
  */
 public interface IOmObjectTypeAttributeService extends IService<OmObjectTypeAttributeDO> {
+
     /**
      * 获得对象类型属性分页列表
      *
@@ -87,9 +88,24 @@ public interface IOmObjectTypeAttributeService extends IService<OmObjectTypeAttr
      * @return 对象类型编号与属性数量的映射
      */
     Map<Long, Long> getOmObjectTypeAttributeCounts(Collection<Long> objectTypeIds);
-    List<OmAttributeBusinessTypeOptionRespVO> getBusinessDataTypes(
-            Long objectTypeId, Long workspaceId, String source);
 
-    List<OmDataTypeEnumOptionRespVO> getEnumOptions(
-            Long objectTypeId, Long workspaceId, String source);
+    /**
+     * 按所属对象类型和来源查询可选业务数据类型
+     *
+     * @param objectTypeId 所属对象类型 ID
+     * @param workspaceId 工作区 ID
+     * @param source 数据来源，PROJECT 当前项目版本，GLOBAL 全局
+     * @return 业务数据类型选项集合
+     */
+    List<OmAttributeBusinessTypeOptionRespVO> getBusinessDataTypes(Long objectTypeId, Long workspaceId, String source);
+
+    /**
+     * 按来源查询当前项目版本或全局可用的枚举类型
+     *
+     * @param objectTypeId 所属对象类型 ID
+     * @param workspaceId 工作区 ID
+     * @param source 数据来源，PROJECT 当前项目版本，GLOBAL 全局
+     * @return 枚举类型选项集合
+     */
+    List<OmDataTypeEnumOptionRespVO> getEnumOptions(Long objectTypeId, Long workspaceId, String source);
 }

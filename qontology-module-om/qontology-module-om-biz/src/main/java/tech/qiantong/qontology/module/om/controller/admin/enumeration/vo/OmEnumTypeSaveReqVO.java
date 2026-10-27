@@ -19,12 +19,11 @@
 package tech.qiantong.qontology.module.om.controller.admin.enumeration.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.Date;
+import lombok.Data;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
 /**
@@ -33,29 +32,30 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
  * @author qOntology
  * @date 2026-10-10
  */
-@Schema(description = "枚举类型 Response VO")
+@Schema(description = "枚举类型新增、修改请求")
 @Data
 public class OmEnumTypeSaveReqVO extends BaseEntity {
 
-    @Schema(description = "工作区id")
+    @Schema(description = "工作区 ID，用于限定数据所属工作区")
     private Long workspaceId;
 
-    @Schema(description = "版本id")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     @jakarta.validation.constraints.NotNull(message = "项目版本不能为空")
     @jakarta.validation.constraints.Positive(message = "项目版本必须为正整数")
     private Long versionId;
 
+    /** 序列化版本号 */
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "ID")
+    @Schema(description = "枚举类型记录 ID")
     private Long enumId;
 
-    @Schema(description = "枚举名称", example = "")
+    @Schema(description = "枚举类型名称，用于界面展示", example = "")
     @NotBlank(message = "枚举名称不能为空")
     @Size(max = 128, message = "枚举名称长度不能超过128个字符")
     private String enumName;
 
-    @Schema(description = "枚举类型", example = "")
+    @Schema(description = "枚举类型编码；与枚举来源共同定位枚举类型，不是枚举记录 ID", example = "")
     @NotBlank(message = "枚举类型不能为空")
     @Size(max = 128, message = "枚举类型长度不能超过128个字符")
     private String enumType;
@@ -64,9 +64,7 @@ public class OmEnumTypeSaveReqVO extends BaseEntity {
     @NotBlank(message = "状态不能为空")
     private String status;
 
-    @Schema(description = "备注", example = "")
+    @Schema(description = "备注信息", example = "")
     @Size(max = 512, message = "备注长度不能超过512个字符")
     private String remark;
-
-
 }

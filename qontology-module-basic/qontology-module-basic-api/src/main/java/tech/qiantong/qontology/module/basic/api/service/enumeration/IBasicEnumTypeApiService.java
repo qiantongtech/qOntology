@@ -21,7 +21,23 @@ package tech.qiantong.qontology.module.basic.api.service.enumeration;
 import java.util.List;
 import tech.qiantong.qontology.module.basic.api.dto.enumeration.BasicEnumTypeOptionDTO;
 
+/**
+ * 全局枚举类型跨模块查询接口
+ */
 public interface IBasicEnumTypeApiService {
+
+    /**
+     * 查询状态正常且有效的全局枚举类型选项
+     *
+     * @return 按枚举类型 ID 升序排列的枚举选项集合
+     */
     List<BasicEnumTypeOptionDTO> getAvailableEnumTypes();
+
+    /**
+     * 校验指定编码的全局枚举类型是否正常且有效
+     *
+     * @param enumType 枚举类型编码，不是枚举类型记录 ID
+     * @return 枚举类型存在、状态正常且有效时返回 true，否则返回 false
+     */
     boolean isAvailableEnumType(String enumType);
 }

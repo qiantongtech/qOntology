@@ -18,15 +18,16 @@
 
 package tech.qiantong.qontology.module.om.service.enumeration;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
-import com.baomidou.mybatisplus.extension.service.IService;
 import tech.qiantong.qontology.core.page.PageResult;
-import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumDataSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumDataPageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumDataRespVO;
+import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumDataSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumDataDO;
+
 /**
  * 枚举数据Service接口
  *
@@ -55,6 +56,7 @@ public interface IOmEnumDataService extends IService<OmEnumDataDO> {
      * 更新枚举数据
      *
      * @param updateReqVO 枚举数据信息
+     * @return 影响行数
      */
     int updateOmEnumData(OmEnumDataSaveReqVO updateReqVO);
 
@@ -62,6 +64,7 @@ public interface IOmEnumDataService extends IService<OmEnumDataDO> {
      * 删除枚举数据
      *
      * @param idList 枚举数据编号
+     * @return 影响行数
      */
     int removeOmEnumData(Collection<Long> idList);
 
@@ -87,7 +90,6 @@ public interface IOmEnumDataService extends IService<OmEnumDataDO> {
      */
     Map<Long, OmEnumDataDO> getOmEnumDataMap();
 
-
     /**
      * 导入枚举数据数据
      *
@@ -97,5 +99,4 @@ public interface IOmEnumDataService extends IService<OmEnumDataDO> {
      * @return 结果
      */
     String importOmEnumData(List<OmEnumDataRespVO> importExcelList, boolean isUpdateSupport, String operName);
-
 }

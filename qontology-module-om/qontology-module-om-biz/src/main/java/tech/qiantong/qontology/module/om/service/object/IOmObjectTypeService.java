@@ -55,6 +55,7 @@ public interface IOmObjectTypeService extends IService<OmObjectTypeDO> {
      * 更新对象类型
      *
      * @param updateReqVO 对象类型信息
+     * @return 影响行数
      */
     int updateOmObjectType(OmObjectTypeSaveReqVO updateReqVO);
 
@@ -62,6 +63,7 @@ public interface IOmObjectTypeService extends IService<OmObjectTypeDO> {
      * 删除对象类型
      *
      * @param id 对象类型编号
+     * @return 影响行数
      */
     int removeOmObjectType(Long id);
 
@@ -104,5 +106,4 @@ public interface IOmObjectTypeService extends IService<OmObjectTypeDO> {
      * @return 结果
      */
     String importOmObjectType(List<OmObjectTypeRespVO> importExcelList, boolean isUpdateSupport, String operName);
-
 }

@@ -34,33 +34,38 @@ import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumDataDO
  */
 @Mapper
 public interface OmEnumDataConvert {
+    /** MapStruct 对象转换器实例 */
     OmEnumDataConvert INSTANCE = Mappers.getMapper(OmEnumDataConvert.class);
 
     /**
      * PageReqVO 转换为 DO
+     *
      * @param omEnumDataPageReqVO 请求参数
      * @return OmEnumDataDO
      */
-     OmEnumDataDO convertToDO(OmEnumDataPageReqVO omEnumDataPageReqVO);
+    OmEnumDataDO convertToDO(OmEnumDataPageReqVO omEnumDataPageReqVO);
 
     /**
      * SaveReqVO 转换为 DO
+     *
      * @param omEnumDataSaveReqVO 保存请求参数
      * @return OmEnumDataDO
      */
-     OmEnumDataDO convertToDO(OmEnumDataSaveReqVO omEnumDataSaveReqVO);
+    OmEnumDataDO convertToDO(OmEnumDataSaveReqVO omEnumDataSaveReqVO);
 
     /**
      * DO 转换为 RespVO
+     *
      * @param omEnumDataDO 实体对象
      * @return OmEnumDataRespVO
      */
-     OmEnumDataRespVO convertToRespVO(OmEnumDataDO omEnumDataDO);
+    OmEnumDataRespVO convertToRespVO(OmEnumDataDO omEnumDataDO);
 
     /**
      * DOList 转换为 RespVOList
+     *
      * @param omEnumDataDOList 实体对象列表
      * @return List<OmEnumDataRespVO>
      */
-     List<OmEnumDataRespVO> convertToRespVOList(List<OmEnumDataDO> omEnumDataDOList);
+    List<OmEnumDataRespVO> convertToRespVOList(List<OmEnumDataDO> omEnumDataDOList);
 }

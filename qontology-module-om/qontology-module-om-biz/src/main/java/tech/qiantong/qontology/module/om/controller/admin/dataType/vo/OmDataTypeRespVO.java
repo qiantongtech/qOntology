@@ -20,12 +20,11 @@ package tech.qiantong.qontology.module.om.controller.admin.dataType.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.Serializable;
+import java.util.Date;
 import lombok.Data;
 import tech.qiantong.qontology.core.annotation.Excel;
 import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
-
-import java.io.Serializable;
-import java.util.Date;
 
 /**
  * 数据类型 Response VO 对象 om_data_type
@@ -37,82 +36,82 @@ import java.util.Date;
 @Data
 public class OmDataTypeRespVO implements Serializable {
 
+    /** 序列化版本号 */
     private static final long serialVersionUID = 1L;
 
-    @Excel(name = "ID")
     @Schema(description = "ID")
+    @Excel(name = "ID")
     private Long id;
 
-    /** 项目版本 ID */
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     private Long versionId;
 
-    @Excel(name = "名称")
     @Schema(description = "名称", example = "")
+    @Excel(name = "名称")
     private String name;
 
+    @Schema(description = "基础类型编码：0 文本、1 整数、2 小数、3 布尔、4 日期、5 枚举", example = "")
     @Excel(name = "数据类型")
-    @Schema(description = "数据类型", example = "")
     private DataTypeEnum dataType;
 
-    @Excel(name = "描述")
     @Schema(description = "描述", example = "")
+    @Excel(name = "描述")
     private String description;
 
+    @Schema(description = "整数、小数类型的计量单位，例如个、元；其他类型不使用", example = "")
     @Excel(name = "单位")
-    @Schema(description = "单位", example = "")
     private String unit;
 
+    @Schema(description = "小数类型的小数位数，0 表示不保留小数", example = "")
     @Excel(name = "小数位数")
-    @Schema(description = "小数位数", example = "")
     private Integer decimalPlaces;
 
+    @Schema(description = "日期类型的格式，例如 yyyy-MM-dd HH:mm:ss", example = "")
     @Excel(name = "格式")
-    @Schema(description = "格式", example = "")
     private String format;
 
-    @Schema(description = "枚举类型", example = "")
+    @Schema(description = "枚举类型编码；与枚举来源共同定位枚举类型，不是枚举记录 ID", example = "")
     @Excel(name = "枚举类型")
     private String enumType;
 
-    /** 枚举来源：PROJECT 当前项目版本，GLOBAL 全局。 */
+    @Schema(description = "枚举来源：PROJECT 当前项目版本，GLOBAL 全局；与 enumType 配合使用")
     private String enumSource;
 
+    @Schema(description = "是否有效：true 有效，false 无效", example = "")
     @Excel(name = "是否有效")
-    @Schema(description = "是否有效", example = "")
     private Boolean validFlag;
 
+    @Schema(description = "逻辑删除标志：true 已删除，false 未删除", example = "")
     @Excel(name = "删除标志")
-    @Schema(description = "删除标志", example = "")
     private Boolean delFlag;
 
-    @Excel(name = "创建人")
     @Schema(description = "创建人", example = "")
+    @Excel(name = "创建人")
     private String createBy;
 
+    @Schema(description = "创建人 ID", example = "")
     @Excel(name = "创建人id")
-    @Schema(description = "创建人id", example = "")
     private Long creatorId;
 
+    @Schema(description = "创建时间", example = "")
     @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(description = "创建时间", example = "")
     private Date createTime;
 
-    @Excel(name = "更新人")
     @Schema(description = "更新人", example = "")
+    @Excel(name = "更新人")
     private String updateBy;
 
+    @Schema(description = "更新人 ID", example = "")
     @Excel(name = "更新人id")
-    @Schema(description = "更新人id", example = "")
     private Long updaterId;
 
+    @Schema(description = "更新时间", example = "")
     @Excel(name = "更新时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(description = "更新时间", example = "")
     private Date updateTime;
 
+    @Schema(description = "备注信息", example = "")
     @Excel(name = "备注")
-    @Schema(description = "备注", example = "")
     private String remark;
-
 }

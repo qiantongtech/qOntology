@@ -19,9 +19,9 @@
 package tech.qiantong.qontology.module.om.dal.mapper.object;
 
 import java.util.Collection;
-import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypePageReqVO;
+import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
 import tech.qiantong.qontology.mybatis.core.mapper.BaseMapperX;
 import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
@@ -32,15 +32,32 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
  * @date 2026-10-12
  */
 public interface OmObjectTypeMapper extends BaseMapperX<OmObjectTypeDO> {
-
+    /**
+     * 按请求条件分页查询对象类型
+     *
+     * @param reqVO 分页查询条件
+     * @return 分页查询结果
+     */
     default PageResult<OmObjectTypeDO> selectPage(OmObjectTypePageReqVO reqVO) {
         return selectPageWithLinkedIds(reqVO, null);
     }
 
-    default PageResult<OmObjectTypeDO> selectPageWithLinkedIds(OmObjectTypePageReqVO reqVO, Collection<Long> linkedIds) {
+    /**
+     * 结合已关联元素 ID 查询对象类型，保留版本、筛选和排序条件
+     *
+     * @param reqVO 分页查询条件
+     * @param linkedIds 已关联的元素 ID 集合
+     * @return 分页查询结果
+     */
+    default PageResult<OmObjectTypeDO> selectPageWithLinkedIds(
+        OmObjectTypePageReqVO reqVO,
+        Collection<Long> linkedIds
+    ) {
         if (linkedIds != null && linkedIds.isEmpty()) return PageResult.empty();
         // 构造动态查询条件
-        return selectPage(reqVO, new LambdaQueryWrapperX<OmObjectTypeDO>()
+        return selectPage(
+            reqVO,
+            new LambdaQueryWrapperX<OmObjectTypeDO>()
                 .eqIfPresent(OmObjectTypeDO::getWorkspaceId, reqVO.getWorkspaceId())
                 .eqIfPresent(OmObjectTypeDO::getVersionId, reqVO.getVersionId())
                 .likeIfPresent(OmObjectTypeDO::getName, reqVO.getName())
@@ -49,11 +66,10 @@ public interface OmObjectTypeMapper extends BaseMapperX<OmObjectTypeDO> {
                 .eqIfPresent(OmObjectTypeDO::getAncestors, reqVO.getAncestors())
                 .eqIfPresent(OmObjectTypeDO::getOrderNum, reqVO.getOrderNum())
                 .eqIfPresent(OmObjectTypeDO::getCreateTime, reqVO.getCreateTime())
-                // 树形列表固定按显示顺序排列，ID保证相同顺序下结果稳定。
                 .eq(OmObjectTypeDO::getValidFlag, true)
                 .in(linkedIds != null, OmObjectTypeDO::getId, linkedIds)
                 .orderByAsc(OmObjectTypeDO::getOrderNum)
-                .orderByAsc(OmObjectTypeDO::getId));
+                .orderByAsc(OmObjectTypeDO::getId)
+        );
     }
-
 }

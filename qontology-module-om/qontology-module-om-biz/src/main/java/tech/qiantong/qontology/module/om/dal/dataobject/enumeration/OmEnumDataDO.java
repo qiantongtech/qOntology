@@ -18,12 +18,12 @@
 
 package tech.qiantong.qontology.module.om.dal.dataobject.enumeration;
 
-import lombok.*;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.*;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
 /**
@@ -34,7 +34,7 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
  */
 @Data
 @TableName(value = "om_enum_data")
-// 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
+// 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写
 // @KeySequence("om_enum_data_seq")
 @Builder
 @NoArgsConstructor
@@ -42,40 +42,39 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
 @EqualsAndHashCode(callSuper = true)
 public class OmEnumDataDO extends BaseEntity {
 
-    /** 工作区id */
+    /** 工作区 ID，用于限定数据所属工作区 */
     private Long workspaceId;
 
-    /** 版本id */
+    /** 项目版本 ID，用于限定数据所属的本体版本 */
     private Long versionId;
 
+    /** 序列化版本号 */
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    /** 枚举编码 */
+    /** 枚举数据记录 ID */
     @TableId(value = "enum_code", type = IdType.AUTO)
     private Long enumCode;
 
-    /** 枚举排序 */
+    /** 枚举项显示顺序 */
     private Long enumSort;
 
-    /** 枚举标签 */
+    /** 枚举项的显示标签 */
     private String enumLabel;
 
-    /** 枚举键值 */
+    /** 枚举项保存的业务键值 */
     private String enumValue;
 
-    /** 枚举类型 */
+    /** 枚举类型编码；与枚举来源共同定位枚举类型，不是枚举记录 ID */
     private String enumType;
 
     /** 状态 */
     private String status;
 
-    /** 是否有效 */
+    /** 是否有效：true 有效，false 无效 */
     private Boolean validFlag;
 
-    /** 删除标志 */
+    /** 逻辑删除标志：true 已删除，false 未删除 */
     @TableLogic
     private Boolean delFlag;
-
-
 }

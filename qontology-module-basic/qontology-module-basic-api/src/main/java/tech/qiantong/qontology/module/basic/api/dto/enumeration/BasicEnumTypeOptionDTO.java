@@ -20,9 +20,15 @@ package tech.qiantong.qontology.module.basic.api.dto.enumeration;
 
 import lombok.Data;
 
-/** 基础管理中可用的全局枚举。 */
+/**
+ * 基础管理中可用的全局枚举类型选项
+ */
 @Data
 public class BasicEnumTypeOptionDTO {
+
+    /** 枚举类型名称，用于界面展示 */
     private String enumName;
+
+    /** 枚举类型编码，对应 basic_enum_type.enum_type，不是记录 ID */
     private String enumType;
 }

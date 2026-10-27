@@ -19,38 +19,41 @@
 package tech.qiantong.qontology.module.om.controller.admin.relation.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import tech.qiantong.qontology.core.page.PageParam;
 
-import java.util.List;
-
+/**
+ * 对象关系分页查询请求
+ */
 @Schema(description = "对象类型关系分页请求")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class OmObjectTypeRelationPageReqVO extends PageParam {
+
     public OmObjectTypeRelationPageReqVO() {
         setPageSize(10);
     }
 
-    @Schema(description = "工作区id")
+    @Schema(description = "工作区 ID，用于限定数据所属工作区")
     private Long workspaceId;
 
-    @Schema(description = "版本id，当前阶段可为空")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     private Long versionId;
 
     @Schema(description = "名称")
     @Size(max = 128, message = "关系名称不能超过128个字符")
     private String name;
 
-    @Schema(description = "是否可逆，0否、1是，空表示全部")
+    @Schema(description = "关系是否可逆：0 否，1 是")
     @Min(value = 0, message = "是否可逆只能为0或1")
     @Max(value = 1, message = "是否可逆只能为0或1")
     private Integer reversibleFlag;
 
-    @Schema(description = "目标ID列表", example = "")
+    @Schema(description = "用于筛选已关联建模目标的 ID 列表", example = "")
     private List<Long> targetIdList;
 }

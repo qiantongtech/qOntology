@@ -17,8 +17,8 @@
 -->
 
 <template>
-  <div ref="pageRef" class="app-container model-axiom-page">
-    <GuideTip tip-id="om/constraint/model.list"/>
+  <div ref="pageRef" class="app-container data-rule-page">
+    <GuideTip tip-id="om/constraint/data.list"/>
     <div v-show="showSearch" class="pagecont-top">
       <el-form ref="queryRef" class="btn-style" :model="query" :inline="true" @submit.prevent="search">
         <el-form-item label="规则名称" prop="name">
@@ -40,14 +40,14 @@
       <div class="justify-between mb15">
         <el-row :gutter="15" class="btn-style">
           <el-col :span="1.5">
-            <el-button v-hasPermi="['om:constraint:model:add']" type="primary" plain :disabled="saving"
+            <el-button v-hasPermi="['om:constraint:data:add']" type="primary" plain :disabled="saving"
                        @click="handleAdd"
             >
               <i class="iconfont-mini icon-xinzeng mr5"></i>新增
             </el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['om:constraint:model:remove']" type="danger" plain
+            <el-button v-hasPermi="['om:constraint:data:remove']" type="danger" plain
                        :disabled="!selectedIds.length || deleting || loading" @click="handleDelete()"
             >
               <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
@@ -69,9 +69,9 @@
         >
           <template #default="{row}">{{ row.description || '-' }}</template>
         </el-table-column>
-        <el-table-column v-if="visible('type')" label="公理类型" min-width="145" align="center">
+        <el-table-column v-if="visible('type')" label="规则类型" min-width="145" align="center">
           <template #default="{row}">
-            <dict-tag :options="om_axiom_type" :value="row.type"/>
+            <dict-tag :options="om_data_rule_type" :value="row.type"/>
           </template>
         </el-table-column>
         <el-table-column v-if="visible('level')" label="级别" width="90" align="center">
@@ -91,15 +91,15 @@
                          class-name="small-padding fixed-width"
         >
           <template #default="{row}">
-            <el-button v-hasPermi="['om:constraint:model:query']" link type="primary" icon="View"
+            <el-button v-hasPermi="['om:constraint:data:query']" link type="primary" icon="View"
                        @click="handleDetail(row)"
             >详情
             </el-button>
-            <el-button v-hasPermi="['om:constraint:model:edit']" link type="primary" icon="Edit"
+            <el-button v-hasPermi="['om:constraint:data:edit']" link type="primary" icon="Edit"
                        :disabled="saving" @click="handleUpdate(row)"
             >修改
             </el-button>
-            <el-button v-hasPermi="['om:constraint:model:remove']" link type="danger" icon="Delete"
+            <el-button v-hasPermi="['om:constraint:data:remove']" link type="danger" icon="Delete"
                        :disabled="deleting" @click="handleDelete(row)"
             >删除
             </el-button>
@@ -107,8 +107,8 @@
         </el-table-column>
         <template #empty>
           <div class="emptyBg">
-            <img src="@/assets/system/images/no_data/noData.png" alt="暂无模型公理"/>
-            <p>{{ versionId ? '暂无模型公理' : '请先选择项目版本' }}</p>
+            <img src="@/assets/system/images/no_data/noData.png" alt="暂无数据规则"/>
+            <p>{{ versionId ? '暂无数据规则' : '请先选择项目版本' }}</p>
           </div>
         </template>
       </el-table>
@@ -116,7 +116,7 @@
                   @pagination="getList"
       />
     </div>
-    <el-dialog v-model="open" :title="dialogTitle" width="860px" :append-to="pageRef" :close-on-click-modal="false"
+    <el-dialog v-model="open" :title="dialogTitle" width="860px" :append-to="pageRef"
                :close-on-press-escape="!saving" :before-close="beforeClose" draggable destroy-on-close
                @closed="handleDialogClosed"
     >
@@ -128,11 +128,11 @@
       >
         <div class="h2-title">基本信息</div>
         <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入模型公理名称" maxlength="128"/>
+          <el-input v-model="form.name" placeholder="请输入数据规则名称" maxlength="128"/>
         </el-form-item>
         <el-form-item label="类型" prop="type">
           <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
-            <el-option v-for="item in om_axiom_type" :key="item.value" :label="item.label" :value="item.value"/>
+            <el-option v-for="item in om_data_rule_type" :key="item.value" :label="item.label" :value="item.value"/>
           </el-select>
         </el-form-item>
         <el-form-item label="级别" prop="level">
@@ -145,86 +145,61 @@
                     placeholder="请输入描述" :maxlength="500" show-word-limit
           />
         </el-form-item>
-        <div class="h2-title">公理表达</div>
-        <template v-if="form.type === 'DOMAIN_RANGE'">
-          <el-form-item label="对象类型关系" prop="relationId">
-            <el-select v-model="form.relationId" filterable placeholder="请选择关系">
-              <el-option v-for="item in relationOptions" :key="item.id" :label="item.name" :value="String(item.id)"/>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="Domain" prop="domainId">
-            <el-select v-model="form.domainId" filterable placeholder="请选择对象类型">
-              <el-option v-for="item in objectTypeOptions" :key="item.id" :label="item.name" :value="item.id"/>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="Range" prop="rangeId">
-            <el-select v-model="form.rangeId" filterable placeholder="请选择对象类型">
-              <el-option v-for="item in objectTypeOptions" :key="item.id" :label="item.name" :value="item.id"/>
-            </el-select>
-          </el-form-item>
-        </template>
-        <template v-else>
-          <el-form-item :label="firstTypeLabel" prop="objectTypeId">
-            <el-select v-model="form.objectTypeId" filterable placeholder="请选择对象类型" @change="handleObjectTypeChange">
-              <el-option v-for="item in objectTypeOptions" :key="item.id" :label="item.name" :value="item.id"/>
-            </el-select>
-          </el-form-item>
-          <template v-if="form.type === 'PROPERTY_RANGE'">
-            <el-form-item label="数据属性" prop="attributeId">
-              <el-select v-model="form.attributeId" filterable :disabled="!form.objectTypeId"
-                         placeholder="请选择当前对象类型的属性"
-              >
-                <el-option v-for="item in currentAttributes" :key="item.id" :label="item.name" :value="item.id"/>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="值类型" prop="typeCategory">
-              <el-radio-group v-model="form.typeCategory" @change="handleValueTypeChange">
-                <el-radio v-for="item in om_attribute_data_type" :key="item.value" :value="Number(item.value)">
-                  {{ item.label }}
-                </el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item v-if="form.typeCategory === 1" label="基础数据类型" prop="basicTypeCode">
-              <el-select v-model="form.basicTypeCode" placeholder="请选择基础数据类型" clearable @change="handleBasicTypeChange">
-                <el-option v-for="item in basic_data_type" :key="item.value" :label="item.label" :value="Number(item.value)"/>
-              </el-select>
-            </el-form-item>
-            <el-form-item v-else label="业务数据类型" prop="businessTypeKey">
-              <el-select v-model="form.businessTypeKey" filterable :disabled="!form.objectTypeId"
-                         placeholder="请选择业务数据类型" clearable @change="handleBusinessTypeChange"
-              >
-                <template #label>
-                  <span class="business-type-label">
-                    {{ selectedBusinessType?.name || form.businessTypeKey }}
-                    <el-tag :type="selectedBusinessType?.businessTypeSource === 'PROJECT' ? 'primary' : 'info'" size="small">
-                      {{ selectedBusinessType?.businessTypeSource === 'PROJECT' ? '当前项目' : '全局' }}
-                    </el-tag>
-                  </span>
+        <div class="h2-title">执行条件</div>
+        <el-form-item label="条件关系" prop="conditionRelation">
+          <el-radio-group v-model="form.conditionRelation">
+            <el-radio value="OR">任一满足（OR）</el-radio>
+            <el-radio value="AND">全部满足（AND）</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="失败条件" required>
+          <div class="conditions">
+            <div v-for="(condition, index) in form.conditions" :key="condition.key" class="condition-row">
+              <div class="condition-label">条件 {{ index + 1 }}：</div>
+              <div class="condition-fields">
+                <el-select :ref="element => setConditionSelectRef(condition.key, element)"
+                           v-model="condition.objectTypeId" filterable placeholder="请选择对象类型"
+                           class="condition-object"
+                           :aria-label="'第' + (index + 1) + '条对象类型'" @change="handleConditionObjectChange(condition)"
+                >
+                  <el-option v-for="item in objectTypeOptions" :key="item.id" :label="item.name" :value="item.id"/>
+                </el-select>
+                <el-select v-model="condition.attributeId" filterable :disabled="!condition.objectTypeId"
+                           class="condition-attribute"
+                           :placeholder="attributePlaceholder" :aria-label="'第' + (index + 1) + '条属性'"
+                           @change="handleConditionAttributeChange(condition)"
+                >
+                  <el-option v-for="item in getConditionAttributes(condition)" :key="item.id" :label="item.name" :value="item.id"/>
+                </el-select>
+                <span v-if="form.type === 'REQUIRED'" class="condition-operator">为空</span>
+                <template v-else>
+                  <el-select v-if="form.type === 'RANGE'" v-model="condition.operator" class="condition-comparison"
+                             :aria-label="'第' + (index + 1) + '条比较符'"
+                  >
+                    <el-option v-for="item in om_rule_operator" :key="item.value" :label="item.label" :value="item.value"/>
+                  </el-select>
+                  <span v-else class="condition-operator">{{ conditionOperatorLabel }}</span>
+                  <el-input v-model="condition.value" :placeholder="conditionValuePlaceholder"
+                            class="condition-value"
+                            :aria-label="'第' + (index + 1) + '条条件值'"
+                  />
                 </template>
-                <el-option-group v-for="group in businessTypeGroups" :key="group.source" :label="group.label">
-                  <el-option v-for="item in group.options" :key="item.key" :label="item.name" :value="item.key"/>
-                </el-option-group>
-              </el-select>
-            </el-form-item>
-            <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
-              <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
-            </el-form-item>
-            <AttributeTypeConfig v-if="form.typeCategory === 1 || selectedBusinessType" :model="effectiveConfig"
-                                 :readonly="form.typeCategory === 2" :enum-options="enumOptions" :enum-loading="enumsLoading"
-                                 :enum-error="enumsError" @enum-open="loadEnums()"
-            />
-            <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType?.description" label="类型描述">
-              <div class="form-readonly textarea">{{ selectedBusinessType.description }}</div>
-            </el-form-item>
-          </template>
-          <el-form-item v-else :label="secondTypeLabel" prop="otherTypeId">
-            <el-select v-model="form.otherTypeId" filterable placeholder="请选择对象类型">
-              <el-option v-for="item in objectTypeOptions" :key="item.id" :label="item.name" :value="item.id"
-                         :disabled="item.id === form.objectTypeId"
-              />
-            </el-select>
-          </el-form-item>
-        </template>
+              </div>
+              <div class="condition-actions">
+                <el-button link type="danger" icon="Delete" :disabled="form.conditions.length === 1"
+                           :aria-label="'删除条件' + (index + 1)" :title="form.conditions.length === 1 ? '至少保留一条条件' : '删除条件'"
+                           @click="removeCondition(index)"
+                />
+                <el-button v-if="index === form.conditions.length - 1" link type="primary" icon="Plus" @click="addCondition">
+                  添加条件
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item label="失败提示" prop="failureMessage">
+          <el-input v-model="form.failureMessage" placeholder="请输入失败提示" maxlength="512"/>
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -233,14 +208,27 @@
         </div>
       </template>
     </el-dialog>
-    <el-dialog v-model="detailOpen" title="模型公理详情" width="860px" :append-to="pageRef" draggable destroy-on-close>
+    <el-dialog v-model="detailOpen" title="数据规则详情" width="860px" :append-to="pageRef" draggable destroy-on-close>
       <el-form label-width="120px">
         <el-form-item v-for="field in detailFields" :key="field.label" :label="field.label + '：'">
           <div class="form-readonly" :class="{textarea: field.multiline}">{{ field.value || '-' }}</div>
         </el-form-item>
-        <AttributeTypeConfig v-if="detail.type === 'PROPERTY_RANGE'" :model="detailConfig" readonly :enum-options="enumOptions"/>
       </el-form>
-
+      <div class="h2-title">失败条件</div>
+      <el-table :data="detail.conditions || []" border>
+        <el-table-column label="对象类型" min-width="130">
+          <template #default="{row}">{{ objectTypeLabel(row.objectTypeId) }}</template>
+        </el-table-column>
+        <el-table-column label="属性" min-width="130">
+          <template #default="{row}">{{ attributeLabel(row.objectTypeId, row.attributeId) }}</template>
+        </el-table-column>
+        <el-table-column label="条件" width="110">
+          <template #default="{row}">{{ conditionOperator(detail.type, row.operator) }}</template>
+        </el-table-column>
+        <el-table-column v-if="detail.type !== 'REQUIRED'" prop="value" label="条件值" min-width="180"
+                         :show-overflow-tooltip="{effect: 'light'}"
+        />
+      </el-table>
       <template #footer>
         <div class="dialog-footer">
           <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
@@ -256,18 +244,18 @@ import {ElMessage, ElMessageBox} from 'element-plus';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
 import useUserStore from '@/store/system/user';
 import {listRule, getRule, addRule, updateRule, delRule} from '@/api/om/constraint/rule';
-import {listRelationTypes, listRelations} from '@/api/om/object/relation';
-import {listAttributes, listAttributeBusinessDataTypes, listAttributeEnums} from '@/api/om/object/attribute';
-import AttributeTypeConfig from '../../object/type/detail/AttributeTypeConfig.vue';
+import {listRelationTypes} from '@/api/om/object/relation';
+import {listAttributes, listAttributeBusinessDataTypes} from '@/api/om/object/attribute';
 
-defineOptions({name: 'OmModelAxiom'});
+defineOptions({name: 'OmDataRule'});
 const props = defineProps({versionId: {type: [String, Number], default: undefined}});
 const {versionId, requireVersion} = useOntologyVersion(() => props.versionId);
 const {proxy} = getCurrentInstance();
 const userStore = useUserStore();
-const {basic_data_type, om_axiom_type, om_rule_level, om_attribute_data_type} = proxy.useDict(
-  'basic_data_type', 'om_axiom_type', 'om_rule_level', 'om_attribute_data_type'
+const {om_data_rule_type, om_rule_level, om_rule_operator} = proxy.useDict(
+  'om_data_rule_type', 'om_rule_level', 'om_rule_operator'
 );
+
 const pageRef = ref();
 const tableRef = ref();
 const queryRef = ref();
@@ -280,7 +268,7 @@ const saving = ref(false);
 const deleting = ref(false);
 const open = ref(false);
 const detailOpen = ref(false);
-const dialogTitle = ref('新增模型公理');
+const dialogTitle = ref('新增数据规则');
 const detail = ref({});
 const showSearch = ref(true);
 const query = reactive({name: '', pageNum: 1, pageSize: 10});
@@ -291,51 +279,37 @@ const businessTypeOptions = reactive({});
 const optionsLoading = ref(false);
 const optionsError = ref('');
 const attributeLoadingCount = ref(0);
-const enumOptions = ref([]);
-const enumsLoading = ref(false);
-const enumsError = ref('');
+const conditionSelectRefs = new Map();
 const columns = ref([
   {key: 0, prop: 'index', label: '序号', visible: true},
   {key: 1, prop: 'name', label: '名称', visible: true},
   {key: 2, prop: 'description', label: '描述', visible: true},
-  {key: 3, prop: 'type', label: '公理类型', visible: true},
+  {key: 3, prop: 'type', label: '规则类型', visible: true},
   {key: 4, prop: 'level', label: '级别', visible: true},
   {key: 5, prop: 'createBy', label: '创建人', visible: true},
   {key: 6, prop: 'createTime', label: '创建时间', visible: true},
   {key: 7, prop: 'operation', label: '操作', visible: true}
 ]);
 const visible = prop => columns.value.find(column => column.prop === prop)?.visible;
-const typeLabel = value => proxy.selectDictLabel(om_axiom_type.value, value) || '-';
+const typeLabel = value => proxy.selectDictLabel(om_data_rule_type.value, value) || '-';
 const levelLabel = value => proxy.selectDictLabel(om_rule_level.value, value) || '-';
-const saveDisabled = computed(() => optionsLoading.value || attributeLoadingCount.value > 0 || !!optionsError.value
-  || (form.value.type === 'PROPERTY_RANGE' && form.value.typeCategory === 1 && form.value.basicTypeCode === 5 && enumsLoading.value));
+const saveDisabled = computed(() => optionsLoading.value || attributeLoadingCount.value > 0 || !!optionsError.value);
 const emptyForm = () => ({
   id: undefined,
   versionId: versionId.value,
-  category: 'MODEL',
+  category: 'DATA',
   name: '',
   description: '',
   level: 'INFO',
-  type: 'SUBCLASS',
-  objectTypeId: '',
-  otherTypeId: '',
-  relationId: '',
-  domainId: '',
-  rangeId: '',
-  attributeId: '',
-  typeCategory: 1,
-  basicTypeCode: undefined,
-  businessTypeKey: '',
-  unit: '',
-  decimalPlaces: undefined,
-  format: '',
-  enumType: undefined,
-  enumSource: 'PROJECT'
+  type: 'REQUIRED',
+  conditionRelation: 'OR',
+  conditions: [createCondition()],
+  failureMessage: ''
 });
 const form = ref(emptyForm());
 const rules = {
   name: [
-    {required: true, whitespace: true, message: '模型公理名称不能为空', trigger: 'blur'},
+    {required: true, whitespace: true, message: '数据规则名称不能为空', trigger: 'blur'},
     {max: 128, message: '名称不能超过128个字符', trigger: 'blur'}
   ],
   type: [{required: true, message: '请选择类型', trigger: 'change'}],
@@ -344,54 +318,24 @@ const rules = {
     {required: true, whitespace: true, message: '描述不能为空', trigger: 'blur'},
     {max: 500, message: '描述不能超过500个字符', trigger: 'blur'}
   ],
-  objectTypeId: [{required: true, message: '请选择对象类型', trigger: 'change'}],
-  otherTypeId: [{required: true, message: '请选择另一对象类型', trigger: 'change'}],
-  relationId: [{required: true, message: '请选择对象类型关系', trigger: 'change'}],
-  domainId: [{required: true, message: '请选择Domain', trigger: 'change'}],
-  rangeId: [{required: true, message: '请选择Range', trigger: 'change'}],
-  attributeId: [{required: true, message: '请选择数据属性', trigger: 'change'}],
-  typeCategory: [{required: true, message: '请选择值类型', trigger: 'change'}],
-  basicTypeCode: [{required: true, message: '请选择基础数据类型', trigger: 'change'}],
-  businessTypeKey: [{required: true, message: '请选择业务数据类型', trigger: 'change'}],
-  unit: [{max: 32, message: '单位不能超过32个字符', trigger: 'blur'}],
-  decimalPlaces: [{
-    validator: (_rule, value, callback) => {
-      if (form.value.typeCategory !== 1 || form.value.basicTypeCode !== 2 || value == null) return callback();
-      const valid = Number.isInteger(value) && value >= 0 && value <= 2147483647;
-      callback(valid ? undefined : new Error('请输入有效的小数位数'));
-    }, trigger: 'change'
-  }],
-  format: [{max: 128, message: '日期格式不能超过128个字符', trigger: 'blur'}],
-  enumType: [{
-    validator: (_rule, value, callback) => {
-      if (form.value.typeCategory !== 1 || form.value.basicTypeCode !== 5 || !value) return callback();
-      const valid = enumOptions.value.some(item => item.enumType === value && item.enumSource === form.value.enumSource);
-      callback(valid ? undefined : new Error('请选择有效的枚举类型'));
-    }, trigger: 'change'
-  }]
+  conditionRelation: [{required: true, message: '请选择条件关系', trigger: 'change'}],
+  failureMessage: [
+    {required: true, whitespace: true, message: '失败提示不能为空', trigger: 'blur'},
+    {max: 512, message: '失败提示不能超过512个字符', trigger: 'blur'}
+  ]
 };
 let listRequest = 0;
 let dialogRequest = 0;
 let contextRequest = 0;
-let enumRequest = 0;
-const relationOptions = ref([]);
-const firstTypeLabel = computed(() => {
-  if (form.value.type === 'SUBCLASS') return '子类型';
-  return form.value.type === 'PROPERTY_RANGE' ? '对象类型' : '对象类型A';
+const attributePlaceholder = computed(() => {
+  if (form.value.type === 'RANGE') return '请选择整数或小数属性';
+  return form.value.type === 'FORMAT' ? '请选择日期属性' : '请选择属性';
 });
-const secondTypeLabel = computed(() => form.value.type === 'SUBCLASS' ? '父类型' : '对象类型B');
-const currentAttributes = computed(() => attributeOptions[form.value.objectTypeId] || []);
-const currentBusinessTypes = computed(() => (businessTypeOptions[form.value.objectTypeId] || [])
-  .map(item => ({...item, key: item.businessTypeSource + ':' + item.id})));
-const selectedBusinessType = computed(() => findBusinessType(form.value));
-const effectiveConfig = computed(() => resolvedConfig(form.value));
-const detailConfig = computed(() => resolvedConfig(detail.value));
-const basicTypeLabel = value => proxy.selectDictLabel(basic_data_type.value, value) || '未设置';
-const businessTypeGroups = computed(() => [
-  {source: 'PROJECT', label: '当前项目'},
-  {source: 'GLOBAL', label: '全局'}
-].map(group => ({...group, options: currentBusinessTypes.value.filter(item => item.businessTypeSource === group.source)}))
-  .filter(group => group.options.length));
+const conditionOperatorLabel = computed(() => form.value.type === 'ENUM' ? '不属于' : '不匹配');
+const conditionValuePlaceholder = computed(() => {
+  if (form.value.type === 'ENUM') return '手工输入，以逗号分隔';
+  return form.value.type === 'RANGE' ? '请输入数值' : '请输入内容';
+});
 
 const detailFields = computed(() => [
   {label: '名称', value: detail.value.name},
@@ -424,10 +368,6 @@ async function listObjectTypeOptions(versionId) {
   return (response.data || []).map(item => ({...item, id: String(item.id)}));
 }
 
-function listRelationOptions(versionId) {
-  return loadAllPages(pageNum => listRelations({versionId, pageNum, pageSize: 100}));
-}
-
 async function listObjectAttributeOptions(objectTypeId, versionId) {
   const results = await Promise.allSettled([
     loadAllPages(pageNum => listAttributes({objectTypeId, versionId, pageNum, pageSize: 100})),
@@ -443,6 +383,41 @@ async function listObjectAttributeOptions(objectTypeId, versionId) {
       ...(results[2].value.data || []).map(item => ({...item, businessTypeSource: 'GLOBAL'}))
     ]
   };
+}
+
+function createCondition() {
+  return {key: globalThis.crypto.randomUUID(), objectTypeId: '', attributeId: '', operator: 'LT', value: ''};
+}
+
+function getBasicTypeCode(attribute, businessTypes) {
+  if (Number(attribute.typeCategory) !== 2) return Number(attribute.basicTypeCode);
+  const businessType = businessTypes.find(item => String(item.id) === String(attribute.businessTypeId)
+    && item.businessTypeSource === (attribute.businessTypeSource || 'GLOBAL'));
+  return businessType ? Number(businessType.dataType) : undefined;
+}
+
+function validateConditions(form, attributes, businessTypes) {
+  if (!form.conditions.length) return '请至少添加一条失败条件';
+  for (const [index, condition] of form.conditions.entries()) {
+    const prefix = `第 ${index + 1} 条失败条件：`;
+    if (!condition.objectTypeId || !condition.attributeId) return `${prefix}请选择对象类型和属性`;
+    const attribute = (attributes[condition.objectTypeId] || []).find(item => item.id === condition.attributeId);
+    if (!attribute) return `${prefix}属性已失效，请重新选择`;
+    if (form.type === 'RANGE') {
+      const code = getBasicTypeCode(attribute, businessTypes[condition.objectTypeId] || []);
+      if (![1, 2].includes(code)) return `${prefix}只能选择整数或小数属性`;
+      if (!om_rule_operator.value.some(item => item.value === condition.operator)) return `${prefix}请选择比较符`;
+      const value = String(condition.value).trim();
+      if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return `${prefix}请输入有效数值`;
+      if (code === 1 && !/^[+-]?\d+$/.test(value)) return `${prefix}请输入整数`;
+    } else if (form.type === 'FORMAT' && getBasicTypeCode(attribute, businessTypes[condition.objectTypeId] || []) !== 4) {
+      return `${prefix}只能选择日期属性`;
+    } else if (form.type === 'ENUM' && !String(condition.value).trim()) {
+      return `${prefix}请输入枚举值`;
+    }
+  }
+  // 格式校验只保存自由文本，不解析或限制正则表达式内容。
+  return '';
 }
 
 function getRowIndex(index) {
@@ -461,7 +436,7 @@ async function getList() {
   try {
     const response = await listRule({
       versionId: versionId.value,
-      category: 'MODEL',
+      category: 'DATA',
       name: appliedName.value,
       pageNum: query.pageNum,
       pageSize: query.pageSize
@@ -512,61 +487,17 @@ async function loadObjectOptions(objectTypeId) {
   }
 }
 
-async function loadEnums(objectTypeId = form.value.objectTypeId) {
-  if (!objectTypeId) return;
-  const request = ++enumRequest;
-  const dialog = dialogRequest;
-  enumsLoading.value = true;
-  enumsError.value = '';
-  const failures = [];
-  try {
-    await Promise.allSettled(['PROJECT', 'GLOBAL'].map(async source => {
-      try {
-        const response = await listAttributeEnums(objectTypeId, source);
-        if (request !== enumRequest || dialog !== dialogRequest) return;
-        if (!Array.isArray(response.data)) throw new Error('枚举返回格式无效');
-        enumOptions.value = [
-          ...enumOptions.value.filter(item => item.enumSource !== source),
-          ...response.data.map(item => ({...item, enumSource: source}))
-        ];
-      } catch {
-        if (request !== enumRequest || dialog !== dialogRequest) return;
-        failures.push(source === 'PROJECT' ? '当前项目' : '全局');
-        enumsError.value = failures.join('、') + '枚举加载失败，可选择已加载的枚举；重新展开可重试。';
-      }
-    }));
-  } finally {
-    if (request === enumRequest && dialog === dialogRequest) enumsLoading.value = false;
-  }
-}
-
-function findBusinessType(record) {
-  return (businessTypeOptions[record.objectTypeId] || []).find(item =>
-    item.businessTypeSource + ':' + item.id === record.businessTypeKey);
-}
-
-function resolvedConfig(record) {
-  const selected = record.typeCategory === 2 ? findBusinessType(record) : undefined;
-  return selected ? {...selected, basicTypeCode: Number(selected.dataType)} : record;
-}
-
 async function loadOptions() {
   const request = dialogRequest;
   optionsLoading.value = true;
   optionsError.value = '';
   try {
-    const results = await Promise.allSettled([
-      listObjectTypeOptions(versionId.value), listRelationOptions(versionId.value)
-    ]);
-    const failed = results.find(result => result.status === 'rejected');
-    if (failed) throw failed.reason;
+    const options = await listObjectTypeOptions(versionId.value);
     if (request !== dialogRequest) return;
-    objectTypeOptions.value = results[0].value;
-    relationOptions.value = results[1].value;
+    objectTypeOptions.value = options;
     const record = detailOpen.value ? detail.value : form.value;
     const objectIds = getRecordObjectIds(record);
     await Promise.allSettled(objectIds.map(loadObjectOptions));
-    if (request === dialogRequest && record.type === 'PROPERTY_RANGE') await loadEnums(record.objectTypeId);
   } catch {
     if (request === dialogRequest) optionsError.value = '选项加载失败，请重新加载';
   } finally {
@@ -578,10 +509,9 @@ function handleAdd() {
   if (!requireVersion()) return;
   ++dialogRequest;
   attributeLoadingCount.value = 0;
-  resetEnums();
   form.value = emptyForm();
   detailOpen.value = false;
-  dialogTitle.value = '新增模型公理';
+  dialogTitle.value = '新增数据规则';
   open.value = true;
   nextTick(() => ruleRef.value?.clearValidate());
   loadOptions();
@@ -590,13 +520,18 @@ function handleAdd() {
 async function handleUpdate(row) {
   if (!requireVersion()) return;
   const request = ++dialogRequest;
-  const response = await getRule(row.id, versionId.value, 'MODEL');
+  const response = await getRule(row.id, versionId.value, 'DATA');
   if (request !== dialogRequest) return;
   attributeLoadingCount.value = 0;
-  resetEnums();
-  form.value = {...emptyForm(), ...response.data};
+  form.value = {
+    ...emptyForm(),
+    ...response.data,
+    conditions: response.data?.conditions?.length
+      ? response.data.conditions.map(condition => ({...condition, key: globalThis.crypto.randomUUID()}))
+      : [createCondition()]
+  };
   detailOpen.value = false;
-  dialogTitle.value = '修改模型公理';
+  dialogTitle.value = '修改数据规则';
   open.value = true;
   nextTick(() => ruleRef.value?.clearValidate());
   loadOptions();
@@ -605,10 +540,9 @@ async function handleUpdate(row) {
 async function handleDetail(row) {
   if (!requireVersion()) return;
   const request = ++dialogRequest;
-  const response = await getRule(row.id, versionId.value, 'MODEL');
+  const response = await getRule(row.id, versionId.value, 'DATA');
   if (request !== dialogRequest) return;
   attributeLoadingCount.value = 0;
-  resetEnums();
   detail.value = response.data;
   await loadDetailOptions();
   if (request === dialogRequest) detailOpen.value = true;
@@ -621,11 +555,8 @@ async function loadDetailOptions() {
     const options = await listObjectTypeOptions(versionId.value);
     if (request !== dialogRequest) return;
     objectTypeOptions.value = options;
-    const relations = await listRelationOptions(versionId.value);
-    if (request !== dialogRequest) return;
-    relationOptions.value = relations;
+
     await Promise.allSettled(getRecordObjectIds(detail.value).map(loadObjectOptions));
-    if (request === dialogRequest && detail.value.type === 'PROPERTY_RANGE') await loadEnums(detail.value.objectTypeId);
   } catch {
     if (request === dialogRequest) ElMessage.warning('部分选项加载失败，详情暂时显示对应编号');
   }
@@ -649,14 +580,6 @@ async function submitForm() {
     description: form.value.description.trim(),
     createBy: form.value.createBy || userStore.nickName || userStore.name || '当前用户'
   };
-  if (data.type === 'PROPERTY_RANGE') {
-    const basicType = data.typeCategory === 1 ? data.basicTypeCode : undefined;
-    data.unit = [1, 2].includes(basicType) ? data.unit : null;
-    data.decimalPlaces = basicType === 2 ? data.decimalPlaces : null;
-    data.format = basicType === 4 ? data.format : null;
-    data.enumType = basicType === 5 ? data.enumType : null;
-    data.enumSource = basicType === 5 && data.enumType ? data.enumSource : null;
-  }
   saving.value = true;
   try {
     await (data.id ? updateRule(data) : addRule(data));
@@ -678,7 +601,7 @@ async function handleDelete(row) {
   const context = contextRequest;
   const deletingVersion = versionId.value;
   try {
-    const message = row ? '是否删除模型公理“' + row.name + '”？' : '是否删除选中的 ' + ids.length + ' 条模型公理？';
+    const message = row ? '是否删除数据规则“' + row.name + '”？' : '是否删除选中的 ' + ids.length + ' 条数据规则？';
     await ElMessageBox.confirm(message, '删除确认', {type: 'warning'});
   } catch {
     return;
@@ -686,7 +609,7 @@ async function handleDelete(row) {
   if (context !== contextRequest || deleting.value) return;
   deleting.value = true;
   try {
-    await delRule(ids, deletingVersion, 'MODEL');
+    await delRule(ids, deletingVersion, 'DATA');
     if (context !== contextRequest) return;
     ElMessage.success('删除成功');
     await getList();
@@ -716,109 +639,64 @@ function attributeLabel(objectTypeId, attributeId) {
 }
 
 function getRecordObjectIds(record) {
-  return record.type === 'PROPERTY_RANGE' && record.objectTypeId ? [record.objectTypeId] : [];
+  return [...new Set((record.conditions || []).map(item => item.objectTypeId).filter(Boolean))];
 }
 
 function handleTypeChange() {
-  const {id, name, description, level, type, createBy, createTime} = form.value;
-  form.value = {...emptyForm(), id, name, description, level, type, createBy, createTime};
-  resetEnums();
+  form.value.conditions = [createCondition()];
   nextTick(() => ruleRef.value?.clearValidate());
 }
 
-function handleObjectTypeChange() {
-  form.value.attributeId = '';
-  form.value.businessTypeKey = '';
-  clearTypeConfig();
-  resetEnums();
-  if (form.value.type === 'PROPERTY_RANGE') {
-    loadObjectOptions(form.value.objectTypeId);
-    loadEnums();
-  }
+function handleConditionObjectChange(condition) {
+  condition.attributeId = '';
+  condition.value = '';
+  loadObjectOptions(condition.objectTypeId);
 }
 
-function handleValueTypeChange() {
-  form.value.basicTypeCode = undefined;
-  form.value.businessTypeKey = '';
-  clearTypeConfig();
-  nextTick(() => ruleRef.value?.clearValidate(['basicTypeCode', 'businessTypeKey']));
+function handleConditionAttributeChange(condition) {
+  condition.value = '';
 }
 
-function clearTypeConfig() {
-  Object.assign(form.value, {unit: '', decimalPlaces: undefined, format: '', enumType: undefined, enumSource: 'PROJECT'});
-  nextTick(() => ruleRef.value?.clearValidate(['unit', 'decimalPlaces', 'format', 'enumType']));
+function getConditionAttributes(condition) {
+  const attributes = attributeOptions[condition.objectTypeId] || [];
+  if (!['RANGE', 'FORMAT'].includes(form.value.type)) return attributes;
+  const businessTypes = businessTypeOptions[condition.objectTypeId] || [];
+  const typeCodes = form.value.type === 'FORMAT' ? [4] : [1, 2];
+  return attributes.filter(item => typeCodes.includes(getBasicTypeCode(item, businessTypes)));
 }
 
-function handleBasicTypeChange() {
-  clearTypeConfig();
+function setConditionSelectRef(key, element) {
+  if (element) conditionSelectRefs.set(key, element);
+  else conditionSelectRefs.delete(key);
 }
 
-function handleBusinessTypeChange() {
-  clearTypeConfig();
+async function addCondition() {
+  const condition = createCondition();
+  form.value.conditions.push(condition);
+  await nextTick();
+  conditionSelectRefs.get(condition.key)?.focus();
 }
 
-function resetEnums() {
-  ++enumRequest;
-  enumOptions.value = [];
-  enumsLoading.value = false;
-  enumsError.value = '';
+function removeCondition(index) {
+  if (form.value.conditions.length > 1) form.value.conditions.splice(index, 1);
 }
 
 function validateExpression() {
-  const record = form.value;
-  const typeExists = id => objectTypeOptions.value.some(item => item.id === id);
-  if (record.type === 'DOMAIN_RANGE') {
-    const relationExists = relationOptions.value.some(item => String(item.id) === record.relationId);
-    if (!relationExists || !typeExists(record.domainId) || !typeExists(record.rangeId)) {
-      return '请选择有效的关系、Domain 和 Range';
-    }
-    return '';
-  }
-  if (!typeExists(record.objectTypeId)) return '请选择有效的对象类型';
-  if (record.type !== 'PROPERTY_RANGE') {
-    if (!typeExists(record.otherTypeId) || record.objectTypeId === record.otherTypeId) {
-      return '请选择两个不同的对象类型';
-    }
-    return '';
-  }
-  if (!currentAttributes.value.some(item => item.id === record.attributeId)) {
-    return '请选择当前对象类型的有效属性';
-  }
-  if (record.typeCategory === 1 && !basic_data_type.value.some(item => Number(item.value) === record.basicTypeCode)) {
-    return '请选择有效的基础数据类型';
-  }
-  if (record.typeCategory === 2 && !currentBusinessTypes.value.some(item => item.key === record.businessTypeKey)) {
-    return '请选择有效的业务数据类型';
-  }
-  return '';
+  return validateConditions(form.value, attributeOptions, businessTypeOptions);
 }
 
 function getDetailFields(record) {
-  if (record.type === 'DOMAIN_RANGE') {
-    return [
-      {label: '对象类型关系', value: relationOptions.value.find(item => String(item.id) === record.relationId)?.name || record.relationId},
-      {label: 'Domain', value: objectTypeLabel(record.domainId)},
-      {label: 'Range', value: objectTypeLabel(record.rangeId)}
-    ];
-  }
-  if (record.type === 'PROPERTY_RANGE') {
-    const businessType = findBusinessType(record);
-    const fields = [
-      {label: '对象类型', value: objectTypeLabel(record.objectTypeId)},
-      {label: '数据属性', value: attributeLabel(record.objectTypeId, record.attributeId)},
-      {label: '值类型', value: record.typeCategory === 1 ? '基础数据类型' : '业务数据类型'},
-      {label: '数据类型', value: record.typeCategory === 1 ? proxy.selectDictLabel(basic_data_type.value, record.basicTypeCode) : businessType?.name || record.businessTypeKey}
-    ];
-    if (record.typeCategory === 2) {
-      fields.push({label: '基础数据类型', value: basicTypeLabel(resolvedConfig(record).basicTypeCode)});
-      if (businessType?.description) fields.push({label: '类型描述', value: businessType.description, multiline: true});
-    }
-    return fields;
-  }
   return [
-    {label: record.type === 'SUBCLASS' ? '子类型' : '对象类型A', value: objectTypeLabel(record.objectTypeId)},
-    {label: record.type === 'SUBCLASS' ? '父类型' : '对象类型B', value: objectTypeLabel(record.otherTypeId)}
+    {label: '条件关系', value: record.conditionRelation === 'AND' ? '全部满足（AND）' : '任一满足（OR）'},
+    {label: '失败提示', value: record.failureMessage, multiline: true}
   ];
+}
+
+function conditionOperator(type, operator) {
+  if (type === 'REQUIRED') return '为空';
+  if (type === 'ENUM') return '不属于';
+  if (type === 'FORMAT') return '不匹配';
+  return proxy.selectDictLabel(om_rule_operator.value, operator);
 }
 
 watch(versionId, () => {
@@ -829,9 +707,7 @@ watch(versionId, () => {
   optionsLoading.value = false;
   attributeLoadingCount.value = 0;
   optionsError.value = '';
-  resetEnums();
   objectTypeOptions.value = [];
-  relationOptions.value = [];
   Object.keys(attributeOptions).forEach(key => delete attributeOptions[key]);
   Object.keys(businessTypeOptions).forEach(key => delete businessTypeOptions[key]);
   query.name = '';
@@ -848,20 +724,17 @@ watch(open, value => {
   ++dialogRequest;
   attributeLoadingCount.value = 0;
   optionsLoading.value = false;
-  ++enumRequest;
-  enumsLoading.value = false;
 });
 
 onBeforeUnmount(() => {
   ++contextRequest;
   ++dialogRequest;
   ++listRequest;
-  ++enumRequest;
 });
 </script>
 
 <style scoped>
-.model-axiom-page :deep(.el-dialog) {
+.data-rule-page :deep(.el-dialog) {
   max-width: calc(100vw - 32px);
 }
 
@@ -907,10 +780,86 @@ onBeforeUnmount(() => {
   margin-bottom: 16px;
 }
 
-.business-type-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.conditions {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: #f5f8ff;
+  border: 1px solid #d9e2ff;
+  border-radius: 4px;
 }
 
+.condition-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.condition-label {
+  flex: 0 0 62px;
+  color: var(--el-text-color-regular);
+  white-space: nowrap;
+}
+
+.condition-fields {
+  display: flex;
+  align-items: center;
+  flex: 1 1 330px;
+  min-width: 0;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.condition-fields > .condition-object,
+.condition-fields > .condition-attribute {
+  flex: 1 1 140px;
+  width: auto;
+  min-width: 0;
+}
+
+.condition-fields > .condition-comparison {
+  flex: 0 1 110px;
+  width: 110px;
+  min-width: 90px;
+}
+
+.condition-fields > .condition-value {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.condition-actions {
+  display: flex;
+  align-items: center;
+  /* 每行预留完整的增删操作宽度，避免最后一行按内容撑宽。 */
+  flex: 0 0 120px;
+  min-width: 0;
+  gap: 12px;
+}
+
+.condition-actions .el-button {
+  flex-shrink: 0;
+}
+
+.condition-actions .el-button + .el-button {
+  margin-left: 0;
+}
+
+.condition-operator {
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .condition-fields {
+    flex-basis: 260px;
+  }
+
+  .condition-actions {
+    margin-left: auto;
+  }
+}
 </style>

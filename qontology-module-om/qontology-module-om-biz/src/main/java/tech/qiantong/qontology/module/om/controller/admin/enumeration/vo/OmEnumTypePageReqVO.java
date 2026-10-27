@@ -32,24 +32,21 @@ import tech.qiantong.qontology.core.page.PageParam;
 @Data
 public class OmEnumTypePageReqVO extends PageParam {
 
-    @Schema(description = "工作区id")
+    @Schema(description = "工作区 ID，用于限定数据所属工作区")
     private Long workspaceId;
 
-    @Schema(description = "版本id")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     private Long versionId;
 
+    /** 序列化版本号 */
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "枚举名称", example = "")
+    @Schema(description = "枚举类型名称，用于界面展示", example = "")
     private String enumName;
 
-    @Schema(description = "枚举类型", example = "")
+    @Schema(description = "枚举类型编码；与枚举来源共同定位枚举类型，不是枚举记录 ID", example = "")
     private String enumType;
 
     @Schema(description = "状态", example = "")
     private String status;
-
-
-
-
 }

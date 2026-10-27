@@ -21,15 +21,8 @@ package tech.qiantong.qontology.module.om.service.object.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
-import java.util.Collection;
 import java.util.ArrayList;
-import tech.qiantong.qontology.core.utils.object.BeanUtils;
-import tech.qiantong.qontology.module.basic.api.dto.dataType.BasicDataTypeOptionDTO;
-import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmAttributeBusinessTypeOptionRespVO;
-import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeEnumOptionRespVO;
-import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
-import tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper;
-import tech.qiantong.qontology.module.om.service.dataType.IOmDataTypeService;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,14 +32,21 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.qiantong.qontology.common.exception.ServiceException;
-import tech.qiantong.qontology.module.basic.api.service.dataType.IBasicDataTypeApiService;
 import tech.qiantong.qontology.core.page.PageResult;
+import tech.qiantong.qontology.core.utils.object.BeanUtils;
+import tech.qiantong.qontology.module.basic.api.dto.dataType.BasicDataTypeOptionDTO;
+import tech.qiantong.qontology.module.basic.api.service.dataType.IBasicDataTypeApiService;
+import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeEnumOptionRespVO;
+import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmAttributeBusinessTypeOptionRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeAttributePageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeAttributeSaveReqVO;
+import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttributeDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
+import tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeAttributeMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeMapper;
+import tech.qiantong.qontology.module.om.service.dataType.IOmDataTypeService;
 import tech.qiantong.qontology.module.om.service.object.IOmObjectTypeAttributeService;
 
 /**
@@ -58,8 +58,9 @@ import tech.qiantong.qontology.module.om.service.object.IOmObjectTypeAttributeSe
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class OmObjectTypeAttributeServiceImpl
-        extends ServiceImpl<OmObjectTypeAttributeMapper, OmObjectTypeAttributeDO>
-        implements IOmObjectTypeAttributeService {
+    extends ServiceImpl<OmObjectTypeAttributeMapper, OmObjectTypeAttributeDO>
+    implements IOmObjectTypeAttributeService {
+
     @Resource
     private OmObjectTypeAttributeMapper omObjectTypeAttributeMapper;
 
@@ -71,11 +72,16 @@ public class OmObjectTypeAttributeServiceImpl
 
     @Resource
     private OmDataTypeMapper projectDataTypeMapper;
+
     @Resource
     private IOmDataTypeService omDataTypeService;
 
     @Override
-    public List<OmAttributeBusinessTypeOptionRespVO> getBusinessDataTypes(Long objectTypeId, Long workspaceId, String source) {
+    public List<OmAttributeBusinessTypeOptionRespVO> getBusinessDataTypes(
+        Long objectTypeId,
+        Long workspaceId,
+        String source
+    ) {
         OmObjectTypeDO parent = requireObjectType(objectTypeId, workspaceId);
         requireSource(source);
         List<OmAttributeBusinessTypeOptionRespVO> result = new ArrayList<>();
@@ -83,9 +89,14 @@ public class OmObjectTypeAttributeServiceImpl
             dataTypeApiService.getAvailableDataTypes().forEach(type -> result.add(toGlobalOption(type)));
         } else {
             if (parent.getVersionId() == null) throw new ServiceException("请选择项目版本");
-            projectDataTypeMapper.selectList(new QueryWrapper<OmDataTypeDO>()
-                    .eq("version_id", parent.getVersionId()).eq("valid_flag", true).orderByDesc("create_time", "id"))
-                    .forEach(type -> result.add(toProjectOption(type)));
+            projectDataTypeMapper
+                .selectList(
+                    new QueryWrapper<OmDataTypeDO>()
+                        .eq("version_id", parent.getVersionId())
+                        .eq("valid_flag", true)
+                        .orderByDesc("create_time", "id")
+                )
+                .forEach(type -> result.add(toProjectOption(type)));
         }
         return result;
     }
@@ -96,12 +107,23 @@ public class OmObjectTypeAttributeServiceImpl
         return omDataTypeService.getEnumOptions(parent.getVersionId(), source);
     }
 
+    /**
+     * 校验来源为 PROJECT 或 GLOBAL
+     *
+     * @param source 数据来源，PROJECT 当前项目版本，GLOBAL 全局
+     */
     private void requireSource(String source) {
         if (!Set.of("PROJECT", "GLOBAL").contains(source == null ? "" : source)) {
             throw new ServiceException("类型来源只能为当前项目或全局");
         }
     }
 
+    /**
+     * 将全局业务数据类型转换为可选项，并标记全局来源
+     *
+     * @param type 对象类型信息
+     * @return 业务处理结果
+     */
     private OmAttributeBusinessTypeOptionRespVO toGlobalOption(BasicDataTypeOptionDTO type) {
         OmAttributeBusinessTypeOptionRespVO option = BeanUtils.toBean(type, OmAttributeBusinessTypeOptionRespVO.class);
         option.setBusinessTypeSource("GLOBAL");
@@ -109,6 +131,12 @@ public class OmObjectTypeAttributeServiceImpl
         return option;
     }
 
+    /**
+     * 将项目业务数据类型转换为可选项，并标记项目来源
+     *
+     * @param type 对象类型信息
+     * @return 业务处理结果
+     */
     private OmAttributeBusinessTypeOptionRespVO toProjectOption(OmDataTypeDO type) {
         OmAttributeBusinessTypeOptionRespVO option = BeanUtils.toBean(type, OmAttributeBusinessTypeOptionRespVO.class);
         option.setDataType(type.getDataType() == null ? null : type.getDataType().getCode());
@@ -116,6 +144,14 @@ public class OmObjectTypeAttributeServiceImpl
         return option;
     }
 
+    /**
+     * 校验业务类型的来源、有效状态及项目版本归属
+     *
+     * @param id 记录 ID
+     * @param source 数据来源，PROJECT 当前项目版本，GLOBAL 全局
+     * @param parent 所属对象类型
+     * @return 业务处理结果
+     */
     private OmAttributeBusinessTypeOptionRespVO requireBusinessType(Long id, String source, OmObjectTypeDO parent) {
         requireSource(source);
         if (id == null) throw new ServiceException("请选择业务数据类型");
@@ -125,8 +161,12 @@ public class OmObjectTypeAttributeServiceImpl
             return toGlobalOption(type);
         }
         OmDataTypeDO type = projectDataTypeMapper.selectById(id);
-        if (type == null || !Boolean.TRUE.equals(type.getValidFlag()) || parent.getVersionId() == null
-                || !Objects.equals(type.getVersionId(), parent.getVersionId())) {
+        if (
+            type == null ||
+            !Boolean.TRUE.equals(type.getValidFlag()) ||
+            parent.getVersionId() == null ||
+            !Objects.equals(type.getVersionId(), parent.getVersionId())
+        ) {
             throw new ServiceException("业务数据类型不存在、已停用或不属于当前项目版本");
         }
         return toProjectOption(type);
@@ -143,8 +183,11 @@ public class OmObjectTypeAttributeServiceImpl
     public OmObjectTypeAttributeDO getOmObjectTypeAttributeById(Long id, Long objectTypeId, Long workspaceId) {
         requireObjectType(objectTypeId, workspaceId);
         OmObjectTypeAttributeDO attribute = omObjectTypeAttributeMapper.selectById(id);
-        if (attribute == null || !Objects.equals(attribute.getObjectTypeId(), objectTypeId)
-                || !Objects.equals(attribute.getWorkspaceId(), workspaceId)) {
+        if (
+            attribute == null ||
+            !Objects.equals(attribute.getObjectTypeId(), objectTypeId) ||
+            !Objects.equals(attribute.getWorkspaceId(), workspaceId)
+        ) {
             throw new ServiceException("对象类型属性不存在或不属于当前对象类型");
         }
         return attribute;
@@ -166,7 +209,10 @@ public class OmObjectTypeAttributeServiceImpl
         }
         OmObjectTypeDO parent = requireObjectType(request.getObjectTypeId(), request.getWorkspaceId());
         OmObjectTypeAttributeDO existing = getOmObjectTypeAttributeById(
-                request.getId(), request.getObjectTypeId(), request.getWorkspaceId());
+            request.getId(),
+            request.getObjectTypeId(),
+            request.getWorkspaceId()
+        );
         OmObjectTypeAttributeDO attribute = buildAttribute(request, parent);
         attribute.setId(request.getId());
         attribute.setValidFlag(existing.getValidFlag());
@@ -185,13 +231,21 @@ public class OmObjectTypeAttributeServiceImpl
         requireObjectType(objectTypeId, workspaceId);
         Set<Long> ids = new LinkedHashSet<>(idList);
         List<OmObjectTypeAttributeDO> attributes = omObjectTypeAttributeMapper.selectList(
-                new QueryWrapper<OmObjectTypeAttributeDO>().eq("object_type_id", objectTypeId)
-                        .eq("workspace_id", workspaceId).in("id", ids).last("FOR UPDATE"));
+            new QueryWrapper<OmObjectTypeAttributeDO>()
+                .eq("object_type_id", objectTypeId)
+                .eq("workspace_id", workspaceId)
+                .in("id", ids)
+                .last("FOR UPDATE")
+        );
         if (attributes.size() != ids.size()) {
             throw new ServiceException("部分属性已不存在或不属于当前对象类型，请刷新后重试");
         }
-        return omObjectTypeAttributeMapper.delete(new QueryWrapper<OmObjectTypeAttributeDO>()
-                .eq("object_type_id", objectTypeId).eq("workspace_id", workspaceId).in("id", ids));
+        return omObjectTypeAttributeMapper.delete(
+            new QueryWrapper<OmObjectTypeAttributeDO>()
+                .eq("object_type_id", objectTypeId)
+                .eq("workspace_id", workspaceId)
+                .in("id", ids)
+        );
     }
 
     @Override
@@ -200,17 +254,26 @@ public class OmObjectTypeAttributeServiceImpl
         if (objectTypeIds == null || objectTypeIds.isEmpty()) {
             return counts;
         }
-        // 对当前列表的对象类型一次性聚合，避免逐行查询数量。
-        for (Map<String, Object> row : omObjectTypeAttributeMapper.selectMaps(new QueryWrapper<OmObjectTypeAttributeDO>()
+        // 对当前列表的对象类型一次性聚合，避免逐行查询数量
+        for (Map<String, Object> row : omObjectTypeAttributeMapper.selectMaps(
+            new QueryWrapper<OmObjectTypeAttributeDO>()
                 .select("object_type_id", "COUNT(*) AS attribute_count")
                 .in("object_type_id", objectTypeIds)
-                .groupBy("object_type_id"))) {
+                .groupBy("object_type_id")
+        )) {
             Long objectTypeId = ((Number) row.get("object_type_id")).longValue();
             counts.put(objectTypeId, ((Number) row.get("attribute_count")).longValue());
         }
         return counts;
     }
 
+    /**
+     * 校验所属对象类型存在且属于当前工作区
+     *
+     * @param id 记录 ID
+     * @param workspaceId 工作区 ID
+     * @return 经校验的业务数据
+     */
     private OmObjectTypeDO requireObjectType(Long id, Long workspaceId) {
         if (id == null || workspaceId == null) {
             throw new ServiceException("对象类型id和工作区id不能为空");
@@ -222,6 +285,13 @@ public class OmObjectTypeAttributeServiceImpl
         return parent;
     }
 
+    /**
+     * 校验属性代码和类型配置，从服务端解析业务类型配置并构建属性
+     *
+     * @param request 业务请求参数
+     * @param parent 所属对象类型
+     * @return 待保存的对象类型属性
+     */
     private OmObjectTypeAttributeDO buildAttribute(OmObjectTypeAttributeSaveReqVO request, OmObjectTypeDO parent) {
         String name = request.getName() == null ? "" : request.getName().trim();
         String description = request.getDescription() == null ? "" : request.getDescription().trim();
@@ -237,9 +307,12 @@ public class OmObjectTypeAttributeServiceImpl
             throw new ServiceException("属性代码须以字母开头，仅允许字母、数字和下划线，长度不超过128");
         }
         QueryWrapper<OmObjectTypeAttributeDO> duplicate = new QueryWrapper<OmObjectTypeAttributeDO>()
-                .eq("object_type_id", parent.getId()).eq("code", code);
+            .eq("object_type_id", parent.getId())
+            .eq("code", code);
         if (request.getId() != null) duplicate.ne("id", request.getId());
-        if (omObjectTypeAttributeMapper.selectCount(duplicate) > 0) throw new ServiceException("当前对象类型下属性代码已存在");
+        if (omObjectTypeAttributeMapper.selectCount(duplicate) > 0) throw new ServiceException(
+            "当前对象类型下属性代码已存在"
+        );
         Integer basicTypeCode;
         Long businessTypeId = null;
         String businessSource = null;
@@ -262,7 +335,9 @@ public class OmObjectTypeAttributeServiceImpl
                 if (decimalPlaces != null && decimalPlaces < 0) throw new ServiceException("请填写有效的小数位数");
             }
             if (basicTypeCode == 4) {
-                format = request.getFormat() == null || request.getFormat().isBlank() ? null : request.getFormat().trim();
+                format = request.getFormat() == null || request.getFormat().isBlank()
+                    ? null
+                    : request.getFormat().trim();
                 if (format != null && format.length() > 128) throw new ServiceException("日期格式长度不超过128");
             }
             if (basicTypeCode == 5 && request.getEnumType() != null && !request.getEnumType().isBlank()) {
@@ -270,8 +345,13 @@ public class OmObjectTypeAttributeServiceImpl
                 enumSource = request.getEnumSource() == null ? "PROJECT" : request.getEnumSource();
                 requireSource(enumSource);
                 final String selectedCode = enumType;
-                if (enumType == null || omDataTypeService.getEnumOptions(parent.getVersionId(), enumSource).stream()
-                        .noneMatch(option -> Objects.equals(option.getEnumType(), selectedCode))) {
+                if (
+                    enumType == null ||
+                    omDataTypeService
+                        .getEnumOptions(parent.getVersionId(), enumSource)
+                        .stream()
+                        .noneMatch(option -> Objects.equals(option.getEnumType(), selectedCode))
+                ) {
                     throw new ServiceException("请选择对应来源下的有效枚举类型");
                 }
             }
@@ -282,7 +362,7 @@ public class OmObjectTypeAttributeServiceImpl
             if (selected.getDataType() == null || !selected.getDataType().matches("[0-5]")) {
                 throw new ServiceException("所选业务数据类型配置无效");
             }
-            // 只读配置一律从服务端来源读取，不采用客户端提交的配置。
+            // 只读配置一律从服务端来源读取，不采用客户端提交的配置
             basicTypeCode = Integer.valueOf(selected.getDataType());
             unit = selected.getUnit();
             decimalPlaces = selected.getDecimalPlaces();
@@ -297,22 +377,22 @@ public class OmObjectTypeAttributeServiceImpl
             throw new ServiceException("备注长度不能超过512个字符");
         }
         OmObjectTypeAttributeDO attribute = OmObjectTypeAttributeDO.builder()
-                .workspaceId(parent.getWorkspaceId())
-                .versionId(parent.getVersionId())
-                .objectTypeId(parent.getId())
-                .name(name)
-                .code(code)
-                .typeCategory(request.getTypeCategory())
-                .basicTypeCode(basicTypeCode)
-                .businessTypeId(businessTypeId)
-                .businessTypeSource(businessSource)
-                .unit(unit)
-                .decimalPlaces(decimalPlaces)
-                .format(format)
-                .enumType(enumType)
-                .enumSource(enumSource)
-                .description(description)
-                .build();
+            .workspaceId(parent.getWorkspaceId())
+            .versionId(parent.getVersionId())
+            .objectTypeId(parent.getId())
+            .name(name)
+            .code(code)
+            .typeCategory(request.getTypeCategory())
+            .basicTypeCode(basicTypeCode)
+            .businessTypeId(businessTypeId)
+            .businessTypeSource(businessSource)
+            .unit(unit)
+            .decimalPlaces(decimalPlaces)
+            .format(format)
+            .enumType(enumType)
+            .enumSource(enumSource)
+            .description(description)
+            .build();
         attribute.setRemark(remark);
         return attribute;
     }

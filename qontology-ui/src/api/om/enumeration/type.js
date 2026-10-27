@@ -16,7 +16,7 @@
  * See the LICENSE file in the project root for full license information.
  */
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 // 查询枚举类型列表
 export function listType(query) {
@@ -24,7 +24,7 @@ export function listType(query) {
         url: '/om/enumType/list',
         method: 'get',
         params: query
-    })
+    });
 }
 
 // 查询枚举类型详细
@@ -32,7 +32,7 @@ export function getType(enumId) {
     return request({
         url: '/om/enumType/' + enumId,
         method: 'get'
-    })
+    });
 }
 
 // 新增枚举类型
@@ -41,7 +41,7 @@ export function addType(data) {
         url: '/om/enumType',
         method: 'post',
         data: data
-    })
+    });
 }
 
 // 修改枚举类型
@@ -50,7 +50,7 @@ export function updateType(data) {
         url: '/om/enumType',
         method: 'put',
         data: data
-    })
+    });
 }
 
 // 删除枚举类型
@@ -58,5 +58,5 @@ export function delType(enumId) {
     return request({
         url: '/om/enumType/' + enumId,
         method: 'delete'
-    })
+    });
 }

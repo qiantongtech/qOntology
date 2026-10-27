@@ -56,7 +56,10 @@ import tech.qiantong.qontology.module.om.service.omtarget.IOmObjectTypeTargetSer
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class OmObjectTypeServiceImpl extends ServiceImpl<OmObjectTypeMapper, OmObjectTypeDO> implements IOmObjectTypeService {
+public class OmObjectTypeServiceImpl
+    extends ServiceImpl<OmObjectTypeMapper, OmObjectTypeDO>
+    implements IOmObjectTypeService {
+
     @Resource
     private OmObjectTypeMapper omObjectTypeMapper;
 
@@ -77,13 +80,20 @@ public class OmObjectTypeServiceImpl extends ServiceImpl<OmObjectTypeMapper, OmO
         pageReqVO.setName(pageReqVO.getName() == null ? null : pageReqVO.getName().trim());
         List<Long> linkedIds = null;
         if (pageReqVO.getTargetIdList() != null && !pageReqVO.getTargetIdList().isEmpty()) {
-            linkedIds = objectTypeTargetService.list(new QueryWrapper<OmObjectTypeTargetDO>()
-                            .select("object_type_id").eq("valid_flag", true)
-                            .in("target_id", pageReqVO.getTargetIdList()))
-                    .stream().map(OmObjectTypeTargetDO::getObjectTypeId).distinct().collect(Collectors.toList());
+            linkedIds = objectTypeTargetService
+                .list(
+                    new QueryWrapper<OmObjectTypeTargetDO>()
+                        .select("object_type_id")
+                        .eq("valid_flag", true)
+                        .in("target_id", pageReqVO.getTargetIdList())
+                )
+                .stream()
+                .map(OmObjectTypeTargetDO::getObjectTypeId)
+                .distinct()
+                .collect(Collectors.toList());
             if (linkedIds.isEmpty()) return PageResult.empty();
         }
-        // BaseMapperX 对 pageSize=-1 直接调用 selectList，普通请求才调用 selectPage。
+        // BaseMapperX 对 pageSize=-1 直接调用 selectList，普通请求才调用 selectPage
         return omObjectTypeMapper.selectPageWithLinkedIds(pageReqVO, linkedIds);
     }
 
@@ -103,15 +113,18 @@ public class OmObjectTypeServiceImpl extends ServiceImpl<OmObjectTypeMapper, OmO
         if (existing == null) {
             throw new ServiceException("对象类型不存在");
         }
-        if ((existing.getParentId() == null || existing.getParentId() == 0L)
-                && updateReqVO.getParentId() != null && updateReqVO.getParentId() != 0L) {
+        if (
+            (existing.getParentId() == null || existing.getParentId() == 0L) &&
+            updateReqVO.getParentId() != null &&
+            updateReqVO.getParentId() != 0L
+        ) {
             throw new ServiceException("顶级对象类型不能修改上级对象类型");
         }
         OmObjectTypeDO updateObj = BeanUtils.toBean(updateReqVO, OmObjectTypeDO.class);
         updateObj.setWorkspaceId(existing.getWorkspaceId());
         updateObj.setVersionId(existing.getVersionId());
         prepareTree(updateObj);
-        // 包括移到顶级：移动节点时同步更新全部后代的祖级路径。
+        // 包括移到顶级：移动节点时同步更新全部后代的祖级路径
         String oldPrefix = existing.getAncestors() + "," + existing.getId();
         String newPrefix = updateObj.getAncestors() + "," + existing.getId();
         for (OmObjectTypeDO child : scopedTypes(existing)) {
@@ -135,30 +148,47 @@ public class OmObjectTypeServiceImpl extends ServiceImpl<OmObjectTypeMapper, OmO
         if (omObjectTypeMapper.selectById(id) == null) {
             throw new ServiceException("对象类型不存在");
         }
-        if (omObjectTypeMapper.selectCount(new QueryWrapper<OmObjectTypeDO>()
-                .eq("parent_id", id)) > 0) {
+        if (omObjectTypeMapper.selectCount(new QueryWrapper<OmObjectTypeDO>().eq("parent_id", id)) > 0) {
             throw new ServiceException("存在下级对象类型，请先删除下级");
         }
-        if (attributeMapper.selectCount(new QueryWrapper<OmObjectTypeAttributeDO>()
-                .eq("object_type_id", id)) > 0) {
+        if (attributeMapper.selectCount(new QueryWrapper<OmObjectTypeAttributeDO>().eq("object_type_id", id)) > 0) {
             throw new ServiceException("存在对象类型属性，请先删除属性");
         }
-        if (relationMapper.selectCount(new QueryWrapper<OmObjectTypeRelationDO>()
-                .and(query -> query.eq("start_type_id", id).or().eq("end_type_id", id))) > 0) {
+        if (
+            relationMapper.selectCount(
+                new QueryWrapper<OmObjectTypeRelationDO>().and(query ->
+                    query.eq("start_type_id", id).or().eq("end_type_id", id)
+                )
+            ) >
+            0
+        ) {
             throw new ServiceException("对象类型已被关系引用，请先删除相关关系");
         }
         objectTypeTargetService.removeByObjectType(id);
         return omObjectTypeMapper.deleteById(id);
     }
 
+    /**
+     * 构造当前工作区和版本范围内的对象类型查询条件
+     *
+     * @param type 对象类型信息
+     * @return 查询结果集合
+     */
     private List<OmObjectTypeDO> scopedTypes(OmObjectTypeDO type) {
-        return omObjectTypeMapper.selectList(new QueryWrapper<OmObjectTypeDO>()
+        return omObjectTypeMapper.selectList(
+            new QueryWrapper<OmObjectTypeDO>()
                 .eq("workspace_id", type.getWorkspaceId())
                 .eq(type.getVersionId() != null, "version_id", type.getVersionId())
                 .isNull(type.getVersionId() == null, "version_id")
-                .orderByAsc("order_num", "id"));
+                .orderByAsc("order_num", "id")
+        );
     }
 
+    /**
+     * 校验上级对象类型并准备节点的祖级路径
+     *
+     * @param type 对象类型信息
+     */
     private void prepareTree(OmObjectTypeDO type) {
         if (type.getName() == null || type.getName().trim().isEmpty() || type.getName().length() > 128) {
             throw new ServiceException("名称不能为空，长度不能超过128个字符");
@@ -181,15 +211,20 @@ public class OmObjectTypeServiceImpl extends ServiceImpl<OmObjectTypeMapper, OmO
             type.setAncestors("0");
         } else {
             OmObjectTypeDO parent = omObjectTypeMapper.selectById(parentId);
-            if (parent == null || !Objects.equals(parent.getWorkspaceId(), type.getWorkspaceId())
-                    || !Objects.equals(parent.getVersionId(), type.getVersionId())) {
+            if (
+                parent == null ||
+                !Objects.equals(parent.getWorkspaceId(), type.getWorkspaceId()) ||
+                !Objects.equals(parent.getVersionId(), type.getVersionId())
+            ) {
                 throw new ServiceException("上级对象类型必须属于当前项目版本");
             }
             if (parent.getAncestors() == null) {
                 throw new ServiceException("父级祖级路径缺失，请先修复父级数据");
             }
-            if (Objects.equals(type.getId(), parentId)
-                    || Arrays.asList(parent.getAncestors().split(",")).contains(String.valueOf(type.getId()))) {
+            if (
+                Objects.equals(type.getId(), parentId) ||
+                Arrays.asList(parent.getAncestors().split(",")).contains(String.valueOf(type.getId()))
+            ) {
                 throw new ServiceException("不能将自身或下级设为父级");
             }
             type.setAncestors(parent.getAncestors() + "," + parentId);
@@ -197,6 +232,11 @@ public class OmObjectTypeServiceImpl extends ServiceImpl<OmObjectTypeMapper, OmO
         checkPathLength(type.getAncestors());
     }
 
+    /**
+     * 校验对象类型祖级路径的长度
+     *
+     * @param path 对象类型祖级 ID 路径
+     */
     private void checkPathLength(String path) {
         if (path.length() > 128) {
             throw new ServiceException("对象类型层级过深，祖级路径不能超过128个字符");
@@ -220,22 +260,28 @@ public class OmObjectTypeServiceImpl extends ServiceImpl<OmObjectTypeMapper, OmO
             throw new ServiceException("对象类型不存在");
         }
         List<OmObjectTypeDO> types = scopedTypes(current);
-        types.removeIf(type -> Objects.equals(type.getId(), id)
-                || (type.getAncestors() != null
-                && Arrays.asList(type.getAncestors().split(",")).contains(String.valueOf(id))));
+        types.removeIf(
+            type ->
+                Objects.equals(type.getId(), id) ||
+                (type.getAncestors() != null &&
+                    Arrays.asList(type.getAncestors().split(",")).contains(String.valueOf(id)))
+        );
         return types;
     }
 
     @Override
     public Map<Long, OmObjectTypeDO> getOmObjectTypeMap() {
         List<OmObjectTypeDO> omObjectTypeList = omObjectTypeMapper.selectList();
-        return omObjectTypeList.stream()
-                .collect(Collectors.toMap(
-                        OmObjectTypeDO::getId,
-                        omObjectTypeDO -> omObjectTypeDO,
-                        // 保留已存在的值
-                        (existing, replacement) -> existing
-                ));
+        return // 保留已存在的值
+        omObjectTypeList
+            .stream()
+            .// 保留已存在的值
+            collect(
+                // 保留已存在的值
+                Collectors
+                    // 保留已存在的值
+                    .toMap(OmObjectTypeDO::getId, omObjectTypeDO -> omObjectTypeDO, (existing, replacement) -> existing)
+            );
     }
 
     /**
@@ -247,16 +293,18 @@ public class OmObjectTypeServiceImpl extends ServiceImpl<OmObjectTypeMapper, OmO
      * @return 结果
      */
     @Override
-    public String importOmObjectType(List<OmObjectTypeRespVO> importExcelList, boolean isUpdateSupport, String operName) {
+    public String importOmObjectType(
+        List<OmObjectTypeRespVO> importExcelList,
+        boolean isUpdateSupport,
+        String operName
+    ) {
         if (StringUtils.isNull(importExcelList) || importExcelList.size() == 0) {
             throw new ServiceException("导入数据不能为空！");
         }
-
         int successNum = 0;
         int failureNum = 0;
         List<String> successMessages = new ArrayList<>();
         List<String> failureMessages = new ArrayList<>();
-
         for (OmObjectTypeRespVO respVO : importExcelList) {
             try {
                 Long omObjectTypeId = respVO.getId();

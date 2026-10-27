@@ -39,27 +39,25 @@ public class OmTermPageReqVO extends PageParam {
     private Long versionId;
 
     private static final long serialVersionUID = 1L;
+
     @Schema(description = "ID", example = "")
     private Long id;
-    @Schema(description = "标准名称", example = "")
+
+    @Schema(description = "术语的标准名称", example = "")
     private String stdName;
 
-    @Schema(description = "英文名称", example = "")
+    @Schema(description = "术语的英文名称", example = "")
     private String enName;
 
-    @Schema(description = "别名", example = "")
+    @Schema(description = "术语别名", example = "")
     private String alias;
 
-    @Schema(description = "缩写", example = "")
+    @Schema(description = "术语缩写", example = "")
     private String abbr;
 
-    @Schema(description = "来源", example = "")
+    @Schema(description = "术语来源", example = "")
     private String source;
 
     @Schema(description = "描述", example = "")
     private String description;
-
-
-
-
 }

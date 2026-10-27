@@ -19,10 +19,9 @@
 package tech.qiantong.qontology.module.om.controller.admin.term.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
 /**
@@ -48,27 +47,27 @@ public class OmTermSaveReqVO extends BaseEntity {
     @Schema(description = "ID")
     private Long id;
 
-    @Schema(description = "标准名称", example = "")
+    @Schema(description = "术语的标准名称", example = "")
     @NotBlank(message = "标准名称不能为空")
     @Size(max = 256, message = "标准名称长度不能超过256个字符")
     private String stdName;
 
-    @Schema(description = "英文名称", example = "")
+    @Schema(description = "术语的英文名称", example = "")
     @NotBlank(message = "英文名称不能为空")
     @Size(max = 256, message = "英文名称长度不能超过256个字符")
     private String enName;
 
-    @Schema(description = "别名", example = "")
+    @Schema(description = "术语别名", example = "")
     @NotBlank(message = "别名不能为空")
     @Size(max = 1024, message = "别名长度不能超过1024个字符")
     private String alias;
 
-    @Schema(description = "缩写", example = "")
+    @Schema(description = "术语缩写", example = "")
     @NotBlank(message = "缩写不能为空")
     @Size(max = 256, message = "缩写长度不能超过256个字符")
     private String abbr;
 
-    @Schema(description = "来源", example = "")
+    @Schema(description = "术语来源", example = "")
     @NotBlank(message = "来源不能为空")
     @Size(max = 200, message = "来源长度不能超过200个字符")
     private String source;
@@ -77,9 +76,7 @@ public class OmTermSaveReqVO extends BaseEntity {
     @Size(max = 500, message = "描述长度不能超过500个字符")
     private String description;
 
-    @Schema(description = "备注", example = "")
+    @Schema(description = "备注信息", example = "")
     @Size(max = 512, message = "备注长度不能超过512个字符")
     private String remark;
-
-
 }

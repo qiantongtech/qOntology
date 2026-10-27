@@ -18,11 +18,9 @@
 
 package tech.qiantong.qontology.module.basic.api.service.asset;
 
-
+import java.util.List;
 import tech.qiantong.qontology.module.basic.api.dto.datasource.BasicDatasourceReqDO;
 import tech.qiantong.qontology.module.basic.api.dto.datasource.BasicDatasourceRespDTO;
-
-import java.util.List;
 
 /**
  * 数据源Service接口
@@ -31,9 +29,20 @@ import java.util.List;
  * @date 2025-01-21
  */
 public interface IBasicDatasourceApiService {
+
+    /**
+     * 根据 ID 查询数据源信息
+     *
+     * @param id 数据源 ID
+     * @return 数据源信息
+     */
     BasicDatasourceRespDTO getDatasourceById(Long id);
 
+    /**
+     * 根据查询条件获取数据源分页结果中的记录
+     *
+     * @param reqDO 数据源查询条件，包含分页及筛选参数
+     * @return 当前查询结果中的数据源集合
+     */
     List<BasicDatasourceRespDTO> getDmDatasource(BasicDatasourceReqDO reqDO);
-
-
 }

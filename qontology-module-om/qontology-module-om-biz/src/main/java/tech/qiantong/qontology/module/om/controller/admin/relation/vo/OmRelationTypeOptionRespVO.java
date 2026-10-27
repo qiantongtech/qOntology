@@ -23,18 +23,22 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * 对象关系响应对象
+ */
 @Schema(description = "关系起点、终点对象类型选项响应")
 @Data
 public class OmRelationTypeOptionRespVO {
+
     @Schema(description = "ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @Schema(description = "上级对象类型id")
+    @Schema(description = "上级对象类型 ID；根节点的父级按对象类型树规则处理")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;
 
-    @Schema(description = "版本id，当前阶段可为空")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long versionId;
 

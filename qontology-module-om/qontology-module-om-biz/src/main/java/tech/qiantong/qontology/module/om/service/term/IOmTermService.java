@@ -18,15 +18,16 @@
 
 package tech.qiantong.qontology.module.om.service.term;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
-import com.baomidou.mybatisplus.extension.service.IService;
 import tech.qiantong.qontology.core.page.PageResult;
-import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermPageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermRespVO;
+import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.term.OmTermDO;
+
 /**
  * 术语Service接口
  *
@@ -55,6 +56,7 @@ public interface IOmTermService extends IService<OmTermDO> {
      * 更新术语
      *
      * @param updateReqVO 术语信息
+     * @return 影响行数
      */
     int updateOmTerm(OmTermSaveReqVO updateReqVO);
 
@@ -62,6 +64,7 @@ public interface IOmTermService extends IService<OmTermDO> {
      * 删除术语
      *
      * @param idList 术语编号
+     * @return 影响行数
      */
     int removeOmTerm(Collection<Long> idList);
 
@@ -87,7 +90,6 @@ public interface IOmTermService extends IService<OmTermDO> {
      */
     Map<Long, OmTermDO> getOmTermMap();
 
-
     /**
      * 导入术语数据
      *
@@ -97,5 +99,4 @@ public interface IOmTermService extends IService<OmTermDO> {
      * @return 结果
      */
     String importOmTerm(List<OmTermRespVO> importExcelList, boolean isUpdateSupport, String operName);
-
 }

@@ -18,14 +18,22 @@
 
 package tech.qiantong.qontology.module.om.controller.admin.dataType.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-/** 枚举选择项；来源与编码共同标识一个选项。 */
+/**
+ * 枚举选择项；来源与编码共同标识一个选项
+ */
 @Data
 public class OmDataTypeEnumOptionRespVO {
+
+    @Schema(description = "枚举类型名称，用于界面展示")
     private String enumName;
+
+    @Schema(description = "枚举类型编码；与枚举来源共同定位枚举类型，不是枚举记录 ID")
     private String enumType;
-    /** PROJECT：当前项目版本；GLOBAL：基础管理。 */
+
+    @Schema(description = "枚举来源：PROJECT 当前项目版本，GLOBAL 全局；与 enumType 配合使用")
     private String enumSource;
 
     public OmDataTypeEnumOptionRespVO(String enumName, String enumType, String enumSource) {

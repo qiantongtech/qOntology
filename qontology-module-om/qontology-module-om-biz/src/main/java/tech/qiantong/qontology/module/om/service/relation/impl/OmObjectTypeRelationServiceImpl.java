@@ -38,12 +38,12 @@ import tech.qiantong.qontology.module.om.controller.admin.relation.vo.OmObjectTy
 import tech.qiantong.qontology.module.om.controller.admin.relation.vo.OmObjectTypeRelationSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttributeDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
-import tech.qiantong.qontology.module.om.dal.dataobject.relation.OmObjectTypeRelationDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.omtarget.OmRelationTargetDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.relation.OmObjectTypeRelationDO;
 import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.relation.OmObjectTypeRelationMapper;
-import tech.qiantong.qontology.module.om.service.relation.IOmObjectTypeRelationService;
 import tech.qiantong.qontology.module.om.service.omtarget.IOmRelationTargetService;
+import tech.qiantong.qontology.module.om.service.relation.IOmObjectTypeRelationService;
 
 /**
  * 对象类型关系 Service 业务层处理
@@ -53,8 +53,10 @@ import tech.qiantong.qontology.module.om.service.omtarget.IOmRelationTargetServi
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class OmObjectTypeRelationServiceImpl extends ServiceImpl<OmObjectTypeRelationMapper, OmObjectTypeRelationDO>
-        implements IOmObjectTypeRelationService {
+public class OmObjectTypeRelationServiceImpl
+    extends ServiceImpl<OmObjectTypeRelationMapper, OmObjectTypeRelationDO>
+    implements IOmObjectTypeRelationService {
+
     @Resource
     private OmObjectTypeRelationMapper omObjectTypeRelationMapper;
 
@@ -68,19 +70,28 @@ public class OmObjectTypeRelationServiceImpl extends ServiceImpl<OmObjectTypeRel
     public PageResult<OmObjectTypeRelationDO> getOmObjectTypeRelationPage(OmObjectTypeRelationPageReqVO request) {
         requireWorkspace(request.getWorkspaceId());
         request.setName(request.getName() == null ? null : request.getName().trim());
-
         if (request.getVersionId() == null || request.getVersionId() <= 0) {
             throw new ServiceException("请选择项目版本后再查询");
         }
         List<Long> linkedIds = null;
         if (request.getTargetIdList() != null && !request.getTargetIdList().isEmpty()) {
-            linkedIds = relationTargetService.list(new QueryWrapper<OmRelationTargetDO>()
-                            .select("relation_id").eq("valid_flag", true)
-                            .in("target_id", request.getTargetIdList()))
-                    .stream().map(OmRelationTargetDO::getRelationId).distinct().collect(Collectors.toList());
+            linkedIds = relationTargetService
+                .list(
+                    new QueryWrapper<OmRelationTargetDO>()
+                        .select("relation_id")
+                        .eq("valid_flag", true)
+                        .in("target_id", request.getTargetIdList())
+                )
+                .stream()
+                .map(OmRelationTargetDO::getRelationId)
+                .distinct()
+                .collect(Collectors.toList());
             if (linkedIds.isEmpty()) return PageResult.empty();
         }
-        PageResult<OmObjectTypeRelationDO> page = omObjectTypeRelationMapper.selectPageWithLinkedIds(request, linkedIds);
+        PageResult<OmObjectTypeRelationDO> page = omObjectTypeRelationMapper.selectPageWithLinkedIds(
+            request,
+            linkedIds
+        );
         fillObjectTypeNames(page.getList());
         return page;
     }
@@ -111,9 +122,12 @@ public class OmObjectTypeRelationServiceImpl extends ServiceImpl<OmObjectTypeRel
         if (request.getRemark() == null) {
             relation.setRemark(current.getRemark());
         }
-        int rows = omObjectTypeRelationMapper.update(relation, new QueryWrapper<OmObjectTypeRelationDO>()
+        int rows = omObjectTypeRelationMapper.update(
+            relation,
+            new QueryWrapper<OmObjectTypeRelationDO>()
                 .eq("id", current.getId())
-                .eq("workspace_id", current.getWorkspaceId()));
+                .eq("workspace_id", current.getWorkspaceId())
+        );
         relationTargetService.saveTargets(relation, request.getTargetIds());
         return rows;
     }
@@ -124,25 +138,25 @@ public class OmObjectTypeRelationServiceImpl extends ServiceImpl<OmObjectTypeRel
             throw new ServiceException("请选择需要删除的关系");
         }
         Set<Long> ids = new HashSet<>(idList);
-        Long count = omObjectTypeRelationMapper.selectCount(new QueryWrapper<OmObjectTypeRelationDO>()
-                .eq("workspace_id", workspaceId)
-                .in("id", ids));
+        Long count = omObjectTypeRelationMapper.selectCount(
+            new QueryWrapper<OmObjectTypeRelationDO>().eq("workspace_id", workspaceId).in("id", ids)
+        );
         if (count != ids.size()) {
             throw new ServiceException("部分关系已不存在，请刷新后重试");
         }
         relationTargetService.removeByRelations(ids, workspaceId);
-        return omObjectTypeRelationMapper.delete(new QueryWrapper<OmObjectTypeRelationDO>()
-                .eq("workspace_id", workspaceId)
-                .in("id", ids));
+        return omObjectTypeRelationMapper.delete(
+            new QueryWrapper<OmObjectTypeRelationDO>().eq("workspace_id", workspaceId).in("id", ids)
+        );
     }
 
     @Override
     public List<OmObjectTypeDO> getObjectTypeOptions(Long workspaceId, Long versionId) {
         requireWorkspace(workspaceId);
         QueryWrapper<OmObjectTypeDO> query = new QueryWrapper<OmObjectTypeDO>()
-                .eq("workspace_id", workspaceId)
-                .eq("valid_flag", 1)
-                .orderByAsc("order_num", "id");
+            .eq("workspace_id", workspaceId)
+            .eq("valid_flag", 1)
+            .orderByAsc("order_num", "id");
         if (versionId != null) {
             query.eq("version_id", versionId);
         }
@@ -156,9 +170,11 @@ public class OmObjectTypeRelationServiceImpl extends ServiceImpl<OmObjectTypeRel
             return counts;
         }
         Set<Long> ids = new HashSet<>(objectTypeIds);
-        List<OmObjectTypeRelationDO> relations = omObjectTypeRelationMapper.selectList(new QueryWrapper<OmObjectTypeRelationDO>()
+        List<OmObjectTypeRelationDO> relations = omObjectTypeRelationMapper.selectList(
+            new QueryWrapper<OmObjectTypeRelationDO>()
                 .select("start_type_id", "end_type_id")
-                .and(query -> query.in("start_type_id", ids).or().in("end_type_id", ids)));
+                .and(query -> query.in("start_type_id", ids).or().in("end_type_id", ids))
+        );
         for (OmObjectTypeRelationDO relation : relations) {
             Long start = relation.getStartTypeId();
             Long end = relation.getEndTypeId();
@@ -172,20 +188,33 @@ public class OmObjectTypeRelationServiceImpl extends ServiceImpl<OmObjectTypeRel
         return counts;
     }
 
+    /**
+     * 校验对象关系存在且属于当前工作区
+     *
+     * @param id 记录 ID
+     * @param workspaceId 工作区 ID
+     * @return 经校验的业务数据
+     */
     private OmObjectTypeRelationDO requireRelation(Long id, Long workspaceId) {
         requireWorkspace(workspaceId);
         if (id == null) {
             throw new ServiceException("关系id不能为空");
         }
-        OmObjectTypeRelationDO relation = omObjectTypeRelationMapper.selectOne(new QueryWrapper<OmObjectTypeRelationDO>()
-                .eq("id", id)
-                .eq("workspace_id", workspaceId));
+        OmObjectTypeRelationDO relation = omObjectTypeRelationMapper.selectOne(
+            new QueryWrapper<OmObjectTypeRelationDO>().eq("id", id).eq("workspace_id", workspaceId)
+        );
         if (relation == null) {
             throw new ServiceException("关系不存在或不属于当前工作区");
         }
         return relation;
     }
 
+    /**
+     * 校验关系配置并构建待保存的对象关系
+     *
+     * @param request 业务请求参数
+     * @return 待保存的对象关系
+     */
     private OmObjectTypeRelationDO buildRelation(OmObjectTypeRelationSaveReqVO request) {
         requireWorkspace(request.getWorkspaceId());
         String name = trim(request.getName());
@@ -214,31 +243,46 @@ public class OmObjectTypeRelationServiceImpl extends ServiceImpl<OmObjectTypeRel
             throw new ServiceException("备注不能超过512个字符");
         }
         OmObjectTypeRelationDO relation = OmObjectTypeRelationDO.builder()
-                .workspaceId(request.getWorkspaceId())
-                .versionId(request.getVersionId())
-                .name(name)
-                .description(description)
-                .startTypeId(request.getStartTypeId())
-                .endTypeId(request.getEndTypeId())
-                .reversibleFlag(reversible)
-                .reverseName(reverseName)
-                .build();
+            .workspaceId(request.getWorkspaceId())
+            .versionId(request.getVersionId())
+            .name(name)
+            .description(description)
+            .startTypeId(request.getStartTypeId())
+            .endTypeId(request.getEndTypeId())
+            .reversibleFlag(reversible)
+            .reverseName(reverseName)
+            .build();
         relation.setRemark(remark);
         return relation;
     }
 
+    /**
+     * 校验对象类型存在且属于指定工作区和版本
+     *
+     * @param id 记录 ID
+     * @param workspaceId 工作区 ID
+     * @param versionId 项目版本 ID
+     */
     private void requireType(Long id, Long workspaceId, Long versionId) {
         if (id == null) {
             throw new ServiceException("请选择起点和终点类型");
         }
         OmObjectTypeDO type = objectTypeMapper.selectById(id);
-        if (type == null || Boolean.FALSE.equals(type.getValidFlag())
-                || !Objects.equals(type.getWorkspaceId(), workspaceId)
-                || !Objects.equals(type.getVersionId(), versionId)) {
+        if (
+            type == null ||
+            Boolean.FALSE.equals(type.getValidFlag()) ||
+            !Objects.equals(type.getWorkspaceId(), workspaceId) ||
+            !Objects.equals(type.getVersionId(), versionId)
+        ) {
             throw new ServiceException("起点、终点类型必须有效且属于当前项目版本");
         }
     }
 
+    /**
+     * 批量补齐关系起点、终点的对象类型名称
+     *
+     * @param relations 待补齐起终点名称的对象关系列表
+     */
     private void fillObjectTypeNames(List<OmObjectTypeRelationDO> relations) {
         Set<Long> ids = new HashSet<>();
         for (OmObjectTypeRelationDO relation : relations) {
@@ -252,21 +296,34 @@ public class OmObjectTypeRelationServiceImpl extends ServiceImpl<OmObjectTypeRel
         if (ids.isEmpty()) {
             return;
         }
-        Map<Long, String> names = objectTypeMapper.selectList(new QueryWrapper<OmObjectTypeDO>().in("id", ids))
-                .stream().filter(type -> type.getName() != null)
-                .collect(Collectors.toMap(OmObjectTypeDO::getId, OmObjectTypeDO::getName, (left, right) -> left));
+        Map<Long, String> names = objectTypeMapper
+            .selectList(new QueryWrapper<OmObjectTypeDO>().in("id", ids))
+            .stream()
+            .filter(type -> type.getName() != null)
+            .collect(Collectors.toMap(OmObjectTypeDO::getId, OmObjectTypeDO::getName, (left, right) -> left));
         for (OmObjectTypeRelationDO relation : relations) {
             relation.setStartTypeName(names.get(relation.getStartTypeId()));
             relation.setEndTypeName(names.get(relation.getEndTypeId()));
         }
     }
 
+    /**
+     * 校验工作区参数
+     *
+     * @param id 记录 ID
+     */
     private void requireWorkspace(Long id) {
         if (id == null) {
             throw new ServiceException("工作区id不能为空");
         }
     }
 
+    /**
+     * 去除文本首尾空白，并将空值转换为空字符串
+     *
+     * @param value 待处理的文本
+     * @return 处理后的文本，原值为 null 时返回空字符串
+     */
     private String trim(String value) {
         return value == null ? "" : value.trim();
     }
