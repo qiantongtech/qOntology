@@ -100,7 +100,7 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
                 .map(repeatable -> CompletableFuture.supplyAsync(() -> {
                     String module = repeatable.getClass().getSimpleName();
                     try {
-                        Boolean copyResult = repeatable.copy(sourceVersionId, targetVersionId);
+                        Boolean copyResult = repeatable.copy(sourceVersionId, targetVersionId, currentUser);
                         return Boolean.TRUE.equals(copyResult) ? null : module;
                     } catch (Exception e) {
                         log.error("项目版本数据复制失败, module={}, sourceVersionId={}, targetVersionId={}",
