@@ -127,6 +127,12 @@ export const guideTipConfig = {
         type: 'remind',
         version: '1.0'
     },
+    'om/qualityValidation.list': {
+        title: '本体质量验证',
+        content: '从模型结构、建模目标和约束数据三个维度全面检查本体模型的完整性、合理性和可用性。',
+        type: 'remind',
+        version: '1.0'
+    },
     'ontology/aiModeling.list': {
         title: 'AI辅助建模',
         content: '通过上传业务文档，由 AI 自动分析其中的业务概念、核心问题及业务规则，生成候选术语、建模目标、对象类型、属性、关系、枚举值和约束规则，帮助您梳理“业务中有哪些对象、对象具备哪些信息、彼此如何关联、需要遵循什么规则”。分析结果供您审核，可查看、修改或删除候选内容，确认后按需批量采纳或一键全部采纳，将文档中的业务知识转化为当前项目可用的建模内容。',
