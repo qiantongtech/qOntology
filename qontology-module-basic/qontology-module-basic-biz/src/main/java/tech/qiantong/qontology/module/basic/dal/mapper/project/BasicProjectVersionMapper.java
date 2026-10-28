@@ -18,9 +18,11 @@
 
 package tech.qiantong.qontology.module.basic.dal.mapper.project;
 
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
+import tech.qiantong.qontology.module.basic.dto.OmTargetCountDTO;
 import tech.qiantong.qontology.mybatis.core.mapper.BaseMapperX;
 import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
@@ -43,7 +45,7 @@ public interface BasicProjectVersionMapper extends BaseMapperX<BasicProjectVersi
         // 构造动态查询条件
         return selectPage(reqVO, new LambdaQueryWrapperX<BasicProjectVersionDO>()
                 .eqIfPresent(BasicProjectVersionDO::getProjectId, reqVO.getProjectId())
-                .eqIfPresent(BasicProjectVersionDO::getVersion, reqVO.getVersion())
+                .likeIfPresent(BasicProjectVersionDO::getVersion, reqVO.getVersion())
                 .eqIfPresent(BasicProjectVersionDO::getDescription, reqVO.getDescription())
                 .eqIfPresent(BasicProjectVersionDO::getBaseVersion, reqVO.getBaseVersion())
                 .eqIfPresent(BasicProjectVersionDO::getCreateTime, reqVO.getCreateTime())
@@ -52,4 +54,52 @@ public interface BasicProjectVersionMapper extends BaseMapperX<BasicProjectVersi
                 // 按照 createTime 字段降序排序
                 .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns));
     }
+
+    /**
+     * 根据版本ID获取目标数量
+     *
+     * @param versionId 版本ID
+     * @return 目标数量
+     */
+    OmTargetCountDTO getOmTargetCount(@Param("versionId") Long versionId);
+
+    /**
+     * 根据版本ID获取术语数量
+     *
+     * @param versionId 版本ID
+     * @return 术语数量
+     */
+    Integer selectTermCount(@Param("versionId") Long versionId);
+
+    /**
+     * 根据版本ID获取枚举数量
+     *
+     * @param versionId 版本ID
+     * @return 枚举数量
+     */
+    Integer selectEnumerationCount(@Param("versionId") Long versionId);
+
+    /**
+     * 根据版本ID获取对象类型数量
+     *
+     * @param versionId 版本ID
+     * @return 对象类型数量
+     */
+    Integer selectObjectTypeCount(@Param("versionId") Long versionId);
+
+    /**
+     * 根据版本ID获取对象类型属性数量
+     *
+     * @param versionId 版本ID
+     * @return 对象类型属性数量
+     */
+    Integer selectObjectTypeAttributeCount(@Param("versionId") Long versionId);
+
+    /**
+     * 根据版本ID获取关系数量
+     *
+     * @param versionId 版本ID
+     * @return 关系数量
+     */
+    Integer selectRelationCount(@Param("versionId") Long versionId);
 }

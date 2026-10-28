@@ -299,3 +299,21 @@
 .top-right-btn {
 	margin-left: auto;
 }
+
+.h2-titles {
+	font-size: 16px;
+	color: rgba(0, 0, 0, 0.85);
+	display: flex;
+	align-items: center;
+	font-weight: 500;
+	margin: 8px 0;
+}
+.h2-titles::before {
+	display: inline-block;
+	content: "";
+	width: 6px;
+	height: 16px;
+	border-radius: 3px;
+	background: var(--el-color-primary);
+	margin-right: 8px;
+}

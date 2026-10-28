@@ -23,6 +23,7 @@ import tech.qiantong.qontology.core.domain.entity.SysDictData;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionSaveReqVO;
+import tech.qiantong.qontology.module.basic.controller.admin.project.vo.VersionDiffStatsVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
 
 import java.util.Collection;
@@ -81,4 +82,12 @@ public interface IBasicProjectVersionService extends IService<BasicProjectVersio
      * @return 项目版本列表
      */
     List<SysDictData> queryProjectVersionDict(Long projectId);
+
+    /**
+     * 获得项目版本差异统计
+     *
+     * @param versionId 项目版本编号
+     * @return 项目版本差异统计
+     */
+    VersionDiffStatsVO queryVersionDiffStats(Long versionId);
 }

@@ -35,6 +35,7 @@ import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionRespVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionSaveReqVO;
+import tech.qiantong.qontology.module.basic.controller.admin.project.vo.VersionDiffStatsVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
 import tech.qiantong.qontology.module.basic.service.project.IBasicProjectVersionService;
 
@@ -102,4 +103,11 @@ public class BasicProjectVersionController extends BaseController {
         return CommonResult.success(list);
     }
 
+    @Operation(summary = "获取版本对比统计数据")
+    @GetMapping("/versionDiffStats")
+    @PreAuthorize("@ss.hasPermi('basic:project:projectversion:diff')")
+    public CommonResult<VersionDiffStatsVO> getVersionDiffStats(Long versionId) {
+        VersionDiffStatsVO versionDiffStatsVO = basicProjectVersionService.queryVersionDiffStats(versionId);
+        return CommonResult.success(versionDiffStatsVO);
+    }
 }
