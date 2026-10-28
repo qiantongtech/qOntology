@@ -102,7 +102,7 @@
                          class-name="small-padding fixed-width" fixed="right" width="240">
           <template #default="scope">
             <el-button link type="primary" icon="view"
-                       @click="routeTo('/om/projectVersion/projectVersionDetail',scope.row)"
+                       @click="routeTo('/om/'+versionId+'/projectVersion/diff',scope.row)"
                        v-hasPermi="['basic:project:projectversion:diff']">版本对比
             </el-button>
             <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
@@ -451,7 +451,8 @@ function routeTo(link, row) {
       router.push({
         path: link,
         query: {
-          id: row.id
+          projectId: currentVersion.value.projectId,
+          compareVersion: row.id
         }
       });
     }

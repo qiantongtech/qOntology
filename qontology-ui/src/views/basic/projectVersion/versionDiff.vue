@@ -31,7 +31,7 @@
               @change="currentVersionChange"
           >
             <el-option
-                v-for="version in modelVersionDict"
+                v-for="version in projectVersionDict"
                 :key="version.dictValue"
                 :label="version.dictLabel"
                 :value="version.dictValue"
@@ -43,9 +43,17 @@
             <el-row :gutter="2" style="margin-bottom: 5px">
               <el-col :span="12">
                 <div class="infotop-row border-top">
+                  <div class="infotop-row-lable">创建人</div>
+                  <div class="infotop-row-value">
+                    {{ currentVersionDiffStats.projectVersion?.createBy || "-" }}
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="12">
+                <div class="infotop-row border-top">
                   <div class="infotop-row-lable">创建时间</div>
                   <div class="infotop-row-value">{{
-                      parseTime(currentVersionData.createTime, "{y}-{m}-{d} {h}:{i}")
+                      parseTime(currentVersionDiffStats.projectVersion?.createTime, "{y}-{m}-{d} {h}:{i}")
                     }}
                   </div>
                 </div>
@@ -57,13 +65,13 @@
                   <div class="infotop-row-lable">版本描述</div>
                   <div class="infotop-row-value">
                     <el-tooltip
-                        :content="currentVersionData.description"
+                        :content="currentVersionDiffStats.projectVersion?.description || '-'"
                         placement="top"
                         effect="light"
-                        :disabled="!currentVersionData.description"
+                        :disabled="!currentVersionDiffStats.projectVersion?.description"
                         popper-class="tooltip-desc"
                     >
-                      <span>{{ currentVersionData.description || "-" }}</span>
+                      <span>{{ currentVersionDiffStats.projectVersion?.description || "-" }}</span>
                     </el-tooltip>
                   </div>
                 </div>
@@ -83,7 +91,7 @@
               @change="compareVersionChange"
           >
             <el-option
-                v-for="version in modelVersionDict"
+                v-for="version in projectVersionDict"
                 :key="version.dictValue"
                 :label="version.dictLabel"
                 :value="version.dictValue"
@@ -95,10 +103,17 @@
             <el-row :gutter="2" style="margin-bottom: 5px">
               <el-col :span="12">
                 <div class="infotop-row border-top">
+                  <div class="infotop-row-lable">创建人</div>
+                  <div class="infotop-row-value">
+                    {{ compareVersionDiffStats.projectVersion?.createBy || "-" }}
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="12">
+                <div class="infotop-row border-top">
                   <div class="infotop-row-lable">创建时间</div>
-                  <div class="infotop-row-value">{{
-                      parseTime(compareVersionData.createTime, "{y}-{m}-{d} {h}:{i}")
-                    }}
+                  <div class="infotop-row-value">
+                    {{ parseTime(compareVersionDiffStats.projectVersion?.createTime, "{y}-{m}-{d} {h}:{i}") }}
                   </div>
                 </div>
               </el-col>
@@ -109,13 +124,13 @@
                   <div class="infotop-row-lable">版本描述</div>
                   <div class="infotop-row-value">
                     <el-tooltip
-                        :content="compareVersionData.description"
+                        :content="compareVersionDiffStats.projectVersion?.description"
                         placement="top"
                         effect="light"
-                        :disabled="!compareVersionData.description"
+                        :disabled="!compareVersionDiffStats.projectVersion?.description"
                         popper-class="tooltip-desc"
                     >
-                      <span>{{ compareVersionData.description || "-" }}</span>
+                      <span>{{ compareVersionDiffStats.projectVersion?.description || "-" }}</span>
                     </el-tooltip>
                   </div>
                 </div>
@@ -126,434 +141,27 @@
       </div>
     </div>
 
-    <!-- 文件配置 -->
-    <div class="version-info" v-if="modelAccessType === 'PYTHON'">
-      <!-- 左边：基准版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">文件配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <!-- 左边：基准版本 -->
-            <div class="table-wrap">
-              <el-table :data="diffResult.current.fileResource" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <pre v-else-if="scope.row.type === 'json'">{{ scope.row.fieldValue }}</pre>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- 右边：对比版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">文件配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <div class="table-wrap">
-              <el-table :data="diffResult.compare.fileResource" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <pre v-else-if="scope.row.type === 'json'">{{ scope.row.fieldValue }}</pre>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 请求配置 -->
-    <div class="version-info" v-if="modelAccessType === 'API'">
-      <!-- 左边：基准版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">请求配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <div class="table-wrap">
-              <el-table :data="diffResult.current.apiConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- 右边：对比版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">请求配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <div class="table-wrap">
-              <el-table :data="diffResult.compare.apiConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 鉴权配置 -->
-    <div class="version-info" v-if="modelAccessType === 'API'">
-      <!-- 左边：基准版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">鉴权配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <div class="table-wrap">
-              <el-table :data="diffResult.current.authConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- 右边：对比版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">鉴权配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <!-- 右边：对比版本 -->
-            <div class="table-wrap">
-              <el-table :data="diffResult.compare.authConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 连接配置 -->
-    <div class="version-info" v-if="modelAccessType === 'REMOTE_EXEC'">
-      <!-- 左边：基准版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">连接配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <div class="table-wrap">
-              <el-table :data="diffResult.current.connectConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- 右边：对比版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">连接配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <!-- 右边：对比版本 -->
-            <div class="table-wrap">
-              <el-table :data="diffResult.compare.connectConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 执行配置 -->
-    <div class="version-info" v-if="modelAccessType === 'REMOTE_EXEC'">
-      <!-- 左边：基准版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">执行配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <div class="table-wrap">
-              <el-table :data="diffResult.current.exeConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- 右边：对比版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">执行配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <!-- 右边：对比版本 -->
-            <div class="table-wrap">
-              <el-table :data="diffResult.compare.exeConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 结果配置 -->
-    <div class="version-info" v-if="modelAccessType === 'REMOTE_EXEC'">
-      <!-- 左边：基准版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">结果配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <div class="table-wrap">
-              <el-table :data="diffResult.current.resultConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- 右边：对比版本 -->
-      <div class="border-item">
-        <div class="border-item-head">
-          <div class="head-left">
-            <span class="h2-titles">结果配置</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
-          </div>
-        </div>
-        <div class="border-item-body">
-          <div class="version-compare">
-            <!-- 右边：对比版本 -->
-            <div class="table-wrap">
-              <el-table :data="diffResult.compare.resultConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
-                  <template #default="scope">
-                    <span>{{ scope.row.name }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="date" label="字段值">
-                  <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <span v-else>{{ scope.row.fieldValue }}</span>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
     <!-- 参数定义 -->
-    <div class="version-info">
+    <div class="version-info diff-section">
       <!-- 左边：基准版本 -->
       <div class="border-item">
         <div class="border-item-head">
           <div class="head-left">
-            <span class="h2-titles">参数定义</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
+            <span class="h2-titles">版本差异明细</span>
           </div>
         </div>
         <div class="border-item-body">
           <div class="version-compare">
             <div class="table-wrap">
-              <el-table :data="diffResult.current.paramConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
+              <el-table :data="diffResult.current" :row-class-name="tableRowClassName">
+                <el-table-column prop="date" label="模块名称" align="center">
                   <template #default="scope">
                     <span>{{ scope.row.name }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="date" label="字段值">
+                <el-table-column prop="date" label="数量/率" align="center">
                   <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <pre v-else-if="scope.row.type === 'json'">{{ scope.row.fieldValue }}</pre>
+                    <span v-if="scope.row.field === 'omTargetCoveredRate'">{{ scope.row.fieldValue + '%' }}</span>
                     <span v-else>{{ scope.row.fieldValue }}</span>
                   </template>
                 </el-table-column>
@@ -566,26 +174,21 @@
       <div class="border-item">
         <div class="border-item-head">
           <div class="head-left">
-            <span class="h2-titles">参数定义</span>
-            <span class="info-tip">红色代表删除，绿色代表新增，黄色代表修改</span>
+            <span class="h2-titles">版本差异明细</span>
           </div>
         </div>
         <div class="border-item-body">
           <div class="version-compare">
             <div class="table-wrap">
-              <el-table :data="diffResult.compare.paramConfig" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="字段名">
+              <el-table :data="diffResult.compare" :row-class-name="tableRowClassName">
+                <el-table-column prop="date" label="模块名称" align="center">
                   <template #default="scope">
                     <span>{{ scope.row.name }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="date" label="字段值">
+                <el-table-column prop="date" label="数量/率" align="center">
                   <template #default="scope">
-                    <dict-tag v-if="scope.row.type === 'select'"
-                              :options="getDictOptions(scope.row.dict)"
-                              :value="scope.row.fieldValue">
-                    </dict-tag>
-                    <pre v-else-if="scope.row.type === 'json'">{{ scope.row.fieldValue }}</pre>
+                    <span v-if="scope.row.field === 'omTargetCoveredRate'">{{ scope.row.fieldValue + '%' }}</span>
                     <span v-else>{{ scope.row.fieldValue }}</span>
                   </template>
                 </el-table-column>
@@ -599,50 +202,27 @@
 </template>
 
 <script setup name="ModelVersionDiff">
-import {ref, onMounted} from "vue";
+import {onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 import {parseTime} from "@/utils/anivia.js";
 
-import {getModelVersionDict, getModelVersion} from "@/api/model/version";
-import {getModelByVersion} from "@/api/model/model.js";
+import {getProjectVersionDict, getVersionDiffStats} from "@/api/basic/project/projectVersion";
 
 const route = useRoute();
 
 const loading = ref(true)
 
-const modelId = route.query.modelId || "";// 模型ID
+const projectId = route.query.projectId || "";// 项目ID
 const currentVersion = ref("");// 基准版本
 const compareVersion = ref("");// 对比版本
-const modelVersionDict = ref([]);// 模型版本字典
-const modelAccessType = ref("");// 模型访问类型
+const projectVersionDict = ref([]);// 项目版本字典
 
-const currentVersionData = ref({});// 基准版本数据
-const compareVersionData = ref({});// 对比版本数据
-
-const currentVersionModel = ref({});// 基准版本模型
-const compareVersionModel = ref({});// 对比版本模型
+const currentVersionDiffStats = ref({projectVersion: {}});// 基准版本模型
+const compareVersionDiffStats = ref({projectVersion: {}});// 对比版本模型
 
 const diffResult = ref({
-  current: {
-    apiConfig: [],
-    authConfig: [],
-    paramConfig: [],
-    fileResource: [],
-
-    connectConfig: [],
-    exeConfig: [],
-    resultConfig: [],
-  },
-  compare: {
-    apiConfig: [],
-    authConfig: [],
-    paramConfig: [],
-    fileResource: [],
-
-    connectConfig: [],
-    exeConfig: [],
-    resultConfig: [],
-  },
+  current: [],
+  compare: [],
 });
 
 const dictMap = {
@@ -664,61 +244,23 @@ const dictMap = {
 
 
 const fieldConfigMap = {
-  "requestMethod": {"name": "请求方法", "group": ["apiConfig"]},
-  "apiUrl": {"name": "接口地址", "group": ["apiConfig"]},
-  "contentType": {"name": "content-Type", "group": ["apiConfig"]},
-  "timeoutSeconds": {"name": "超时时间", "group": ["apiConfig"]},
-
-  "authType": {"name": "鉴权类型", "group": ["authConfig"], "type": "select", "dict": "authTypeDict"},
-  "authMethod": {"name": "鉴权方式", "group": ["authConfig"], "type": "select", "dict": "authMethodDict"},
-  "authInjectPosition": {"name": "注入位置", "group": ["authConfig"], "type": "select", "dict": "injectPositionDict"},
-  "authKeyName": {"name": "Key", "group": ["authConfig"]},
-  "authTokenValue": {"name": "Value", "group": ["authConfig"]},
-  "authDynamicMethod": {"name": "Token 接口请求方法", "group": ["authConfig"]},
-  "authDynamicUrl": {"name": "Token 接口地址", "group": ["authConfig"]},
-  "authDynamicHeaders": {"name": "Token 请求头", "group": ["authConfig"]},
-  "authDynamicParams": {"name": "Query 参数", "group": ["authConfig"]},
-  "authExtractPath": {"name": "Token 提取路径", "group": ["authConfig"]},
-  "authTokenPrefix": {"name": "值前缀", "group": ["authConfig"]},
-
-  "inputSchema": {"name": "参数定义", "group": ["paramConfig"], "type": "json"},
-
-  "fileName": {"name": "文件名", "group": ["fileResource"]},
-  "fileSize": {"name": "文件大小", "group": ["fileResource"]},
-  "scriptName": {"name": "主文件名称", "group": ["fileResource"]},
-
-  "osType": {"name": "目标环境", "group": ["connectConfig"]},
-  "host": {"name": "主机地址", "group": ["connectConfig"]},
-  "port": {"name": "端口号", "group": ["connectConfig"]},
-  "username": {"name": "用户名", "group": ["connectConfig"]},
-  "authPassword": {"name": "密码", "group": ["connectConfig"]},
-  "authKey": {"name": "密钥文件", "group": ["connectConfig"]},
-
-  "workDir": {"name": "工作目录", "group": ["exeConfig"]},
-  "timeout": {"name": "执行超时时间", "group": ["exeConfig"]},
-  "cmdTemplate": {"name": "启动命令", "group": ["exeConfig"]},
-  "envList": {"name": "环境变量", "group": ["exeConfig"]},
-
-  "logExtType": {"name": "日志提取方式", "group": ["resultConfig"]},
-  "resultExtType": {"name": "结果提取方式", "group": ["resultConfig"]},
-  "resultFormat": {"name": "结果格式", "group": ["resultConfig"]},
-  "logFilePath": {"name": "日志文件路径", "group": ["resultConfig"]},
-  "startMarker": {"name": "结果开始标记", "group": ["resultConfig"]},
-  "endMarker": {"name": "结果结束标记", "group": ["resultConfig"]},
-  "resultFilePath": {"name": "结果文件路径", "group": ["resultConfig"]},
+  "omTargetCount": {"name": "建模目标"},
+  "omTargetCoveredRate": {"name": "建模目标覆盖率"},
+  "termCount": {"name": "术语"},
+  "enumerationCount": {"name": "枚举"},
+  "objectTypeCount": {"name": "对象类型"},
+  "objectTypeAttributeCount": {"name": "对象类型属性"},
+  "relationCount": {"name": "对象类型关系"  },
+  "modelAxiomCount": {"name": "模型公理"},
+  "dataRuleCount": {"name": "数据规则"},
 }
 
 // 基准版本改变
 async function currentVersionChange(val) {
   loading.value = true;
   currentVersion.value = val;
-  const p1 = getModelVersion(modelId, currentVersion.value).then((res) => {
-    currentVersionData.value = res.data;
-  })
-  const p2 = getModelByVersion(modelId, currentVersion.value).then((res) => {
-    currentVersionModel.value = res.data;
-  })
-  await Promise.all([p1, p2]);
+  const res = await getVersionDiffStats(currentVersion.value);
+  currentVersionDiffStats.value = res.data;
   diffData();
   loading.value = false;
 }
@@ -727,39 +269,32 @@ async function currentVersionChange(val) {
 async function compareVersionChange(val) {
   loading.value = true;
   compareVersion.value = val;
-  const p1 = getModelVersion(modelId, compareVersion.value).then((res) => {
-    compareVersionData.value = res.data;
-  })
-  const p2 = getModelByVersion(modelId, compareVersion.value).then((res) => {
-    compareVersionModel.value = res.data;
-  })
-  await Promise.all([p1, p2]);
+  const res = await getVersionDiffStats(compareVersion.value);
+  compareVersionDiffStats.value = res.data;
   diffData();
   loading.value = false;
 }
 
 // 初始化数据
 async function initData() {
-  currentVersion.value = route.query.currentVersion || "";
+  currentVersion.value = route.params.versionId || "";
   compareVersion.value = route.query.compareVersion || "";
-  getModelVersionDict(modelId).then((res) => {
-    modelVersionDict.value = res.data;
-  })
-  getModelVersion(modelId, currentVersion.value).then((res) => {
-    currentVersionData.value = res.data;
-  })
-  getModelVersion(modelId, compareVersion.value).then((res) => {
-    compareVersionData.value = res.data;
+  getProjectVersionDict(projectId).then((res) => {
+    projectVersionDict.value = res.data;
   })
 
-  const p2 = getModelByVersion(modelId, currentVersion.value).then((res) => {
-    currentVersionModel.value = res.data;
-  })
-  const p3 = getModelByVersion(modelId, compareVersion.value).then((res) => {
-    compareVersionModel.value = res.data;
-  })
-  await Promise.all([p2, p3]);
-  modelAccessType.value = currentVersionModel.value["accessType"];
+  const tasks = [];
+  if (currentVersion.value) {
+    tasks.push(getVersionDiffStats(currentVersion.value).then((res) => {
+      currentVersionDiffStats.value = res.data || {projectVersion: {}};
+    }))
+  }
+  if (compareVersion.value) {
+    tasks.push(getVersionDiffStats(compareVersion.value).then((res) => {
+      compareVersionDiffStats.value = res.data || {projectVersion: {}};
+    }))
+  }
+  await Promise.all(tasks);
 
   diffData();
   loading.value = false;
@@ -772,23 +307,13 @@ function tableRowClassName(row) {
 
 // 对比数据
 function diffData() {
-  let a = currentVersionModel.value.modelFileResourceRespVO || {};
-  let b = compareVersionModel.value.modelFileResourceRespVO || {};
-  if (modelAccessType.value === "API") {
-    a = currentVersionModel.value.modelConfig || {};
-    b = compareVersionModel.value.modelConfig || {};
-  }else if (modelAccessType.value === "REMOTE_EXEC") {
-    a = currentVersionModel.value.modelRemoteExec || {};
-    b = compareVersionModel.value.modelRemoteExec || {};
-  }
+  let a = currentVersionDiffStats.value || {};
+  let b = compareVersionDiffStats.value || {};
 
-  const allFields = [...new Set([...Object.keys(a), ...Object.keys(b)])];
-  const current = {apiConfig: [], authConfig: [], paramConfig: [], fileResource: [], connectConfig: [],
-    exeConfig: [],
-    resultConfig: [],};
-  const compare = {apiConfig: [], authConfig: [], paramConfig: [], fileResource: [], connectConfig: [],
-    exeConfig: [],
-    resultConfig: [],};
+  const allFields = [...new Set([...Object.keys(fieldConfigMap)])];
+  const current = [];
+  const compare = [];
+
   for (const field of allFields) {
     let fieldConfig = fieldConfigMap[field];
     if (!fieldConfig) {
@@ -800,6 +325,8 @@ function diffData() {
     let valA = hasA ? a[field] : "";
     let valB = hasB ? b[field] : "";
     if (!valA && !valB) {
+      current.push({field, fieldValue: 0, changeType: "", ...fieldConfig})
+      compare.push({field, fieldValue: 0, changeType: "", ...fieldConfig})
       continue;
     }
     const isEqual = JSON.stringify(valA) === JSON.stringify(valB);
@@ -811,17 +338,15 @@ function diffData() {
       }
     } else if (valA && !valB) {
       // a有 b无
-      typeA = "row-green";
-      typeB = "row-red";
+      typeA = "row-yellow";
+      typeB = "row-yellow";
     } else {
       // a无 b有
-      typeA = "row-red";
-      typeB = "row-green";
+      typeA = "row-yellow";
+      typeB = "row-yellow";
     }
-    for (const group of fieldConfig.group) {
-      current[group].push({field, fieldValue: valA, changeType: typeA, ...fieldConfig})
-      compare[group].push({field, fieldValue: valB, changeType: typeB, ...fieldConfig})
-    }
+    current.push({field, fieldValue: valA, changeType: typeA, ...fieldConfig})
+    compare.push({field, fieldValue: valB, changeType: typeB, ...fieldConfig})
   }
   diffResult.value = {current, compare};
 }
@@ -879,6 +404,7 @@ onMounted(() => {
   gap: 12px;
   margin-bottom: 8px;
   flex-wrap: wrap;
+  flex-shrink: 0;
   overflow: auto;
 
   .border-item {
@@ -891,6 +417,48 @@ onMounted(() => {
 
     &:last-child {
       padding-left: 12px;
+    }
+  }
+}
+
+// 版本差异明细：纵向撑满剩余视口
+.diff-section {
+  flex: 1;
+  min-height: 320px;
+
+  .border-item {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    .border-item-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+    }
+  }
+
+  .version-compare {
+    flex: 1;
+    min-height: 0;
+
+    .table-wrap {
+      display: flex;
+      flex-direction: column;
+
+      :deep(.el-table) {
+        flex: 1;
+        height: 100%;
+        min-height: 0;
+
+        .el-scrollbar,
+        .el-scrollbar__wrap,
+        // 行数不足以撑满时，让行高均分撑满表格区域
+        .el-scrollbar__view,
+        .el-table__body {
+          height: 100%;
+        }
+      }
     }
   }
 }

@@ -69,3 +69,13 @@ export function getProjectVersionDict(projectId) {
     params: { projectId: projectId },
   })
 }
+
+// 获取项目版本下拉选择框数据
+export function getVersionDiffStats(versionId) {
+  return request({
+    url: '/basic/projectVersion/versionDiffStats',
+    method: 'get',
+    params: { versionId: versionId },
+  })
+}
+
