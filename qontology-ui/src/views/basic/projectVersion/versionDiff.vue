@@ -69,7 +69,6 @@
                         placement="top"
                         effect="light"
                         :disabled="!currentVersionDiffStats.projectVersion?.description"
-                        popper-class="tooltip-desc"
                     >
                       <span>{{ currentVersionDiffStats.projectVersion?.description || "-" }}</span>
                     </el-tooltip>
@@ -128,7 +127,6 @@
                         placement="top"
                         effect="light"
                         :disabled="!compareVersionDiffStats.projectVersion?.description"
-                        popper-class="tooltip-desc"
                     >
                       <span>{{ compareVersionDiffStats.projectVersion?.description || "-" }}</span>
                     </el-tooltip>
@@ -141,7 +139,7 @@
       </div>
     </div>
 
-    <!-- 参数定义 -->
+    <!-- 版本差异明细 -->
     <div class="version-info diff-section">
       <!-- 左边：基准版本 -->
       <div class="border-item">
@@ -154,12 +152,12 @@
           <div class="version-compare">
             <div class="table-wrap">
               <el-table :data="diffResult.current" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="模块名称" align="center">
+                <el-table-column label="模块名称" align="center">
                   <template #default="scope">
                     <span>{{ scope.row.name }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="date" label="数量/率" align="center">
+                <el-table-column label="数量/率" align="center">
                   <template #default="scope">
                     <span v-if="scope.row.field === 'omTargetCoveredRate'">{{ scope.row.fieldValue + '%' }}</span>
                     <span v-else>{{ scope.row.fieldValue }}</span>
@@ -181,12 +179,12 @@
           <div class="version-compare">
             <div class="table-wrap">
               <el-table :data="diffResult.compare" :row-class-name="tableRowClassName">
-                <el-table-column prop="date" label="模块名称" align="center">
+                <el-table-column label="模块名称" align="center">
                   <template #default="scope">
                     <span>{{ scope.row.name }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="date" label="数量/率" align="center">
+                <el-table-column label="数量/率" align="center">
                   <template #default="scope">
                     <span v-if="scope.row.field === 'omTargetCoveredRate'">{{ scope.row.fieldValue + '%' }}</span>
                     <span v-else>{{ scope.row.fieldValue }}</span>
@@ -225,24 +223,6 @@ const diffResult = ref({
   compare: [],
 });
 
-const dictMap = {
-  "authTypeDict": [
-    {"label": "无鉴权", "value": "NONE", "listClass": "primary"},
-    {"label": "固定 Token / API Key", "value": "FIXED", "listClass": "primary"},
-    {"label": "动态 Token API", "value": "DYNAMIC", "listClass": "primary"},
-  ],
-  "authMethodDict": [
-    {"label": "Bearer Token", "value": "bearer", "listClass": "primary"},
-    {"label": "API Key", "value": "apiKey", "listClass": "primary"},
-    {"label": "动态 Token API", "value": "DYNAMIC", "listClass": "primary"},
-  ],
-  "injectPositionDict": [
-    {"label": "Header", "value": "Header", "listClass": "primary"},
-    {"label": "Query", "value": "Query", "listClass": "primary"},
-  ],
-}
-
-
 const fieldConfigMap = {
   "omTargetCount": {"name": "建模目标"},
   "omTargetCoveredRate": {"name": "建模目标覆盖率"},
@@ -250,7 +230,7 @@ const fieldConfigMap = {
   "enumerationCount": {"name": "枚举"},
   "objectTypeCount": {"name": "对象类型"},
   "objectTypeAttributeCount": {"name": "对象类型属性"},
-  "relationCount": {"name": "对象类型关系"  },
+  "relationCount": {"name": "对象类型关系"},
   "modelAxiomCount": {"name": "模型公理"},
   "dataRuleCount": {"name": "数据规则"},
 }
@@ -260,7 +240,7 @@ async function currentVersionChange(val) {
   loading.value = true;
   currentVersion.value = val;
   const res = await getVersionDiffStats(currentVersion.value);
-  currentVersionDiffStats.value = res.data;
+  currentVersionDiffStats.value = res.data || {projectVersion: {}};
   diffData();
   loading.value = false;
 }
@@ -270,7 +250,7 @@ async function compareVersionChange(val) {
   loading.value = true;
   compareVersion.value = val;
   const res = await getVersionDiffStats(compareVersion.value);
-  compareVersionDiffStats.value = res.data;
+  compareVersionDiffStats.value = res.data || {projectVersion: {}};
   diffData();
   loading.value = false;
 }
@@ -307,55 +287,27 @@ function tableRowClassName(row) {
 
 // 对比数据
 function diffData() {
-  let a = currentVersionDiffStats.value || {};
-  let b = compareVersionDiffStats.value || {};
+  const a = currentVersionDiffStats.value || {};
+  const b = compareVersionDiffStats.value || {};
 
-  const allFields = [...new Set([...Object.keys(fieldConfigMap)])];
   const current = [];
   const compare = [];
 
-  for (const field of allFields) {
-    let fieldConfig = fieldConfigMap[field];
-    if (!fieldConfig) {
-      continue;
-    }
-
-    const hasA = Object.prototype.hasOwnProperty.call(a, field);
-    const hasB = Object.prototype.hasOwnProperty.call(b, field);
-    let valA = hasA ? a[field] : "";
-    let valB = hasB ? b[field] : "";
+  for (const [field, fieldConfig] of Object.entries(fieldConfigMap)) {
+    const valA = a[field] ?? "";
+    const valB = b[field] ?? "";
+    // 两边都没值：按 0 展示，不标色
     if (!valA && !valB) {
       current.push({field, fieldValue: 0, changeType: "", ...fieldConfig})
       compare.push({field, fieldValue: 0, changeType: "", ...fieldConfig})
       continue;
     }
-    const isEqual = JSON.stringify(valA) === JSON.stringify(valB);
-    let typeA, typeB;
-    if (valA && valB) {
-      if (!isEqual) {
-        typeA = "row-yellow";
-        typeB = "row-yellow";
-      }
-    } else if (valA && !valB) {
-      // a有 b无
-      typeA = "row-yellow";
-      typeB = "row-yellow";
-    } else {
-      // a无 b有
-      typeA = "row-yellow";
-      typeB = "row-yellow";
-    }
-    current.push({field, fieldValue: valA, changeType: typeA, ...fieldConfig})
-    compare.push({field, fieldValue: valB, changeType: typeB, ...fieldConfig})
+    // 值不一致（含单边没值）标黄，一致则不标色
+    const changeType = JSON.stringify(valA) === JSON.stringify(valB) ? "" : "row-yellow";
+    current.push({field, fieldValue: valA, changeType, ...fieldConfig})
+    compare.push({field, fieldValue: valB, changeType, ...fieldConfig})
   }
   diffResult.value = {current, compare};
-}
-
-// 获取字典选项
-function getDictOptions(dictName) {
-  if (!dictName) return []
-  // 返回对应字典数组，不存在返回空数组
-  return dictMap[dictName] || []
 }
 
 onMounted(() => {
@@ -466,24 +418,13 @@ onMounted(() => {
 .version-compare {
   width: 100%;
   display: flex;
-  gap: 0;
-  position: relative;
   overflow: hidden;
-  flex-wrap: wrap;
 
   .table-wrap {
     flex: 1;
     overflow: hidden;
     min-width: 480px;
-
-    &:first-child {
-      padding-right: 16px;
-      //border-right: 1px solid #dfe3e9;
-    }
-
-    &:last-child {
-      padding-left: 16px;
-    }
+    padding: 0 16px;
   }
 }
 </style>
@@ -491,13 +432,5 @@ onMounted(() => {
 <style>
 .el-table .row-yellow {
   --el-table-tr-bg-color: var(--el-color-warning-light-9);
-}
-
-.el-table .row-green {
-  --el-table-tr-bg-color: var(--el-color-success-light-9);
-}
-
-.el-table .row-red {
-  --el-table-tr-bg-color: var(--el-color-danger-light-9);
 }
 </style>
