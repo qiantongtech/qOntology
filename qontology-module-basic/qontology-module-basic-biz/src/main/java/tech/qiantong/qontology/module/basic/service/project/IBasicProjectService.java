@@ -20,6 +20,7 @@ package tech.qiantong.qontology.module.basic.service.project;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import tech.qiantong.qontology.core.domain.entity.SysDictData;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectSaveReqVO;
@@ -50,7 +51,7 @@ public interface IBasicProjectService extends IService<BasicProjectDO> {
      * @param createReqVO 项目管理信息
      * @return 项目管理编号
      */
-    Long createBasicProject(BasicProjectSaveReqVO createReqVO);
+    Long createBasicProject(BasicProjectSaveReqVO createReqVO, LoginUser currentUser);
 
     /**
      * 更新项目管理

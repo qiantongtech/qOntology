@@ -23,6 +23,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import java.util.Objects;
 import org.springframework.transaction.annotation.Isolation;
 import tech.qiantong.qontology.common.exception.ServiceException;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
 import tech.qiantong.qontology.module.om.api.export.OntologyExportApi;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -81,14 +82,14 @@ public class BasicProjectServiceImpl extends ServiceImpl<BasicProjectMapper, Bas
      * @return 项目管理编号
      */
     @Override
-    public Long createBasicProject(BasicProjectSaveReqVO createReqVO) {
+    public Long createBasicProject(BasicProjectSaveReqVO createReqVO, LoginUser currentUser) {
         BasicProjectDO dictType = BeanUtils.toBean(createReqVO, BasicProjectDO.class);
         baseMapper.insert(dictType);
         // 创建完成后需要同时创建版本信息
         BasicProjectVersionSaveReqVO versionReqVO = new BasicProjectVersionSaveReqVO();
         versionReqVO.setProjectId(dictType.getId());
         versionReqVO.setVersion(createReqVO.getCurrentVersion());
-        projectVersionService.createBasicProjectVersion(versionReqVO);
+        projectVersionService.createBasicProjectVersion(versionReqVO, currentUser);
         return dictType.getId();
     }
 

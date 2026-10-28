@@ -44,7 +44,7 @@ public class OmTargetApiServiceImpl implements IOmTargetApiService, IProjectRepe
                     item.setVersionId(targetVersionId);
                     item.setAcceptStatus(AcceptStatusEnum.WAITING);// 需要设置验证状态
                     item.setCreatorId(currentUser.getUserId());
-                    item.setCreateBy(currentUser.getUsername());
+                    item.setCreateBy(currentUser.getUser().getNickName());
                     item.setCreateTime(new Date());
                 })
                 .collect(Collectors.toList());

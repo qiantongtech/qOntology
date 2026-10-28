@@ -44,7 +44,7 @@ public class OmTermApiServiceImpl implements IProjectRepeatable {
                     termDO.setId(null);
                     termDO.setVersionId(targetVersionId);
                     termDO.setCreatorId(currentUser.getUserId());
-                    termDO.setCreateBy(currentUser.getUsername());
+                    termDO.setCreateBy(currentUser.getUser().getNickName());
                     termDO.setCreateTime(new Date());
                     return termDO;
                 })
