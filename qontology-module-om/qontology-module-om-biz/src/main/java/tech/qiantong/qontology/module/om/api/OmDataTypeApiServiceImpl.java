@@ -10,6 +10,7 @@ import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
 import tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper;
 import tech.qiantong.qontology.module.om.api.service.IProjectRepeatable;
+import tech.qiantong.qontology.module.om.api.service.ProjectCopyContext;
 
 import java.util.Date;
 import java.util.List;
@@ -30,7 +31,10 @@ public class OmDataTypeApiServiceImpl implements IProjectRepeatable {
      * @return 是否复制成功
      */
     @Override
-    public Boolean copy(Long sourceVersionId, Long targetVersionId, LoginUser currentUser) {
+    public Boolean copy(ProjectCopyContext context) {
+        Long sourceVersionId = context.getSourceVersionId();
+        Long targetVersionId = context.getTargetVersionId();
+        LoginUser currentUser = context.getCurrentUser();
         // 查询源版本下的全部数据类型
         LambdaQueryWrapper<OmDataTypeDO> queryWrapper = Wrappers.lambdaQuery(OmDataTypeDO.class)
                 .eq(OmDataTypeDO::getVersionId, sourceVersionId);

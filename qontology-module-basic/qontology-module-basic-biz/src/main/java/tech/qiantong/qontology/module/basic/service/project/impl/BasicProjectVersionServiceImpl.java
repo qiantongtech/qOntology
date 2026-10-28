@@ -40,6 +40,7 @@ import tech.qiantong.qontology.module.basic.dal.mapper.project.BasicProjectVersi
 import tech.qiantong.qontology.module.basic.dto.OmTargetCountDTO;
 import tech.qiantong.qontology.module.basic.service.project.IBasicProjectVersionService;
 import tech.qiantong.qontology.module.om.api.service.IProjectRepeatable;
+import tech.qiantong.qontology.module.om.api.service.ProjectCopyContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -60,7 +61,7 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
 
     @Resource
     private List<IProjectRepeatable> projectRepeatableList;
-    // 复用项目全局线程池，用于并行执行各实现类的 copy 方法
+    // 复用项目全局线程池，用于版本差异统计等异步查询
     @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
@@ -94,26 +95,30 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
         // 基准版本作为源版本，新建版本作为目标版本；无基准版本时无需复制
         Long sourceVersionId = createReqVO.getBaseVersionId();
         Long targetVersionId = dictType.getId();
+        if (sourceVersionId == null || sourceVersionId <= 0) {
+            return dictType.getId();
+        }
 
-        // 并行执行所有实现类的 copy：每个任务在独立线程与其独立事务中提交
-        List<CompletableFuture<String>> futures = projectRepeatableList.stream()
-                .map(repeatable -> CompletableFuture.supplyAsync(() -> {
+        // 构建复制上下文，按 copyOrder 升序【同线程串行】执行各实现类的 copy：
+        // 1) 保证被依赖父表（如 om_target、om_object_type）先完成并登记旧ID->新ID映射；
+        // 2) 全部在外层同一事务内进行，新行对后续关联表可见，且任一失败整体回滚。
+        ProjectCopyContext context = new ProjectCopyContext(sourceVersionId, targetVersionId, currentUser);
+        List<String> failedModules = new ArrayList<>();
+        projectRepeatableList.stream()
+                .sorted(Comparator.comparingInt(IProjectRepeatable::copyOrder))
+                .forEach(repeatable -> {
                     String module = repeatable.getClass().getSimpleName();
                     try {
-                        Boolean copyResult = repeatable.copy(sourceVersionId, targetVersionId, currentUser);
-                        return Boolean.TRUE.equals(copyResult) ? null : module;
+                        Boolean copyResult = repeatable.copy(context);
+                        if (!Boolean.TRUE.equals(copyResult)) {
+                            failedModules.add(module);
+                        }
                     } catch (Exception e) {
                         log.error("项目版本数据复制失败, module={}, sourceVersionId={}, targetVersionId={}",
                                 module, sourceVersionId, targetVersionId, e);
-                        return module;
+                        failedModules.add(module);
                     }
-                }, threadPoolTaskExecutor)).toList();
-
-        // 等待全部完成并汇总失败的模块名（无论成败都等所有任务跑完，便于一次性反馈）
-        List<String> failedModules = futures.stream()
-                .map(CompletableFuture::join)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                });
         if (CollUtil.isNotEmpty(failedModules)) {
             throw new ServiceException("项目版本数据复制失败：" + String.join(", ", failedModules));
         }

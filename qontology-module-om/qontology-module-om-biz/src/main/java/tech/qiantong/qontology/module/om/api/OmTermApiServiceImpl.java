@@ -10,6 +10,7 @@ import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.om.dal.dataobject.term.OmTermDO;
 import tech.qiantong.qontology.module.om.dal.mapper.term.OmTermMapper;
 import tech.qiantong.qontology.module.om.api.service.IProjectRepeatable;
+import tech.qiantong.qontology.module.om.api.service.ProjectCopyContext;
 
 import java.util.Date;
 import java.util.List;
@@ -29,7 +30,10 @@ public class OmTermApiServiceImpl implements IProjectRepeatable {
      * @return 是否复制成功
      */
     @Override
-    public Boolean copy(Long sourceVersionId, Long targetVersionId, LoginUser currentUser) {
+    public Boolean copy(ProjectCopyContext context) {
+        Long sourceVersionId = context.getSourceVersionId();
+        Long targetVersionId = context.getTargetVersionId();
+        LoginUser currentUser = context.getCurrentUser();
         // 查询源版本下的全部术语
         LambdaQueryWrapper<OmTermDO> queryWrapper = Wrappers.lambdaQuery(OmTermDO.class)
                 .eq(OmTermDO::getVersionId, sourceVersionId);
