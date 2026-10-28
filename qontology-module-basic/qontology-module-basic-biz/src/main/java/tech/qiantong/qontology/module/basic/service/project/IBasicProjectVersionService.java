@@ -20,6 +20,7 @@ package tech.qiantong.qontology.module.basic.service.project;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import tech.qiantong.qontology.core.domain.entity.SysDictData;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionSaveReqVO;
@@ -51,7 +52,7 @@ public interface IBasicProjectVersionService extends IService<BasicProjectVersio
      * @param createReqVO 项目版本信息
      * @return 项目版本编号
      */
-    Long createBasicProjectVersion(BasicProjectVersionSaveReqVO createReqVO);
+    Long createBasicProjectVersion(BasicProjectVersionSaveReqVO createReqVO, LoginUser currentUser);
 
     /**
      * 更新项目版本

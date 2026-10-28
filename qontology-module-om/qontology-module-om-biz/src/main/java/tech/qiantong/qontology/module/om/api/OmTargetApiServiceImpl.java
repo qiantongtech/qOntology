@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.module.om.api.service.IOmTargetApiService;
 import tech.qiantong.qontology.module.om.api.service.IProjectRepeatable;
 import tech.qiantong.qontology.module.om.dal.dataobject.omtarget.OmTargetDO;
 import tech.qiantong.qontology.module.om.enums.AcceptStatusEnum;
 import tech.qiantong.qontology.module.om.service.omtarget.IOmTargetService;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +31,7 @@ public class OmTargetApiServiceImpl implements IOmTargetApiService, IProjectRepe
      * @return 是否复制成功
      */
     @Override
-    public Boolean copy(Long sourceVersionId, Long targetVersionId) {
+    public Boolean copy(Long sourceVersionId, Long targetVersionId, LoginUser currentUser) {
         LambdaQueryWrapper<OmTargetDO> queryWrapper = Wrappers.lambdaQuery(OmTargetDO.class)
                 .eq(OmTargetDO::getVersionId, sourceVersionId);
         List<OmTargetDO> sourceList = omTargetService.list(queryWrapper);
@@ -41,6 +43,9 @@ public class OmTargetApiServiceImpl implements IOmTargetApiService, IProjectRepe
                     item.setId(null);
                     item.setVersionId(targetVersionId);
                     item.setAcceptStatus(AcceptStatusEnum.WAITING);// 需要设置验证状态
+                    item.setCreatorId(currentUser.getUserId());
+                    item.setCreateBy(currentUser.getUsername());
+                    item.setCreateTime(new Date());
                 })
                 .collect(Collectors.toList());
         return omTargetService.saveBatch(targetDOList);

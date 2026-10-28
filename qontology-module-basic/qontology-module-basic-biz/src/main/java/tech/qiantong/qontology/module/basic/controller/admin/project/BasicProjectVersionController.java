@@ -30,6 +30,7 @@ import tech.qiantong.qontology.common.enums.BusinessType;
 import tech.qiantong.qontology.core.controller.BaseController;
 import tech.qiantong.qontology.core.domain.CommonResult;
 import tech.qiantong.qontology.core.domain.entity.SysDictData;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
@@ -77,7 +78,8 @@ public class BasicProjectVersionController extends BaseController {
     @Log(title = "项目版本", businessType = BusinessType.INSERT)
     @PostMapping
     public CommonResult<Long> add(@Valid @RequestBody BasicProjectVersionSaveReqVO basicProjectVersion) {
-        return CommonResult.toAjax(basicProjectVersionService.createBasicProjectVersion(basicProjectVersion));
+        LoginUser currentUser = super.getLoginUser();
+        return CommonResult.toAjax(basicProjectVersionService.createBasicProjectVersion(basicProjectVersion,currentUser));
     }
 
     @Operation(summary = "修改项目版本")

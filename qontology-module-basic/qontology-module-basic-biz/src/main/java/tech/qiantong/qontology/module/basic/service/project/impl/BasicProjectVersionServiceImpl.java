@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.qiantong.qontology.common.exception.ServiceException;
 import tech.qiantong.qontology.core.domain.entity.SysDictData;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
@@ -81,7 +82,7 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
      * @return 编号
      */
     @Override
-    public Long createBasicProjectVersion(BasicProjectVersionSaveReqVO createReqVO) {
+    public Long createBasicProjectVersion(BasicProjectVersionSaveReqVO createReqVO, LoginUser currentUser) {
         BasicProjectVersionDO dictType = BeanUtils.toBean(createReqVO, BasicProjectVersionDO.class);
         baseMapper.insert(dictType);
 
