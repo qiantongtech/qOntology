@@ -19,11 +19,11 @@
 package tech.qiantong.qontology.module.om.controller.admin.constraint.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import tech.qiantong.qontology.core.annotation.Excel;
-import java.util.Date;
 import java.io.Serializable;
+import java.util.Date;
+import lombok.*;
+import tech.qiantong.qontology.core.annotation.Excel;
 
 /**
  * 数据规则 Response VO 对象 om_data_rule
@@ -110,5 +110,4 @@ public class OmDataRuleRespVO implements Serializable {
     @Excel(name = "备注")
     @Schema(description = "备注", example = "")
     private String remark;
-
 }

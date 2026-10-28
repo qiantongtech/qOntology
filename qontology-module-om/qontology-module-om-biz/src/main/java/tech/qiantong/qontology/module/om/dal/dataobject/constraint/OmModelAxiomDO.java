@@ -18,13 +18,13 @@
 
 package tech.qiantong.qontology.module.om.dal.dataobject.constraint;
 
-import lombok.*;
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.*;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
 /**
@@ -42,6 +42,7 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class OmModelAxiomDO extends BaseEntity {
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
@@ -80,7 +81,6 @@ public class OmModelAxiomDO extends BaseEntity {
     /** 公理中独立定义的关系名称，不关联已有对象关系 */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String relationName;
-
 
     /** Domain对象类型id */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
@@ -136,6 +136,4 @@ public class OmModelAxiomDO extends BaseEntity {
     /** 删除标志 */
     @TableLogic
     private Boolean delFlag;
-
-
 }

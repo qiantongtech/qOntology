@@ -25,7 +25,6 @@ import tech.qiantong.qontology.module.basic.api.dto.enumeration.BasicEnumTypeOpt
  * 全局枚举类型跨模块查询接口
  */
 public interface IBasicEnumTypeApiService {
-
     /**
      * 查询状态正常且有效的全局枚举类型选项
      *

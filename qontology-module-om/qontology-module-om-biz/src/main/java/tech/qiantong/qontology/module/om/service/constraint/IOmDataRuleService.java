@@ -18,15 +18,16 @@
 
 package tech.qiantong.qontology.module.om.service.constraint;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
-import com.baomidou.mybatisplus.extension.service.IService;
 import tech.qiantong.qontology.core.page.PageResult;
-import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmDataRuleSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmDataRulePageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmDataRuleRespVO;
+import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmDataRuleSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.constraint.OmDataRuleDO;
+
 /**
  * 数据规则Service接口
  *
@@ -34,7 +35,6 @@ import tech.qiantong.qontology.module.om.dal.dataobject.constraint.OmDataRuleDO;
  * @date 2026-10-28
  */
 public interface IOmDataRuleService extends IService<OmDataRuleDO> {
-
     /**
      * 获得数据规则分页列表
      *
@@ -55,6 +55,7 @@ public interface IOmDataRuleService extends IService<OmDataRuleDO> {
      * 更新数据规则
      *
      * @param updateReqVO 数据规则信息
+     * @return 实际受影响的记录数
      */
     int updateOmDataRule(OmDataRuleSaveReqVO updateReqVO);
 
@@ -62,6 +63,7 @@ public interface IOmDataRuleService extends IService<OmDataRuleDO> {
      * 删除数据规则
      *
      * @param idList 数据规则编号
+     * @return 实际受影响的记录数
      */
     int removeOmDataRule(Collection<Long> idList);
 
@@ -87,15 +89,13 @@ public interface IOmDataRuleService extends IService<OmDataRuleDO> {
      */
     Map<Long, OmDataRuleDO> getOmDataRuleMap();
 
-
     /**
      * 导入数据规则数据
      *
      * @param importExcelList 数据规则数据列表
      * @param isUpdateSupport 是否更新支持，如果已存在，则进行更新数据
      * @param operName 操作用户
-     * @return 结果
+     * @return 导入处理结果说明
      */
     String importOmDataRule(List<OmDataRuleRespVO> importExcelList, boolean isUpdateSupport, String operName);
-
 }

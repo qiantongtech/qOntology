@@ -36,7 +36,6 @@ import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttri
  * @date 2026-10-13
  */
 public interface IOmObjectTypeAttributeService extends IService<OmObjectTypeAttributeDO> {
-
     /**
      * 获得对象类型属性分页列表
      *
@@ -67,7 +66,7 @@ public interface IOmObjectTypeAttributeService extends IService<OmObjectTypeAttr
      * 更新对象类型属性
      *
      * @param request 属性信息
-     * @return 影响行数
+     * @return 实际受影响的记录数
      */
     int updateOmObjectTypeAttribute(OmObjectTypeAttributeSaveReqVO request);
 
@@ -77,7 +76,7 @@ public interface IOmObjectTypeAttributeService extends IService<OmObjectTypeAttr
      * @param idList 属性编号集合
      * @param objectTypeId 所属对象类型编号
      * @param workspaceId 工作区编号
-     * @return 影响行数
+     * @return 实际受影响的记录数
      */
     int removeOmObjectTypeAttribute(Collection<Long> idList, Long objectTypeId, Long workspaceId);
 

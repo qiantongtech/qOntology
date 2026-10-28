@@ -20,27 +20,25 @@ package tech.qiantong.qontology.module.om.service.export;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
-
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.xml.stream.XMLStreamException;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import tech.qiantong.qontology.common.exception.ServiceException;
-import tech.qiantong.qontology.module.om.api.export.OntologyExportApi;
 import tech.qiantong.qontology.module.basic.api.dto.dataType.BasicDataTypeOptionDTO;
 import tech.qiantong.qontology.module.basic.api.service.dataType.IBasicDataTypeApiService;
+import tech.qiantong.qontology.module.om.api.export.OntologyExportApi;
 import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
-import tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper;
-import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttributeDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.relation.OmObjectTypeRelationDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.term.OmTermDO;
-import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeAttributeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.relation.OmObjectTypeRelationMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.term.OmTermMapper;
 
@@ -55,34 +53,75 @@ public class OntologyExportService implements OntologyExportApi {
 
     private static final String XSD = "http://www.w3.org/2001/XMLSchema#";
     private static final Map<Integer, String> BASIC_TYPES = Map.of(
-            0, "string", 1, "integer", 2, "decimal", 3, "boolean", 4, "date", 5, "string");
+        0,
+        "string",
+        1,
+        "integer",
+        2,
+        "decimal",
+        3,
+        "boolean",
+        4,
+        "date",
+        5,
+        "string"
+    );
 
     @Resource
     private IBasicDataTypeApiService dataTypeApiService;
+
     @Resource
     private OmDataTypeMapper projectDataTypeMapper;
+
     @Resource
     private OmObjectTypeMapper typeMapper;
+
     @Resource
     private OmObjectTypeAttributeMapper attributeMapper;
+
     @Resource
     private OmObjectTypeRelationMapper relationMapper;
+
     @Resource
     private OmTermMapper termMapper;
 
+    /**
+     * 导出指定项目版本的 OWL 本体文档
+     *
+     * @param versionId 待导出或查询的项目版本 ID
+     * @param namespace 本体命名空间，作为导出资源标识的前缀
+     * @param projectName 写入本体标签的项目名称
+     * @param versionName 写入本体版本信息的版本名称
+     * @return UTF-8 编码的本体文档字节数组
+     */
     @Override
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public byte[] exportOwl(Long versionId, String namespace, String projectName, String versionName) {
         return exportOntology(versionId, namespace, projectName, versionName, false);
     }
 
+    /**
+     * 导出指定项目版本的 Turtle 本体文档
+     *
+     * @param versionId 待导出或查询的项目版本 ID
+     * @param namespace 本体命名空间，作为导出资源标识的前缀
+     * @param projectName 写入本体标签的项目名称
+     * @param versionName 写入本体版本信息的版本名称
+     * @return UTF-8 编码的本体文档字节数组
+     */
     @Override
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public byte[] exportTurtle(Long versionId, String namespace, String projectName, String versionName) {
         return exportOntology(versionId, namespace, projectName, versionName, true);
     }
 
-    private byte[] exportOntology(Long versionId, String namespace, String projectName, String versionName, boolean turtle) {
+    private byte[] exportOntology(
+        Long versionId,
+        String namespace,
+        String projectName,
+        String versionName,
+        boolean turtle
+    ) {
         if (versionId == null || versionId <= 0) throw new ServiceException("请选择导出版本");
         String ns = namespace(namespace);
         List<OmObjectTypeDO> types = typeMapper.selectList(versionQuery(versionId, "id"));
@@ -107,8 +146,15 @@ public class OntologyExportService implements OntologyExportApi {
             text(x, "dct", "identifier", String.valueOf(versionId));
             x.endEntity();
             // 保留原有分类注释名称，同时声明新增类型元数据。
-            for (String annotation : List.of("dataTypeCategory", "basicTypeCode", "businessTypeId",
-                    "businessTypeSource", "unit", "decimalPlaces", "format")) {
+            for (String annotation : List.of(
+                "dataTypeCategory",
+                "basicTypeCode",
+                "businessTypeId",
+                "businessTypeSource",
+                "unit",
+                "decimalPlaces",
+                "format"
+            )) {
                 entity(x, "owl", "AnnotationProperty", ns + annotation);
                 x.endEntity();
             }
@@ -122,24 +168,36 @@ public class OntologyExportService implements OntologyExportApi {
                 text(x, "ont", "basicTypeCode", type.getDataType());
                 resource(x, "owl", "equivalentClass", businessBasicType(type));
                 text(x, "ont", "unit", type.getUnit());
-                if (type.getDecimalPlaces() != null)
-                    text(x, "ont", "decimalPlaces", String.valueOf(type.getDecimalPlaces()));
+                if (type.getDecimalPlaces() != null) text(
+                    x,
+                    "ont",
+                    "decimalPlaces",
+                    String.valueOf(type.getDecimalPlaces())
+                );
                 text(x, "ont", "format", type.getFormat());
                 x.endEntity();
             }
             for (OmObjectTypeDO type : types) {
                 entity(x, "owl", "Class", ns + "type_" + type.getId());
                 labels(x, type.getName(), type.getDescription());
-                if (type.getParentId() != null && type.getParentId() != 0)
-                    resource(x, "rdfs", "subClassOf", ns + "type_" + type.getParentId());
+                if (type.getParentId() != null && type.getParentId() != 0) resource(
+                    x,
+                    "rdfs",
+                    "subClassOf",
+                    ns + "type_" + type.getParentId()
+                );
                 x.endEntity();
             }
             for (OmObjectTypeAttributeDO attribute : attributes) {
                 entity(x, "owl", "DatatypeProperty", ns + "attribute_" + attribute.getId());
                 labels(x, attribute.getName(), attribute.getDescription());
                 resource(x, "rdfs", "domain", ns + "type_" + attribute.getObjectTypeId());
-                if (attribute.getTypeCategory() != null)
-                    text(x, "ont", "dataTypeCategory", String.valueOf(attribute.getTypeCategory()));
+                if (attribute.getTypeCategory() != null) text(
+                    x,
+                    "ont",
+                    "dataTypeCategory",
+                    String.valueOf(attribute.getTypeCategory())
+                );
                 if (Integer.valueOf(1).equals(attribute.getTypeCategory()) && attribute.getBasicTypeCode() != null) {
                     text(x, "ont", "basicTypeCode", String.valueOf(attribute.getBasicTypeCode()));
                     resource(x, "rdfs", "range", basicType(attribute.getBasicTypeCode()));
@@ -173,8 +231,8 @@ public class OntologyExportService implements OntologyExportApi {
                 labels(x, term.getStdName(), term.getDescription());
                 languageText(x, "prefLabel", term.getStdName(), "zh");
                 languageText(x, "prefLabel", term.getEnName(), "en");
-                if (term.getAlias() != null)
-                    for (String alias : term.getAlias().split("[,，;；\n]")) text(x, "skos", "altLabel", alias.trim());
+                if (term.getAlias() != null) for (String alias : term.getAlias().split("[,，;；\n]"))
+                    text(x, "skos", "altLabel", alias.trim());
                 text(x, "skos", "notation", term.getAbbr());
                 text(x, "dct", "source", term.getSource());
                 x.endEntity();
@@ -186,12 +244,15 @@ public class OntologyExportService implements OntologyExportApi {
     }
 
     private Map<BusinessTypeKey, BasicDataTypeOptionDTO> resolveBusinessTypes(
-            Long versionId, List<OmObjectTypeAttributeDO> attributes) {
+        Long versionId,
+        List<OmObjectTypeAttributeDO> attributes
+    ) {
         Map<BusinessTypeKey, BasicDataTypeOptionDTO> result = new LinkedHashMap<>();
         for (OmObjectTypeAttributeDO attribute : attributes) {
             if (Integer.valueOf(2).equals(attribute.getTypeCategory())) {
-                if (attribute.getBusinessTypeId() == null)
-                    throw new ServiceException("属性“" + attribute.getName() + "”未选择业务数据类型，请修正后导出");
+                if (attribute.getBusinessTypeId() == null) throw new ServiceException(
+                    "属性“" + attribute.getName() + "”未选择业务数据类型，请修正后导出"
+                );
                 BusinessTypeKey key = businessTypeKey(attribute);
                 if (result.containsKey(key)) continue;
                 BasicDataTypeOptionDTO type;
@@ -199,10 +260,18 @@ public class OntologyExportService implements OntologyExportApi {
                     type = dataTypeApiService.getAvailableDataType(key.id());
                 } else {
                     OmDataTypeDO projectType = projectDataTypeMapper.selectById(key.id());
-                    if (projectType == null || !Boolean.TRUE.equals(projectType.getValidFlag())
-                            || !Objects.equals(projectType.getVersionId(), versionId)) {
-                        throw new ServiceException("属性“" + attribute.getName() + "”引用的当前项目业务数据类型“"
-                                + key.id() + "”不存在、已停用或不属于导出版本，请修正后导出");
+                    if (
+                        projectType == null ||
+                        !Boolean.TRUE.equals(projectType.getValidFlag()) ||
+                        !Objects.equals(projectType.getVersionId(), versionId)
+                    ) {
+                        throw new ServiceException(
+                            "属性“" +
+                                attribute.getName() +
+                                "”引用的当前项目业务数据类型“" +
+                                key.id() +
+                                "”不存在、已停用或不属于导出版本，请修正后导出"
+                        );
                     }
                     type = new BasicDataTypeOptionDTO();
                     type.setId(projectType.getId());
@@ -213,9 +282,13 @@ public class OntologyExportService implements OntologyExportApi {
                     type.setDecimalPlaces(projectType.getDecimalPlaces());
                     type.setFormat(projectType.getFormat());
                 }
-                if (type == null)
-                    throw new ServiceException("属性“" + attribute.getName() + "”引用的全局业务数据类型“"
-                            + key.id() + "”不存在或已停用，请修正后导出");
+                if (type == null) throw new ServiceException(
+                    "属性“" +
+                        attribute.getName() +
+                        "”引用的全局业务数据类型“" +
+                        key.id() +
+                        "”不存在或已停用，请修正后导出"
+                );
                 businessBasicType(type);
                 result.put(key, type);
             }
@@ -226,12 +299,18 @@ public class OntologyExportService implements OntologyExportApi {
     private static BusinessTypeKey businessTypeKey(OmObjectTypeAttributeDO attribute) {
         // 历史属性未保存来源时，与属性保存逻辑保持一致，按全局类型处理。
         String source = attribute.getBusinessTypeSource() == null ? "GLOBAL" : attribute.getBusinessTypeSource();
-        if (!Set.of("PROJECT", "GLOBAL").contains(source))
-            throw new ServiceException("属性“" + attribute.getName() + "”的业务数据类型来源无效，请修正后导出");
+        if (!Set.of("PROJECT", "GLOBAL").contains(source)) throw new ServiceException(
+            "属性“" + attribute.getName() + "”的业务数据类型来源无效，请修正后导出"
+        );
         return new BusinessTypeKey(source, attribute.getBusinessTypeId());
     }
 
     private record BusinessTypeKey(String source, Long id) {
+        /**
+         * 生成业务数据类型的本地资源名称
+         *
+         * @return 业务数据类型的本地资源名称
+         */
         String localName() {
             // 保留原有全局类型 IRI，项目类型使用独立名称，避免两张表主键相同导致串用。
             return "PROJECT".equals(source) ? "business_type_project_" + id : "business_type_" + id;
@@ -254,8 +333,7 @@ public class OntologyExportService implements OntologyExportApi {
 
     private static <T> QueryWrapper<T> versionQuery(Long versionId, String key) {
         // 仅导出当前版本的有效数据；逻辑删除条件由 MyBatis-Plus 自动追加。
-        return new QueryWrapper<T>().eq("version_id", versionId)
-                .eq("valid_flag", true).orderByAsc(key);
+        return new QueryWrapper<T>().eq("version_id", versionId).eq("valid_flag", true).orderByAsc(key);
     }
 
     private static void requireType(Set<Long> ids, Long id) {
@@ -267,27 +345,33 @@ public class OntologyExportService implements OntologyExportApi {
             URI uri = new URI(value == null ? "" : value.trim());
             if (!uri.isAbsolute() || uri.getSchemeSpecificPart().isEmpty()) throw new IllegalArgumentException();
             String result = uri.toASCIIString();
-            return result.endsWith("#") || result.endsWith("/") ? result : result + (uri.getFragment() == null ? "#" : "_");
+            return result.endsWith("#") || result.endsWith("/")
+                ? result
+                : result + (uri.getFragment() == null ? "#" : "_");
         } catch (Exception ex) {
             throw new ServiceException("项目命名空间必须是有效的绝对 URI，例如 https://example.com/ontology#");
         }
     }
 
-    private static void entity(OntologyDocumentWriter writer, String prefix, String local, String iri) throws XMLStreamException {
+    private static void entity(OntologyDocumentWriter writer, String prefix, String local, String iri)
+        throws XMLStreamException {
         writer.entity(prefix, local, iri);
     }
 
-    private static void resource(OntologyDocumentWriter writer, String prefix, String local, String iri) throws XMLStreamException {
+    private static void resource(OntologyDocumentWriter writer, String prefix, String local, String iri)
+        throws XMLStreamException {
         writer.resource(prefix, local, iri);
     }
 
-    private static void text(OntologyDocumentWriter writer, String prefix, String local, String value) throws XMLStreamException {
+    private static void text(OntologyDocumentWriter writer, String prefix, String local, String value)
+        throws XMLStreamException {
         if (value == null || value.isBlank()) return;
         validateText(value);
         writer.literal(prefix, local, value, null);
     }
 
-    private static void languageText(OntologyDocumentWriter writer, String local, String value, String language) throws XMLStreamException {
+    private static void languageText(OntologyDocumentWriter writer, String local, String value, String language)
+        throws XMLStreamException {
         if (value == null || value.isBlank()) return;
         validateText(value);
         writer.literal("skos", local, value, language);

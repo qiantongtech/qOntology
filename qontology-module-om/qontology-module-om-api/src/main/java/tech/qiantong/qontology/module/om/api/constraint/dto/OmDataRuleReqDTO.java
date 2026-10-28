@@ -63,6 +63,4 @@ public class OmDataRuleReqDTO {
 
     /** 删除标志 */
     private Boolean delFlag;
-
-
 }

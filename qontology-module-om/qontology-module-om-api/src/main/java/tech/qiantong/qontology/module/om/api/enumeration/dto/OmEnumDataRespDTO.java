@@ -29,13 +29,13 @@ import lombok.*;
 @Data
 public class OmEnumDataRespDTO {
 
+    private static final long serialVersionUID = 1L;
+
     /** 工作区id */
     private Long workspaceId;
 
     /** 版本id */
     private Long versionId;
-
-    private static final long serialVersionUID = 1L;
 
     /** 枚举编码 */
     private Long enumCode;

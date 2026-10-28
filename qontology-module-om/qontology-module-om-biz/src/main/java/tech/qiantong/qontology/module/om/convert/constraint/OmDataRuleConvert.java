@@ -38,29 +38,33 @@ public interface OmDataRuleConvert {
 
     /**
      * PageReqVO 转换为 DO
+     *
      * @param omDataRulePageReqVO 请求参数
      * @return OmDataRuleDO
      */
-     OmDataRuleDO convertToDO(OmDataRulePageReqVO omDataRulePageReqVO);
+    OmDataRuleDO convertToDO(OmDataRulePageReqVO omDataRulePageReqVO);
 
     /**
      * SaveReqVO 转换为 DO
+     *
      * @param omDataRuleSaveReqVO 保存请求参数
      * @return OmDataRuleDO
      */
-     OmDataRuleDO convertToDO(OmDataRuleSaveReqVO omDataRuleSaveReqVO);
+    OmDataRuleDO convertToDO(OmDataRuleSaveReqVO omDataRuleSaveReqVO);
 
     /**
      * DO 转换为 RespVO
+     *
      * @param omDataRuleDO 实体对象
      * @return OmDataRuleRespVO
      */
-     OmDataRuleRespVO convertToRespVO(OmDataRuleDO omDataRuleDO);
+    OmDataRuleRespVO convertToRespVO(OmDataRuleDO omDataRuleDO);
 
     /**
      * DOList 转换为 RespVOList
+     *
      * @param omDataRuleDOList 实体对象列表
      * @return List<OmDataRuleRespVO>
      */
-     List<OmDataRuleRespVO> convertToRespVOList(List<OmDataRuleDO> omDataRuleDOList);
+    List<OmDataRuleRespVO> convertToRespVOList(List<OmDataRuleDO> omDataRuleDOList);
 }

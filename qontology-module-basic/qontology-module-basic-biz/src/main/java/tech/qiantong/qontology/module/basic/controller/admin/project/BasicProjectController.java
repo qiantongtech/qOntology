@@ -22,6 +22,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -33,20 +40,12 @@ import tech.qiantong.qontology.core.domain.entity.SysDictData;
 import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
+import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectOwlExportReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectRespVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectSaveReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectDO;
 import tech.qiantong.qontology.module.basic.service.project.IBasicProjectService;
-
-import java.nio.charset.StandardCharsets;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectOwlExportReqVO;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * 项目管理Controller
@@ -59,6 +58,7 @@ import java.util.List;
 @RequestMapping("/basic/project")
 @Validated
 public class BasicProjectController extends BaseController {
+
     @Resource
     private IBasicProjectService basicProjectService;
 
@@ -85,7 +85,7 @@ public class BasicProjectController extends BaseController {
     @PostMapping
     public CommonResult<Long> add(@Valid @RequestBody BasicProjectSaveReqVO basicProject) {
         LoginUser currentUser = super.getLoginUser();
-        return CommonResult.toAjax(basicProjectService.createBasicProject(basicProject, currentUser));
+        return CommonResult.toAjax(basicProjectService.createBasicProject(basicProject,currentUser));
     }
 
     @Operation(summary = "修改项目管理")
@@ -110,27 +110,46 @@ public class BasicProjectController extends BaseController {
         return CommonResult.success(basicProjectService.queryProjectDict());
     }
 
+    /**
+     * 查询项目下可导出的版本选项
+     *
+     * @param id 记录 ID
+     * @return 可导出的版本选项列表
+     */
     @Operation(summary = "查询项目可导出的本体版本")
     @GetMapping("/{id}/export/versions")
     public CommonResult<List<SysDictData>> exportVersions(@PathVariable Long id) {
         return CommonResult.success(basicProjectService.getOwlExportVersions(id));
     }
 
+    /**
+     * 导出指定项目版本的 OWL 本体文档
+     *
+     * @param id 记录 ID
+     * @param request 项目导出请求，包含版本 ID 和导出格式
+     * @return 包含本体文件内容及下载响应头的 HTTP 响应
+     */
     @Operation(summary = "导出指定项目版本的本体，支持Turtle和RDF/XML")
     @Log(title = "项目本体导出", businessType = BusinessType.EXPORT)
-    @PostMapping({"/{id}/export", "/{id}/export/owl"})
-    public ResponseEntity<byte[]> exportOwl(@PathVariable Long id,
-                                          @Valid @RequestBody BasicProjectOwlExportReqVO request) {
+    @PostMapping({ "/{id}/export", "/{id}/export/owl" })
+    public ResponseEntity<byte[]> exportOwl(
+        @PathVariable Long id,
+        @Valid @RequestBody BasicProjectOwlExportReqVO request
+    ) {
         boolean turtle = "TURTLE".equals(request.getFormat());
-        byte[] content = turtle ? basicProjectService.exportTurtle(id, request.getVersionId())
-                : basicProjectService.exportOwl(id, request.getVersionId());
-        String fileName = request.getFileName().trim().replaceFirst("(?i)\\.(owl|ttl)$", "")
-                + (turtle ? ".ttl" : ".owl");
+        byte[] content = turtle
+            ? basicProjectService.exportTurtle(id, request.getVersionId())
+            : basicProjectService.exportOwl(id, request.getVersionId());
+        String fileName =
+            request.getFileName().trim().replaceFirst("(?i)\\.(owl|ttl)$", "") + (turtle ? ".ttl" : ".owl");
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(turtle
-                        ? "text/turtle;charset=UTF-8" : "application/rdf+xml;charset=UTF-8"))
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString())
-                .body(content);
+            .contentType(
+                MediaType.parseMediaType(turtle ? "text/turtle;charset=UTF-8" : "application/rdf+xml;charset=UTF-8")
+            )
+            .header(
+                HttpHeaders.CONTENT_DISPOSITION,
+                ContentDisposition.attachment().filename(fileName, StandardCharsets.UTF_8).build().toString()
+            )
+            .body(content);
     }
 }

@@ -33,8 +33,10 @@ import tech.qiantong.qontology.core.page.PageParam;
 public class OmModelAxiomPageReqVO extends PageParam {
 
     private static final long serialVersionUID = 1L;
+
     @Schema(description = "ID", example = "")
     private Long id;
+
     @Schema(description = "项目版本id", example = "")
     private Long versionId;
 
@@ -94,8 +96,4 @@ public class OmModelAxiomPageReqVO extends PageParam {
 
     @Schema(description = "枚举来源", example = "")
     private String enumSource;
-
-
-
-
 }

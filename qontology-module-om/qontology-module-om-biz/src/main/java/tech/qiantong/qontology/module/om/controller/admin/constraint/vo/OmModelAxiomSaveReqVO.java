@@ -19,11 +19,10 @@
 package tech.qiantong.qontology.module.om.controller.admin.constraint.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
 /**
@@ -75,7 +74,6 @@ public class OmModelAxiomSaveReqVO extends BaseEntity {
     @Size(max = 128, message = "关系名称长度不能超过128个字符")
     private String relationName;
 
-
     @Schema(description = "Domain对象类型id", example = "")
     private Long domainId;
 
@@ -120,6 +118,4 @@ public class OmModelAxiomSaveReqVO extends BaseEntity {
     @Schema(description = "备注", example = "")
     @Size(max = 512, message = "备注长度不能超过512个字符")
     private String remark;
-
-
 }

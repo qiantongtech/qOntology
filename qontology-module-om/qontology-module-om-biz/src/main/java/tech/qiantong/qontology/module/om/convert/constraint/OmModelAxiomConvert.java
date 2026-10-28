@@ -38,29 +38,33 @@ public interface OmModelAxiomConvert {
 
     /**
      * PageReqVO 转换为 DO
+     *
      * @param omModelAxiomPageReqVO 请求参数
      * @return OmModelAxiomDO
      */
-     OmModelAxiomDO convertToDO(OmModelAxiomPageReqVO omModelAxiomPageReqVO);
+    OmModelAxiomDO convertToDO(OmModelAxiomPageReqVO omModelAxiomPageReqVO);
 
     /**
      * SaveReqVO 转换为 DO
+     *
      * @param omModelAxiomSaveReqVO 保存请求参数
      * @return OmModelAxiomDO
      */
-     OmModelAxiomDO convertToDO(OmModelAxiomSaveReqVO omModelAxiomSaveReqVO);
+    OmModelAxiomDO convertToDO(OmModelAxiomSaveReqVO omModelAxiomSaveReqVO);
 
     /**
      * DO 转换为 RespVO
+     *
      * @param omModelAxiomDO 实体对象
      * @return OmModelAxiomRespVO
      */
-     OmModelAxiomRespVO convertToRespVO(OmModelAxiomDO omModelAxiomDO);
+    OmModelAxiomRespVO convertToRespVO(OmModelAxiomDO omModelAxiomDO);
 
     /**
      * DOList 转换为 RespVOList
+     *
      * @param omModelAxiomDOList 实体对象列表
      * @return List<OmModelAxiomRespVO>
      */
-     List<OmModelAxiomRespVO> convertToRespVOList(List<OmModelAxiomDO> omModelAxiomDOList);
+    List<OmModelAxiomRespVO> convertToRespVOList(List<OmModelAxiomDO> omModelAxiomDOList);
 }

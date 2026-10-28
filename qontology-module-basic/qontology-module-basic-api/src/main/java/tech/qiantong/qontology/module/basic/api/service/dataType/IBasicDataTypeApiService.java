@@ -25,7 +25,6 @@ import tech.qiantong.qontology.module.basic.api.dto.dataType.BasicDataTypeOption
  * 全局业务数据类型跨模块查询接口
  */
 public interface IBasicDataTypeApiService {
-
     /**
      * 查询有效的全局业务数据类型选项
      *

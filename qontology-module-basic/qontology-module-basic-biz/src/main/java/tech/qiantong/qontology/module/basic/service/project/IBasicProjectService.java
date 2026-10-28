@@ -19,15 +19,14 @@
 package tech.qiantong.qontology.module.basic.service.project;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
+import java.util.List;
 import tech.qiantong.qontology.core.domain.entity.SysDictData;
 import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectSaveReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectDO;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * 项目管理Service接口
@@ -36,7 +35,6 @@ import java.util.List;
  * @date 2026-10-12
  */
 public interface IBasicProjectService extends IService<BasicProjectDO> {
-
     /**
      * 获得项目管理分页列表
      *
@@ -81,12 +79,29 @@ public interface IBasicProjectService extends IService<BasicProjectDO> {
      * @return 项目管理字典
      */
     List<SysDictData> queryProjectDict();
-    /** 当前项目可导出的版本。 */
+    /**
+     * 当前项目可导出的版本
+     *
+     * @param projectId 项目 ID，用于校验当前工作区内的项目及版本归属
+     * @return 可导出的版本选项列表
+     */
     List<SysDictData> getOwlExportVersions(Long projectId);
 
-    /** 校验版本归属并导出该版本的本体。 */
+    /**
+     * 导出指定项目版本的 OWL 本体文档
+     *
+     * @param projectId 项目 ID，用于校验当前工作区内的项目及版本归属
+     * @param versionId 待导出或查询的项目版本 ID
+     * @return UTF-8 编码的本体文档字节数组
+     */
     byte[] exportOwl(Long projectId, Long versionId);
 
-    /** 校验版本归属并导出 Turtle 本体。 */
+    /**
+     * 导出指定项目版本的 Turtle 本体文档
+     *
+     * @param projectId 项目 ID，用于校验当前工作区内的项目及版本归属
+     * @param versionId 待导出或查询的项目版本 ID
+     * @return UTF-8 编码的本体文档字节数组
+     */
     byte[] exportTurtle(Long projectId, Long versionId);
 }

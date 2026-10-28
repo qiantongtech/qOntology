@@ -25,6 +25,7 @@ import lombok.Data;
 @Data
 @Schema(description = "项目本体导出请求，支持 Turtle 和 RDF/XML")
 public class BasicProjectOwlExportReqVO {
+
     @NotBlank(message = "请输入导出文件名称")
     @Size(max = 128, message = "文件名称不能超过128个字符")
     @Pattern(regexp = "[^\\\\/:*?\"<>|\\p{Cntrl}]+", message = "文件名称不能包含路径分隔符或特殊字符")

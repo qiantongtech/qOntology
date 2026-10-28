@@ -35,7 +35,6 @@ import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumTypeDO
  * @date 2026-10-10
  */
 public interface IOmEnumTypeService extends IService<OmEnumTypeDO> {
-
     /**
      * 获得枚举类型分页列表
      *
@@ -56,7 +55,7 @@ public interface IOmEnumTypeService extends IService<OmEnumTypeDO> {
      * 更新枚举类型
      *
      * @param updateReqVO 枚举类型信息
-     * @return 影响行数
+     * @return 实际受影响的记录数
      */
     int updateOmEnumType(OmEnumTypeSaveReqVO updateReqVO);
 
@@ -64,7 +63,7 @@ public interface IOmEnumTypeService extends IService<OmEnumTypeDO> {
      * 删除枚举类型
      *
      * @param idList 枚举类型编号
-     * @return 影响行数
+     * @return 实际受影响的记录数
      */
     int removeOmEnumType(Collection<Long> idList);
 
@@ -96,7 +95,7 @@ public interface IOmEnumTypeService extends IService<OmEnumTypeDO> {
      * @param importExcelList 枚举类型数据列表
      * @param isUpdateSupport 是否更新支持，如果已存在，则进行更新数据
      * @param operName 操作用户
-     * @return 结果
+     * @return 导入处理结果说明
      */
     String importOmEnumType(List<OmEnumTypeRespVO> importExcelList, boolean isUpdateSupport, String operName);
 }

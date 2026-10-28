@@ -18,13 +18,13 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.constraint;
 
-import tech.qiantong.qontology.module.om.dal.dataobject.constraint.OmDataRuleDO;
-import java.util.Arrays;
 import com.github.yulichang.base.MPJBaseMapper;
-import tech.qiantong.qontology.core.page.PageResult;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmDataRulePageReqVO;
+import tech.qiantong.qontology.module.om.dal.dataobject.constraint.OmDataRuleDO;
 import tech.qiantong.qontology.mybatis.core.mapper.BaseMapperX;
 import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
@@ -35,13 +35,20 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
  * @date 2026-10-28
  */
 public interface OmDataRuleMapper extends BaseMapperX<OmDataRuleDO> {
-
+    /**
+     * 按筛选条件分页查询记录
+     *
+     * @param reqVO 分页查询条件
+     * @return 包含记录列表和总数的分页结果
+     */
     default PageResult<OmDataRuleDO> selectPage(OmDataRulePageReqVO reqVO) {
         // 定义排序的字段（防止 SQL 注入，与数据库字段名称一致）
         Set<String> allowedColumns = new HashSet<>(Arrays.asList("id", "create_time", "update_time"));
 
         // 构造动态查询条件
-        return selectPage(reqVO, new LambdaQueryWrapperX<OmDataRuleDO>()
+        return selectPage(
+            reqVO,
+            new LambdaQueryWrapperX<OmDataRuleDO>()
                 .eqIfPresent(OmDataRuleDO::getVersionId, reqVO.getVersionId())
                 .likeIfPresent(OmDataRuleDO::getName, reqVO.getName())
                 .eqIfPresent(OmDataRuleDO::getDescription, reqVO.getDescription())
@@ -54,6 +61,7 @@ public interface OmDataRuleMapper extends BaseMapperX<OmDataRuleDO> {
                 // 如果 reqVO.getName() 不为空，则添加 name 的精确匹配条件（name = '<name>'）
                 // .likeIfPresent(OmDataRuleDO::getName, reqVO.getName())
                 // 按照 createTime 字段降序排序
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns)
+        );
     }
 }

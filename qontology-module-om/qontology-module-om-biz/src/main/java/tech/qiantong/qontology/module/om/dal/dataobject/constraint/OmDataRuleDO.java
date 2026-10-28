@@ -18,12 +18,12 @@
 
 package tech.qiantong.qontology.module.om.dal.dataobject.constraint;
 
-import lombok.*;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.*;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
 /**
@@ -41,6 +41,7 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class OmDataRuleDO extends BaseEntity {
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
@@ -78,6 +79,4 @@ public class OmDataRuleDO extends BaseEntity {
     /** 删除标志 */
     @TableLogic
     private Boolean delFlag;
-
-
 }

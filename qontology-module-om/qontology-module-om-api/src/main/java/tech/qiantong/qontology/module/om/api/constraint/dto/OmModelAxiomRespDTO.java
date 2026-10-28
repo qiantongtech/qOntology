@@ -99,6 +99,4 @@ public class OmModelAxiomRespDTO {
 
     /** 删除标志 */
     private Boolean delFlag;
-
-
 }

@@ -33,8 +33,10 @@ import tech.qiantong.qontology.core.page.PageParam;
 public class OmDataRulePageReqVO extends PageParam {
 
     private static final long serialVersionUID = 1L;
+
     @Schema(description = "ID", example = "")
     private Long id;
+
     @Schema(description = "项目版本id", example = "")
     private Long versionId;
 
@@ -58,8 +60,4 @@ public class OmDataRulePageReqVO extends PageParam {
 
     @Schema(description = "失败提示", example = "")
     private String failureMessage;
-
-
-
-
 }

@@ -36,7 +36,6 @@ import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
  * @date 2026-10-16
  */
 public interface IOmDataTypeService extends IService<OmDataTypeDO> {
-
     /**
      * 获得数据类型分页列表
      *
@@ -57,7 +56,7 @@ public interface IOmDataTypeService extends IService<OmDataTypeDO> {
      * 更新数据类型
      *
      * @param updateReqVO 数据类型信息
-     * @return 影响行数
+     * @return 实际受影响的记录数
      */
     int updateOmDataType(OmDataTypeSaveReqVO updateReqVO);
 
@@ -66,7 +65,7 @@ public interface IOmDataTypeService extends IService<OmDataTypeDO> {
      *
      * @param idList 数据类型编号
      * @param versionId 项目版本 ID
-     * @return 影响行数
+     * @return 实际受影响的记录数
      */
     int removeOmDataType(Collection<Long> idList, Long versionId);
 
@@ -74,8 +73,8 @@ public interface IOmDataTypeService extends IService<OmDataTypeDO> {
      * 获得数据类型详情
      *
      * @param id 数据类型编号
-     * @return 数据类型
      * @param versionId 项目版本 ID
+     * @return 数据类型
      */
     OmDataTypeDO getOmDataTypeById(Long id, Long versionId);
 

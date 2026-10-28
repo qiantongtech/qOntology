@@ -28,24 +28,29 @@ import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectV
 import tech.qiantong.qontology.module.om.api.export.OntologyExportApi;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import tech.qiantong.qontology.common.exception.ServiceException;
 import tech.qiantong.qontology.core.domain.entity.SysDictData;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectSaveReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionSaveReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectDO;
+import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
 import tech.qiantong.qontology.module.basic.dal.mapper.project.BasicProjectMapper;
 import tech.qiantong.qontology.module.basic.service.project.IBasicProjectService;
 import tech.qiantong.qontology.module.basic.service.project.IBasicProjectVersionService;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import tech.qiantong.qontology.module.om.api.export.OntologyExportApi;
 
 /**
  * 项目管理Service业务层处理
@@ -56,7 +61,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class BasicProjectServiceImpl extends ServiceImpl<BasicProjectMapper, BasicProjectDO> implements IBasicProjectService {
+public class BasicProjectServiceImpl
+    extends ServiceImpl<BasicProjectMapper, BasicProjectDO>
+    implements IBasicProjectService {
 
     @Resource
     private IBasicProjectVersionService projectVersionService;
@@ -89,7 +96,7 @@ public class BasicProjectServiceImpl extends ServiceImpl<BasicProjectMapper, Bas
         BasicProjectVersionSaveReqVO versionReqVO = new BasicProjectVersionSaveReqVO();
         versionReqVO.setProjectId(dictType.getId());
         versionReqVO.setVersion(createReqVO.getCurrentVersion());
-        projectVersionService.createBasicProjectVersion(versionReqVO, currentUser);
+        projectVersionService.createBasicProjectVersion(versionReqVO,currentUser);
         return dictType.getId();
     }
 
@@ -142,31 +149,58 @@ public class BasicProjectServiceImpl extends ServiceImpl<BasicProjectMapper, Bas
         if (CollUtil.isEmpty(list)) {
             return new ArrayList<>(0);
         }
-        return list.stream().map(item -> {
-            SysDictData dictData = new SysDictData();
-            dictData.setDictLabel(item.getName());
-            dictData.setDictValue(item.getId().toString());
-            return dictData;
-        }).collect(Collectors.toList());
+        return list
+            .stream()
+            .map(item -> {
+                SysDictData dictData = new SysDictData();
+                dictData.setDictLabel(item.getName());
+                dictData.setDictValue(item.getId().toString());
+                return dictData;
+            })
+            .collect(Collectors.toList());
     }
+
+    /**
+     * 当前项目可导出的版本
+     *
+     * @param projectId 项目 ID，用于校验当前工作区内的项目及版本归属
+     * @return 可导出的版本选项列表
+     */
     @Override
     public List<SysDictData> getOwlExportVersions(Long projectId) {
         requireExportProject(projectId);
-        return projectVersionService.list(new QueryWrapper<BasicProjectVersionDO>()
-                .eq("project_id", projectId).orderByDesc("id")).stream().map(version -> {
-            SysDictData option = new SysDictData();
-            option.setDictValue(String.valueOf(version.getId()));
-            option.setDictLabel(version.getVersion());
-            return option;
-        }).collect(Collectors.toList());
+        return projectVersionService
+            .list(new QueryWrapper<BasicProjectVersionDO>().eq("project_id", projectId).orderByDesc("id"))
+            .stream()
+            .map(version -> {
+                SysDictData option = new SysDictData();
+                option.setDictValue(String.valueOf(version.getId()));
+                option.setDictLabel(version.getVersion());
+                return option;
+            })
+            .collect(Collectors.toList());
     }
 
+    /**
+     * 导出指定项目版本的 OWL 本体文档
+     *
+     * @param projectId 项目 ID，用于校验当前工作区内的项目及版本归属
+     * @param versionId 待导出或查询的项目版本 ID
+     * @return UTF-8 编码的本体文档字节数组
+     */
     @Override
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public byte[] exportOwl(Long projectId, Long versionId) {
         return exportOntology(projectId, versionId, false);
     }
 
+    /**
+     * 导出指定项目版本的 Turtle 本体文档
+     *
+     * @param projectId 项目 ID，用于校验当前工作区内的项目及版本归属
+     * @param versionId 待导出或查询的项目版本 ID
+     * @return UTF-8 编码的本体文档字节数组
+     */
     @Override
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public byte[] exportTurtle(Long projectId, Long versionId) {
@@ -181,8 +215,8 @@ public class BasicProjectServiceImpl extends ServiceImpl<BasicProjectMapper, Bas
             throw new ServiceException("导出版本不存在或不属于当前项目");
         }
         return turtle
-                ? ontologyExportApi.exportTurtle(versionId, project.getNamespace(), project.getName(), version.getVersion())
-                : ontologyExportApi.exportOwl(versionId, project.getNamespace(), project.getName(), version.getVersion());
+            ? ontologyExportApi.exportTurtle(versionId, project.getNamespace(), project.getName(), version.getVersion())
+            : ontologyExportApi.exportOwl(versionId, project.getNamespace(), project.getName(), version.getVersion());
     }
 
     private BasicProjectDO requireExportProject(Long projectId) {
