@@ -65,9 +65,10 @@ public class OmObjectTypeAttributeController extends BaseController {
     private IOmObjectTypeAttributeService attributeService;
 
     /**
-     * 按当前对象类型及来源查询可选业务数据类型
+     * 按项目版本和来源查询可选业务数据类型，兼容通过对象类型确定版本
      *
-     * @param objectTypeId 所属对象类型 ID
+     * @param objectTypeId 所属对象类型 ID，可为空
+     * @param versionId 项目版本 ID，未指定对象类型时使用
      * @param source 数据来源，PROJECT 当前项目版本，GLOBAL 全局
      * @return 业务处理结果
      */
@@ -75,10 +76,13 @@ public class OmObjectTypeAttributeController extends BaseController {
     @PreAuthorize("@ss.hasPermi('om:object:type:edit') or @ss.hasPermi('om:object:type:query')")
     @GetMapping("/businessDataTypes")
     public CommonResult<List<OmAttributeBusinessTypeOptionRespVO>> businessDataTypes(
-        @RequestParam Long objectTypeId,
+        @RequestParam(required = false) Long objectTypeId,
+        @RequestParam(required = false) Long versionId,
         @RequestParam(defaultValue = "GLOBAL") String source
     ) {
-        return CommonResult.success(attributeService.getBusinessDataTypes(objectTypeId, getWorkSpaceId(), source));
+        return CommonResult.success(
+            attributeService.getBusinessDataTypes(objectTypeId, versionId, getWorkSpaceId(), source)
+        );
     }
 
     /**

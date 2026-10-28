@@ -44,7 +44,7 @@
                 <el-row :gutter="15" class="btn-style">
                     <el-col :span="1.5">
                         <el-button
-                            v-hasPermi="['om:constraint:model:add']"
+                            v-hasPermi="['om:constraint:modelaxi:add']"
                             type="primary"
                             plain
                             :disabled="saving"
@@ -55,7 +55,7 @@
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            v-hasPermi="['om:constraint:model:remove']"
+                            v-hasPermi="['om:constraint:modelaxi:remove']"
                             type="danger"
                             plain
                             :disabled="!selectedIds.length || deleting || loading"
@@ -73,22 +73,23 @@
                 :data="rows"
                 row-key="id"
                 stripe
+                :default-sort="{prop: 'createTime', order: 'descending'}"
+                @sort-change="handleSortChange"
                 @selection-change="handleSelectionChange"
             >
                 <el-table-column type="selection" width="55" align="center" />
                 <el-table-column
-                    v-if="visible('index')"
-                    type="index"
-                    :index="getRowIndex"
-                    label="序号"
-                    width="70"
+                    v-if="visible('id')"
+                    prop="id" sortable="custom"
+                    label="编号"
+                    width="80"
                     align="center"
                 />
                 <el-table-column
                     v-if="visible('name')"
                     prop="name"
                     label="名称"
-                    min-width="160"
+                    min-width="200"
                     :show-overflow-tooltip="{ effect: 'light' }"
                 />
                 <el-table-column
@@ -100,7 +101,7 @@
                 >
                     <template #default="{ row }">{{ row.description || '-' }}</template>
                 </el-table-column>
-                <el-table-column v-if="visible('type')" label="公理类型" min-width="145" align="center">
+                <el-table-column v-if="visible('type')" label="公理类型" width="150" align="center">
                     <template #default="{ row }">
                         <dict-tag :options="om_axiom_type" :value="row.type" />
                     </template>
@@ -120,7 +121,7 @@
                 >
                     <template #default="{ row }">{{ row.createBy || '-' }}</template>
                 </el-table-column>
-                <el-table-column v-if="visible('createTime')" label="创建时间" width="180" align="center">
+                <el-table-column v-if="visible('createTime')" prop="createTime" sortable="custom" label="创建时间" width="180" align="center">
                     <template #default="{ row }">{{
                         proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-'
                     }}</template>
@@ -128,14 +129,14 @@
                 <el-table-column
                     v-if="visible('operation')"
                     label="操作"
-                    width="210"
+                    width="240"
                     align="center"
                     fixed="right"
                     class-name="small-padding fixed-width"
                 >
                     <template #default="{ row }">
                         <el-button
-                            v-hasPermi="['om:constraint:model:query']"
+                            v-hasPermi="['om:constraint:modelaxi:query']"
                             link
                             type="primary"
                             icon="View"
@@ -143,7 +144,7 @@
                             >详情
                         </el-button>
                         <el-button
-                            v-hasPermi="['om:constraint:model:edit']"
+                            v-hasPermi="['om:constraint:modelaxi:edit']"
                             link
                             type="primary"
                             icon="Edit"
@@ -152,7 +153,7 @@
                             >修改
                         </el-button>
                         <el-button
-                            v-hasPermi="['om:constraint:model:remove']"
+                            v-hasPermi="['om:constraint:modelaxi:remove']"
                             link
                             type="danger"
                             icon="Delete"
@@ -188,23 +189,13 @@
             destroy-on-close
             @closed="handleDialogClosed"
         >
-            <el-alert
-                v-if="optionsError"
-                :title="optionsError"
-                type="error"
-                :closable="false"
-                show-icon
-                class="options-error"
-            >
-                <el-button link type="primary" @click="loadOptions">重新加载</el-button>
-            </el-alert>
             <el-form
                 ref="ruleRef"
                 :model="form"
                 :rules="rules"
                 label-width="120px"
                 class="rule-form"
-                :disabled="saving || optionsLoading"
+
                 @submit.prevent="submitForm"
             >
                 <div class="h2-title">基本信息</div>
@@ -235,14 +226,19 @@
                         type="textarea"
                         :rows="4"
                         placeholder="请输入描述"
-                        :maxlength="500"
+                        :maxlength="512"
                         show-word-limit
                     />
                 </el-form-item>
                 <div class="h2-title">公理表达</div>
                 <template v-if="form.type === 'DOMAIN_RANGE'">
                     <el-form-item label="对象类型关系" prop="relationId">
-                        <el-select v-model="form.relationId" filterable placeholder="请选择关系">
+                        <el-select
+                            v-model="form.relationId"
+                            :loading="optionsLoading"
+                            filterable
+                            placeholder="请选择关系"
+                        >
                             <el-option
                                 v-for="item in relationOptions"
                                 :key="item.id"
@@ -252,46 +248,53 @@
                         </el-select>
                     </el-form-item>
                     <el-form-item label="Domain" prop="domainId">
-                        <el-select v-model="form.domainId" filterable placeholder="请选择对象类型">
-                            <el-option
-                                v-for="item in objectTypeOptions"
-                                :key="item.id"
-                                :label="item.name"
-                                :value="item.id"
-                            />
-                        </el-select>
+                        <el-tree-select
+                            v-model="form.domainId"
+                            :data="objectTypeTree"
+                            :props="objectTypeTreeProps"
+                            value-key="id"
+                            :loading="optionsLoading"
+                            check-strictly
+                            filterable
+                            clearable
+                            placeholder="请选择对象类型"
+                            @change="handleDomainChange"
+                        />
                     </el-form-item>
                     <el-form-item label="Range" prop="rangeId">
-                        <el-select v-model="form.rangeId" filterable placeholder="请选择对象类型">
-                            <el-option
-                                v-for="item in objectTypeOptions"
-                                :key="item.id"
-                                :label="item.name"
-                                :value="item.id"
-                            />
-                        </el-select>
+                        <el-tree-select
+                            v-model="form.rangeId"
+                            :data="rangeObjectTypeTree"
+                            :props="objectTypeTreeProps"
+                            value-key="id"
+                            :loading="optionsLoading"
+                            check-strictly
+                            filterable
+                            clearable
+                            placeholder="请选择对象类型"
+                        />
                     </el-form-item>
                 </template>
                 <template v-else>
                     <el-form-item :label="firstTypeLabel" prop="objectTypeId">
-                        <el-select
+                        <el-tree-select
                             v-model="form.objectTypeId"
+                            :data="objectTypeTree"
+                            :props="objectTypeTreeProps"
+                            value-key="id"
+                            :loading="optionsLoading"
+                            check-strictly
                             filterable
+                            clearable
                             placeholder="请选择对象类型"
                             @change="handleObjectTypeChange"
-                        >
-                            <el-option
-                                v-for="item in objectTypeOptions"
-                                :key="item.id"
-                                :label="item.name"
-                                :value="item.id"
-                            />
-                        </el-select>
+                        />
                     </el-form-item>
                     <template v-if="form.type === 'PROPERTY_RANGE'">
-                        <el-form-item label="数据属性" prop="attributeId">
+                        <el-form-item label="对象类型属性" prop="attributeId">
                             <el-select
                                 v-model="form.attributeId"
+                                :loading="optionsLoading || attributeLoadingCount > 0"
                                 filterable
                                 :disabled="!form.objectTypeId"
                                 placeholder="请选择当前对象类型的属性"
@@ -304,7 +307,7 @@
                                 />
                             </el-select>
                         </el-form-item>
-                        <el-form-item label="值类型" prop="typeCategory">
+                        <el-form-item label="数据类型" prop="typeCategory">
                             <el-radio-group v-model="form.typeCategory" @change="handleValueTypeChange">
                                 <el-radio
                                     v-for="item in om_attribute_data_type"
@@ -333,8 +336,8 @@
                         <el-form-item v-else label="业务数据类型" prop="businessTypeKey">
                             <el-select
                                 v-model="form.businessTypeKey"
+                                :loading="optionsLoading"
                                 filterable
-                                :disabled="!form.objectTypeId"
                                 placeholder="请选择业务数据类型"
                                 clearable
                                 @change="handleBusinessTypeChange"
@@ -381,7 +384,6 @@
                             :readonly="form.typeCategory === 2"
                             :enum-options="enumOptions"
                             :enum-loading="enumsLoading"
-                            :enum-error="enumsError"
                             @enum-open="loadEnums()"
                         />
                         <el-form-item
@@ -392,15 +394,17 @@
                         </el-form-item>
                     </template>
                     <el-form-item v-else :label="secondTypeLabel" prop="otherTypeId">
-                        <el-select v-model="form.otherTypeId" filterable placeholder="请选择对象类型">
-                            <el-option
-                                v-for="item in objectTypeOptions"
-                                :key="item.id"
-                                :label="item.name"
-                                :value="item.id"
-                                :disabled="item.id === form.objectTypeId"
-                            />
-                        </el-select>
+                        <el-tree-select
+                            v-model="form.otherTypeId"
+                            :data="otherObjectTypeTree"
+                            :props="objectTypeTreeProps"
+                            value-key="id"
+                            :loading="optionsLoading"
+                            check-strictly
+                            filterable
+                            clearable
+                            placeholder="请选择对象类型"
+                        />
                     </el-form-item>
                 </template>
             </el-form>
@@ -420,7 +424,7 @@
             destroy-on-close
         >
             <el-form label-width="120px">
-                <el-form-item v-for="field in detailFields" :key="field.label" :label="field.label + '：'">
+                <el-form-item v-for="field in detailFields" :key="field.label" :label="field.label">
                     <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
                 </el-form-item>
                 <AttributeTypeConfig
@@ -444,8 +448,7 @@
     import { computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
-    import useUserStore from '@/store/system/user';
-    import { listRule, getRule, addRule, updateRule, delRule } from '@/api/om/constraint/rule';
+    import { listModelAxiom, getModelAxiom, addModelAxiom, updateModelAxiom, delModelAxiom } from '@/api/om/constraint/modelAxiom';
     import { listRelationTypes, listRelations } from '@/api/om/object/relation';
     import { listAttributes, listAttributeBusinessDataTypes, listAttributeEnums } from '@/api/om/object/attribute';
     import AttributeTypeConfig from '../../object/type/detail/AttributeTypeConfig.vue';
@@ -454,7 +457,6 @@
     const props = defineProps({ versionId: { type: [String, Number], default: undefined } });
     const { versionId, requireVersion } = useOntologyVersion(() => props.versionId);
     const { proxy } = getCurrentInstance();
-    const userStore = useUserStore();
     const { basic_data_type, om_axiom_type, om_rule_level, om_attribute_data_type } = proxy.useDict(
         'basic_data_type',
         'om_axiom_type',
@@ -476,19 +478,36 @@
     const dialogTitle = ref('新增模型公理');
     const detail = ref({});
     const showSearch = ref(true);
-    const query = reactive({ name: '', pageNum: 1, pageSize: 10 });
+    const query = reactive({ name: '', pageNum: 1, pageSize: 10, orderByColumn: 'createTime,id', isAsc: 'desc,desc' });
     const appliedName = ref('');
     const objectTypeOptions = ref([]);
+    const objectTypeTreeProps = { label: 'name', value: 'id', children: 'children' };
+    const objectTypeTree = computed(() =>
+        proxy.handleTree(objectTypeOptions.value.map((item) => ({ ...item })), 'id', 'parentId')
+    );
+    const otherObjectTypeTree = computed(() =>
+        proxy.handleTree(
+            objectTypeOptions.value.map((item) => ({ ...item, disabled: item.id === form.value.objectTypeId })),
+            'id',
+            'parentId'
+        )
+    );
+    const rangeObjectTypeTree = computed(() =>
+        proxy.handleTree(
+            objectTypeOptions.value.map((item) => ({ ...item, disabled: item.id === form.value.domainId })),
+            'id',
+            'parentId'
+        )
+    );
     const attributeOptions = reactive({});
-    const businessTypeOptions = reactive({});
+    const businessTypeOptions = ref([]);
     const optionsLoading = ref(false);
-    const optionsError = ref('');
+    const optionsLoadFailed = ref(false);
     const attributeLoadingCount = ref(0);
     const enumOptions = ref([]);
     const enumsLoading = ref(false);
-    const enumsError = ref('');
     const columns = ref([
-        { key: 0, prop: 'index', label: '序号', visible: true },
+        { key: 0, prop: 'id', label: '编号', visible: true },
         { key: 1, prop: 'name', label: '名称', visible: true },
         { key: 2, prop: 'description', label: '描述', visible: true },
         { key: 3, prop: 'type', label: '公理类型', visible: true },
@@ -504,7 +523,7 @@
         () =>
             optionsLoading.value ||
             attributeLoadingCount.value > 0 ||
-            !!optionsError.value ||
+            optionsLoadFailed.value ||
             (form.value.type === 'PROPERTY_RANGE' &&
                 form.value.typeCategory === 1 &&
                 form.value.basicTypeCode === 5 &&
@@ -513,7 +532,6 @@
     const emptyForm = () => ({
         id: undefined,
         versionId: versionId.value,
-        category: 'MODEL',
         name: '',
         description: '',
         level: 'INFO',
@@ -541,10 +559,6 @@
         ],
         type: [{ required: true, message: '请选择类型', trigger: 'change' }],
         level: [{ required: true, message: '请选择级别', trigger: 'change' }],
-        description: [
-            { required: true, whitespace: true, message: '描述不能为空', trigger: 'blur' },
-            { max: 500, message: '描述不能超过500个字符', trigger: 'blur' }
-        ],
         objectTypeId: [{ required: true, message: '请选择对象类型', trigger: 'change' }],
         otherTypeId: [{ required: true, message: '请选择另一对象类型', trigger: 'change' }],
         relationId: [{ required: true, message: '请选择对象类型关系', trigger: 'change' }],
@@ -592,7 +606,7 @@
     const secondTypeLabel = computed(() => (form.value.type === 'SUBCLASS' ? '父类型' : '对象类型B'));
     const currentAttributes = computed(() => attributeOptions[form.value.objectTypeId] || []);
     const currentBusinessTypes = computed(() =>
-        (businessTypeOptions[form.value.objectTypeId] || []).map((item) => ({
+        businessTypeOptions.value.map((item) => ({
             ...item,
             key: item.businessTypeSource + ':' + item.id
         }))
@@ -641,7 +655,11 @@
 
     async function listObjectTypeOptions(versionId) {
         const response = await listRelationTypes(versionId);
-        return (response.data || []).map((item) => ({ ...item, id: String(item.id) }));
+        return (response.data || []).map((item) => ({
+            ...item,
+            id: String(item.id),
+            parentId: item.parentId == null ? null : String(item.parentId)
+        }));
     }
 
     function listRelationOptions(versionId) {
@@ -649,24 +667,22 @@
     }
 
     async function listObjectAttributeOptions(objectTypeId, versionId) {
+        const rows = await loadAllPages((pageNum) => listAttributes({ objectTypeId, versionId, pageNum, pageSize: 100 }));
+        return rows.map((item) => ({ ...item, id: String(item.id) }));
+    }
+
+    // 业务数据类型按项目版本和全局范围加载，不依赖具体对象类型
+    async function listBusinessTypeOptions(versionId) {
         const results = await Promise.allSettled([
-            loadAllPages((pageNum) => listAttributes({ objectTypeId, versionId, pageNum, pageSize: 100 })),
-            listAttributeBusinessDataTypes(objectTypeId, 'PROJECT'),
-            listAttributeBusinessDataTypes(objectTypeId, 'GLOBAL')
+            listAttributeBusinessDataTypes(undefined, 'PROJECT', versionId),
+            listAttributeBusinessDataTypes(undefined, 'GLOBAL', versionId)
         ]);
         const failed = results.find((result) => result.status === 'rejected');
         if (failed) throw failed.reason;
-        return {
-            attributes: results[0].value.map((item) => ({ ...item, id: String(item.id) })),
-            businessTypes: [
-                ...(results[1].value.data || []).map((item) => ({ ...item, businessTypeSource: 'PROJECT' })),
-                ...(results[2].value.data || []).map((item) => ({ ...item, businessTypeSource: 'GLOBAL' }))
-            ]
-        };
-    }
-
-    function getRowIndex(index) {
-        return (query.pageNum - 1) * query.pageSize + index + 1;
+        return [
+            ...(results[0].value.data || []).map((item) => ({ ...item, businessTypeSource: 'PROJECT' })),
+            ...(results[1].value.data || []).map((item) => ({ ...item, businessTypeSource: 'GLOBAL' }))
+        ];
     }
 
     async function getList() {
@@ -679,12 +695,13 @@
         }
         loading.value = true;
         try {
-            const response = await listRule({
+            const response = await listModelAxiom({
                 versionId: versionId.value,
-                category: 'MODEL',
                 name: appliedName.value,
                 pageNum: query.pageNum,
-                pageSize: query.pageSize
+                pageSize: query.pageSize,
+                orderByColumn: query.orderByColumn,
+                isAsc: query.isAsc
             });
             if (request !== listRequest) return;
             total.value = Number(response.data?.total || 0);
@@ -712,6 +729,17 @@
         return search();
     }
 
+    // 使用后端排序，保证编号和创建时间在全部分页数据中排序一致。
+    function handleSortChange({prop, order}) {
+            const field = order && ['id', 'createTime'].includes(prop) ? prop : 'createTime';
+            const direction = order === 'ascending' ? 'asc' : 'desc';
+            // 创建时间相同时按编号降序，避免翻页时记录顺序不稳定。
+            query.orderByColumn = field === 'createTime' ? 'createTime,id' : 'id';
+            query.isAsc = field === 'createTime' ? direction + ',desc' : direction;
+            query.pageNum = 1;
+            return getList();
+    }
+
     function handleSelectionChange(selection) {
         selectedIds.value = selection.map((row) => row.id);
     }
@@ -723,10 +751,9 @@
         try {
             const response = await listObjectAttributeOptions(objectTypeId, versionId.value);
             if (request !== dialogRequest) return;
-            attributeOptions[objectTypeId] = response.attributes;
-            businessTypeOptions[objectTypeId] = response.businessTypes;
+            attributeOptions[objectTypeId] = response;
         } catch {
-            if (request === dialogRequest) optionsError.value = '属性或业务数据类型加载失败，请重新加载';
+            if (request === dialogRequest) optionsLoadFailed.value = true;
         } finally {
             if (request === dialogRequest) attributeLoadingCount.value--;
         }
@@ -737,24 +764,16 @@
         const request = ++enumRequest;
         const dialog = dialogRequest;
         enumsLoading.value = true;
-        enumsError.value = '';
-        const failures = [];
         try {
             await Promise.allSettled(
                 ['PROJECT', 'GLOBAL'].map(async (source) => {
-                    try {
-                        const response = await listAttributeEnums(objectTypeId, source);
-                        if (request !== enumRequest || dialog !== dialogRequest) return;
-                        if (!Array.isArray(response.data)) throw new Error('枚举返回格式无效');
-                        enumOptions.value = [
-                            ...enumOptions.value.filter((item) => item.enumSource !== source),
-                            ...response.data.map((item) => ({ ...item, enumSource: source }))
-                        ];
-                    } catch {
-                        if (request !== enumRequest || dialog !== dialogRequest) return;
-                        failures.push(source === 'PROJECT' ? '当前项目' : '全局');
-                        enumsError.value = failures.join('、') + '枚举加载失败，可选择已加载的枚举；重新展开可重试。';
-                    }
+                    const response = await listAttributeEnums(objectTypeId, source);
+                    if (request !== enumRequest || dialog !== dialogRequest) return;
+                    if (!Array.isArray(response.data)) throw new Error('枚举返回格式无效');
+                    enumOptions.value = [
+                        ...enumOptions.value.filter((item) => item.enumSource !== source),
+                        ...response.data.map((item) => ({ ...item, enumSource: source }))
+                    ];
                 })
             );
         } finally {
@@ -763,7 +782,7 @@
     }
 
     function findBusinessType(record) {
-        return (businessTypeOptions[record.objectTypeId] || []).find(
+        return businessTypeOptions.value.find(
             (item) => item.businessTypeSource + ':' + item.id === record.businessTypeKey
         );
     }
@@ -776,23 +795,25 @@
     async function loadOptions() {
         const request = dialogRequest;
         optionsLoading.value = true;
-        optionsError.value = '';
+        optionsLoadFailed.value = false;
         try {
             const results = await Promise.allSettled([
                 listObjectTypeOptions(versionId.value),
-                listRelationOptions(versionId.value)
+                listRelationOptions(versionId.value),
+                listBusinessTypeOptions(versionId.value)
             ]);
             const failed = results.find((result) => result.status === 'rejected');
             if (failed) throw failed.reason;
             if (request !== dialogRequest) return;
             objectTypeOptions.value = results[0].value;
             relationOptions.value = results[1].value;
+            businessTypeOptions.value = results[2].value;
             const record = detailOpen.value ? detail.value : form.value;
             const objectIds = getRecordObjectIds(record);
             await Promise.allSettled(objectIds.map(loadObjectOptions));
             if (request === dialogRequest && record.type === 'PROPERTY_RANGE') await loadEnums(record.objectTypeId);
         } catch {
-            if (request === dialogRequest) optionsError.value = '选项加载失败，请重新加载';
+            if (request === dialogRequest) optionsLoadFailed.value = true;
         } finally {
             if (request === dialogRequest) optionsLoading.value = false;
         }
@@ -814,7 +835,7 @@
     async function handleUpdate(row) {
         if (!requireVersion()) return;
         const request = ++dialogRequest;
-        const response = await getRule(row.id, versionId.value, 'MODEL');
+        const response = await getModelAxiom(row.id);
         if (request !== dialogRequest) return;
         attributeLoadingCount.value = 0;
         resetEnums();
@@ -829,7 +850,7 @@
     async function handleDetail(row) {
         if (!requireVersion()) return;
         const request = ++dialogRequest;
-        const response = await getRule(row.id, versionId.value, 'MODEL');
+        const response = await getModelAxiom(row.id);
         if (request !== dialogRequest) return;
         attributeLoadingCount.value = 0;
         resetEnums();
@@ -840,7 +861,7 @@
 
     async function loadDetailOptions() {
         const request = dialogRequest;
-        optionsError.value = '';
+        optionsLoadFailed.value = false;
         try {
             const options = await listObjectTypeOptions(versionId.value);
             if (request !== dialogRequest) return;
@@ -848,11 +869,14 @@
             const relations = await listRelationOptions(versionId.value);
             if (request !== dialogRequest) return;
             relationOptions.value = relations;
+            const businessTypes = await listBusinessTypeOptions(versionId.value);
+            if (request !== dialogRequest) return;
+            businessTypeOptions.value = businessTypes;
             await Promise.allSettled(getRecordObjectIds(detail.value).map(loadObjectOptions));
             if (request === dialogRequest && detail.value.type === 'PROPERTY_RANGE')
                 await loadEnums(detail.value.objectTypeId);
         } catch {
-            if (request === dialogRequest) ElMessage.warning('部分选项加载失败，详情暂时显示对应编号');
+            // 接口异常由统一请求拦截器提示
         }
     }
 
@@ -871,26 +895,15 @@
             ...JSON.parse(JSON.stringify(form.value)),
             versionId: versionId.value,
             name: form.value.name.trim(),
-            description: form.value.description.trim(),
-            createBy: form.value.createBy || userStore.nickName || userStore.name || '当前用户'
+            description: form.value.description.trim()
         };
-        if (data.type === 'PROPERTY_RANGE') {
-            const basicType = data.typeCategory === 1 ? data.basicTypeCode : undefined;
-            data.unit = [1, 2].includes(basicType) ? data.unit : null;
-            data.decimalPlaces = basicType === 2 ? data.decimalPlaces : null;
-            data.format = basicType === 4 ? data.format : null;
-            data.enumType = basicType === 5 ? data.enumType : null;
-            data.enumSource = basicType === 5 && data.enumType ? data.enumSource : null;
-        }
         saving.value = true;
         try {
-            await (data.id ? updateRule(data) : addRule(data));
+            await (data.id ? updateModelAxiom(data) : addModelAxiom(data));
             if (context !== contextRequest) return;
             ElMessage.success(data.id ? '修改成功' : '新增成功');
             open.value = false;
             await getList();
-        } catch (error) {
-            if (context === contextRequest) ElMessage.error(error.message || '保存失败');
         } finally {
             saving.value = false;
         }
@@ -901,7 +914,6 @@
         const ids = row ? [row.id] : [...selectedIds.value];
         if (!ids.length) return;
         const context = contextRequest;
-        const deletingVersion = versionId.value;
         try {
             const message = row
                 ? '是否删除模型公理“' + row.name + '”？'
@@ -913,7 +925,7 @@
         if (context !== contextRequest || deleting.value) return;
         deleting.value = true;
         try {
-            await delRule(ids, deletingVersion, 'MODEL');
+            await delModelAxiom(ids);
             if (context !== contextRequest) return;
             ElMessage.success('删除成功');
             await getList();
@@ -950,14 +962,33 @@
 
     function handleTypeChange() {
         const { id, name, description, level, type, createBy, createTime } = form.value;
+        // 通过表单重置表达字段，避免清空选值触发异步必填校验
+        ruleRef.value?.resetFields([
+            'objectTypeId',
+            'otherTypeId',
+            'relationId',
+            'domainId',
+            'rangeId',
+            'attributeId',
+            'typeCategory',
+            'basicTypeCode',
+            'businessTypeKey',
+            'unit',
+            'decimalPlaces',
+            'format',
+            'enumType'
+        ]);
         form.value = { ...emptyForm(), id, name, description, level, type, createBy, createTime };
         resetEnums();
         nextTick(() => ruleRef.value?.clearValidate());
     }
 
+    function handleDomainChange() {
+        if (form.value.domainId && form.value.domainId === form.value.rangeId) form.value.rangeId = '';
+    }
+
     function handleObjectTypeChange() {
         form.value.attributeId = '';
-        form.value.businessTypeKey = '';
         clearTypeConfig();
         resetEnums();
         if (form.value.type === 'PROPERTY_RANGE') {
@@ -996,13 +1027,13 @@
         ++enumRequest;
         enumOptions.value = [];
         enumsLoading.value = false;
-        enumsError.value = '';
     }
 
     function validateExpression() {
         const record = form.value;
         const typeExists = (id) => objectTypeOptions.value.some((item) => item.id === id);
         if (record.type === 'DOMAIN_RANGE') {
+            if (record.domainId && record.domainId === record.rangeId) return 'Domain 和 Range 不能选择相同的对象类型';
             const relationExists = relationOptions.value.some((item) => String(item.id) === record.relationId);
             if (!relationExists || !typeExists(record.domainId) || !typeExists(record.rangeId)) {
                 return '请选择有效的关系、Domain 和 Range';
@@ -1051,8 +1082,8 @@
             const businessType = findBusinessType(record);
             const fields = [
                 { label: '对象类型', value: objectTypeLabel(record.objectTypeId) },
-                { label: '数据属性', value: attributeLabel(record.objectTypeId, record.attributeId) },
-                { label: '值类型', value: record.typeCategory === 1 ? '基础数据类型' : '业务数据类型' },
+                { label: '对象类型属性', value: attributeLabel(record.objectTypeId, record.attributeId) },
+                { label: '数据类型', value: record.typeCategory === 1 ? '基础数据类型' : '业务数据类型' },
                 {
                     label: '数据类型',
                     value:
@@ -1083,12 +1114,12 @@
             detailOpen.value = false;
             optionsLoading.value = false;
             attributeLoadingCount.value = 0;
-            optionsError.value = '';
+            optionsLoadFailed.value = false;
             resetEnums();
             objectTypeOptions.value = [];
             relationOptions.value = [];
             Object.keys(attributeOptions).forEach((key) => delete attributeOptions[key]);
-            Object.keys(businessTypeOptions).forEach((key) => delete businessTypeOptions[key]);
+            businessTypeOptions.value = [];
             query.name = '';
             query.pageNum = 1;
             appliedName.value = '';
@@ -1160,10 +1191,6 @@
     .character-count :deep(.el-textarea__inner) {
         padding-bottom: 24px;
     }
-    .options-error {
-        margin-bottom: 16px;
-    }
-
     .business-type-label {
         display: inline-flex;
         align-items: center;

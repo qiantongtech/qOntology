@@ -184,6 +184,7 @@
                             <el-tree-select
                                 v-model="form.parentId"
                                 :data="parentOptions"
+                                :loading="parentOptionsLoading"
                                 :props="{ label: 'name', value: 'id', children: 'children' }"
                                 value-key="id"
                                 placeholder="请选择上级对象类型，留空则为顶级对象类型"
@@ -247,7 +248,13 @@
             <template #footer>
                 <div class="dialog-footer">
                     <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
-                    <el-button type="primary" size="mini" :loading="saving" @click="submitForm">确 定</el-button>
+                    <el-button
+                        type="primary"
+                        size="mini"
+                        :loading="saving"
+                        :disabled="parentOptionsLoading"
+                        @click="submitForm"
+                    >确 定</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -432,6 +439,7 @@
         return filter(tree.value);
     });
     const parentOptions = ref([]);
+    const parentOptionsLoading = ref(false);
     let listRequest = 0;
     let contextRequest = 0;
     let editRequest = 0;
@@ -488,11 +496,16 @@
             form.value.parentId = parent.id;
         }
         dialogTitle.value = '新增对象类型';
+        parentOptionsLoading.value = true;
         open.value = true;
         nextTick(() => typeRef.value?.clearValidate());
-        const response = await listType({ workspaceId: 1001, versionId: versionId.value, pageNum: 1, pageSize: -1 });
-        if (request !== editRequest || !open.value) return;
-        parentOptions.value = proxy.handleTree(response.data.rows || [], 'id');
+        try {
+            const response = await listType({ workspaceId: 1001, versionId: versionId.value, pageNum: 1, pageSize: -1 });
+            if (request !== editRequest || !open.value) return;
+            parentOptions.value = proxy.handleTree(response.data.rows || [], 'id');
+        } finally {
+            if (request === editRequest) parentOptionsLoading.value = false;
+        }
     }
 
     async function handleUpdate(row) {
@@ -531,10 +544,11 @@
     async function submitForm() {
         if (!requireVersion()) return;
         const submittingVersion = versionId.value;
-        if (saving.value) return;
+        if (saving.value || parentOptionsLoading.value) return;
         if (
             !(await typeRef.value.validate().catch(() => false)) ||
             saving.value ||
+            parentOptionsLoading.value ||
             submittingVersion !== versionId.value ||
             !open.value
         )
@@ -684,17 +698,23 @@
         ++contextRequest;
         rows.value = [];
         ++editRequest;
+        parentOptionsLoading.value = false;
         open.value = false;
         termOpen.value = false;
         targetPickerOpen.value = false;
         getList();
     });
     watch(open, (value) => {
-        if (!value) targetPickerOpen.value = false;
+        if (!value) {
+            ++editRequest;
+            parentOptionsLoading.value = false;
+            targetPickerOpen.value = false;
+        }
     });
     onMounted(getList);
     onBeforeUnmount(() => {
         ++contextRequest;
+        ++editRequest;
     });
 </script>
 

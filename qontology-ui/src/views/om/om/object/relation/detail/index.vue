@@ -18,13 +18,7 @@
 
 <template>
     <div v-loading="loading" class="app-container object-relation-detail-page">
-        <el-result v-if="error" icon="warning" :title="error">
-            <template #extra>
-                <el-button @click="returnToList">返回列表</el-button>
-                <el-button type="primary" @click="loadDetail">重新加载</el-button>
-            </template>
-        </el-result>
-        <template v-else>
+        <template v-if="!loadFailed">
             <div class="pagecont-top" style="padding-bottom: 15px">
                 <div class="infotop">
                     <div class="infotop-title mb15">
@@ -131,6 +125,7 @@
 <script setup>
     import { computed, getCurrentInstance, onBeforeUnmount, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
+    import { ElMessage } from 'element-plus';
     import { getRelation } from '@/api/om/object/relation';
     import TargetPanel from './TargetPanel.vue';
 
@@ -143,7 +138,7 @@
         sys_yes_no.value.find((dict) => dict.value === (value === 1 ? 'Y' : value === 0 ? 'N' : ''))?.label || '-';
     const detail = ref({});
     const loading = ref(false);
-    const error = ref('');
+    const loadFailed = ref(false);
     const activeTab = ref('goals');
     const nameOverflow = ref(false);
     const descriptionOverflow = ref(false);
@@ -164,10 +159,11 @@
         detail.value = {};
         nameOverflow.value = false;
         descriptionOverflow.value = false;
-        error.value = '';
+        loadFailed.value = false;
         if (typeof id !== 'string' || !/^\d+$/.test(id)) {
             loading.value = false;
-            error.value = '对象关系编号无效';
+            loadFailed.value = true;
+            ElMessage.error('对象关系编号无效');
             return;
         }
         loading.value = true;
@@ -175,12 +171,13 @@
             const response = await getRelation(id);
             if (request !== requestId) return;
             if (!response.data || String(response.data.versionId) !== String(route.params.versionId)) {
-                error.value = '对象关系不存在或已删除';
+                loadFailed.value = true;
+                ElMessage.error('对象关系不存在或已删除');
                 return;
             }
             detail.value = response.data;
         } catch {
-            if (request === requestId) error.value = '对象关系详情加载失败';
+            if (request === requestId) loadFailed.value = true;
         } finally {
             if (request === requestId) loading.value = false;
         }

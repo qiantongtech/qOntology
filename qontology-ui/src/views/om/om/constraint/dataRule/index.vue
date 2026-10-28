@@ -40,14 +40,14 @@
       <div class="justify-between mb15">
         <el-row :gutter="15" class="btn-style">
           <el-col :span="1.5">
-            <el-button v-hasPermi="['om:constraint:data:add']" type="primary" plain :disabled="saving"
+            <el-button v-hasPermi="['om:constraint:datarule:add']" type="primary" plain :disabled="saving"
                        @click="handleAdd"
             >
               <i class="iconfont-mini icon-xinzeng mr5"></i>新增
             </el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['om:constraint:data:remove']" type="danger" plain
+            <el-button v-hasPermi="['om:constraint:datarule:remove']" type="danger" plain
                        :disabled="!selectedIds.length || deleting || loading" @click="handleDelete()"
             >
               <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
@@ -57,11 +57,13 @@
         <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
       </div>
       <el-table ref="tableRef" v-loading="loading" :data="rows" row-key="id" stripe
+                :default-sort="{prop: 'createTime', order: 'descending'}"
+                @sort-change="handleSortChange"
                 @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center"/>
-        <el-table-column v-if="visible('index')" type="index" :index="getRowIndex" label="序号" width="70" align="center"/>
-        <el-table-column v-if="visible('name')" prop="name" label="名称" min-width="160"
+        <el-table-column v-if="visible('id')" prop="id" sortable="custom" label="编号" width="80" align="center"/>
+        <el-table-column v-if="visible('name')" prop="name" label="名称" min-width="200"
                          :show-overflow-tooltip="{effect: 'light'}"
         />
         <el-table-column v-if="visible('description')" prop="description" label="描述" min-width="240"
@@ -69,7 +71,7 @@
         >
           <template #default="{row}">{{ row.description || '-' }}</template>
         </el-table-column>
-        <el-table-column v-if="visible('type')" label="规则类型" min-width="145" align="center">
+        <el-table-column v-if="visible('type')" label="规则类型" width="150" align="center">
           <template #default="{row}">
             <dict-tag :options="om_data_rule_type" :value="row.type"/>
           </template>
@@ -84,22 +86,22 @@
         >
           <template #default="{row}">{{ row.createBy || '-' }}</template>
         </el-table-column>
-        <el-table-column v-if="visible('createTime')" label="创建时间" width="180" align="center">
+        <el-table-column v-if="visible('createTime')" prop="createTime" sortable="custom" label="创建时间" width="180" align="center">
           <template #default="{row}">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
         </el-table-column>
-        <el-table-column v-if="visible('operation')" label="操作" width="210" align="center" fixed="right"
+        <el-table-column v-if="visible('operation')" label="操作" width="240" align="center" fixed="right"
                          class-name="small-padding fixed-width"
         >
           <template #default="{row}">
-            <el-button v-hasPermi="['om:constraint:data:query']" link type="primary" icon="View"
+            <el-button v-hasPermi="['om:constraint:datarule:query']" link type="primary" icon="View"
                        @click="handleDetail(row)"
             >详情
             </el-button>
-            <el-button v-hasPermi="['om:constraint:data:edit']" link type="primary" icon="Edit"
+            <el-button v-hasPermi="['om:constraint:datarule:edit']" link type="primary" icon="Edit"
                        :disabled="saving" @click="handleUpdate(row)"
             >修改
             </el-button>
-            <el-button v-hasPermi="['om:constraint:data:remove']" link type="danger" icon="Delete"
+            <el-button v-hasPermi="['om:constraint:datarule:remove']" link type="danger" icon="Delete"
                        :disabled="deleting" @click="handleDelete(row)"
             >删除
             </el-button>
@@ -120,11 +122,8 @@
                :close-on-press-escape="!saving" :before-close="beforeClose" draggable destroy-on-close
                @closed="handleDialogClosed"
     >
-      <el-alert v-if="optionsError" :title="optionsError" type="error" :closable="false" show-icon class="options-error">
-        <el-button link type="primary" @click="loadOptions">重新加载</el-button>
-      </el-alert>
       <el-form ref="ruleRef" :model="form" :rules="rules" label-width="120px" class="rule-form"
-               :disabled="saving || optionsLoading" @submit.prevent="submitForm"
+               @submit.prevent="submitForm"
       >
         <div class="h2-title">基本信息</div>
         <el-form-item label="名称" prop="name">
@@ -142,7 +141,7 @@
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="form.description" class="character-count" type="textarea" :rows="4"
-                    placeholder="请输入描述" :maxlength="500" show-word-limit
+                    placeholder="请输入描述" :maxlength="512" show-word-limit
           />
         </el-form-item>
         <div class="h2-title">执行条件</div>
@@ -157,17 +156,30 @@
             <div v-for="(condition, index) in form.conditions" :key="condition.key" class="condition-row">
               <div class="condition-label">条件 {{ index + 1 }}：</div>
               <div class="condition-fields">
-                <el-select :ref="element => setConditionSelectRef(condition.key, element)"
-                           v-model="condition.objectTypeId" filterable placeholder="请选择对象类型"
-                           class="condition-object"
-                           :aria-label="'第' + (index + 1) + '条对象类型'" @change="handleConditionObjectChange(condition)"
-                >
-                  <el-option v-for="item in objectTypeOptions" :key="item.id" :label="item.name" :value="item.id"/>
-                </el-select>
-                <el-select v-model="condition.attributeId" filterable :disabled="!condition.objectTypeId"
-                           class="condition-attribute"
-                           :placeholder="attributePlaceholder" :aria-label="'第' + (index + 1) + '条属性'"
-                           @change="handleConditionAttributeChange(condition)"
+                <el-tree-select
+                  :ref="element => setConditionSelectRef(condition.key, element)"
+                  v-model="condition.objectTypeId"
+                  :data="objectTypeTree"
+                  :props="objectTypeTreeProps"
+                  value-key="id"
+                  :loading="optionsLoading"
+                  check-strictly
+                  filterable
+                  clearable
+                  placeholder="请选择对象类型"
+                  class="condition-object"
+                  :aria-label="'第' + (index + 1) + '条对象类型'"
+                  @change="handleConditionObjectChange(condition)"
+                />
+                <el-select
+                  v-model="condition.attributeId"
+                  :loading="optionsLoading || attributeLoadingCount > 0"
+                  filterable
+                  :disabled="!condition.objectTypeId"
+                  class="condition-attribute"
+                  :placeholder="attributePlaceholder"
+                  :aria-label="'第' + (index + 1) + '条属性'"
+                  @change="handleConditionAttributeChange(condition)"
                 >
                   <el-option v-for="item in getConditionAttributes(condition)" :key="item.id" :label="item.name" :value="item.id"/>
                 </el-select>
@@ -179,9 +191,16 @@
                     <el-option v-for="item in om_rule_operator" :key="item.value" :label="item.label" :value="item.value"/>
                   </el-select>
                   <span v-else class="condition-operator">{{ conditionOperatorLabel }}</span>
-                  <el-input v-model="condition.value" :placeholder="conditionValuePlaceholder"
+                  <el-select v-if="form.type === 'FORMAT'" v-model="condition.value" placeholder="请选择日期格式"
+                             class="condition-value" :aria-label="'第' + (index + 1) + '条日期格式'" clearable
+                  >
+                    <el-option v-for="format in dateFormatOptions" :key="format" :label="format" :value="format"/>
+                  </el-select>
+                  <el-input v-else :model-value="condition.value" :placeholder="conditionValuePlaceholder"
                             class="condition-value"
+                            :inputmode="form.type === 'RANGE' ? 'decimal' : 'text'"
                             :aria-label="'第' + (index + 1) + '条条件值'"
+                            @update:model-value="value => handleConditionValueInput(condition, value)"
                   />
                 </template>
               </div>
@@ -209,26 +228,96 @@
       </template>
     </el-dialog>
     <el-dialog v-model="detailOpen" title="数据规则详情" width="860px" :append-to="pageRef" draggable destroy-on-close>
-      <el-form label-width="120px">
-        <el-form-item v-for="field in detailFields" :key="field.label" :label="field.label + '：'">
-          <div class="form-readonly" :class="{textarea: field.multiline}">{{ field.value || '-' }}</div>
+      <el-form :model="detail" disabled label-width="120px" class="rule-form">
+        <div class="h2-title">基本信息</div>
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="detail.name" placeholder="请输入数据规则名称" maxlength="128"/>
+        </el-form-item>
+        <el-form-item label="类型" prop="type">
+          <el-select v-model="detail.type" placeholder="请选择类型">
+            <el-option v-for="item in om_data_rule_type" :key="item.value" :label="item.label" :value="item.value"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="级别" prop="level">
+          <el-radio-group v-model="detail.level">
+            <el-radio v-for="item in om_rule_level" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="detail.description" class="character-count" type="textarea" :rows="4"
+                    placeholder="请输入描述" :maxlength="512" show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="创建人">
+          <el-input :model-value="detail.createBy || '-'"/>
+        </el-form-item>
+        <el-form-item label="创建时间">
+          <el-input :model-value="proxy.parseTime(detail.createTime, '{y}-{m}-{d} {h}:{i}') || '-'"/>
+        </el-form-item>
+        <div class="h2-title">执行条件</div>
+        <el-form-item label="条件关系" prop="conditionRelation">
+          <el-radio-group v-model="detail.conditionRelation">
+            <el-radio value="OR">任一满足（OR）</el-radio>
+            <el-radio value="AND">全部满足（AND）</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="失败条件">
+          <div class="conditions">
+            <div v-for="(condition, index) in detail.conditions" :key="index" class="condition-row">
+              <div class="condition-label">条件 {{ index + 1 }}：</div>
+              <div class="condition-fields">
+                <el-tree-select
+                  v-model="condition.objectTypeId"
+                  :data="objectTypeTree"
+                  :props="objectTypeTreeProps"
+                  value-key="id"
+                  :loading="optionsLoading"
+                  check-strictly
+                  filterable
+                  clearable
+                  placeholder="请选择对象类型"
+                  class="condition-object"
+                  :aria-label="'第' + (index + 1) + '条对象类型'"
+                />
+                <el-select
+                  v-model="condition.attributeId"
+                  :loading="optionsLoading || attributeLoadingCount > 0"
+                  filterable
+                  :disabled="!condition.objectTypeId"
+                  class="condition-attribute"
+                  placeholder="请选择属性"
+                  :aria-label="'第' + (index + 1) + '条属性'"
+                >
+                  <el-option v-for="item in getConditionAttributes(condition, detail.type)" :key="item.id" :label="item.name" :value="item.id"/>
+                </el-select>
+                <span v-if="detail.type === 'REQUIRED'" class="condition-operator">为空</span>
+                <template v-else>
+                  <el-select v-if="detail.type === 'RANGE'" v-model="condition.operator" class="condition-comparison"
+                             :aria-label="'第' + (index + 1) + '条比较符'"
+                  >
+                    <el-option v-for="item in om_rule_operator" :key="item.value" :label="item.label" :value="item.value"/>
+                  </el-select>
+                  <span v-else class="condition-operator">{{ conditionOperator(detail.type, condition.operator) }}</span>
+                  <el-select v-if="detail.type === 'FORMAT'" v-model="condition.value" placeholder="请选择日期格式"
+                             class="condition-value" :aria-label="'第' + (index + 1) + '条日期格式'" clearable
+                  >
+                    <el-option v-for="format in dateFormatOptions" :key="format" :label="format" :value="format"/>
+                  </el-select>
+                  <el-input v-else :model-value="condition.value" placeholder="条件值"
+                            class="condition-value"
+                            :inputmode="detail.type === 'RANGE' ? 'decimal' : 'text'"
+                            :aria-label="'第' + (index + 1) + '条条件值'"
+                  />
+                </template>
+              </div>
+
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item label="失败提示" prop="failureMessage">
+          <el-input v-model="detail.failureMessage" placeholder="请输入失败提示" maxlength="512"/>
         </el-form-item>
       </el-form>
-      <div class="h2-title">失败条件</div>
-      <el-table :data="detail.conditions || []" border>
-        <el-table-column label="对象类型" min-width="130">
-          <template #default="{row}">{{ objectTypeLabel(row.objectTypeId) }}</template>
-        </el-table-column>
-        <el-table-column label="属性" min-width="130">
-          <template #default="{row}">{{ attributeLabel(row.objectTypeId, row.attributeId) }}</template>
-        </el-table-column>
-        <el-table-column label="条件" width="110">
-          <template #default="{row}">{{ conditionOperator(detail.type, row.operator) }}</template>
-        </el-table-column>
-        <el-table-column v-if="detail.type !== 'REQUIRED'" prop="value" label="条件值" min-width="180"
-                         :show-overflow-tooltip="{effect: 'light'}"
-        />
-      </el-table>
       <template #footer>
         <div class="dialog-footer">
           <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
@@ -242,8 +331,7 @@
 import {computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
-import useUserStore from '@/store/system/user';
-import {listRule, getRule, addRule, updateRule, delRule} from '@/api/om/constraint/rule';
+import { listDataRule, getDataRule, addDataRule, updateDataRule, delDataRule } from '@/api/om/constraint/dataRule';
 import {listRelationTypes} from '@/api/om/object/relation';
 import {listAttributes, listAttributeBusinessDataTypes} from '@/api/om/object/attribute';
 
@@ -251,7 +339,6 @@ defineOptions({name: 'OmDataRule'});
 const props = defineProps({versionId: {type: [String, Number], default: undefined}});
 const {versionId, requireVersion} = useOntologyVersion(() => props.versionId);
 const {proxy} = getCurrentInstance();
-const userStore = useUserStore();
 const {om_data_rule_type, om_rule_level, om_rule_operator} = proxy.useDict(
   'om_data_rule_type', 'om_rule_level', 'om_rule_operator'
 );
@@ -271,17 +358,21 @@ const detailOpen = ref(false);
 const dialogTitle = ref('新增数据规则');
 const detail = ref({});
 const showSearch = ref(true);
-const query = reactive({name: '', pageNum: 1, pageSize: 10});
+const query = reactive({name: '', pageNum: 1, pageSize: 10, orderByColumn: 'createTime,id', isAsc: 'desc,desc'});
 const appliedName = ref('');
 const objectTypeOptions = ref([]);
+const objectTypeTreeProps = {label: 'name', value: 'id', children: 'children'};
+const objectTypeTree = computed(() =>
+  proxy.handleTree(objectTypeOptions.value.map(item => ({...item})), 'id', 'parentId')
+);
 const attributeOptions = reactive({});
 const businessTypeOptions = reactive({});
 const optionsLoading = ref(false);
-const optionsError = ref('');
+const optionsLoadFailed = ref(false);
 const attributeLoadingCount = ref(0);
 const conditionSelectRefs = new Map();
 const columns = ref([
-  {key: 0, prop: 'index', label: '序号', visible: true},
+  {key: 0, prop: 'id', label: '编号', visible: true},
   {key: 1, prop: 'name', label: '名称', visible: true},
   {key: 2, prop: 'description', label: '描述', visible: true},
   {key: 3, prop: 'type', label: '规则类型', visible: true},
@@ -291,13 +382,10 @@ const columns = ref([
   {key: 7, prop: 'operation', label: '操作', visible: true}
 ]);
 const visible = prop => columns.value.find(column => column.prop === prop)?.visible;
-const typeLabel = value => proxy.selectDictLabel(om_data_rule_type.value, value) || '-';
-const levelLabel = value => proxy.selectDictLabel(om_rule_level.value, value) || '-';
-const saveDisabled = computed(() => optionsLoading.value || attributeLoadingCount.value > 0 || !!optionsError.value);
+const saveDisabled = computed(() => optionsLoading.value || attributeLoadingCount.value > 0 || optionsLoadFailed.value);
 const emptyForm = () => ({
   id: undefined,
   versionId: versionId.value,
-  category: 'DATA',
   name: '',
   description: '',
   level: 'INFO',
@@ -315,8 +403,7 @@ const rules = {
   type: [{required: true, message: '请选择类型', trigger: 'change'}],
   level: [{required: true, message: '请选择级别', trigger: 'change'}],
   description: [
-    {required: true, whitespace: true, message: '描述不能为空', trigger: 'blur'},
-    {max: 500, message: '描述不能超过500个字符', trigger: 'blur'}
+    {max: 512, message: '描述不能超过512个字符', trigger: 'blur'}
   ],
   conditionRelation: [{required: true, message: '请选择条件关系', trigger: 'change'}],
   failureMessage: [
@@ -332,20 +419,21 @@ const attributePlaceholder = computed(() => {
   return form.value.type === 'FORMAT' ? '请选择日期属性' : '请选择属性';
 });
 const conditionOperatorLabel = computed(() => form.value.type === 'ENUM' ? '不属于' : '不匹配');
+const dateFormatOptions = [
+  'yyyy',
+  'yyyy-MM',
+  'yyyy-MM-dd',
+  'yyyy/MM/dd',
+  'yyyyMMdd',
+  'yyyy-MM-dd HH:mm',
+  'yyyy-MM-dd HH:mm:ss',
+  'yyyy/MM/dd HH:mm:ss',
+  "yyyy-MM-dd'T'HH:mm:ss"
+];
 const conditionValuePlaceholder = computed(() => {
   if (form.value.type === 'ENUM') return '手工输入，以逗号分隔';
   return form.value.type === 'RANGE' ? '请输入数值' : '请输入内容';
 });
-
-const detailFields = computed(() => [
-  {label: '名称', value: detail.value.name},
-  {label: '类型', value: typeLabel(detail.value.type)},
-  {label: '级别', value: levelLabel(detail.value.level)},
-  {label: '描述', value: detail.value.description, multiline: true},
-  ...getDetailFields(detail.value),
-  {label: '创建人', value: detail.value.createBy},
-  {label: '创建时间', value: proxy.parseTime(detail.value.createTime, '{y}-{m}-{d} {h}:{i}')}
-]);
 
 // 下拉选项需要读取全部分页数据，避免只显示第一页属性或关系。
 async function loadAllPages(loadPage) {
@@ -365,7 +453,11 @@ async function loadAllPages(loadPage) {
 
 async function listObjectTypeOptions(versionId) {
   const response = await listRelationTypes(versionId);
-  return (response.data || []).map(item => ({...item, id: String(item.id)}));
+  return (response.data || []).map(item => ({
+    ...item,
+    id: String(item.id),
+    parentId: item.parentId == null ? null : String(item.parentId)
+  }));
 }
 
 async function listObjectAttributeOptions(objectTypeId, versionId) {
@@ -410,18 +502,14 @@ function validateConditions(form, attributes, businessTypes) {
       const value = String(condition.value).trim();
       if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return `${prefix}请输入有效数值`;
       if (code === 1 && !/^[+-]?\d+$/.test(value)) return `${prefix}请输入整数`;
-    } else if (form.type === 'FORMAT' && getBasicTypeCode(attribute, businessTypes[condition.objectTypeId] || []) !== 4) {
-      return `${prefix}只能选择日期属性`;
+    } else if (form.type === 'FORMAT') {
+      if (getBasicTypeCode(attribute, businessTypes[condition.objectTypeId] || []) !== 4) return `${prefix}只能选择日期属性`;
+      if (!dateFormatOptions.includes(condition.value)) return `${prefix}请选择日期格式`;
     } else if (form.type === 'ENUM' && !String(condition.value).trim()) {
       return `${prefix}请输入枚举值`;
     }
   }
-  // 格式校验只保存自由文本，不解析或限制正则表达式内容。
   return '';
-}
-
-function getRowIndex(index) {
-  return (query.pageNum - 1) * query.pageSize + index + 1;
 }
 
 async function getList() {
@@ -434,12 +522,13 @@ async function getList() {
   }
   loading.value = true;
   try {
-    const response = await listRule({
+    const response = await listDataRule({
       versionId: versionId.value,
-      category: 'DATA',
       name: appliedName.value,
       pageNum: query.pageNum,
-      pageSize: query.pageSize
+      pageSize: query.pageSize,
+      orderByColumn: query.orderByColumn,
+      isAsc: query.isAsc
     });
     if (request !== listRequest) return;
     total.value = Number(response.data?.total || 0);
@@ -467,6 +556,17 @@ function resetSearch() {
   return search();
 }
 
+// 使用后端排序，保证编号和创建时间在全部分页数据中排序一致。
+function handleSortChange({prop, order}) {
+  const field = order && ['id', 'createTime'].includes(prop) ? prop : 'createTime';
+  const direction = order === 'ascending' ? 'asc' : 'desc';
+  // 创建时间相同时按编号降序，避免翻页时记录顺序不稳定。
+  query.orderByColumn = field === 'createTime' ? 'createTime,id' : 'id';
+  query.isAsc = field === 'createTime' ? direction + ',desc' : direction;
+  query.pageNum = 1;
+  return getList();
+}
+
 function handleSelectionChange(selection) {
   selectedIds.value = selection.map(row => row.id);
 }
@@ -481,7 +581,7 @@ async function loadObjectOptions(objectTypeId) {
     attributeOptions[objectTypeId] = response.attributes;
     businessTypeOptions[objectTypeId] = response.businessTypes;
   } catch {
-    if (request === dialogRequest) optionsError.value = '属性或业务数据类型加载失败，请重新加载';
+    if (request === dialogRequest) optionsLoadFailed.value = true;
   } finally {
     if (request === dialogRequest) attributeLoadingCount.value--;
   }
@@ -490,7 +590,7 @@ async function loadObjectOptions(objectTypeId) {
 async function loadOptions() {
   const request = dialogRequest;
   optionsLoading.value = true;
-  optionsError.value = '';
+  optionsLoadFailed.value = false;
   try {
     const options = await listObjectTypeOptions(versionId.value);
     if (request !== dialogRequest) return;
@@ -499,7 +599,7 @@ async function loadOptions() {
     const objectIds = getRecordObjectIds(record);
     await Promise.allSettled(objectIds.map(loadObjectOptions));
   } catch {
-    if (request === dialogRequest) optionsError.value = '选项加载失败，请重新加载';
+    if (request === dialogRequest) optionsLoadFailed.value = true;
   } finally {
     if (request === dialogRequest) optionsLoading.value = false;
   }
@@ -520,7 +620,7 @@ function handleAdd() {
 async function handleUpdate(row) {
   if (!requireVersion()) return;
   const request = ++dialogRequest;
-  const response = await getRule(row.id, versionId.value, 'DATA');
+  const response = await getDataRule(row.id);
   if (request !== dialogRequest) return;
   attributeLoadingCount.value = 0;
   form.value = {
@@ -540,7 +640,7 @@ async function handleUpdate(row) {
 async function handleDetail(row) {
   if (!requireVersion()) return;
   const request = ++dialogRequest;
-  const response = await getRule(row.id, versionId.value, 'DATA');
+  const response = await getDataRule(row.id);
   if (request !== dialogRequest) return;
   attributeLoadingCount.value = 0;
   detail.value = response.data;
@@ -548,9 +648,10 @@ async function handleDetail(row) {
   if (request === dialogRequest) detailOpen.value = true;
 }
 
+// 详情沿用新增的控件布局，加载对象和属性选项后回显名称。
 async function loadDetailOptions() {
   const request = dialogRequest;
-  optionsError.value = '';
+  optionsLoadFailed.value = false;
   try {
     const options = await listObjectTypeOptions(versionId.value);
     if (request !== dialogRequest) return;
@@ -558,7 +659,7 @@ async function loadDetailOptions() {
 
     await Promise.allSettled(getRecordObjectIds(detail.value).map(loadObjectOptions));
   } catch {
-    if (request === dialogRequest) ElMessage.warning('部分选项加载失败，详情暂时显示对应编号');
+    // 接口异常由统一请求拦截器提示
   }
 }
 
@@ -577,18 +678,15 @@ async function submitForm() {
     ...JSON.parse(JSON.stringify(form.value)),
     versionId: versionId.value,
     name: form.value.name.trim(),
-    description: form.value.description.trim(),
-    createBy: form.value.createBy || userStore.nickName || userStore.name || '当前用户'
+    description: form.value.description.trim()
   };
   saving.value = true;
   try {
-    await (data.id ? updateRule(data) : addRule(data));
+    await (data.id ? updateDataRule(data) : addDataRule(data));
     if (context !== contextRequest) return;
     ElMessage.success(data.id ? '修改成功' : '新增成功');
     open.value = false;
     await getList();
-  } catch (error) {
-    if (context === contextRequest) ElMessage.error(error.message || '保存失败');
   } finally {
     saving.value = false;
   }
@@ -599,7 +697,6 @@ async function handleDelete(row) {
   const ids = row ? [row.id] : [...selectedIds.value];
   if (!ids.length) return;
   const context = contextRequest;
-  const deletingVersion = versionId.value;
   try {
     const message = row ? '是否删除数据规则“' + row.name + '”？' : '是否删除选中的 ' + ids.length + ' 条数据规则？';
     await ElMessageBox.confirm(message, '删除确认', {type: 'warning'});
@@ -609,7 +706,7 @@ async function handleDelete(row) {
   if (context !== contextRequest || deleting.value) return;
   deleting.value = true;
   try {
-    await delRule(ids, deletingVersion, 'DATA');
+    await delDataRule(ids);
     if (context !== contextRequest) return;
     ElMessage.success('删除成功');
     await getList();
@@ -630,14 +727,6 @@ function handleDialogClosed() {
   ruleRef.value?.clearValidate();
 }
 
-function objectTypeLabel(id) {
-  return objectTypeOptions.value.find(item => item.id === id)?.name || id || '-';
-}
-
-function attributeLabel(objectTypeId, attributeId) {
-  return (attributeOptions[objectTypeId] || []).find(item => item.id === attributeId)?.name || attributeId || '-';
-}
-
 function getRecordObjectIds(record) {
   return [...new Set((record.conditions || []).map(item => item.objectTypeId).filter(Boolean))];
 }
@@ -653,15 +742,33 @@ function handleConditionObjectChange(condition) {
   loadObjectOptions(condition.objectTypeId);
 }
 
+// 取值范围只允许一个数值，输入或粘贴时移除文字及多余的符号
+function handleConditionValueInput(condition, value) {
+  if (form.value.type !== 'RANGE') {
+    condition.value = value;
+    return;
+  }
+  const attribute = (attributeOptions[condition.objectTypeId] || []).find(item => item.id === condition.attributeId);
+  const code = attribute ? getBasicTypeCode(attribute, businessTypeOptions[condition.objectTypeId] || []) : undefined;
+  let numeric = String(value).replace(/[^\d.+-]/g, '').replace(/(?!^)[+-]/g, '');
+  if (code === 1) {
+    numeric = numeric.replace(/\./g, '');
+  } else {
+    const dotIndex = numeric.indexOf('.');
+    if (dotIndex !== -1) numeric = numeric.slice(0, dotIndex + 1) + numeric.slice(dotIndex + 1).replace(/\./g, '');
+  }
+  condition.value = numeric;
+}
+
 function handleConditionAttributeChange(condition) {
   condition.value = '';
 }
 
-function getConditionAttributes(condition) {
+function getConditionAttributes(condition, type = form.value.type) {
   const attributes = attributeOptions[condition.objectTypeId] || [];
-  if (!['RANGE', 'FORMAT'].includes(form.value.type)) return attributes;
+  if (!['RANGE', 'FORMAT'].includes(type)) return attributes;
   const businessTypes = businessTypeOptions[condition.objectTypeId] || [];
-  const typeCodes = form.value.type === 'FORMAT' ? [4] : [1, 2];
+  const typeCodes = type === 'FORMAT' ? [4] : [1, 2];
   return attributes.filter(item => typeCodes.includes(getBasicTypeCode(item, businessTypes)));
 }
 
@@ -685,13 +792,6 @@ function validateExpression() {
   return validateConditions(form.value, attributeOptions, businessTypeOptions);
 }
 
-function getDetailFields(record) {
-  return [
-    {label: '条件关系', value: record.conditionRelation === 'AND' ? '全部满足（AND）' : '任一满足（OR）'},
-    {label: '失败提示', value: record.failureMessage, multiline: true}
-  ];
-}
-
 function conditionOperator(type, operator) {
   if (type === 'REQUIRED') return '为空';
   if (type === 'ENUM') return '不属于';
@@ -706,7 +806,7 @@ watch(versionId, () => {
   detailOpen.value = false;
   optionsLoading.value = false;
   attributeLoadingCount.value = 0;
-  optionsError.value = '';
+  optionsLoadFailed.value = false;
   objectTypeOptions.value = [];
   Object.keys(attributeOptions).forEach(key => delete attributeOptions[key]);
   Object.keys(businessTypeOptions).forEach(key => delete businessTypeOptions[key]);
@@ -733,7 +833,7 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .data-rule-page :deep(.el-dialog) {
   max-width: calc(100vw - 32px);
 }
@@ -776,9 +876,6 @@ onBeforeUnmount(() => {
 .character-count :deep(.el-textarea__inner) {
   padding-bottom: 24px;
 }
-.options-error {
-  margin-bottom: 16px;
-}
 
 .conditions {
   box-sizing: border-box;
@@ -801,7 +898,14 @@ onBeforeUnmount(() => {
 
 .condition-label {
   flex: 0 0 62px;
-  color: var(--el-text-color-regular);
+}
+
+.condition-label,
+.condition-operator {
+  color: #606266;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 32px;
   white-space: nowrap;
 }
 
@@ -847,10 +951,6 @@ onBeforeUnmount(() => {
 
 .condition-actions .el-button + .el-button {
   margin-left: 0;
-}
-
-.condition-operator {
-  white-space: nowrap;
 }
 
 @media (max-width: 900px) {

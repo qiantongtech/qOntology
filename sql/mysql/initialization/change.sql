@@ -44,5 +44,101 @@ INSERT INTO om_target_task VALUES(11, 11, 1, '排除范围中财务核算、成�
 
 UPDATE `system_menu` SET `menu_name` = '约束规则', `parent_id` = 1078, `order_num` = 4, `path` = ':versionId/constraint', `component` = NULL, `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'M', `visible` = '0', `status` = '0', `perms` = '', `icon` = '约束规则', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '超级管理员', `update_time` = '2026-10-27 15:28:39', `remark` = '' WHERE `menu_id` = 1163;
 UPDATE `system_menu` SET `menu_name` = 'AI辅助建模', `parent_id` = 1078, `order_num` = 5, `path` = ':versionId/aiModeling', `component` = 'om/aiModeling/index', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'C', `visible` = '0', `status` = '0', `perms` = '', `icon` = 'organization-chart', `create_by` = '吴同', `create_time` = '2026-10-19 14:50:52', `update_by` = '超级管理员', `update_time` = '2026-10-27 14:18:15', `remark` = '' WHERE `menu_id` = 1079;
-UPDATE `system_menu` SET `menu_name` = '模型公理', `parent_id` = 1163, `order_num` = 1, `path` = 'modelAxiom', `component` = 'om/om/constraint/modelAxiom/index', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'C', `visible` = '0', `status` = '0', `perms` = 'om:constraint:model:list', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '', `update_time` = NULL, `remark` = '' WHERE `menu_id` = 1164;
-UPDATE `system_menu` SET `menu_name` = '数据规则', `parent_id` = 1163, `order_num` = 2, `path` = 'dataRules', `component` = 'om/om/constraint/dataRules/index', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'C', `visible` = '0', `status` = '0', `perms` = 'om:constraint:data:list', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '', `update_time` = NULL, `remark` = '' WHERE `menu_id` = 1169;
+UPDATE `system_menu` SET `menu_name` = '模型公理', `parent_id` = 1163, `order_num` = 1, `path` = 'modelAxiom', `component` = 'om/om/constraint/modelAxiom/index', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'C', `visible` = '0', `status` = '0', `perms` = 'om:constraint:modelaxi:list', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '', `update_time` = NULL, `remark` = '' WHERE `menu_id` = 1164;
+UPDATE `system_menu` SET `menu_name` = '数据规则', `parent_id` = 1163, `order_num` = 2, `path` = 'dataRule', `component` = 'om/om/constraint/dataRule/index', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'C', `visible` = '0', `status` = '0', `perms` = 'om:constraint:datarule:list', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '', `update_time` = NULL, `remark` = '' WHERE `menu_id` = 1169;
+UPDATE `system_menu` SET `menu_name` = '模型公理查询', `parent_id` = 1164, `order_num` = 1, `path` = '#', `component` = '', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'F', `visible` = '0', `status` = '0', `perms` = 'om:constraint:modelaxi:query', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '超级管理员', `update_time` = '2026-10-28 11:42:22', `remark` = '' WHERE `menu_id` = 1165;
+UPDATE `system_menu` SET `menu_name` = '模型公理新增', `parent_id` = 1164, `order_num` = 2, `path` = '#', `component` = '', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'F', `visible` = '0', `status` = '0', `perms` = 'om:constraint:modelaxi:add', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '超级管理员', `update_time` = '2026-10-28 11:42:28', `remark` = '' WHERE `menu_id` = 1166;
+UPDATE `system_menu` SET `menu_name` = '模型公理修改', `parent_id` = 1164, `order_num` = 3, `path` = '#', `component` = '', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'F', `visible` = '0', `status` = '0', `perms` = 'om:constraint:modelaxi:edit', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '超级管理员', `update_time` = '2026-10-28 11:42:36', `remark` = '' WHERE `menu_id` = 1167;
+UPDATE `system_menu` SET `menu_name` = '模型公理删除', `parent_id` = 1164, `order_num` = 4, `path` = '#', `component` = '', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'F', `visible` = '0', `status` = '0', `perms` = 'om:constraint:modelaxi:remove', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '超级管理员', `update_time` = '2026-10-28 11:42:41', `remark` = '' WHERE `menu_id` = 1168;
+UPDATE `system_menu` SET `menu_name` = '数据规则查询', `parent_id` = 1169, `order_num` = 1, `path` = '#', `component` = '', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'F', `visible` = '0', `status` = '0', `perms` = 'om:constraint:datarule:query', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:25', `update_by` = '超级管理员', `update_time` = '2026-10-28 11:43:02', `remark` = '' WHERE `menu_id` = 1170;
+UPDATE `system_menu` SET `menu_name` = '数据规则新增', `parent_id` = 1169, `order_num` = 2, `path` = '#', `component` = '', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'F', `visible` = '0', `status` = '0', `perms` = 'om:constraint:datarule:add', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:26', `update_by` = '超级管理员', `update_time` = '2026-10-28 11:43:17', `remark` = '' WHERE `menu_id` = 1171;
+UPDATE `system_menu` SET `menu_name` = '数据规则修改', `parent_id` = 1169, `order_num` = 3, `path` = '#', `component` = '', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'F', `visible` = '0', `status` = '0', `perms` = 'om:constraint:datarule:edit', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:26', `update_by` = '超级管理员', `update_time` = '2026-10-28 11:43:21', `remark` = '' WHERE `menu_id` = 1172;
+UPDATE `system_menu` SET `menu_name` = '数据规则删除', `parent_id` = 1169, `order_num` = 4, `path` = '#', `component` = '', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'F', `visible` = '0', `status` = '0', `perms` = 'om:constraint:datarule:remove', `icon` = '#', `create_by` = 'admin', `create_time` = '2026-10-22 19:56:26', `update_by` = '超级管理员', `update_time` = '2026-10-28 11:43:26', `remark` = '' WHERE `menu_id` = 1173;
+UPDATE `system_dict_data` SET `dict_sort` = 1, `dict_label` = '子类型', `dict_value` = 'SUBCLASS', `dict_type` = 'om_axiom_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'Y', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:30', `update_by` = '吴同', `update_time` = '2026-10-28 13:57:57', `remark` = '' WHERE `dict_code` = 72;
+UPDATE `system_dict_data` SET `dict_sort` = 2, `dict_label` = '等价', `dict_value` = 'EQUIVALENT', `dict_type` = 'om_axiom_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:30', `update_by` = '吴同', `update_time` = '2026-10-28 13:58:31', `remark` = '' WHERE `dict_code` = 73;
+UPDATE `system_dict_data` SET `dict_sort` = 3, `dict_label` = '互斥', `dict_value` = 'DISJOINT', `dict_type` = 'om_axiom_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:30', `update_by` = '吴同', `update_time` = '2026-10-28 13:58:35', `remark` = '' WHERE `dict_code` = 74;
+UPDATE `system_dict_data` SET `dict_sort` = 4, `dict_label` = 'Domain / Range', `dict_value` = 'DOMAIN_RANGE', `dict_type` = 'om_axiom_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:30', `update_by` = '吴同', `update_time` = '2026-10-28 13:58:39', `remark` = '' WHERE `dict_code` = 75;
+UPDATE `system_dict_data` SET `dict_sort` = 5, `dict_label` = '属性范围', `dict_value` = 'PROPERTY_RANGE', `dict_type` = 'om_axiom_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:31', `update_by` = '吴同', `update_time` = '2026-10-28 13:58:42', `remark` = '' WHERE `dict_code` = 76;
+UPDATE `system_dict_data` SET `dict_sort` = 1, `dict_label` = '必填', `dict_value` = 'REQUIRED', `dict_type` = 'om_data_rule_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'Y', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:31', `update_by` = '吴同', `update_time` = '2026-10-28 13:54:11', `remark` = '' WHERE `dict_code` = 77;
+UPDATE `system_dict_data` SET `dict_sort` = 2, `dict_label` = '枚举', `dict_value` = 'ENUM', `dict_type` = 'om_data_rule_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:31', `update_by` = '吴同', `update_time` = '2026-10-28 13:54:16', `remark` = '' WHERE `dict_code` = 78;
+UPDATE `system_dict_data` SET `dict_sort` = 3, `dict_label` = '取值范围', `dict_value` = 'RANGE', `dict_type` = 'om_data_rule_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:31', `update_by` = '吴同', `update_time` = '2026-10-28 13:54:20', `remark` = '' WHERE `dict_code` = 79;
+UPDATE `system_dict_data` SET `dict_sort` = 4, `dict_label` = '格式校验', `dict_value` = 'FORMAT', `dict_type` = 'om_data_rule_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 09:52:31', `update_by` = '吴同', `update_time` = '2026-10-28 13:54:23', `remark` = '' WHERE `dict_code` = 80;
+
+
+DROP TABLE IF EXISTS `om_constraint_rule`;
+
+-- ----------------------------
+-- Table structure for om_model_axiom
+-- ----------------------------
+DROP TABLE IF EXISTS `om_model_axiom`;
+CREATE TABLE `om_model_axiom`  (
+           `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+           `version_id` bigint NOT NULL COMMENT '项目版本id',
+           `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '模型公理名称',
+           `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述',
+           `type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '公理类型;SUBCLASS：子类型，EQUIVALENT：等价，DISJOINT：互斥，DOMAIN_RANGE：定义域/值域，PROPERTY_RANGE：属性范围',
+           `level` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'INFO' COMMENT '级别;INFO：提示，WARNING：警告，ERROR：错误',
+           `object_type_id` bigint NULL DEFAULT NULL COMMENT '对象类型id;子类型、对象类型A或属性所属对象类型',
+           `other_type_id` bigint NULL DEFAULT NULL COMMENT '另一对象类型id;父类型或对象类型B',
+           `relation_id` bigint NULL DEFAULT NULL COMMENT '对象类型关系id;关联om_object_type_relation',
+           `domain_id` bigint NULL DEFAULT NULL COMMENT 'Domain对象类型id',
+           `range_id` bigint NULL DEFAULT NULL COMMENT 'Range对象类型id',
+           `attribute_id` bigint NULL DEFAULT NULL COMMENT '数据属性id;关联om_object_type_attribute',
+           `type_category` tinyint UNSIGNED NULL DEFAULT NULL COMMENT '属性值类型分类;1：基础数据类型，2：业务数据类型',
+           `basic_type_code` tinyint UNSIGNED NULL DEFAULT NULL COMMENT '基础类型编码;0：文本，1：整数，2：小数，3：布尔，4：日期，5：枚举',
+           `business_type_id` bigint NULL DEFAULT NULL COMMENT '业务类型id;按来源关联om_data_type或basic_data_type',
+           `business_type_source` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '业务类型来源;PROJECT当前项目版本,GLOBAL全局',
+           `unit` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '单位;基础整数、小数展示',
+           `decimal_places` int NULL DEFAULT NULL COMMENT '小数位数;基础小数展示',
+           `format` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '日期格式;基础日期展示',
+           `enum_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '枚举类型编码;基础枚举展示',
+           `enum_source` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '枚举来源;PROJECT当前项目版本,GLOBAL全局',
+           `valid_flag` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否有效;0：无效，1：有效',
+           `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标志;1：已删除，0：未删除',
+           `create_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '创建人',
+           `creator_id` bigint NULL DEFAULT NULL COMMENT '创建人id',
+           `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+           `update_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '更新人',
+           `updater_id` bigint NULL DEFAULT NULL COMMENT '更新人id',
+           `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+           `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+           PRIMARY KEY (`id`) USING BTREE,
+           INDEX `idx_version_del_name`(`version_id` ASC, `del_flag` ASC, `name` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '模型公理表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of om_model_axiom
+-- ----------------------------
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for om_data_rule
+-- ----------------------------
+DROP TABLE IF EXISTS `om_data_rule`;
+CREATE TABLE `om_data_rule`  (
+             `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+             `version_id` bigint NOT NULL COMMENT '项目版本id',
+             `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '数据规则名称',
+             `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述',
+             `type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '规则类型;REQUIRED：必填，ENUM：枚举，RANGE：取值范围，FORMAT：格式校验',
+             `level` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'INFO' COMMENT '级别;INFO：提示，WARNING：警告，ERROR：错误',
+             `condition_relation` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OR' COMMENT '失败条件关系;AND全部满足,OR任一满足',
+             `conditions` json NOT NULL COMMENT '有序失败条件数组;每项包含objectTypeId、attributeId、operator、value',
+             `failure_message` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '失败提示',
+             `valid_flag` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否有效;0：无效，1：有效',
+             `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标志;1：已删除，0：未删除',
+             `create_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '创建人',
+             `creator_id` bigint NULL DEFAULT NULL COMMENT '创建人id',
+             `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+             `update_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '更新人',
+             `updater_id` bigint NULL DEFAULT NULL COMMENT '更新人id',
+             `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+             `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+             PRIMARY KEY (`id`) USING BTREE,
+             INDEX `idx_version_del_name`(`version_id` ASC, `del_flag` ASC, `name` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '数据规则表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of om_data_rule
+-- ----------------------------

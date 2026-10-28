@@ -90,14 +90,20 @@ public interface IOmObjectTypeAttributeService extends IService<OmObjectTypeAttr
     Map<Long, Long> getOmObjectTypeAttributeCounts(Collection<Long> objectTypeIds);
 
     /**
-     * 按所属对象类型和来源查询可选业务数据类型
+     * 按项目版本和来源查询可选业务数据类型，兼容通过对象类型确定版本
      *
-     * @param objectTypeId 所属对象类型 ID
+     * @param objectTypeId 所属对象类型 ID，可为空
+     * @param versionId 项目版本 ID，未指定对象类型时使用
      * @param workspaceId 工作区 ID
      * @param source 数据来源，PROJECT 当前项目版本，GLOBAL 全局
      * @return 业务数据类型选项集合
      */
-    List<OmAttributeBusinessTypeOptionRespVO> getBusinessDataTypes(Long objectTypeId, Long workspaceId, String source);
+    List<OmAttributeBusinessTypeOptionRespVO> getBusinessDataTypes(
+        Long objectTypeId,
+        Long versionId,
+        Long workspaceId,
+        String source
+    );
 
     /**
      * 按来源查询当前项目版本或全局可用的枚举类型

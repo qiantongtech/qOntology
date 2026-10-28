@@ -276,7 +276,6 @@
                                 clearable
                                 :filter-method="filterEnums"
                                 :loading="enumLoading && !enumTypeDict.length"
-                                :no-data-text="enumLoadErrors.length ? '枚举加载失败，请重新展开重试' : '无数据'"
                                 @visible-change="handleEnumVisible"
                             >
                                 <template #label>
@@ -299,13 +298,6 @@
                                     />
                                 </el-option-group>
                             </el-select>
-                            <div v-if="enumLoadErrors.length" class="enum-load-error" role="status">
-                                {{
-                                    enumLoadErrors
-                                        .map((source) => (source === 'PROJECT' ? '当前项目' : '全局'))
-                                        .join('、')
-                                }}枚举加载失败，可继续选择已加载的枚举；重新展开可重试。
-                            </div>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -455,7 +447,6 @@
     const enumTypeDict = ref([]);
     const enumSearch = ref('');
     const enumLoading = ref(false);
-    const enumLoadErrors = ref([]);
 
     // 数据类型 0-文本、1-整数、2-小数、3-布尔、4-日期、5-枚举
     const dataTypeConstant = {
@@ -562,7 +553,6 @@
             dataTypeList.value = [];
             enumTypeDict.value = [];
             enumSearch.value = '';
-            enumLoadErrors.value = [];
             handleSelectionChange([]);
             queryParams.value.pageNum = 1;
             getList();
@@ -600,24 +590,19 @@
             return;
         }
         enumLoading.value = true;
-        enumLoadErrors.value = [];
         const isCurrentRequest = () => request === enumRequest && requestedVersion === versionId.value;
         try {
             await Promise.allSettled(
                 ['PROJECT', 'GLOBAL'].map(async (source) => {
-                    try {
-                        const response = await getEnumTypeDict(requestedVersion, source);
-                        if (!isCurrentRequest()) return;
-                        if (!Array.isArray(response.data)) throw new Error('枚举接口未返回有效列表');
-                        const options = response.data.map((item) => ({ ...item, enumSource: source }));
-                        // 仅替换本来源的数据，另一来源为空或失败时保留已经加载的选项
-                        enumTypeDict.value = [
-                            ...enumTypeDict.value.filter((item) => item.enumSource !== source),
-                            ...options
-                        ];
-                    } catch {
-                        if (isCurrentRequest()) enumLoadErrors.value = [...enumLoadErrors.value, source];
-                    }
+                    const response = await getEnumTypeDict(requestedVersion, source);
+                    if (!isCurrentRequest()) return;
+                    if (!Array.isArray(response.data)) throw new Error('枚举接口未返回有效列表');
+                    const options = response.data.map((item) => ({ ...item, enumSource: source }));
+                    // 仅替换本来源的数据，另一来源为空或失败时保留已经加载的选项
+                    enumTypeDict.value = [
+                        ...enumTypeDict.value.filter((item) => item.enumSource !== source),
+                        ...options
+                    ];
                 })
             );
         } finally {
@@ -688,6 +673,7 @@
     /** 新增按钮操作 */
     function handleAdd() {
         if (!requireVersion()) return;
+        ++detailRequest;
         reset();
         open.value = true;
         title.value = '添加数据类型';
@@ -782,11 +768,5 @@
         font-weight: 400;
         height: 18px;
         line-height: 16px;
-    }
-    .enum-load-error {
-        color: #e6a23c;
-        font-size: 12px;
-        line-height: 20px;
-        margin-top: 4px;
     }
 </style>

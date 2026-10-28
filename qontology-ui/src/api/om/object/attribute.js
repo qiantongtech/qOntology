@@ -65,11 +65,11 @@ export function delAttribute(ids, objectTypeId) {
 }
 
 // 查询可选业务数据类型
-export function listAttributeBusinessDataTypes(objectTypeId, source) {
+export function listAttributeBusinessDataTypes(objectTypeId, source, versionId) {
     return request({
         url: '/om/objectTypeAttribute/businessDataTypes',
         method: 'get',
-        params: { objectTypeId, source }
+        params: { objectTypeId, source, versionId }
     });
 }
 

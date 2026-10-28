@@ -239,6 +239,7 @@
                             <el-tree-select
                                 v-model="form.startTypeId"
                                 :data="typeOptions"
+                                :loading="typeOptionsLoading"
                                 :props="treeProps"
                                 value-key="id"
                                 placeholder="请选择起点类型"
@@ -258,6 +259,7 @@
                             <el-tree-select
                                 v-model="form.endTypeId"
                                 :data="typeOptions"
+                                :loading="typeOptionsLoading"
                                 :props="treeProps"
                                 value-key="id"
                                 placeholder="请选择终点类型"
@@ -316,7 +318,13 @@
             <template #footer>
                 <div class="dialog-footer">
                     <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
-                    <el-button type="primary" size="mini" :loading="saving" @click="submitForm">确 定</el-button>
+                    <el-button
+                        type="primary"
+                        size="mini"
+                        :loading="saving"
+                        :disabled="typeOptionsLoading"
+                        @click="submitForm"
+                    >确 定</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -371,6 +379,7 @@
     const targetPickerOpen = ref(false);
     const selectedTargets = ref([]);
     const typeOptions = ref([]);
+    const typeOptionsLoading = ref(false);
     const dialogTitle = ref('新增关系');
     const query = reactive({
         name: '',
@@ -500,15 +509,21 @@
     async function handleAdd() {
         if (!requireVersion()) return;
         const request = ++dialogRequest;
-        const response = await listRelationTypes(versionId.value);
-        if (request !== dialogRequest) return;
-        typeOptions.value = proxy.handleTree(response.data || [], 'id', 'parentId');
+        typeOptions.value = [];
+        typeOptionsLoading.value = true;
         form.value = emptyForm();
         selectedTargets.value = [];
         targetPickerOpen.value = false;
         dialogTitle.value = '新增关系';
         open.value = true;
         nextTick(() => relationRef.value?.clearValidate());
+        try {
+            const response = await listRelationTypes(versionId.value);
+            if (request !== dialogRequest || !open.value) return;
+            typeOptions.value = proxy.handleTree(response.data || [], 'id', 'parentId');
+        } finally {
+            if (request === dialogRequest) typeOptionsLoading.value = false;
+        }
     }
 
     async function handleUpdate(row) {
@@ -539,8 +554,13 @@
     async function submitForm() {
         if (!requireVersion()) return;
         const submittingVersion = versionId.value;
-        if (saving.value || !(await relationRef.value.validate().catch(() => false))) return;
-        if (saving.value || submittingVersion !== versionId.value || !open.value) return;
+        if (
+            saving.value ||
+            typeOptionsLoading.value ||
+            !(await relationRef.value.validate().catch(() => false))
+        )
+            return;
+        if (saving.value || typeOptionsLoading.value || submittingVersion !== versionId.value || !open.value) return;
         const context = contextRequest;
         ++dialogRequest;
         const data = {
@@ -617,6 +637,7 @@
         () => {
             ++contextRequest;
             ++dialogRequest;
+            typeOptionsLoading.value = false;
             open.value = false;
             targetPickerOpen.value = false;
             selectedTargets.value = [];
@@ -637,7 +658,11 @@
         nextTick(() => relationRef.value?.clearValidate('reverseName'));
     }
     watch(open, (value) => {
-        if (!value) targetPickerOpen.value = false;
+        if (!value) {
+            ++dialogRequest;
+            typeOptionsLoading.value = false;
+            targetPickerOpen.value = false;
+        }
     });
     onBeforeUnmount(() => {
         ++contextRequest;

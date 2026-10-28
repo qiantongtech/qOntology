@@ -108,6 +108,16 @@ mysql:
   # 主库密码
   password: lJ7gP0cA5dD2dA1hA3bJ
 
+#mysql:
+#  # JDBC驱动类名
+#  driver-class-name: com.mysql.cj.jdbc.Driver
+#  # 主库JDBC连接URL
+#  url: jdbc:mysql://127.0.0.1:3306/qontology_dev?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+#  # 主库用户名
+#  username: root
+#  # 主库密码
+#  password: 123456
+
 # 达梦配置文件
 dm8:
   # JDBC驱动类名

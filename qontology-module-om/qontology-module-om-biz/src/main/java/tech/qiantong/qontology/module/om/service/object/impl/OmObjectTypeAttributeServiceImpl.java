@@ -79,20 +79,24 @@ public class OmObjectTypeAttributeServiceImpl
     @Override
     public List<OmAttributeBusinessTypeOptionRespVO> getBusinessDataTypes(
         Long objectTypeId,
+        Long versionId,
         Long workspaceId,
         String source
     ) {
-        OmObjectTypeDO parent = requireObjectType(objectTypeId, workspaceId);
+        // 原属性页面仍通过对象类型定位版本，模型公理可直接传入当前项目版本
+        Long resolvedVersionId = objectTypeId == null
+            ? versionId
+            : requireObjectType(objectTypeId, workspaceId).getVersionId();
+        if (resolvedVersionId == null || resolvedVersionId <= 0) throw new ServiceException("请选择项目版本");
         requireSource(source);
         List<OmAttributeBusinessTypeOptionRespVO> result = new ArrayList<>();
         if ("GLOBAL".equals(source)) {
             dataTypeApiService.getAvailableDataTypes().forEach(type -> result.add(toGlobalOption(type)));
         } else {
-            if (parent.getVersionId() == null) throw new ServiceException("请选择项目版本");
             projectDataTypeMapper
                 .selectList(
                     new QueryWrapper<OmDataTypeDO>()
-                        .eq("version_id", parent.getVersionId())
+                        .eq("version_id", resolvedVersionId)
                         .eq("valid_flag", true)
                         .orderByDesc("create_time", "id")
                 )

@@ -287,7 +287,7 @@
                         filterable
                         clearable
                         :loading="businessTypesLoading && !businessDataTypes.length"
-                        :no-data-text="businessTypesError ? '加载失败，请重新展开重试' : '暂无可用业务数据类型'"
+                        no-data-text="暂无可用业务数据类型"
                         @visible-change="(value) => value && loadBusinessDataTypes()"
                     >
                         <template #label>
@@ -310,7 +310,6 @@
                         </el-option-group>
                     </el-select>
 
-                    <div v-if="businessTypesError" class="load-warning">部分业务类型加载失败，可继续选择已加载的类型；重新展开可重试。</div>
                 </el-form-item>
 
                 <template v-if="form.typeCategory === 2 && form.businessTypeId">
@@ -325,7 +324,6 @@
                     :readonly="form.typeCategory === 2"
                     :enum-options="enumOptions"
                     :enum-loading="enumsLoading"
-                    :enum-error="enumsError"
                     @enum-open="loadEnums"
                 />
 
@@ -442,13 +440,9 @@
 
     const businessTypesLoading = ref(false);
 
-    const businessTypesError = ref(false);
-
     const enumOptions = ref([]);
 
     const enumsLoading = ref(false);
-
-    const enumsError = ref('');
 
     const dataTypeOptions = computed(() =>
         om_attribute_data_type.value.map((dict) => ({ label: dict.label, value: Number(dict.value) }))
@@ -700,30 +694,24 @@
 
         businessTypesLoading.value = true;
 
-        businessTypesError.value = false;
-
         try {
             await Promise.allSettled(
                 ['PROJECT', 'GLOBAL'].map(async (source) => {
-                    try {
-                        const response = await listAttributeBusinessDataTypes(objectId, source);
+                    const response = await listAttributeBusinessDataTypes(objectId, source);
 
-                        if (request !== businessRequest) return;
+                    if (request !== businessRequest) return;
 
-                        if (!Array.isArray(response.data)) throw new Error('业务类型返回格式无效');
+                    if (!Array.isArray(response.data)) throw new Error('业务类型返回格式无效');
 
-                        businessDataTypes.value = [
-                            ...businessDataTypes.value.filter((item) => item.businessTypeSource !== source),
+                    businessDataTypes.value = [
+                        ...businessDataTypes.value.filter((item) => item.businessTypeSource !== source),
 
-                            ...response.data.map((item) => ({
-                                ...item,
-                                id: String(item.id),
-                                businessTypeSource: source
-                            }))
-                        ];
-                    } catch {
-                        if (request === businessRequest) businessTypesError.value = true;
-                    }
+                        ...response.data.map((item) => ({
+                            ...item,
+                            id: String(item.id),
+                            businessTypeSource: source
+                        }))
+                    ];
                 })
             );
         } finally {
@@ -740,32 +728,20 @@
 
         enumsLoading.value = true;
 
-        enumsError.value = '';
-
-        const failures = [];
-
         try {
             await Promise.allSettled(
                 ['PROJECT', 'GLOBAL'].map(async (source) => {
-                    try {
-                        const response = await listAttributeEnums(objectId, source);
+                    const response = await listAttributeEnums(objectId, source);
 
-                        if (request !== enumRequest) return;
+                    if (request !== enumRequest) return;
 
-                        if (!Array.isArray(response.data)) throw new Error('枚举返回格式无效');
+                    if (!Array.isArray(response.data)) throw new Error('枚举返回格式无效');
 
-                        enumOptions.value = [
-                            ...enumOptions.value.filter((item) => item.enumSource !== source),
+                    enumOptions.value = [
+                        ...enumOptions.value.filter((item) => item.enumSource !== source),
 
-                            ...response.data.map((item) => ({ ...item, enumSource: source }))
-                        ];
-                    } catch {
-                        if (request === enumRequest) {
-                            failures.push(source === 'PROJECT' ? '当前项目' : '全局');
-
-                            enumsError.value = `${failures.join('、')}枚举加载失败，可选择已加载的枚举；重新展开可重试。`;
-                        }
-                    }
+                        ...response.data.map((item) => ({ ...item, enumSource: source }))
+                    ];
                 })
             );
         } finally {
@@ -1058,11 +1034,7 @@
 
             businessTypesLoading.value = false;
 
-            businessTypesError.value = false;
-
             enumsLoading.value = false;
-
-            enumsError.value = '';
 
             open.value = false;
 
@@ -1138,14 +1110,6 @@
         align-items: center;
 
         gap: 6px;
-    }
-
-    .load-warning {
-        color: var(--el-color-warning);
-
-        font-size: 12px;
-
-        line-height: 20px;
     }
 
     .attribute-dialog-form :deep(.el-form-item__label) {

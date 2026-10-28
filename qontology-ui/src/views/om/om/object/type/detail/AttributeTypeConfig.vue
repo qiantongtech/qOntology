@@ -68,7 +68,6 @@
                     </el-option>
                 </el-option-group>
             </el-select>
-            <div v-if="enumError" class="load-warning">{{ enumError }}</div>
         </template>
     </el-form-item>
 </template>
@@ -79,8 +78,7 @@
         model: { type: Object, required: true },
         readonly: { type: Boolean, default: false },
         enumOptions: { type: Array, default: () => [] },
-        enumLoading: { type: Boolean, default: false },
-        enumError: { type: String, default: '' }
+        enumLoading: { type: Boolean, default: false }
     });
     const emit = defineEmits(['enum-open']);
     const typeCode = computed(() =>
@@ -133,10 +131,5 @@
     }
     .enum-option small {
         color: var(--el-text-color-secondary);
-    }
-    .load-warning {
-        color: var(--el-color-warning);
-        font-size: 12px;
-        line-height: 20px;
     }
 </style>
