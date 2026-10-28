@@ -21,15 +21,25 @@
         <GuideTip tip-id="om/constraint/model.list" />
         <div v-show="showSearch" class="pagecont-top">
             <el-form ref="queryRef" class="btn-style" :model="query" :inline="true" @submit.prevent="search">
-                <el-form-item label="规则名称" prop="name">
+                <el-form-item label="公理名称" prop="name">
                     <el-input
                         v-model="query.name"
                         class="el-form-input-width"
-                        placeholder="请输入名称"
+                        placeholder="请输入公理名称"
                         maxlength="128"
                         clearable
                         @keyup.enter="search"
                     />
+                </el-form-item>
+                <el-form-item label="公理类型" prop="type">
+                  <el-select v-model="query.type" class="el-form-input-width" placeholder="请选择公理类型" clearable>
+                    <el-option v-for="item in om_axiom_type" :key="item.value" :label="item.label" :value="item.value"/>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="级别" prop="level">
+                  <el-select v-model="query.level" class="el-form-input-width" placeholder="请选择级别" clearable>
+                    <el-option v-for="item in om_rule_level" :key="item.value" :label="item.label" :value="item.value"/>
+                  </el-select>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" plain @click="search">
@@ -232,20 +242,8 @@
                 </el-form-item>
                 <div class="h2-title">公理表达</div>
                 <template v-if="form.type === 'DOMAIN_RANGE'">
-                    <el-form-item label="对象类型关系" prop="relationId">
-                        <el-select
-                            v-model="form.relationId"
-                            :loading="optionsLoading"
-                            filterable
-                            placeholder="请选择关系"
-                        >
-                            <el-option
-                                v-for="item in relationOptions"
-                                :key="item.id"
-                                :label="item.name"
-                                :value="String(item.id)"
-                            />
-                        </el-select>
+                    <el-form-item label="关系" prop="relationName">
+                        <el-input v-model="form.relationName" placeholder="请输入关系名称" maxlength="128" clearable />
                     </el-form-item>
                     <el-form-item label="Domain" prop="domainId">
                         <el-tree-select
@@ -449,7 +447,7 @@
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
     import { listModelAxiom, getModelAxiom, addModelAxiom, updateModelAxiom, delModelAxiom } from '@/api/om/constraint/modelAxiom';
-    import { listRelationTypes, listRelations } from '@/api/om/object/relation';
+    import { listRelationTypes } from '@/api/om/object/relation';
     import { listAttributes, listAttributeBusinessDataTypes, listAttributeEnums } from '@/api/om/object/attribute';
     import AttributeTypeConfig from '../../object/type/detail/AttributeTypeConfig.vue';
 
@@ -478,8 +476,11 @@
     const dialogTitle = ref('新增模型公理');
     const detail = ref({});
     const showSearch = ref(true);
-    const query = reactive({ name: '', pageNum: 1, pageSize: 10, orderByColumn: 'createTime,id', isAsc: 'desc,desc' });
+    const query = reactive({ name: '', type: '', level: '', pageNum: 1, pageSize: 10, orderByColumn: 'createTime,id', isAsc: 'desc,desc' });
     const appliedName = ref('');
+    // 查询条件在点击查询时生效，翻页和排序继续使用已提交的筛选条件。
+    const appliedType = ref('');
+    const appliedLevel = ref('');
     const objectTypeOptions = ref([]);
     const objectTypeTreeProps = { label: 'name', value: 'id', children: 'children' };
     const objectTypeTree = computed(() =>
@@ -538,7 +539,7 @@
         type: 'SUBCLASS',
         objectTypeId: '',
         otherTypeId: '',
-        relationId: '',
+        relationName: '',
         domainId: '',
         rangeId: '',
         attributeId: '',
@@ -561,7 +562,10 @@
         level: [{ required: true, message: '请选择级别', trigger: 'change' }],
         objectTypeId: [{ required: true, message: '请选择对象类型', trigger: 'change' }],
         otherTypeId: [{ required: true, message: '请选择另一对象类型', trigger: 'change' }],
-        relationId: [{ required: true, message: '请选择对象类型关系', trigger: 'change' }],
+        relationName: [
+            { required: true, whitespace: true, message: '关系名称不能为空', trigger: 'blur' },
+            { max: 128, message: '关系名称不能超过128个字符', trigger: 'blur' }
+        ],
         domainId: [{ required: true, message: '请选择Domain', trigger: 'change' }],
         rangeId: [{ required: true, message: '请选择Range', trigger: 'change' }],
         attributeId: [{ required: true, message: '请选择数据属性', trigger: 'change' }],
@@ -598,7 +602,6 @@
     let dialogRequest = 0;
     let contextRequest = 0;
     let enumRequest = 0;
-    const relationOptions = ref([]);
     const firstTypeLabel = computed(() => {
         if (form.value.type === 'SUBCLASS') return '子类型';
         return form.value.type === 'PROPERTY_RANGE' ? '对象类型' : '对象类型A';
@@ -662,10 +665,6 @@
         }));
     }
 
-    function listRelationOptions(versionId) {
-        return loadAllPages((pageNum) => listRelations({ versionId, pageNum, pageSize: 100 }));
-    }
-
     async function listObjectAttributeOptions(objectTypeId, versionId) {
         const rows = await loadAllPages((pageNum) => listAttributes({ objectTypeId, versionId, pageNum, pageSize: 100 }));
         return rows.map((item) => ({ ...item, id: String(item.id) }));
@@ -698,6 +697,8 @@
             const response = await listModelAxiom({
                 versionId: versionId.value,
                 name: appliedName.value,
+                type: appliedType.value,
+                level: appliedLevel.value,
                 pageNum: query.pageNum,
                 pageSize: query.pageSize,
                 orderByColumn: query.orderByColumn,
@@ -720,6 +721,8 @@
 
     function search() {
         appliedName.value = query.name.trim();
+        appliedType.value = query.type || '';
+        appliedLevel.value = query.level || '';
         query.pageNum = 1;
         return getList();
     }
@@ -799,15 +802,13 @@
         try {
             const results = await Promise.allSettled([
                 listObjectTypeOptions(versionId.value),
-                listRelationOptions(versionId.value),
                 listBusinessTypeOptions(versionId.value)
             ]);
             const failed = results.find((result) => result.status === 'rejected');
             if (failed) throw failed.reason;
             if (request !== dialogRequest) return;
             objectTypeOptions.value = results[0].value;
-            relationOptions.value = results[1].value;
-            businessTypeOptions.value = results[2].value;
+            businessTypeOptions.value = results[1].value;
             const record = detailOpen.value ? detail.value : form.value;
             const objectIds = getRecordObjectIds(record);
             await Promise.allSettled(objectIds.map(loadObjectOptions));
@@ -866,9 +867,6 @@
             const options = await listObjectTypeOptions(versionId.value);
             if (request !== dialogRequest) return;
             objectTypeOptions.value = options;
-            const relations = await listRelationOptions(versionId.value);
-            if (request !== dialogRequest) return;
-            relationOptions.value = relations;
             const businessTypes = await listBusinessTypeOptions(versionId.value);
             if (request !== dialogRequest) return;
             businessTypeOptions.value = businessTypes;
@@ -966,7 +964,7 @@
         ruleRef.value?.resetFields([
             'objectTypeId',
             'otherTypeId',
-            'relationId',
+            'relationName',
             'domainId',
             'rangeId',
             'attributeId',
@@ -1034,9 +1032,9 @@
         const typeExists = (id) => objectTypeOptions.value.some((item) => item.id === id);
         if (record.type === 'DOMAIN_RANGE') {
             if (record.domainId && record.domainId === record.rangeId) return 'Domain 和 Range 不能选择相同的对象类型';
-            const relationExists = relationOptions.value.some((item) => String(item.id) === record.relationId);
-            if (!relationExists || !typeExists(record.domainId) || !typeExists(record.rangeId)) {
-                return '请选择有效的关系、Domain 和 Range';
+            if (!record.relationName?.trim()) return '请输入关系名称';
+            if (!typeExists(record.domainId) || !typeExists(record.rangeId)) {
+                return '请选择有效的Domain和Range';
             }
             return '';
         }
@@ -1069,10 +1067,8 @@
         if (record.type === 'DOMAIN_RANGE') {
             return [
                 {
-                    label: '对象类型关系',
-                    value:
-                        relationOptions.value.find((item) => String(item.id) === record.relationId)?.name ||
-                        record.relationId
+                    label: '关系',
+                    value: record.relationName
                 },
                 { label: 'Domain', value: objectTypeLabel(record.domainId) },
                 { label: 'Range', value: objectTypeLabel(record.rangeId) }
@@ -1117,12 +1113,15 @@
             optionsLoadFailed.value = false;
             resetEnums();
             objectTypeOptions.value = [];
-            relationOptions.value = [];
             Object.keys(attributeOptions).forEach((key) => delete attributeOptions[key]);
             businessTypeOptions.value = [];
             query.name = '';
+            query.type = '';
+            query.level = '';
             query.pageNum = 1;
             appliedName.value = '';
+            appliedType.value = '';
+            appliedLevel.value = '';
             rows.value = [];
             selectedIds.value = [];
             total.value = 0;

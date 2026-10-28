@@ -22,9 +22,19 @@
     <div v-show="showSearch" class="pagecont-top">
       <el-form ref="queryRef" class="btn-style" :model="query" :inline="true" @submit.prevent="search">
         <el-form-item label="规则名称" prop="name">
-          <el-input v-model="query.name" class="el-form-input-width" placeholder="请输入名称" maxlength="128"
+          <el-input v-model="query.name" class="el-form-input-width" placeholder="请输入规则名称" maxlength="128"
                     clearable @keyup.enter="search"
           />
+        </el-form-item>
+        <el-form-item label="规则类型" prop="type">
+          <el-select v-model="query.type" class="el-form-input-width" placeholder="请选择规则类型" clearable>
+            <el-option v-for="item in om_data_rule_type" :key="item.value" :label="item.label" :value="item.value"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="级别" prop="level">
+          <el-select v-model="query.level" class="el-form-input-width" placeholder="请选择级别" clearable>
+            <el-option v-for="item in om_rule_level" :key="item.value" :label="item.label" :value="item.value"/>
+          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" plain @click="search">
@@ -358,8 +368,11 @@ const detailOpen = ref(false);
 const dialogTitle = ref('新增数据规则');
 const detail = ref({});
 const showSearch = ref(true);
-const query = reactive({name: '', pageNum: 1, pageSize: 10, orderByColumn: 'createTime,id', isAsc: 'desc,desc'});
+const query = reactive({name: '', type: '', level: '', pageNum: 1, pageSize: 10, orderByColumn: 'createTime,id', isAsc: 'desc,desc'});
 const appliedName = ref('');
+// 查询条件在点击查询时生效，翻页和排序继续使用已提交的筛选条件。
+const appliedType = ref('');
+const appliedLevel = ref('');
 const objectTypeOptions = ref([]);
 const objectTypeTreeProps = {label: 'name', value: 'id', children: 'children'};
 const objectTypeTree = computed(() =>
@@ -525,6 +538,8 @@ async function getList() {
     const response = await listDataRule({
       versionId: versionId.value,
       name: appliedName.value,
+      type: appliedType.value,
+      level: appliedLevel.value,
       pageNum: query.pageNum,
       pageSize: query.pageSize,
       orderByColumn: query.orderByColumn,
@@ -547,6 +562,8 @@ async function getList() {
 
 function search() {
   appliedName.value = query.name.trim();
+  appliedType.value = query.type || '';
+  appliedLevel.value = query.level || '';
   query.pageNum = 1;
   return getList();
 }
@@ -811,8 +828,12 @@ watch(versionId, () => {
   Object.keys(attributeOptions).forEach(key => delete attributeOptions[key]);
   Object.keys(businessTypeOptions).forEach(key => delete businessTypeOptions[key]);
   query.name = '';
+  query.type = '';
+  query.level = '';
   query.pageNum = 1;
   appliedName.value = '';
+  appliedType.value = '';
+  appliedLevel.value = '';
   rows.value = [];
   selectedIds.value = [];
   total.value = 0;

@@ -27,6 +27,7 @@ export function normalizeModelAxiom(record) {
     result.typeCategory = record.typeCategory == null ? 1 : Number(record.typeCategory);
     result.basicTypeCode = record.basicTypeCode == null ? undefined : Number(record.basicTypeCode);
     result.businessTypeKey = record.businessTypeId == null ? '' : `${record.businessTypeSource}:${record.businessTypeId}`;
+    result.relationName = record.relationName || '';
     result.description = record.description || '';
     return result;
 }
@@ -42,11 +43,13 @@ export function buildModelAxiom(record) {
         level: record.level
     };
     const fields = ['objectTypeId', 'otherTypeId', 'relationId', 'domainId', 'rangeId', 'attributeId',
-        'typeCategory', 'basicTypeCode', 'businessTypeId', 'businessTypeSource', 'unit', 'decimalPlaces',
+        'typeCategory', 'basicTypeCode', 'relationName', 'businessTypeId', 'businessTypeSource', 'unit', 'decimalPlaces',
         'format', 'enumType', 'enumSource'];
     fields.forEach(field => { result[field] = null; });
     if (record.type === 'DOMAIN_RANGE') {
-        ['relationId', 'domainId', 'rangeId'].forEach(field => { result[field] = toId(record[field]); });
+        // 关系名称独立定义，不依赖对象关系记录。
+        result.relationName = record.relationName.trim();
+        ['domainId', 'rangeId'].forEach(field => { result[field] = toId(record[field]); });
     } else {
         result.objectTypeId = toId(record.objectTypeId);
         if (record.type !== 'PROPERTY_RANGE') {

@@ -238,38 +238,22 @@ qOntology 规划 **开源版** 与 **专业版**。开源版聚焦领域建模�
 <table>
     <tr>
         <td><img src=".gitee/system/home.png" alt="系统首页" width="400"/></td>
-        <td><img src=".gitee/system/project.png" alt="基础管理－项目管理" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/globalEnum.png" alt="基础管理－枚举管理" width="400"/></td>
-        <td><img src=".gitee/system/globalBusinessDataType.png" alt="基础管理－业务数据类型" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/dataSource.png" alt="基础管理－数据源" width="400"/></td>
-        <td><img src=".gitee/system/fileCategory.png" alt="基础管理－文件分类" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/fileManagement.png" alt="基础管理－文件管理" width="400"/></td>
         <td><img src=".gitee/system/projectOverview.png" alt="本体建模－项目概览" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/modelingGoal.png" alt="本体建模－建模目标" width="400"/></td>
+        <td><img src=".gitee/system/project.png" alt="基础管理－新增项目" width="400"/></td>
+        <td><img src=".gitee/system/modelingGoal.png" alt="本体建模－建模目标详情与关联对象类型" width="400"/></td>
+    </tr>
+    <tr>
         <td><img src=".gitee/system/term.png" alt="语义资产－术语管理" width="400"/></td>
+        <td><img src=".gitee/system/objectType.png" alt="本体建模－对象类型详情与属性配置" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/businessDataType.png" alt="语义资产－业务数据类型" width="400"/></td>
-        <td><img src=".gitee/system/enum.png" alt="语义资产－枚举管理" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/objectType.png" alt="本体建模－对象类型" width="400"/></td>
-        <td><img src=".gitee/system/objectRelation.png" alt="本体建模－对象关系" width="400"/></td>
-    </tr>
-    <tr>
+        <td><img src=".gitee/system/objectRelation.png" alt="本体建模－对象关系编辑与建模目标关联" width="400"/></td>
         <td><img src=".gitee/system/knowledgeGraph.png" alt="本体应用－知识图谱" width="400"/></td>
-        <td><img src=".gitee/system/unstructuredExtraction.png" alt="本体应用－非结构化抽取" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/structuredExtraction.png" alt="本体应用－结构化抽取" width="400"/></td>
-        <td><img src=".gitee/system/extractionLog.png" alt="本体应用－抽取日志" width="400"/></td>
+        <td><img src=".gitee/system/unstructuredExtraction.png" alt="本体应用－非结构化抽取结果" width="400"/></td>
+        <td><img src=".gitee/system/structuredExtraction.png" alt="本体应用－结构化抽取字段映射" width="400"/></td>
     </tr>
 </table>

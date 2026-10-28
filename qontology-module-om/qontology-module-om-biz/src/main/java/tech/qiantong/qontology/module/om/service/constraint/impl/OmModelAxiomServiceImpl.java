@@ -64,6 +64,7 @@ public class OmModelAxiomServiceImpl  extends ServiceImpl<OmModelAxiomMapper,OmM
 
     @Override
     public Long createOmModelAxiom(OmModelAxiomSaveReqVO createReqVO) {
+        prepareRelationName(createReqVO);
         validateNameUnique(createReqVO);
         OmModelAxiomDO createObj = BeanUtils.toBean(createReqVO, OmModelAxiomDO.class);
         omModelAxiomMapper.insert(createObj);
@@ -75,12 +76,28 @@ public class OmModelAxiomServiceImpl  extends ServiceImpl<OmModelAxiomMapper,OmM
         if (updateReqVO.getId() == null || omModelAxiomMapper.selectById(updateReqVO.getId()) == null) {
             throw new ServiceException("模型公理不存在或已删除");
         }
+        prepareRelationName(updateReqVO);
         validateNameUnique(updateReqVO);
 
         // 更新模型公理
         OmModelAxiomDO updateObj = BeanUtils.toBean(updateReqVO, OmModelAxiomDO.class);
         return omModelAxiomMapper.updateById(updateObj);
     }
+    /**
+     * Domain/Range公理使用手工定义的关系名称，清理旧的关系记录引用。
+     */
+    private void prepareRelationName(OmModelAxiomSaveReqVO reqVO) {
+        reqVO.setRelationId(null);
+        if ("DOMAIN_RANGE".equals(reqVO.getType())) {
+            if (StringUtils.isBlank(reqVO.getRelationName())) {
+                throw new ServiceException("关系名称不能为空");
+            }
+            reqVO.setRelationName(reqVO.getRelationName().trim());
+        } else {
+            reqVO.setRelationName(null);
+        }
+    }
+
     /**
      * 同一项目版本内，未删除记录的名称不能重复。
      */

@@ -77,6 +77,11 @@ public class OmModelAxiomDO extends BaseEntity {
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long relationId;
 
+    /** 公理中独立定义的关系名称，不关联已有对象关系 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String relationName;
+
+
     /** Domain对象类型id */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long domainId;

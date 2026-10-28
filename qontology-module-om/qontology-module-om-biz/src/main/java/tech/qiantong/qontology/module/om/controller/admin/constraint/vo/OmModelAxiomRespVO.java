@@ -73,6 +73,10 @@ public class OmModelAxiomRespVO implements Serializable {
     @Schema(description = "对象类型关系id", example = "")
     private Long relationId;
 
+    @Schema(description = "关系名称")
+    private String relationName;
+
+
     @Excel(name = "Domain对象类型id")
     @Schema(description = "Domain对象类型id", example = "")
     private Long domainId;

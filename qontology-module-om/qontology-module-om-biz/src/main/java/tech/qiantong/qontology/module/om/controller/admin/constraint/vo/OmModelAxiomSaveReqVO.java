@@ -71,6 +71,11 @@ public class OmModelAxiomSaveReqVO extends BaseEntity {
     @Schema(description = "对象类型关系id", example = "")
     private Long relationId;
 
+    @Schema(description = "关系名称")
+    @Size(max = 128, message = "关系名称长度不能超过128个字符")
+    private String relationName;
+
+
     @Schema(description = "Domain对象类型id", example = "")
     private Long domainId;
 
