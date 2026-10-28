@@ -30,6 +30,7 @@ import tech.qiantong.qontology.common.enums.BusinessType;
 import tech.qiantong.qontology.core.controller.BaseController;
 import tech.qiantong.qontology.core.domain.CommonResult;
 import tech.qiantong.qontology.core.domain.entity.SysDictData;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectPageReqVO;
@@ -83,7 +84,8 @@ public class BasicProjectController extends BaseController {
     @Log(title = "项目管理", businessType = BusinessType.INSERT)
     @PostMapping
     public CommonResult<Long> add(@Valid @RequestBody BasicProjectSaveReqVO basicProject) {
-        return CommonResult.toAjax(basicProjectService.createBasicProject(basicProject));
+        LoginUser currentUser = super.getLoginUser();
+        return CommonResult.toAjax(basicProjectService.createBasicProject(basicProject, currentUser));
     }
 
     @Operation(summary = "修改项目管理")

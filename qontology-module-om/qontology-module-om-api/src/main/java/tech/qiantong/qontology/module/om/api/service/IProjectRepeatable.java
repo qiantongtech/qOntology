@@ -6,8 +6,10 @@ import tech.qiantong.qontology.core.domain.model.LoginUser;
 public interface IProjectRepeatable {
     /**
      * 复制
+     *
      * @param sourceVersionId 源版本ID
      * @param targetVersionId 目标版本ID
+     * @param currentUser     当前用户
      * @return 是否复制成功
      */
     Boolean copy(Long sourceVersionId, Long targetVersionId, LoginUser currentUser);
