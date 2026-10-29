@@ -15,6 +15,7 @@ import tech.qiantong.qontology.module.om.dal.mapper.relation.OmObjectTypeRelatio
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +52,8 @@ public class OmObjectTypeRelationApiServiceImpl implements IProjectRepeatable {
 
         Date now = new Date();
         List<OmObjectTypeRelationDO> targetList = new ArrayList<>(sourceList.size());
+        // 与 targetList 下标对齐地记录旧主键（循环中存在跳过，不能直接用 sourceList 下标对应）
+        List<Long> oldIds = new ArrayList<>(sourceList.size());
         for (OmObjectTypeRelationDO item : sourceList) {
             Long newStartTypeId = objectTypeMapping.get(item.getStartTypeId());
             Long newEndTypeId = objectTypeMapping.get(item.getEndTypeId());
@@ -70,11 +73,20 @@ public class OmObjectTypeRelationApiServiceImpl implements IProjectRepeatable {
             relation.setCreateBy(currentUser.getUsername());
             relation.setCreateTime(now);
             targetList.add(relation);
+            oldIds.add(item.getId());
         }
         if (CollUtil.isEmpty(targetList)) {
             return true;
         }
-        return omObjectTypeRelationMapper.insertBatch(targetList);
+        boolean saved = omObjectTypeRelationMapper.insertBatch(targetList);
+
+        // 登记 om_object_type_relation 的 旧ID->新ID 映射，供 om_relation_target 重映射 relation_id 使用
+        Map<Long, Long> idMapping = new HashMap<>(oldIds.size());
+        for (int i = 0; i < oldIds.size(); i++) {
+            idMapping.put(oldIds.get(i), targetList.get(i).getId());
+        }
+        context.putIdMapping(ProjectCopyContext.TABLE_OM_OBJECT_TYPE_RELATION, idMapping);
+        return saved;
     }
 
     /**

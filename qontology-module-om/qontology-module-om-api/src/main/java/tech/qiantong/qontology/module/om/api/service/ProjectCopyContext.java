@@ -17,6 +17,9 @@ public class ProjectCopyContext {
     public static final String TABLE_OM_TARGET = "om_target";
     /** om_object_type 表映射键 */
     public static final String TABLE_OM_OBJECT_TYPE = "om_object_type";
+    public static final String TABLE_OM_OBJECT_TYPE_RELATION = "om_object_type_relation";
+    /** om_data_type（当前项目数据类型）表映射键 */
+    public static final String TABLE_OM_DATA_TYPE = "om_data_type";
 
     /** 源版本ID（基准版本） */
     private final Long sourceVersionId;

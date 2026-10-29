@@ -92,36 +92,7 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
             return dictType.getId();
         }
 
-        // 基准版本作为源版本，新建版本作为目标版本；无基准版本时无需复制
-        Long sourceVersionId = createReqVO.getBaseVersionId();
-        Long targetVersionId = dictType.getId();
-        if (sourceVersionId == null || sourceVersionId <= 0) {
-            return dictType.getId();
-        }
-
-        // 构建复制上下文，按 copyOrder 升序【同线程串行】执行各实现类的 copy：
-        // 1) 保证被依赖父表（如 om_target、om_object_type）先完成并登记旧ID->新ID映射；
-        // 2) 全部在外层同一事务内进行，新行对后续关联表可见，且任一失败整体回滚。
-        ProjectCopyContext context = new ProjectCopyContext(sourceVersionId, targetVersionId, currentUser);
-        List<String> failedModules = new ArrayList<>();
-        projectRepeatableList.stream()
-                .sorted(Comparator.comparingInt(IProjectRepeatable::copyOrder))
-                .forEach(repeatable -> {
-                    String module = repeatable.getClass().getSimpleName();
-                    try {
-                        Boolean copyResult = repeatable.copy(context);
-                        if (!Boolean.TRUE.equals(copyResult)) {
-                            failedModules.add(module);
-                        }
-                    } catch (Exception e) {
-                        log.error("项目版本数据复制失败, module={}, sourceVersionId={}, targetVersionId={}",
-                                module, sourceVersionId, targetVersionId, e);
-                        failedModules.add(module);
-                    }
-                });
-        if (CollUtil.isNotEmpty(failedModules)) {
-            throw new ServiceException("项目版本数据复制失败：" + String.join(", ", failedModules));
-        }
+        copyBusinessTable(createReqVO.getBaseVersionId(), dictType.getId(), currentUser);
 
         return dictType.getId();
     }
@@ -241,10 +212,10 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
 
             BigDecimal totalCount = omTargetCount.getTotalCount();
             BigDecimal coveredCount = omTargetCount.getCoveredCount();
-            if (totalCount.compareTo(BigDecimal.ZERO) == 0){
+            if (totalCount.compareTo(BigDecimal.ZERO) == 0) {
                 resultVO.setOmTargetCount(0);
                 resultVO.setOmTargetCoveredRate(0.0f);
-            }else {
+            } else {
                 BigDecimal divide = coveredCount.divide(totalCount, 2, RoundingMode.HALF_UP);
                 resultVO.setOmTargetCount(totalCount.intValue());
                 resultVO.setOmTargetCoveredRate(divide.floatValue());
@@ -261,5 +232,44 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
             throw new ServiceException("并行查询对象详情失败");
         }
         return resultVO;
+    }
+
+    /**
+     * 复制业务表
+     *
+     * @param sourceVersionId 源版本 id
+     * @param targetVersionId 目标版本 id
+     * @param currentUser     当前用户
+     */
+    private void copyBusinessTable(Long sourceVersionId, Long targetVersionId, LoginUser currentUser) {
+
+        if (Objects.isNull(sourceVersionId) || Objects.isNull(targetVersionId)) {
+            return;
+        }
+
+        // 构建复制上下文，按 copyOrder 升序【同线程串行】执行各实现类的 copy：
+        // 1) 保证被依赖父表（如 om_target、om_object_type）先完成并登记旧ID->新ID映射；
+        // 2) 全部在外层同一事务内进行，新行对后续关联表可见，且任一失败整体回滚。
+        ProjectCopyContext context = new ProjectCopyContext(sourceVersionId, targetVersionId, currentUser);
+        List<String> failedModules = new ArrayList<>();
+        projectRepeatableList.stream()
+                .sorted(Comparator.comparingInt(IProjectRepeatable::copyOrder))
+                .forEach(repeatable -> {
+                    String module = repeatable.getClass().getSimpleName();
+                    try {
+                        Boolean copyResult = repeatable.copy(context);
+                        if (!Boolean.TRUE.equals(copyResult)) {
+                            failedModules.add(module);
+                        }
+                    } catch (Exception e) {
+                        log.error("项目版本数据复制失败, module={}, sourceVersionId={}, targetVersionId={}",
+                                module, sourceVersionId, targetVersionId, e);
+                        failedModules.add(module);
+                    }
+                });
+        if (CollUtil.isNotEmpty(failedModules)) {
+            throw new ServiceException("项目版本数据复制失败：" + String.join(", ", failedModules));
+        }
+
     }
 }
