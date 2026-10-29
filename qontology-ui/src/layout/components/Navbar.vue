@@ -401,7 +401,7 @@ import {
 } from "@/api/system/system/message/message";
 import { loginOut } from "@/api/system/sso-auth.js";
 // import MessageList from "@/views/system/system/message/components/messageList.vue";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import moment from "moment";
 import { listNotice } from "@/api/system/system/notice";
 import { getCurrentAppVersion } from "@/api/system/update/update.js";
@@ -547,7 +547,35 @@ function projectIdChange() {
     });
 }
 
+// 版本管理页新增/修改版本后，重新拉取项目版本字典，保持下拉选项数据同步
+function refreshProjectVersionOptions() {
+  if (!projectId.value) {
+    return;
+  }
+  return getProjectVersionDict(projectId.value)
+    .then((res) => {
+      const list = res?.data;
+      if (!Array.isArray(list) || list.length === 0) {
+        return;
+      }
+      projectVersionOptions.value = list;
+      // 保留当前选中版本；若已不在最新列表中（如被删除），回退到第一项
+      const current = String(projectVersionId.value || '');
+      if (!current || !list.some(item => String(item.dictValue) === current)) {
+        projectVersionId.value = list[0].dictValue;
+      }
+    })
+    .catch((err) => {
+      console.error('刷新项目版本字典失败:', err);
+    });
+}
+
+function handleProjectVersionChanged(event) {
+  refreshProjectVersionOptions();
+}
+
 onMounted(() => {
+  window.addEventListener('project-version-changed', handleProjectVersionChanged);
   //   // 获取版本更新信息
   //   getCurrentAppVersion().then((res) => {
   //     if (res.data != null) {
@@ -559,6 +587,10 @@ onMounted(() => {
   //       latestVersion.value = res.data.latestVersion;
   //     }
   //   });
+});
+
+onUnmounted(() => {
+  window.removeEventListener('project-version-changed', handleProjectVersionChanged);
 });
 
 // 将 Markdown 转为 HTML，并进行安全过滤

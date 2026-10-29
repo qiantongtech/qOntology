@@ -22,51 +22,27 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="tech.qiantong.qontology.module.basic.dal.mapper.project.BasicProjectVersionMapper">
 
-    <select id="getOmTargetCount" resultType="tech.qiantong.qontology.module.basic.dto.OmTargetCountDTO">
-        select count(*) total_count,
-               IFNULL(SUM(CASE WHEN accept_status = 1 THEN 1 ELSE 0 END), 0) AS covered_count
-        from om_target ot
-        where ot.del_flag =0
-          and ot.valid_flag = 1
-          and ot.version_id = #{versionId}
-    </select>
-
-    <select id="selectTermCount" resultType="java.lang.Integer">
-        select count(*)
-        from om_term t
-        where t.del_flag =0
-          and t.valid_flag = 1
-          and t.version_id = #{versionId}
-    </select>
-
-    <select id="selectEnumerationCount" resultType="java.lang.Integer">
-        select count(*)
-        from om_enum_type oet
-        where oet.del_flag =0
-          and oet.valid_flag = 1
-          and oet.version_id = #{versionId}
-    </select>
-    <select id="selectObjectTypeCount" resultType="java.lang.Integer">
-        select count(*)
-        from om_object_type oot
-        where oot.del_flag =0
-          and oot.valid_flag = 1
-          and oot.version_id = #{versionId}
-    </select>
-    <select id="selectObjectTypeAttributeCount" resultType="java.lang.Integer">
-        select count(*)
-        from om_object_type_attribute oota
-        where oota.del_flag =0
-          and oota.valid_flag = 1
-          and oota.version_id = #{versionId}
-    </select>
-
-    <select id="selectRelationCount" resultType="java.lang.Integer">
-        select count(*)
-        from om_object_type_relation ootr
-        where ootr.del_flag =0
-          and ootr.valid_flag = 1
-          and ootr.version_id = #{versionId}
+    <!-- 版本差异统计：单次查询合并返回各业务表数量，减少数据库连接与网络往返 -->
+    <select id="selectVersionDiffStatsCount" resultType="tech.qiantong.qontology.module.basic.dto.VersionDiffStatsCountDTO">
+        select
+            (select count(*) from om_target ot
+                where ot.del_flag = 0 and ot.valid_flag = 1 and ot.version_id = #{versionId}) om_target_count,
+            (select IFNULL(SUM(CASE WHEN ot.accept_status = 1 THEN 1 ELSE 0 END), 0) from om_target ot
+                where ot.del_flag = 0 and ot.valid_flag = 1 and ot.version_id = #{versionId}) om_target_covered_count,
+            (select count(*) from om_term t
+                where t.del_flag = 0 and t.valid_flag = 1 and t.version_id = #{versionId}) term_count,
+            (select count(*) from om_enum_type oet
+                where oet.del_flag = 0 and oet.valid_flag = 1 and oet.version_id = #{versionId}) enumeration_count,
+            (select count(*) from om_object_type oot
+                where oot.del_flag = 0 and oot.valid_flag = 1 and oot.version_id = #{versionId}) object_type_count,
+            (select count(*) from om_object_type_attribute oota
+                where oota.del_flag = 0 and oota.valid_flag = 1 and oota.version_id = #{versionId}) object_type_attribute_count,
+            (select count(*) from om_object_type_relation ootr
+                where ootr.del_flag = 0 and ootr.valid_flag = 1 and ootr.version_id = #{versionId}) relation_count,
+            (select count(*) from om_model_axiom oma
+                where oma.del_flag = 0 and oma.valid_flag = 1 and oma.version_id = #{versionId}) model_axiom_count,
+            (select count(*) from om_data_rule odr
+                where odr.del_flag = 0 and odr.valid_flag = 1 and odr.version_id = #{versionId}) data_rule_count
     </select>
 
 </mapper>

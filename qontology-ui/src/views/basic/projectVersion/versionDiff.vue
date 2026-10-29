@@ -188,6 +188,8 @@
                   <template #default="scope">
                     <span v-if="scope.row.field === 'omTargetCoveredRate'">{{ scope.row.fieldValue + '%' }}</span>
                     <span v-else>{{ scope.row.fieldValue }}</span>
+                    <em v-if="scope.row.trend === 'up'" class="trend-arrow trend-up">▲</em>
+                    <em v-else-if="scope.row.trend === 'down'" class="trend-arrow trend-down">▼</em>
                   </template>
                 </el-table-column>
               </el-table>
@@ -299,13 +301,22 @@ function diffData() {
     // 两边都没值：按 0 展示，不标色
     if (!valA && !valB) {
       current.push({field, fieldValue: 0, changeType: "", ...fieldConfig})
-      compare.push({field, fieldValue: 0, changeType: "", ...fieldConfig})
+      compare.push({field, fieldValue: 0, changeType: "", trend: "", ...fieldConfig})
       continue;
     }
     // 值不一致（含单边没值）标黄，一致则不标色
     const changeType = JSON.stringify(valA) === JSON.stringify(valB) ? "" : "row-yellow";
+    // 对比版本数量相对基准版本数量的趋势：高于=up（绿向上箭头），低于=down（红向下箭头）
+    const numA = valA === "" ? 0 : Number(valA);
+    const numB = valB === "" ? 0 : Number(valB);
+    let trend = "";
+    if (numB > numA) {
+      trend = "up";
+    } else if (numB < numA) {
+      trend = "down";
+    }
     current.push({field, fieldValue: valA, changeType, ...fieldConfig})
-    compare.push({field, fieldValue: valB, changeType, ...fieldConfig})
+    compare.push({field, fieldValue: valB, changeType, trend, ...fieldConfig})
   }
   diffResult.value = {current, compare};
 }
@@ -426,6 +437,22 @@ onMounted(() => {
     min-width: 480px;
     padding: 0 16px;
   }
+}
+
+// 对比版本数量趋势箭头（样式对齐 overview 枚举个数/术语个数卡片）
+.trend-arrow {
+  margin-left: 4px;
+  font-size: 12px;
+  font-style: normal;
+  vertical-align: middle;
+}
+
+.trend-up {
+  color: #32b8bb;
+}
+
+.trend-down {
+  color: #ef6b75;
 }
 </style>
 

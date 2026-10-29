@@ -101,9 +101,11 @@
         <el-table-column v-if="getColumnVisibility(9)" label="操作" align="center"
                          class-name="small-padding fixed-width" fixed="right" width="240">
           <template #default="scope">
-            <el-button link type="primary" icon="view"
+            <el-button link type="primary"
                        @click="routeTo('/om/'+versionId+'/projectVersion/diff',scope.row)"
-                       v-hasPermi="['basic:project:projectversion:diff']">版本对比
+                       v-hasPermi="['basic:project:projectversion:diff']">
+              <svg-icon icon-class="meta-version" class="handle-svg-icon"/>
+              版本对比
             </el-button>
             <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
                        v-hasPermi="['basic:project:projectversion:edit']">修改
@@ -228,6 +230,7 @@ import {
 } from "@/api/basic/project/projectVersion.js";
 import {parseTime} from "@/utils/anivia";
 import {useRoute, useRouter} from "vue-router";
+
 
 const {proxy} = getCurrentInstance();
 const route = useRoute();
@@ -378,7 +381,7 @@ function handleSortChange(column, prop, order) {
 function handleAdd() {
   reset();
   open.value = true;
-  title.value = "添加项目版本";
+  title.value = "新增项目版本";
 }
 
 /** 修改按钮操作 */
@@ -404,6 +407,11 @@ function handleDetail(row) {
   });
 }
 
+/** 通知 Navbar 刷新项目版本下拉选项数据 */
+function notifyProjectVersionChanged() {
+  window.dispatchEvent(new CustomEvent('project-version-changed'));
+}
+
 /** 提交按钮 */
 function submitForm() {
   proxy.$refs["projectVersionRef"].validate(valid => {
@@ -413,6 +421,7 @@ function submitForm() {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
+          notifyProjectVersionChanged();
         }).catch(error => {
         });
       } else {
@@ -420,6 +429,7 @@ function submitForm() {
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
+          notifyProjectVersionChanged();
         }).catch(error => {
         });
       }
@@ -434,6 +444,7 @@ function handleDelete(row) {
     return delProjectVersion(_ids);
   }).then(() => {
     getList();
+    notifyProjectVersionChanged();
     proxy.$modal.msgSuccess("删除成功");
   }).catch(() => {
   });
@@ -461,6 +472,17 @@ function routeTo(link, row) {
 </script>
 
 <style scoped lang="scss">
+.handle-svg-icon {
+  /* 固定 9*9 */
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  vertical-align: -0.125em;
+  /* 跟随按钮文字颜色（含 hover / active） */
+  fill: currentColor;
+  color: inherit;
+}
+
 .more-actions {
   width: 100px;
   margin: 0 auto;
