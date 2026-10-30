@@ -25,9 +25,7 @@ public class OmEnumTypeApiServiceImpl implements IProjectRepeatable {
     /**
      * 复制
      *
-     * @param sourceVersionId 源版本ID
-     * @param targetVersionId 目标版本ID
-     * @param currentUser     当前用户
+     * @param context 项目版本复制上下文，承载源/目标版本、操作用户及跨表ID映射
      * @return 是否复制成功
      */
     @Override

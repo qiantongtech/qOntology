@@ -86,7 +86,7 @@ public class OmObjectTypeAttributeApiServiceImpl implements IProjectRepeatable {
             attribute.setObjectTypeId(newObjectTypeId);
             attribute.setBusinessTypeId(newBusinessTypeId);
             attribute.setCreatorId(currentUser.getUserId());
-            attribute.setCreateBy(currentUser.getUsername());
+            attribute.setCreateBy(currentUser.getUser().getNickName());
             attribute.setCreateTime(now);
             targetList.add(attribute);
         }

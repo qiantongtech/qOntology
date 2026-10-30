@@ -68,7 +68,7 @@ public class OmObjectTypeTargetApiServiceImpl implements IProjectRepeatable {
             link.setObjectTypeId(newObjectTypeId);
             link.setTargetId(newTargetId);
             link.setCreatorId(currentUser.getUserId());
-            link.setCreateBy(currentUser.getUsername());
+            link.setCreateBy(currentUser.getUser().getNickName());
             link.setCreateTime(now);
             targetList.add(link);
         }
