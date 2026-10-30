@@ -24,7 +24,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.qiantong.qontology.common.exception.ServiceException;
@@ -37,14 +36,14 @@ import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicPro
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.VersionDiffStatsVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
 import tech.qiantong.qontology.module.basic.dal.mapper.project.BasicProjectVersionMapper;
-import tech.qiantong.qontology.module.basic.dto.OmTargetCountDTO;
+import tech.qiantong.qontology.module.basic.dto.VersionDiffStatsCountDTO;
 import tech.qiantong.qontology.module.basic.service.project.IBasicProjectVersionService;
 import tech.qiantong.qontology.module.om.api.service.IProjectRepeatable;
+import tech.qiantong.qontology.module.om.api.service.ProjectCopyContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -60,9 +59,6 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
 
     @Resource
     private List<IProjectRepeatable> projectRepeatableList;
-    // 复用项目全局线程池，用于并行执行各实现类的 copy 方法
-    @Resource
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     /**
      * 获得项目版本分页列表
@@ -83,6 +79,14 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
      */
     @Override
     public Long createBasicProjectVersion(BasicProjectVersionSaveReqVO createReqVO, LoginUser currentUser) {
+        // 校验版本号不能重复
+        LambdaQueryWrapper<BasicProjectVersionDO> queryWrapper = Wrappers.lambdaQuery(BasicProjectVersionDO.class)
+                .eq(BasicProjectVersionDO::getProjectId, createReqVO.getProjectId())
+                .eq(BasicProjectVersionDO::getVersion, createReqVO.getVersion());
+        if (super.count(queryWrapper) > 0) {
+            throw new ServiceException("项目版本号不能重复");
+        }
+
         BasicProjectVersionDO dictType = BeanUtils.toBean(createReqVO, BasicProjectVersionDO.class);
         baseMapper.insert(dictType);
 
@@ -91,32 +95,7 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
             return dictType.getId();
         }
 
-        // 基准版本作为源版本，新建版本作为目标版本；无基准版本时无需复制
-        Long sourceVersionId = createReqVO.getBaseVersionId();
-        Long targetVersionId = dictType.getId();
-
-        // 并行执行所有实现类的 copy：每个任务在独立线程与其独立事务中提交
-        List<CompletableFuture<String>> futures = projectRepeatableList.stream()
-                .map(repeatable -> CompletableFuture.supplyAsync(() -> {
-                    String module = repeatable.getClass().getSimpleName();
-                    try {
-                        Boolean copyResult = repeatable.copy(sourceVersionId, targetVersionId, currentUser);
-                        return Boolean.TRUE.equals(copyResult) ? null : module;
-                    } catch (Exception e) {
-                        log.error("项目版本数据复制失败, module={}, sourceVersionId={}, targetVersionId={}",
-                                module, sourceVersionId, targetVersionId, e);
-                        return module;
-                    }
-                }, threadPoolTaskExecutor)).toList();
-
-        // 等待全部完成并汇总失败的模块名（无论成败都等所有任务跑完，便于一次性反馈）
-        List<String> failedModules = futures.stream()
-                .map(CompletableFuture::join)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(failedModules)) {
-            throw new ServiceException("项目版本数据复制失败：" + String.join(", ", failedModules));
-        }
+        copyBusinessTable(createReqVO.getBaseVersionId(), dictType.getId(), currentUser);
 
         return dictType.getId();
     }
@@ -130,7 +109,14 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
     @Override
     public int updateBasicProjectVersion(BasicProjectVersionSaveReqVO updateReqVO) {
         // 相关校验
-
+        // 校验版本号不能重复
+        LambdaQueryWrapper<BasicProjectVersionDO> queryWrapper = Wrappers.lambdaQuery(BasicProjectVersionDO.class)
+                .eq(BasicProjectVersionDO::getProjectId, updateReqVO.getProjectId())
+                .eq(BasicProjectVersionDO::getVersion, updateReqVO.getVersion())
+                .ne(BasicProjectVersionDO::getId, updateReqVO.getId());
+        if (super.count(queryWrapper) > 0) {
+            throw new ServiceException("项目版本号不能重复");
+        }
         // 更新项目版本
         BasicProjectVersionDO updateObj = BeanUtils.toBean(updateReqVO, BasicProjectVersionDO.class);
         return baseMapper.updateById(updateObj);
@@ -194,67 +180,76 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
         VersionDiffStatsVO resultVO = new VersionDiffStatsVO();
         resultVO.setProjectVersion(version);
 
-        // 1. 异步任务1：查询对象基础信息
-        CompletableFuture<OmTargetCountDTO> omTargetCountFuture = CompletableFuture.supplyAsync(
-                () -> baseMapper.getOmTargetCount(versionId),
-                threadPoolTaskExecutor
-        );
-        CompletableFuture<Integer> termCountFuture = CompletableFuture.supplyAsync(
-                () -> baseMapper.selectTermCount(versionId),
-                threadPoolTaskExecutor
-        );
-        CompletableFuture<Integer> enumerationCountFuture = CompletableFuture.supplyAsync(
-                () -> baseMapper.selectEnumerationCount(versionId),
-                threadPoolTaskExecutor
-        );
-        CompletableFuture<Integer> objectTypeCountFuture = CompletableFuture.supplyAsync(
-                () -> baseMapper.selectObjectTypeCount(versionId),
-                threadPoolTaskExecutor
-        );
-        CompletableFuture<Integer> objectTypeAttributeCountFuture = CompletableFuture.supplyAsync(
-                () -> baseMapper.selectObjectTypeAttributeCount(versionId),
-                threadPoolTaskExecutor
-        );
-        CompletableFuture<Integer> relationCountFuture = CompletableFuture.supplyAsync(
-                () -> baseMapper.selectRelationCount(versionId),
-                threadPoolTaskExecutor
-        );
-        // 等待所有查询任务完成
-        CompletableFuture.allOf(omTargetCountFuture, termCountFuture, enumerationCountFuture, objectTypeCountFuture,
-                objectTypeAttributeCountFuture, relationCountFuture).join();
-
-        // 获取结果并组装
-        try {
-            OmTargetCountDTO omTargetCount = omTargetCountFuture.get();
-            Integer termCount = termCountFuture.get();
-            Integer enumerationCount = enumerationCountFuture.get();
-            Integer objectTypeCount = objectTypeCountFuture.get();
-            Integer objectTypeAttributeCount = objectTypeAttributeCountFuture.get();
-            Integer relationCount = relationCountFuture.get();
-
-            // 组装VO
-
-            BigDecimal totalCount = omTargetCount.getTotalCount();
-            BigDecimal coveredCount = omTargetCount.getCoveredCount();
-            if (totalCount.compareTo(BigDecimal.ZERO) == 0){
-                resultVO.setOmTargetCount(0);
-                resultVO.setOmTargetCoveredRate(0.0f);
-            }else {
-                BigDecimal divide = coveredCount.divide(totalCount, 2, RoundingMode.HALF_UP);
-                resultVO.setOmTargetCount(totalCount.intValue());
-                resultVO.setOmTargetCoveredRate(divide.floatValue());
-            }
-
-            resultVO.setTermCount(termCount);
-            resultVO.setEnumerationCount(enumerationCount);
-            resultVO.setObjectTypeCount(objectTypeCount);
-            resultVO.setObjectTypeAttributeCount(objectTypeAttributeCount);
-            resultVO.setRelationCount(relationCount);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ServiceException("并行查询对象详情失败");
+        VersionDiffStatsCountDTO statsCount = baseMapper.selectVersionDiffStatsCount(versionId);
+        if (Objects.isNull(statsCount)) {
+            return resultVO;
         }
+
+        // 建模目标数量与覆盖率
+        int omTargetCount = nullToZero(statsCount.getOmTargetCount());
+        int omTargetCoveredCount = nullToZero(statsCount.getOmTargetCoveredCount());
+        resultVO.setOmTargetCount(omTargetCount);
+        if (omTargetCount == 0) {
+            resultVO.setOmTargetCoveredRate(0.0f);
+        } else {
+            BigDecimal coveredRate = BigDecimal.valueOf(omTargetCoveredCount)
+                    .divide(BigDecimal.valueOf(omTargetCount), 2, RoundingMode.HALF_UP);
+            resultVO.setOmTargetCoveredRate(coveredRate.floatValue());
+        }
+
+        resultVO.setTermCount(nullToZero(statsCount.getTermCount()));
+        resultVO.setEnumerationCount(nullToZero(statsCount.getEnumerationCount()));
+        resultVO.setObjectTypeCount(nullToZero(statsCount.getObjectTypeCount()));
+        resultVO.setObjectTypeAttributeCount(nullToZero(statsCount.getObjectTypeAttributeCount()));
+        resultVO.setRelationCount(nullToZero(statsCount.getRelationCount()));
+        resultVO.setModelAxiomCount(nullToZero(statsCount.getModelAxiomCount()));
+        resultVO.setDataRuleCount(nullToZero(statsCount.getDataRuleCount()));
         return resultVO;
+    }
+
+    /**
+     * 统计数值空值兜底，统一按 0 处理
+     */
+    private static int nullToZero(Integer count) {
+        return Objects.isNull(count) ? 0 : count;
+    }
+
+    /**
+     * 复制业务表
+     *
+     * @param sourceVersionId 源版本 id
+     * @param targetVersionId 目标版本 id
+     * @param currentUser     当前用户
+     */
+    private void copyBusinessTable(Long sourceVersionId, Long targetVersionId, LoginUser currentUser) {
+
+        if (Objects.isNull(sourceVersionId) || Objects.isNull(targetVersionId)) {
+            return;
+        }
+
+        // 构建复制上下文，按 copyOrder 升序【同线程串行】执行各实现类的 copy：
+        // 1) 保证被依赖父表（如 om_target、om_object_type）先完成并登记旧ID->新ID映射；
+        // 2) 全部在外层同一事务内进行，新行对后续关联表可见，且任一失败整体回滚。
+        ProjectCopyContext context = new ProjectCopyContext(sourceVersionId, targetVersionId, currentUser);
+        List<String> failedModules = new ArrayList<>();
+        projectRepeatableList.stream()
+                .sorted(Comparator.comparingInt(IProjectRepeatable::copyOrder))
+                .forEach(repeatable -> {
+                    String module = repeatable.getClass().getSimpleName();
+                    try {
+                        Boolean copyResult = repeatable.copy(context);
+                        if (!Boolean.TRUE.equals(copyResult)) {
+                            failedModules.add(module);
+                        }
+                    } catch (Exception e) {
+                        log.error("项目版本数据复制失败, module={}, sourceVersionId={}, targetVersionId={}",
+                                module, sourceVersionId, targetVersionId, e);
+                        failedModules.add(module);
+                    }
+                });
+        if (CollUtil.isNotEmpty(failedModules)) {
+            throw new ServiceException("项目版本数据复制失败：" + String.join(", ", failedModules));
+        }
+
     }
 }

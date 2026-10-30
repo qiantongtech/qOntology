@@ -10,9 +10,12 @@ import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
 import tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper;
 import tech.qiantong.qontology.module.om.api.service.IProjectRepeatable;
+import tech.qiantong.qontology.module.om.api.service.ProjectCopyContext;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,7 +33,10 @@ public class OmDataTypeApiServiceImpl implements IProjectRepeatable {
      * @return 是否复制成功
      */
     @Override
-    public Boolean copy(Long sourceVersionId, Long targetVersionId, LoginUser currentUser) {
+    public Boolean copy(ProjectCopyContext context) {
+        Long sourceVersionId = context.getSourceVersionId();
+        Long targetVersionId = context.getTargetVersionId();
+        LoginUser currentUser = context.getCurrentUser();
         // 查询源版本下的全部数据类型
         LambdaQueryWrapper<OmDataTypeDO> queryWrapper = Wrappers.lambdaQuery(OmDataTypeDO.class)
                 .eq(OmDataTypeDO::getVersionId, sourceVersionId);
@@ -50,6 +56,23 @@ public class OmDataTypeApiServiceImpl implements IProjectRepeatable {
                     return dataTypeDO;
                 })
                 .collect(Collectors.toList());
-        return omDataTypeMapper.insertBatch(targetList);
+        boolean saved = omDataTypeMapper.insertBatch(targetList);
+
+        // 登记 om_data_type 的 旧ID->新ID 映射，供 om_object_type_attribute 重映射 business_type_id 使用
+        // （sourceList 与 targetList 无跳过，下标严格对齐）
+        Map<Long, Long> idMapping = new HashMap<>(sourceList.size());
+        for (int i = 0; i < sourceList.size(); i++) {
+            idMapping.put(sourceList.get(i).getId(), targetList.get(i).getId());
+        }
+        context.putIdMapping(ProjectCopyContext.TABLE_OM_DATA_TYPE, idMapping);
+        return saved;
+    }
+
+    /**
+     * 先于引用它的 om_object_type_attribute 复制，并对外提供ID映射。
+     */
+    @Override
+    public int copyOrder() {
+        return 150;
     }
 }
