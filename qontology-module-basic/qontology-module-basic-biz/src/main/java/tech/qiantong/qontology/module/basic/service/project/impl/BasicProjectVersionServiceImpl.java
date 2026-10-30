@@ -79,6 +79,14 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
      */
     @Override
     public Long createBasicProjectVersion(BasicProjectVersionSaveReqVO createReqVO, LoginUser currentUser) {
+        // 校验版本号不能重复
+        LambdaQueryWrapper<BasicProjectVersionDO> queryWrapper = Wrappers.lambdaQuery(BasicProjectVersionDO.class)
+                .eq(BasicProjectVersionDO::getProjectId, createReqVO.getProjectId())
+                .eq(BasicProjectVersionDO::getVersion, createReqVO.getVersion());
+        if (super.count(queryWrapper) > 0) {
+            throw new ServiceException("项目版本号不能重复");
+        }
+
         BasicProjectVersionDO dictType = BeanUtils.toBean(createReqVO, BasicProjectVersionDO.class);
         baseMapper.insert(dictType);
 
@@ -101,7 +109,14 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
     @Override
     public int updateBasicProjectVersion(BasicProjectVersionSaveReqVO updateReqVO) {
         // 相关校验
-
+        // 校验版本号不能重复
+        LambdaQueryWrapper<BasicProjectVersionDO> queryWrapper = Wrappers.lambdaQuery(BasicProjectVersionDO.class)
+                .eq(BasicProjectVersionDO::getProjectId, updateReqVO.getProjectId())
+                .eq(BasicProjectVersionDO::getVersion, updateReqVO.getVersion())
+                .ne(BasicProjectVersionDO::getId, updateReqVO.getId());
+        if (super.count(queryWrapper) > 0) {
+            throw new ServiceException("项目版本号不能重复");
+        }
         // 更新项目版本
         BasicProjectVersionDO updateObj = BeanUtils.toBean(updateReqVO, BasicProjectVersionDO.class);
         return baseMapper.updateById(updateObj);
