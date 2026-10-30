@@ -47,6 +47,13 @@ export default [
                 meta: { title: 'AI辅助建模', activeMenu: '/om/:versionId/aiModeling' }
             },
             {
+                path: ':versionId/aiModeling/add',
+                component: () => import('@/views/om/aiModeling/add/index.vue'),
+                hidden: true,
+                name: 'AiModelingAdd',
+                meta: { title: 'AI辅助建模任务', activeMenu: '/om/:versionId/aiModeling' }
+            },
+            {
                 path: ':versionId/aiModeling/detail/:id(\\d+)',
                 component: () => import('@/views/om/aiModeling/detail/index.vue'),
                 name: 'AiModelingDetail',

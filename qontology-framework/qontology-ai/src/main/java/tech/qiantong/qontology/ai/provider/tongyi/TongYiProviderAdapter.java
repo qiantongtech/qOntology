@@ -16,6 +16,8 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -46,11 +48,11 @@ import java.util.function.Consumer;
  * @date 2026-10-14
  */
 public final class TongYiProviderAdapter extends SpringAiProviderSupport implements AiProviderAdapter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TongYiProviderAdapter.class);
     private static final String DASHSCOPE_NATIVE_BASE_URL = "https://dashscope.aliyuncs.com/api/v1";
     /** DashScope OpenAI兼容接口根地址，Spring AI会在此地址后追加/v1/chat/completions。 */
     private static final String DASHSCOPE_COMPATIBLE_BASE_URL =
             "https://dashscope.aliyuncs.com/compatible-mode";
-
     private final ObjectProvider<WebClient.Builder> webClientBuilders;
     private final Duration httpReadTimeout;
 
@@ -93,6 +95,9 @@ public final class TongYiProviderAdapter extends SpringAiProviderSupport impleme
 
     @Override
     public void stream(AiModelConfig config, AiChatRequest request, Consumer<AiChatChunk> consumer) {
+        if (Boolean.TRUE.equals(request.attributes().get("enable_thinking"))) {
+            LOGGER.info("通义模型进入兼容接口思考流，model={}", request.model().modelName());
+        }
         stream(chatModel(config, request), request, consumer, providerCode());
     }
 

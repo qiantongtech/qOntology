@@ -1,202 +1,265 @@
+<!--
+ Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ 
+ This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
+ 
+ qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ You may use qOntology for commercial purposes, but you may not remove, hide,
+ modify, or replace the qOntology logo, copyright notices, license notices,
+ or attribution information without a separate commercial license.
+ 
+ White-label use, OEM distribution, rebranding, or presenting qOntology as
+ another product requires separate commercial authorization from
+ Jiangsu Qiantong Technology Co., Ltd.
+ 
+ Business License: https://community.qontology.ai/business/policy.html
+ See the LICENSE file in the project root for full license information.
+-->
 <template>
   <div class="app-container">
     <div class="pagecont-top" style="padding-bottom: 15px">
       <div class="infotop">
         <div class="infotop-title mb15">
           <div class="task-item">
-            <span class="task-id">{{ task.id }}</span
-            ><span class="task-name">{{ task.name }}</span
-            ><dict-tag :options="taskStatusOptions" :value="task.status" />
+            <span class="task-id">{{ task.id }}</span>
+            <span class="task-name">{{ task.taskName }}</span>
+            <dict-tag :options="om_ai_task_status" :value="task.status" />
           </div>
-          <el-row :gutter="10" class="btn-style" style="margin-left: auto"
-            ><el-col :span="1.5"
-              ><el-button
+          <el-row :gutter="10" class="btn-style task-actions">
+            <el-col :span="1.5">
+              <el-button
+                v-hasPermi="['om:aiModeling:adopt']"
                 type="primary"
                 size="small"
+                :disabled="!canAdopt"
+                @click="adoptEverything"
+                >一键采纳</el-button
+              >
+            </el-col>
+
+            <el-col :span="1.5">
+              <el-button
+                type="primary"
+                size="small"
+                class="fhbtn"
                 plain
                 @click="goBack"
-                @mousedown="(e) => e.preventDefault()"
+                @mousedown="(event) => event.preventDefault()"
               >
                 <svg-icon
+                  icon-class="fhs"
                   style="width: 12px; height: 12px; margin-right: 3px"
-                  iconClass="fhs"
                 />
-                返回</el-button
-              ></el-col
-            ><el-col :span="1.5"
-              ><el-button type="primary" size="small" @click="developing"
-                >一键采纳</el-button
-              ></el-col
-            ></el-row
-          >
+                返回
+              </el-button>
+            </el-col>
+          </el-row>
         </div>
-        <el-row :gutter="3" class="info-row"
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">任务编号</div>
-              <div class="infotop-row-value">{{ task.code }}</div>
-            </div> </el-col
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">建模类型</div>
-              <div class="infotop-row-value">文档辅助建模</div>
-            </div> </el-col
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">任务状态</div>
-              <div class="infotop-row-value">
-                <dict-tag :options="taskStatusOptions" :value="task.status" />
-              </div>
-            </div> </el-col
-        ></el-row>
-        <el-row :gutter="3" class="info-row"
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
+        <el-row :gutter="3" class="info-row">
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
               <div class="infotop-row-lable">任务名称</div>
-              <div class="infotop-row-value">{{ task.name }}</div>
-            </div> </el-col
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">文档名称</div>
-              <div class="infotop-row-value">{{ task.documentName }}</div>
-            </div> </el-col
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">创建人</div>
-              <div class="infotop-row-value">{{ task.creator }}</div>
-            </div>
-          </el-col></el-row
-        >
-        <el-row :gutter="3" class="info-row"
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">创建时间</div>
-              <div class="infotop-row-value">{{ task.createdAt }}</div>
-            </div> </el-col
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">解析时间</div>
-              <div class="infotop-row-value">{{ task.parsedAt }}</div>
-            </div> </el-col
-          ><el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">候选项数量</div>
-              <div class="infotop-row-value">{{ task.candidateCount }}</div>
-            </div>
-          </el-col></el-row
-        >
-        <el-row :gutter="3"
-          ><el-col :span="24">
-            <div class="infotop-row border-top">
+              <div class="infotop-row-value">{{ task.taskName || "-" }}</div>
+            </div></el-col
+          >
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
+              <div class="infotop-row-lable">开始时间</div>
+              <div class="infotop-row-value">
+                {{ proxy.parseTime(task.startedTime) || "-" }}
+              </div>
+            </div></el-col
+          >
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
+              <div class="infotop-row-lable">完成时间</div>
+              <div class="infotop-row-value">
+                {{ proxy.parseTime(task.finishedTime) || "-" }}
+              </div>
+            </div></el-col
+          >
+        </el-row>
+        <el-row :gutter="3" class="info-row">
+          <el-col :span="24"
+            ><div class="infotop-row border-top">
               <div class="infotop-row-lable">任务描述</div>
-              <div class="infotop-row-value">{{ task.description }}</div>
-            </div>
-          </el-col></el-row
-        >
+              <div class="infotop-row-value">{{ task.description || "-" }}</div>
+            </div></el-col
+          >
+        </el-row>
+        <el-row :gutter="3" class="info-row">
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
+              <div class="infotop-row-lable">失败原因</div>
+              <div class="infotop-row-value">
+                {{ task.failureReason || "-" }}
+              </div>
+            </div></el-col
+          >
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
+              <div class="infotop-row-lable">候选数量</div>
+              <div class="infotop-row-value">
+                {{ task.candidateCount ?? 0 }}
+              </div>
+            </div></el-col
+          >
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
+              <div class="infotop-row-lable">文档名称</div>
+              <div class="infotop-row-value document-list">
+                <template v-if="files.length">
+                  <div
+                    v-for="file in files"
+                    :key="file.id || file.fileName"
+                    class="document-name"
+                    :title="file.fileName"
+                  >
+                    {{ file.fileName || "-" }}
+                  </div>
+                </template>
+                <template v-else>-</template>
+              </div>
+            </div></el-col
+          >
+        </el-row>
+        <el-row :gutter="3" class="info-row">
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
+              <div class="infotop-row-lable">创建人</div>
+              <div class="infotop-row-value">{{ task.createBy || "-" }}</div>
+            </div></el-col
+          >
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
+              <div class="infotop-row-lable">创建时间</div>
+              <div class="infotop-row-value">
+                {{ proxy.parseTime(task.createTime) || "-" }}
+              </div>
+            </div></el-col
+          >
+          <el-col :span="8"
+            ><div class="infotop-row border-top">
+              <div class="infotop-row-lable">更新时间</div>
+              <div class="infotop-row-value">
+                {{ proxy.parseTime(task.updateTime) || "-" }}
+              </div>
+            </div></el-col
+          >
+        </el-row>
+        <el-alert
+          v-if="task.status === 3 && task.failureReason"
+          class="mt15"
+          type="error"
+          :closable="false"
+          show-icon
+          :title="task.failureReason"
+        />
       </div>
     </div>
+
     <div class="pagecont-bottom">
-      <el-tabs v-model="activeName"
-        ><el-tab-pane
+      <el-tabs v-model="activeTab">
+        <el-tab-pane
           v-for="tab in tabs"
           :key="tab.name"
           :label="tab.label"
           :name="tab.name"
-      /></el-tabs>
-      <component :is="activeComponent" />
+        />
+      </el-tabs>
+      <component
+        :is="currentTab.component"
+        v-if="currentTab.component"
+        :key="currentTab.name"
+        :task-id="taskId"
+      />
+      <Placeholder v-else :title="currentTab.label" />
     </div>
   </div>
 </template>
+
 <script setup name="AiModelingDetail">
-import Terms from "../tabs/Terms.vue";
-import Goals from "../tabs/Goals.vue";
-import ObjectTypes from "../tabs/ObjectTypes.vue";
-import Properties from "../tabs/Properties.vue";
-import Relations from "../tabs/Relations.vue";
-import Enumerations from "../tabs/Enumerations.vue";
-import Rules from "../tabs/Rules.vue";
+import { useRoute, useRouter } from "vue-router";
+import { useOntologyVersion } from "@/views/om/useOntologyVersion";
+import Placeholder from "../tabs/Placeholder.vue";
+import TargetTab from "../tabs/TargetTab.vue";
+import TermTab from "../tabs/TermTab.vue";
+import EnumTab from "../tabs/EnumTab.vue";
+import ObjectTab from "../tabs/ObjectTab.vue";
+import AttributeTab from "../tabs/AttributeTab.vue";
+import RelationTab from "../tabs/RelationTab.vue";
+import TimelineTab from "../tabs/TimelineTab.vue";
+import { adoptAll, getAiFiles, getAiTask } from "@/api/om/aiModeling";
+
 const { proxy } = getCurrentInstance();
 const route = useRoute();
-const taskStatusOptions = [
-  { value: "running", label: "执行中", elTagType: "warning" },
-  { value: "success", label: "执行成功", elTagType: "success" },
-  { value: "failed", label: "执行失败", elTagType: "danger" },
-];
-const taskList = [
-  {
-    id: 1,
-    code: "AI_MODEL_202610251225",
-    name: "供应链领域本体构建",
-    description:
-      "根据供应链业务文档识别术语、对象类型、属性及关系，生成候选本体模型内容。",
-    status: "success",
-    creator: "吴同",
-    createdAt: "2026-10-25 12:25",
-    parsedAt: "2026-10-25 12:26",
-    documentName: "供应链领域业务说明.docx",
-    candidateCount: "32",
-  },
-  {
-    id: 2,
-    code: "AI_MODEL_202610241225",
-    name: "采购管理本体构建",
-    description: "根据采购业务领域文档生成候选本体模型内容。",
-    status: "running",
-    creator: "吴同",
-    createdAt: "2026-10-24 12:25",
-    parsedAt: "-",
-    documentName: "采购管理规范.docx",
-    candidateCount: "-",
-  },
-  {
-    id: 3,
-    code: "AI_MODEL_202610231225",
-    name: "设备管理本体构建",
-    description: "根据设备管理领域文档生成候选本体模型内容。",
-    status: "failed",
-    creator: "吴同",
-    createdAt: "2026-10-23 12:25",
-    parsedAt: "2026-10-23 12:26",
-    documentName: "设备管理规范.pdf",
-    candidateCount: "0",
-  },
-  {
-    id: 4,
-    code: "AI_MODEL_202610221225",
-    name: "客户管理本体构建",
-    description: "根据客户业务领域文档生成候选本体模型内容。",
-    status: "success",
-    creator: "吴同",
-    createdAt: "2026-10-22 12:25",
-    parsedAt: "2026-10-22 12:27",
-    documentName: "客户管理说明.docx",
-    candidateCount: "28",
-  },
-];
-const task = computed(
-  () =>
-    taskList.find((item) => item.id === Number(route.params.id)) || taskList[0]
-);
+const router = useRouter();
+const { versionId } = useOntologyVersion();
+const taskId = Number(route.params.id);
+const { om_ai_task_status } = proxy.useDict("om_ai_task_status");
+
+const task = ref({});
+const files = ref([]);
+const activeTab = ref("target");
+
+/** 详情页签与系统正式菜单字段保持一致。 */
 const tabs = [
-  { name: "terms", label: "候选术语", component: Terms },
-  { name: "goals", label: "候选建模目标", component: Goals },
-  { name: "objects", label: "候选对象类型", component: ObjectTypes },
-  { name: "properties", label: "候选属性", component: Properties },
-  { name: "relations", label: "候选对象类型关系", component: Relations },
-  { name: "enums", label: "候选枚举值", component: Enumerations },
-  { name: "rules", label: "候选约束规则", component: Rules },
+  { name: "target", label: "建模目标", component: TargetTab },
+  { name: "term", label: "术语管理", component: TermTab },
+  { name: "enum_type", label: "枚举管理", component: EnumTab },
+  { name: "object", label: "对象类型", component: ObjectTab },
+  { name: "attribute", label: "对象类型属性", component: AttributeTab },
+  { name: "relation", label: "对象类型关系", component: RelationTab },
+  { name: "axiom", label: "模型公理" },
+  { name: "rule", label: "数据规则" },
+  { name: "timeline", label: "解析过程", component: TimelineTab },
 ];
-const activeName = ref("terms");
-const activeComponent = computed(
-  () => tabs.find((tab) => tab.name === activeName.value).component
+
+const currentTab = computed(
+  () => tabs.find((tab) => tab.name === activeTab.value) || tabs[0]
 );
-function developing() {
-  proxy.$modal.msgWarning("功能开发中");
+const canAdopt = computed(
+  () => task.value.status === 2 && Number(task.value.candidateCount || 0) > 0
+);
+/** 加载任务详情。 */
+async function loadDetail() {
+  const [taskResponse, fileResponse] = await Promise.all([
+    getAiTask(taskId),
+    getAiFiles(taskId),
+  ]);
+  task.value = taskResponse.data;
+  files.value = fileResponse.data || [];
 }
+
+/** 返回 AI 辅助建模任务列表。 */
 function goBack() {
-  proxy.$router.push(`/om/${route.params.versionId}/aiModeling`);
+  router.push(`/om/${versionId.value}/aiModeling`);
 }
+
+/** 按依赖顺序采纳全部候选数据。 */
+async function adoptEverything() {
+  try {
+    await proxy.$modal.confirm(`确认采纳全部候选数据吗？`);
+    const result = await adoptAll(taskId);
+    proxy.$modal.msgSuccess(
+      `采纳完成：成功 ${result.data.success}，失败 ${result.data.failed}`
+    );
+  } catch (err) {
+    // 用户点取消 或者 接口报错都会进这里
+    // 如果需要区分【用户取消】和【接口异常】可以单独判断
+    if (err !== "cancel") {
+      proxy.$modal.msgError("采纳失败，请稍后重试");
+    }
+  }
+}
+
+loadDetail();
+const refreshTimer = setInterval(() => {
+  if (task.value.status === 1) loadDetail();
+}, 2500);
+onUnmounted(() => clearInterval(refreshTimer));
 </script>
+
 <style scoped lang="scss">
 .task-item {
   display: flex;
@@ -225,7 +288,41 @@ function goBack() {
   text-overflow: ellipsis;
 }
 
+.task-actions {
+  margin-left: auto;
+}
+
 .info-row {
   margin-bottom: 3px;
+}
+
+.infotop-row {
+  align-items: stretch;
+}
+
+.infotop-row-lable,
+.infotop-row-value {
+  height: auto;
+  min-height: 40px;
+}
+
+.infotop-row-lable {
+  flex-shrink: 0;
+}
+
+.document-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.document-name {
+  width: 100%;
+  overflow-wrap: anywhere;
+  line-height: 22px;
 }
 </style>
