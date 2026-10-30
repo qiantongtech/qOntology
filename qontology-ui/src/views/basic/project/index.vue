@@ -233,7 +233,7 @@
             <el-form-item label="命名空间" prop="namespace">
               <el-input v-model="form.namespace" placeholder="请输入命名空间"/>
               <div class="info-tip"><el-icon size="12"><InfoFilled/></el-icon>
-                <span>命名空间用于唯一标识本体的术语来源，遵循 W3C 标准。例如：http://www.example.org</span>
+                <span>命名空间用于唯一标识本体的术语来源，遵循 W3C 标准。例如：https://example.com</span>
               </div>
             </el-form-item>
           </el-col>
@@ -484,6 +484,9 @@ const defaultSort = ref({prop: "createTime", order: "descending"});
 const router = useRouter();
 const dialogMode = ref("add");// add, edit, detail
 
+// 命名空间需符合 W3C 的 URI 格式：以 http/https 开头的绝对 URI，且不含空白字符
+const namespaceUriPattern = /^https?:\/\/[^\s/?#]+(?:[/?#]\S*)?$/i;
+
 const data = reactive({
   form: {},
   queryParams: {
@@ -501,7 +504,14 @@ const data = reactive({
   rules: {
     name: [{required: true, message: "项目名称不能为空", trigger: "blur"}],
     domain: [{required: true, message: "项目领域不能为空", trigger: "blur"}],
-    namespace: [{required: true, message: "命名空间不能为空", trigger: "blur"}],
+    namespace: [
+      {required: true, message: "命名空间不能为空", trigger: "blur"},
+      {validator: (_rule, value, callback) => {
+        callback(namespaceUriPattern.test(value || '')
+            ? undefined
+            : new Error('命名空间需符合 W3C 的 URI 格式，例如：https://example.com/ontology#'));
+      }, trigger: "blur"}
+    ],
     status: [{required: true, message: "状态不能为空", trigger: "blur"}],
     currentVersion: [{required: true, message: "初始版本不能为空", trigger: "blur"}],
     includeRange: [{required: true, message: "包含范围不能为空", trigger: "blur"}],

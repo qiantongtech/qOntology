@@ -18,6 +18,8 @@
 
 package tech.qiantong.qontology.module.basic.service.dataType.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -65,6 +67,11 @@ public class BasicDataTypeServiceImpl extends ServiceImpl<BasicDataTypeMapper, B
 
     @Override
     public Long createBasicDataType(BasicDataTypeSaveReqVO createReqVO) {
+        LambdaQueryWrapper<BasicDataTypeDO> queryWrapper = Wrappers.lambdaQuery(BasicDataTypeDO.class)
+                .eq(BasicDataTypeDO::getName, createReqVO.getName());
+        if (baseMapper.selectCount(queryWrapper) > 0) {
+            throw new ServiceException("当前已存在同名业务数据类型，请修改名称", 601);
+        }
         BasicDataTypeDO dictType = BeanUtils.toBean(createReqVO, BasicDataTypeDO.class);
         basicDataTypeMapper.insert(dictType);
         return dictType.getId();
@@ -73,10 +80,15 @@ public class BasicDataTypeServiceImpl extends ServiceImpl<BasicDataTypeMapper, B
     @Override
     public int updateBasicDataType(BasicDataTypeSaveReqVO updateReqVO) {
         // 相关校验
-
+        LambdaQueryWrapper<BasicDataTypeDO> queryWrapper = Wrappers.lambdaQuery(BasicDataTypeDO.class)
+                .eq(BasicDataTypeDO::getName, updateReqVO.getName())
+                .ne(BasicDataTypeDO::getId, updateReqVO.getId());
+        if (baseMapper.selectCount(queryWrapper) > 0) {
+            throw new ServiceException("当前已存在同名业务数据类型，请修改名称", 601);
+        }
         // 更新数据类型
         BasicDataTypeDO updateObj = BeanUtils.toBean(updateReqVO, BasicDataTypeDO.class);
-        return basicDataTypeMapper.updateById(updateObj);
+        return baseMapper.updateById(updateObj);
     }
 
     @Override
