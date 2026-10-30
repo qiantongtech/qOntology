@@ -19,15 +19,14 @@
 package tech.qiantong.qontology.module.basic.service.dataType;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.dataType.vo.BasicDataTypePageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.dataType.vo.BasicDataTypeRespVO;
 import tech.qiantong.qontology.module.basic.controller.admin.dataType.vo.BasicDataTypeSaveReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.dataType.BasicDataTypeDO;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 数据类型Service接口
@@ -36,7 +35,6 @@ import java.util.Map;
  * @date 2026-10-16
  */
 public interface IBasicDataTypeService extends IService<BasicDataTypeDO> {
-
     /**
      * 获得数据类型分页列表
      *
@@ -57,6 +55,7 @@ public interface IBasicDataTypeService extends IService<BasicDataTypeDO> {
      * 更新数据类型
      *
      * @param updateReqVO 数据类型信息
+     * @return 实际受影响的记录数
      */
     int updateBasicDataType(BasicDataTypeSaveReqVO updateReqVO);
 
@@ -64,6 +63,7 @@ public interface IBasicDataTypeService extends IService<BasicDataTypeDO> {
      * 删除数据类型
      *
      * @param idList 数据类型编号
+     * @return 实际受影响的记录数
      */
     int removeBasicDataType(Collection<Long> idList);
 
@@ -74,5 +74,4 @@ public interface IBasicDataTypeService extends IService<BasicDataTypeDO> {
      * @return 数据类型
      */
     BasicDataTypeDO getBasicDataTypeById(Long id);
-
 }

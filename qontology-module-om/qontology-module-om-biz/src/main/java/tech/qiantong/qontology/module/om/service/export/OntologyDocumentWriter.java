@@ -30,9 +30,17 @@ import javax.xml.stream.XMLStreamWriter;
  * 同一份本体映射的两种文档语法；仅负责序列化，不读取业务数据。
  */
 abstract class OntologyDocumentWriter {
+
     private static final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     private static final String XML = "http://www.w3.org/XML/1998/namespace";
 
+    /**
+     * 根据目标语法创建本体文档写入器
+     *
+     * @param turtle 是否使用 Turtle 语法，false 使用 RDF/XML 语法
+     * @param namespace 本体命名空间，作为导出资源标识的前缀
+     * @return 对应目标语法的文档写入器
+     */
     static OntologyDocumentWriter create(boolean turtle, String namespace) throws XMLStreamException {
         Map<String, String> prefixes = new LinkedHashMap<>();
         prefixes.put("rdf", RDF);
@@ -45,17 +53,49 @@ abstract class OntologyDocumentWriter {
         return turtle ? new TurtleWriter(prefixes) : new RdfXmlWriter(prefixes);
     }
 
+    /**
+     * 开始写入指定类型的本体实体
+     *
+     * @param prefix 谓词或实体类型的命名空间前缀
+     * @param local 谓词或实体类型的本地名称
+     * @param iri 资源的完整 IRI
+     */
     abstract void entity(String prefix, String local, String iri) throws XMLStreamException;
 
+    /**
+     * 写入指向资源 IRI 的属性
+     *
+     * @param prefix 谓词或实体类型的命名空间前缀
+     * @param local 谓词或实体类型的本地名称
+     * @param iri 资源的完整 IRI
+     */
     abstract void resource(String prefix, String local, String iri) throws XMLStreamException;
 
+    /**
+     * 写入文本字面量及可选语言标签
+     *
+     * @param prefix 谓词或实体类型的命名空间前缀
+     * @param local 谓词或实体类型的本地名称
+     * @param value 待写出的字面量文本
+     * @param language 字面量语言标签，为空时不附加语言标签
+     */
     abstract void literal(String prefix, String local, String value, String language) throws XMLStreamException;
 
+    /**
+     * 结束当前本体实体的写入
+     *
+     */
     abstract void endEntity() throws XMLStreamException;
 
+    /**
+     * 完成序列化并获取 UTF-8 编码的文档内容
+     *
+     * @return UTF-8 编码的本体文档字节数组
+     */
     abstract byte[] finish() throws XMLStreamException;
 
     private static final class RdfXmlWriter extends OntologyDocumentWriter {
+
         private final ByteArrayOutputStream output = new ByteArrayOutputStream();
         private final XMLStreamWriter xml;
         private final Map<String, String> prefixes;
@@ -70,12 +110,26 @@ abstract class OntologyDocumentWriter {
             }
         }
 
+        /**
+         * 开始写入指定类型的本体实体
+         *
+         * @param prefix 谓词或实体类型的命名空间前缀
+         * @param local 谓词或实体类型的本地名称
+         * @param iri 资源的完整 IRI
+         */
         @Override
         void entity(String prefix, String local, String iri) throws XMLStreamException {
             xml.writeStartElement(prefix, local, prefixes.get(prefix));
             xml.writeAttribute("rdf", RDF, "about", iri);
         }
 
+        /**
+         * 写入指向资源 IRI 的属性
+         *
+         * @param prefix 谓词或实体类型的命名空间前缀
+         * @param local 谓词或实体类型的本地名称
+         * @param iri 资源的完整 IRI
+         */
         @Override
         void resource(String prefix, String local, String iri) throws XMLStreamException {
             xml.writeStartElement(prefix, local, prefixes.get(prefix));
@@ -83,6 +137,14 @@ abstract class OntologyDocumentWriter {
             xml.writeEndElement();
         }
 
+        /**
+         * 写入文本字面量及可选语言标签
+         *
+         * @param prefix 谓词或实体类型的命名空间前缀
+         * @param local 谓词或实体类型的本地名称
+         * @param value 待写出的字面量文本
+         * @param language 字面量语言标签，为空时不附加语言标签
+         */
         @Override
         void literal(String prefix, String local, String value, String language) throws XMLStreamException {
             xml.writeStartElement(prefix, local, prefixes.get(prefix));
@@ -97,11 +159,20 @@ abstract class OntologyDocumentWriter {
             xml.writeEndElement();
         }
 
+        /**
+         * 结束当前本体实体的写入
+         *
+         */
         @Override
         void endEntity() throws XMLStreamException {
             xml.writeEndElement();
         }
 
+        /**
+         * 完成序列化并获取 UTF-8 编码的文档内容
+         *
+         * @return UTF-8 编码的本体文档字节数组
+         */
         @Override
         byte[] finish() throws XMLStreamException {
             xml.writeEndElement();
@@ -112,6 +183,7 @@ abstract class OntologyDocumentWriter {
     }
 
     private static final class TurtleWriter extends OntologyDocumentWriter {
+
         private final StringBuilder output = new StringBuilder();
         private final Map<String, String> prefixes;
         private String subject;
@@ -119,10 +191,18 @@ abstract class OntologyDocumentWriter {
         private TurtleWriter(Map<String, String> prefixes) {
             this.prefixes = prefixes;
             prefixes.forEach((prefix, iri) ->
-                    output.append("@prefix ").append(prefix).append(": ").append(iri(iri)).append(" .\n"));
+                output.append("@prefix ").append(prefix).append(": ").append(iri(iri)).append(" .\n")
+            );
             output.append('\n');
         }
 
+        /**
+         * 开始写入指定类型的本体实体
+         *
+         * @param prefix 谓词或实体类型的命名空间前缀
+         * @param local 谓词或实体类型的本地名称
+         * @param iri 资源的完整 IRI
+         */
         @Override
         void entity(String prefix, String local, String iri) {
             subject = resourceName(iri);
@@ -130,12 +210,27 @@ abstract class OntologyDocumentWriter {
             output.append(prefix).append(':').append(local).append(" .\n");
         }
 
+        /**
+         * 写入指向资源 IRI 的属性
+         *
+         * @param prefix 谓词或实体类型的命名空间前缀
+         * @param local 谓词或实体类型的本地名称
+         * @param iri 资源的完整 IRI
+         */
         @Override
         void resource(String prefix, String local, String iri) {
             predicate(prefix, local);
             output.append(resourceName(iri)).append(" .\n");
         }
 
+        /**
+         * 写入文本字面量及可选语言标签
+         *
+         * @param prefix 谓词或实体类型的命名空间前缀
+         * @param local 谓词或实体类型的本地名称
+         * @param value 待写出的字面量文本
+         * @param language 字面量语言标签，为空时不附加语言标签
+         */
         @Override
         void literal(String prefix, String local, String value, String language) {
             predicate(prefix, local);
@@ -148,12 +243,21 @@ abstract class OntologyDocumentWriter {
             output.append(subject).append(' ').append(prefix).append(':').append(local).append(' ');
         }
 
+        /**
+         * 结束当前本体实体的写入
+         *
+         */
         @Override
         void endEntity() {
             output.append('\n');
             subject = null;
         }
 
+        /**
+         * 完成序列化并获取 UTF-8 编码的文档内容
+         *
+         * @return UTF-8 编码的本体文档字节数组
+         */
         @Override
         byte[] finish() {
             return output.toString().getBytes(StandardCharsets.UTF_8);
@@ -176,21 +280,26 @@ abstract class OntologyDocumentWriter {
         }
 
         private static String escape(String value) {
-            return value.replace("\\", "\\\\").replace("\"", "\\\"")
-                    .replace("\t", "\\t").replace("\n", "\\n").replace("\r", "\\r");
+            return value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\t", "\\t")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
         }
 
         private static String iri(String value) {
             StringBuilder result = new StringBuilder("<");
-            value.codePoints().forEach(c -> {
-                if (c <= 0x20 || "<>\"{}|^".indexOf(c) >= 0 || c == 0x60 || c == 0x5c) {
-                    result.append(String.format("\\u%04X", c));
-                } else {
-                    result.appendCodePoint(c);
-                }
-            });
+            value
+                .codePoints()
+                .forEach(c -> {
+                    if (c <= 0x20 || "<>\"{}|^".indexOf(c) >= 0 || c == 0x60 || c == 0x5c) {
+                        result.append(String.format("\\u%04X", c));
+                    } else {
+                        result.appendCodePoint(c);
+                    }
+                });
             return result.append('>').toString();
         }
     }
 }
-

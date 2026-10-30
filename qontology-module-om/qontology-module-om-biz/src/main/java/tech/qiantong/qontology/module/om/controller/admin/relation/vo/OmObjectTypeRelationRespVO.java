@@ -25,19 +25,23 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
+/**
+ * 对象关系响应对象
+ */
 @Schema(description = "对象类型关系响应")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class OmObjectTypeRelationRespVO extends BaseEntity {
+
     @Schema(description = "ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @Schema(description = "工作区id")
+    @Schema(description = "工作区 ID，用于限定数据所属工作区")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long workspaceId;
 
-    @Schema(description = "版本id，当前阶段可为空")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long versionId;
 
@@ -47,26 +51,26 @@ public class OmObjectTypeRelationRespVO extends BaseEntity {
     @Schema(description = "描述")
     private String description;
 
-    @Schema(description = "起点对象类型id")
+    @Schema(description = "关系起点的对象类型 ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long startTypeId;
 
-    @Schema(description = "终点对象类型id")
+    @Schema(description = "关系终点的对象类型 ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long endTypeId;
 
-    @Schema(description = "起点对象类型名称")
+    @Schema(description = "关系起点的对象类型名称")
     private String startTypeName;
 
-    @Schema(description = "终点对象类型名称")
+    @Schema(description = "关系终点的对象类型名称")
     private String endTypeName;
 
-    @Schema(description = "是否可逆；0：否，1：是")
+    @Schema(description = "关系是否可逆：0 否，1 是")
     private Integer reversibleFlag;
 
-    @Schema(description = "反向名称")
+    @Schema(description = "可逆关系的反向名称")
     private String reverseName;
 
-    @Schema(description = "是否有效；0：无效，1：有效")
+    @Schema(description = "是否有效：true 有效，false 无效")
     private Boolean validFlag;
 }

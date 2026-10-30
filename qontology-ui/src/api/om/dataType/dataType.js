@@ -16,53 +16,53 @@
  * See the LICENSE file in the project root for full license information.
  */
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 // 查询数据类型列表
 export function listDataType(query) {
-  return request({
-    url: '/om/dataType/list',
-    method: 'get',
-    params: query
-  })
+    return request({
+        url: '/om/dataType/list',
+        method: 'get',
+        params: query
+    });
 }
 
 // 查询数据类型详细
 export function getDataType(id, versionId) {
-  return request({
-    url: '/om/dataType/' + id,
-    method: 'get',
-    params: {versionId}
-  })
+    return request({
+        url: '/om/dataType/' + id,
+        method: 'get',
+        params: { versionId }
+    });
 }
 
 // 新增数据类型
 export function addDataType(data) {
-  return request({
-    url: '/om/dataType',
-    method: 'post',
-    data: data
-  })
+    return request({
+        url: '/om/dataType',
+        method: 'post',
+        data: data
+    });
 }
 
 // 修改数据类型
 export function updateDataType(data) {
-  return request({
-    url: '/om/dataType',
-    method: 'put',
-    data: data
-  })
+    return request({
+        url: '/om/dataType',
+        method: 'put',
+        data: data
+    });
 }
 
 // 删除数据类型
 export function delDataType(id, versionId) {
-  return request({
-    url: '/om/dataType/' + id,
-    method: 'delete',
-    params: {versionId}
-  })
+    return request({
+        url: '/om/dataType/' + id,
+        method: 'delete',
+        params: { versionId }
+    });
 }
 
 export function getEnumTypeDict(versionId, enumSource) {
-  return request({url: '/om/dataType/enumOptions', method: 'get', params: {versionId, enumSource}})
+    return request({ url: '/om/dataType/enumOptions', method: 'get', params: { versionId, enumSource } });
 }

@@ -18,17 +18,16 @@
 
 package tech.qiantong.qontology.module.om.service.dataType;
 
-import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeEnumOptionRespVO;
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import tech.qiantong.qontology.core.page.PageResult;
+import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeEnumOptionRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypePageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 数据类型Service接口
@@ -37,7 +36,6 @@ import java.util.Map;
  * @date 2026-10-16
  */
 public interface IOmDataTypeService extends IService<OmDataTypeDO> {
-
     /**
      * 获得数据类型分页列表
      *
@@ -58,6 +56,7 @@ public interface IOmDataTypeService extends IService<OmDataTypeDO> {
      * 更新数据类型
      *
      * @param updateReqVO 数据类型信息
+     * @return 实际受影响的记录数
      */
     int updateOmDataType(OmDataTypeSaveReqVO updateReqVO);
 
@@ -65,6 +64,8 @@ public interface IOmDataTypeService extends IService<OmDataTypeDO> {
      * 删除数据类型
      *
      * @param idList 数据类型编号
+     * @param versionId 项目版本 ID
+     * @return 实际受影响的记录数
      */
     int removeOmDataType(Collection<Long> idList, Long versionId);
 
@@ -72,9 +73,17 @@ public interface IOmDataTypeService extends IService<OmDataTypeDO> {
      * 获得数据类型详情
      *
      * @param id 数据类型编号
+     * @param versionId 项目版本 ID
      * @return 数据类型
      */
     OmDataTypeDO getOmDataTypeById(Long id, Long versionId);
 
+    /**
+     * 按来源查询当前项目版本或全局可用的枚举类型
+     *
+     * @param versionId 项目版本 ID
+     * @param enumSource 枚举来源，PROJECT 当前项目版本，GLOBAL 全局
+     * @return 枚举类型选项集合
+     */
     List<OmDataTypeEnumOptionRespVO> getEnumOptions(Long versionId, String enumSource);
 }

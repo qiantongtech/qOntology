@@ -41,16 +41,16 @@ import tech.qiantong.qontology.core.controller.BaseController;
 import tech.qiantong.qontology.core.domain.CommonResult;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
+import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeTargetRespVO;
+import tech.qiantong.qontology.module.om.controller.admin.omtarget.vo.OmTargetPageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.relation.vo.OmObjectTypeRelationPageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.relation.vo.OmObjectTypeRelationRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.relation.vo.OmObjectTypeRelationSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.relation.vo.OmRelationTypeOptionRespVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.relation.OmObjectTypeRelationDO;
-import tech.qiantong.qontology.module.om.service.relation.IOmObjectTypeRelationService;
-import tech.qiantong.qontology.module.om.service.omtarget.IOmRelationTargetService;
 import tech.qiantong.qontology.module.om.service.omtarget.IOmObjectTypeTargetService;
-import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeTargetRespVO;
-import tech.qiantong.qontology.module.om.controller.admin.omtarget.vo.OmTargetPageReqVO;
+import tech.qiantong.qontology.module.om.service.omtarget.IOmRelationTargetService;
+import tech.qiantong.qontology.module.om.service.relation.IOmObjectTypeRelationService;
 
 /**
  * 对象类型关系 Controller
@@ -63,6 +63,7 @@ import tech.qiantong.qontology.module.om.controller.admin.omtarget.vo.OmTargetPa
 @RequestMapping("/om/objectTypeRelation")
 @Validated
 public class OmObjectTypeRelationController extends BaseController {
+
     @Resource
     private IOmObjectTypeRelationService relationService;
 
@@ -72,6 +73,12 @@ public class OmObjectTypeRelationController extends BaseController {
     @Resource
     private IOmObjectTypeTargetService objectTypeTargetService;
 
+    /**
+     * 查询当前版本可关联的建模目标
+     *
+     * @param request 业务请求参数
+     * @return 分页查询结果
+     */
     @Operation(summary = "查询关系可关联的建模目标")
     @PreAuthorize("@ss.hasPermi('om:object:relation:add') or @ss.hasPermi('om:object:relation:edit')")
     @GetMapping("/targetOptions")
@@ -79,6 +86,12 @@ public class OmObjectTypeRelationController extends BaseController {
         return CommonResult.success(objectTypeTargetService.getTargetOptions(request));
     }
 
+    /**
+     * 查询当前模型元素已关联的建模目标
+     *
+     * @param id 记录 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询关系已关联的建模目标")
     @PreAuthorize("@ss.hasPermi('om:object:relation:query') or @ss.hasPermi('om:object:relation:edit')")
     @GetMapping("/{id}/targets")
@@ -86,21 +99,47 @@ public class OmObjectTypeRelationController extends BaseController {
         return CommonResult.success(relationTargetService.getTargets(id, getWorkSpaceId()));
     }
 
+    /**
+     * 分页查询当前模型元素已关联的建模目标
+     *
+     * @param id 记录 ID
+     * @param request 业务请求参数
+     * @return 分页查询结果
+     */
     @Operation(summary = "分页查询关系已关联的建模目标")
     @PreAuthorize("@ss.hasPermi('om:object:relation:query') or @ss.hasPermi('om:object:relation:edit')")
     @GetMapping("/{id}/targets/page")
-    public CommonResult<PageResult<OmObjectTypeTargetRespVO>> targetsPage(@PathVariable Long id, @Valid OmTargetPageReqVO request) {
+    public CommonResult<PageResult<OmObjectTypeTargetRespVO>> targetsPage(
+        @PathVariable Long id,
+        @Valid OmTargetPageReqVO request
+    ) {
         return CommonResult.success(relationTargetService.getTargetsPage(id, getWorkSpaceId(), request));
     }
 
+    /**
+     * 查询指定建模目标关联的对象关系
+     *
+     * @param targetId 建模目标 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询建模目标关联的对象类型关系")
     @PreAuthorize("@ss.hasPermi('om:target:target:query')")
     @GetMapping("/byTarget/{targetId}")
     public CommonResult<List<OmObjectTypeRelationRespVO>> byTarget(@PathVariable Long targetId) {
-        return CommonResult.success(BeanUtils.toBean(
-                relationTargetService.getRelations(targetId, getWorkSpaceId()), OmObjectTypeRelationRespVO.class));
+        return CommonResult.success(
+            BeanUtils.toBean(
+                relationTargetService.getRelations(targetId, getWorkSpaceId()),
+                OmObjectTypeRelationRespVO.class
+            )
+        );
     }
 
+    /**
+     * 查询对象关系列表
+     *
+     * @param request 业务请求参数
+     * @return 分页查询结果
+     */
     @Operation(summary = "查询对象类型关系列表")
     @PreAuthorize("@ss.hasPermi('om:object:relation:list')")
     @GetMapping("/list")
@@ -110,14 +149,30 @@ public class OmObjectTypeRelationController extends BaseController {
         return CommonResult.success(BeanUtils.toBean(page, OmObjectTypeRelationRespVO.class));
     }
 
+    /**
+     * 查询当前版本可用的关系起点、终点对象类型
+     *
+     * @param versionId 项目版本 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询关系的起点、终点类型候选列表")
     @PreAuthorize("@ss.hasPermi('om:object:relation:list')")
     @GetMapping("/typeOptions")
     public CommonResult<List<OmRelationTypeOptionRespVO>> typeOptions(@RequestParam(required = false) Long versionId) {
-        return CommonResult.success(BeanUtils.toBean(
-                relationService.getObjectTypeOptions(getWorkSpaceId(), versionId), OmRelationTypeOptionRespVO.class));
+        return CommonResult.success(
+            BeanUtils.toBean(
+                relationService.getObjectTypeOptions(getWorkSpaceId(), versionId),
+                OmRelationTypeOptionRespVO.class
+            )
+        );
     }
 
+    /**
+     * 查询对象关系详情
+     *
+     * @param id 记录 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询对象类型关系详情")
     @PreAuthorize("@ss.hasPermi('om:object:relation:query')")
     @GetMapping("/{id}")
@@ -126,6 +181,12 @@ public class OmObjectTypeRelationController extends BaseController {
         return CommonResult.success(BeanUtils.toBean(relation, OmObjectTypeRelationRespVO.class));
     }
 
+    /**
+     * 新增对象关系
+     *
+     * @param request 业务请求参数
+     * @return 业务处理结果
+     */
     @Operation(summary = "新增对象类型关系")
     @PreAuthorize("@ss.hasPermi('om:object:relation:add')")
     @Log(title = "对象类型关系", businessType = BusinessType.INSERT)
@@ -135,6 +196,12 @@ public class OmObjectTypeRelationController extends BaseController {
         return CommonResult.success(relationService.createOmObjectTypeRelation(request));
     }
 
+    /**
+     * 修改对象关系
+     *
+     * @param request 业务请求参数
+     * @return 业务处理结果
+     */
     @Operation(summary = "修改对象类型关系")
     @PreAuthorize("@ss.hasPermi('om:object:relation:edit')")
     @Log(title = "对象类型关系", businessType = BusinessType.UPDATE)
@@ -144,6 +211,12 @@ public class OmObjectTypeRelationController extends BaseController {
         return CommonResult.toAjax(relationService.updateOmObjectTypeRelation(request));
     }
 
+    /**
+     * 删除对象关系
+     *
+     * @param ids 记录 ID 数组
+     * @return 业务处理结果
+     */
     @Operation(summary = "删除对象类型关系")
     @PreAuthorize("@ss.hasPermi('om:object:relation:remove')")
     @Log(title = "对象类型关系", businessType = BusinessType.DELETE)

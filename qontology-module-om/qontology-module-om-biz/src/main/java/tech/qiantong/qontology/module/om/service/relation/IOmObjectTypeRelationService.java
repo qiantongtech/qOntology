@@ -35,6 +35,7 @@ import tech.qiantong.qontology.module.om.dal.dataobject.relation.OmObjectTypeRel
  * @date 2026-10-13
  */
 public interface IOmObjectTypeRelationService extends IService<OmObjectTypeRelationDO> {
+
     /**
      * 获得对象类型关系分页列表
      *

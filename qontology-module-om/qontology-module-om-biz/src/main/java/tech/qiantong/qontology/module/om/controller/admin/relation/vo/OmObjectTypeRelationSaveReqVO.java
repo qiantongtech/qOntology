@@ -22,23 +22,27 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotEmpty;
-import java.util.List;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import lombok.Data;
 
-@Schema(description = "对象类型关系新增、修改请求")
+/**
+ * 对象关系新增、修改请求
+ */
+@Schema(description = "对象关系新增、修改请求")
 @Data
 public class OmObjectTypeRelationSaveReqVO {
+
     @Schema(description = "ID")
     private Long id;
 
-    @Schema(description = "工作区id")
+    @Schema(description = "工作区 ID，用于限定数据所属工作区")
     private Long workspaceId;
 
-    @Schema(description = "版本id，当前阶段可为空")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     @jakarta.validation.constraints.NotNull(message = "项目版本不能为空")
     @jakarta.validation.constraints.Positive(message = "项目版本必须为正整数")
     private Long versionId;
@@ -52,31 +56,31 @@ public class OmObjectTypeRelationSaveReqVO {
     @Size(max = 256, message = "关系描述不能超过256个字符")
     private String description;
 
-    @Schema(description = "起点对象类型id")
+    @Schema(description = "关系起点的对象类型 ID")
     @NotNull(message = "请选择起点类型")
     @Positive(message = "起点类型id无效")
     private Long startTypeId;
 
-    @Schema(description = "终点对象类型id")
+    @Schema(description = "关系终点的对象类型 ID")
     @NotNull(message = "请选择终点类型")
     @Positive(message = "终点类型id无效")
     private Long endTypeId;
 
-    @Schema(description = "是否可逆；0：否，1：是")
+    @Schema(description = "关系是否可逆：0 否，1 是")
     @NotNull(message = "请选择是否可逆")
     @Min(value = 0, message = "是否可逆只能为0或1")
     @Max(value = 1, message = "是否可逆只能为0或1")
     private Integer reversibleFlag = 0;
 
-    @Schema(description = "反向名称")
+    @Schema(description = "可逆关系的反向名称")
     @Size(max = 128, message = "反向名称不能超过128个字符")
     private String reverseName;
 
-    @Schema(description = "备注")
+    @Schema(description = "备注信息")
     @Size(max = 512, message = "备注不能超过512个字符")
     private String remark;
 
-    @Schema(description = "关联的建模目标ID列表，至少选择一个")
+    @Schema(description = "关联的建模目标 ID 列表")
     @NotEmpty(message = "请至少关联一个建模目标")
     private List<@NotNull(message = "建模目标ID不能为空") @Positive(message = "建模目标ID必须为正整数") Long> targetIds;
 }

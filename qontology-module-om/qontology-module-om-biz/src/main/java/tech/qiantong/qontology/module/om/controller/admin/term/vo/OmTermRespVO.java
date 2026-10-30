@@ -19,11 +19,11 @@
 package tech.qiantong.qontology.module.om.controller.admin.term.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import tech.qiantong.qontology.core.annotation.Excel;
-import java.util.Date;
 import java.io.Serializable;
+import java.util.Date;
+import lombok.*;
+import tech.qiantong.qontology.core.annotation.Excel;
 
 /**
  * 术语 Response VO 对象 om_term
@@ -45,70 +45,69 @@ public class OmTermRespVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Excel(name = "ID")
     @Schema(description = "ID")
+    @Excel(name = "ID")
     private Long id;
 
+    @Schema(description = "术语的标准名称", example = "")
     @Excel(name = "标准名称")
-    @Schema(description = "标准名称", example = "")
     private String stdName;
 
+    @Schema(description = "术语的英文名称", example = "")
     @Excel(name = "英文名称")
-    @Schema(description = "英文名称", example = "")
     private String enName;
 
+    @Schema(description = "术语别名", example = "")
     @Excel(name = "别名")
-    @Schema(description = "别名", example = "")
     private String alias;
 
+    @Schema(description = "术语缩写", example = "")
     @Excel(name = "缩写")
-    @Schema(description = "缩写", example = "")
     private String abbr;
 
+    @Schema(description = "术语来源", example = "")
     @Excel(name = "来源")
-    @Schema(description = "来源", example = "")
     private String source;
 
-    @Excel(name = "描述")
     @Schema(description = "描述", example = "")
+    @Excel(name = "描述")
     private String description;
 
+    @Schema(description = "是否有效：true 有效，false 无效", example = "")
     @Excel(name = "是否有效")
-    @Schema(description = "是否有效", example = "")
     private Boolean validFlag;
 
+    @Schema(description = "逻辑删除标志：true 已删除，false 未删除", example = "")
     @Excel(name = "删除标志")
-    @Schema(description = "删除标志", example = "")
     private Boolean delFlag;
 
-    @Excel(name = "创建人")
     @Schema(description = "创建人", example = "")
+    @Excel(name = "创建人")
     private String createBy;
 
+    @Schema(description = "创建人 ID", example = "")
     @Excel(name = "创建人id")
-    @Schema(description = "创建人id", example = "")
     private Long creatorId;
 
+    @Schema(description = "创建时间", example = "")
     @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(description = "创建时间", example = "")
     private Date createTime;
 
-    @Excel(name = "更新人")
     @Schema(description = "更新人", example = "")
+    @Excel(name = "更新人")
     private String updateBy;
 
+    @Schema(description = "更新人 ID", example = "")
     @Excel(name = "更新人id")
-    @Schema(description = "更新人id", example = "")
     private Long updaterId;
 
+    @Schema(description = "更新时间", example = "")
     @Excel(name = "更新时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(description = "更新时间", example = "")
     private Date updateTime;
 
+    @Schema(description = "备注信息", example = "")
     @Excel(name = "备注")
-    @Schema(description = "备注", example = "")
     private String remark;
-
 }

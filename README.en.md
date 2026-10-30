@@ -225,38 +225,22 @@ First, add **Wu Datong on QQ** ([<u>click here to add</u>](https://qm.qq.com/q/K
 <table>
     <tr>
         <td><img src=".gitee/system/home.png" alt="System Home" width="400"/></td>
-        <td><img src=".gitee/system/project.png" alt="Foundational Management - Project Management" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/globalEnum.png" alt="Foundational Management - Enumeration Management" width="400"/></td>
-        <td><img src=".gitee/system/globalBusinessDataType.png" alt="Foundational Management - Business Data Types" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/dataSource.png" alt="Foundational Management - Data Sources" width="400"/></td>
-        <td><img src=".gitee/system/fileCategory.png" alt="Foundational Management - File Categories" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/fileManagement.png" alt="Foundational Management - File Management" width="400"/></td>
         <td><img src=".gitee/system/projectOverview.png" alt="Ontology Modeling - Project Overview" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/modelingGoal.png" alt="Ontology Modeling - Modeling Goals" width="400"/></td>
+        <td><img src=".gitee/system/project.png" alt="Foundational Management - Create Project" width="400"/></td>
+        <td><img src=".gitee/system/modelingGoal.png" alt="Ontology Modeling - Modeling Goal Details and Linked Object Types" width="400"/></td>
+    </tr>
+    <tr>
         <td><img src=".gitee/system/term.png" alt="Semantic Assets - Terminology Management" width="400"/></td>
+        <td><img src=".gitee/system/objectType.png" alt="Ontology Modeling - Object Type Details and Properties" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/businessDataType.png" alt="Semantic Assets - Business Data Types" width="400"/></td>
-        <td><img src=".gitee/system/enum.png" alt="Semantic Assets - Enumeration Management" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/objectType.png" alt="Ontology Modeling - Object Types" width="400"/></td>
-        <td><img src=".gitee/system/objectRelation.png" alt="Ontology Modeling - Object Relationships" width="400"/></td>
-    </tr>
-    <tr>
+        <td><img src=".gitee/system/objectRelation.png" alt="Ontology Modeling - Relationship Editing and Linked Modeling Goals" width="400"/></td>
         <td><img src=".gitee/system/knowledgeGraph.png" alt="Ontology Applications - Knowledge Graph" width="400"/></td>
-        <td><img src=".gitee/system/unstructuredExtraction.png" alt="Ontology Applications - Unstructured Extraction" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/structuredExtraction.png" alt="Ontology Applications - Structured Extraction" width="400"/></td>
-        <td><img src=".gitee/system/extractionLog.png" alt="Ontology Applications - Extraction Logs" width="400"/></td>
+        <td><img src=".gitee/system/unstructuredExtraction.png" alt="Ontology Applications - Unstructured Extraction Results" width="400"/></td>
+        <td><img src=".gitee/system/structuredExtraction.png" alt="Ontology Applications - Structured Extraction Field Mapping" width="400"/></td>
     </tr>
 </table>

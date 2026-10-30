@@ -19,14 +19,13 @@
 package tech.qiantong.qontology.module.basic.service.enumeration;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.enumeration.vo.BasicEnumDataPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.enumeration.vo.BasicEnumDataSaveReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.enumeration.BasicEnumDataDO;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 枚举数据Service接口
@@ -35,7 +34,6 @@ import java.util.Map;
  * @date 2026-10-10
  */
 public interface IBasicEnumDataService extends IService<BasicEnumDataDO> {
-
     /**
      * 获得枚举数据分页列表
      *
@@ -56,6 +54,7 @@ public interface IBasicEnumDataService extends IService<BasicEnumDataDO> {
      * 更新枚举数据
      *
      * @param updateReqVO 枚举数据信息
+     * @return 实际受影响的记录数
      */
     int updateBasicEnumData(BasicEnumDataSaveReqVO updateReqVO);
 
@@ -63,6 +62,7 @@ public interface IBasicEnumDataService extends IService<BasicEnumDataDO> {
      * 删除枚举数据
      *
      * @param idList 枚举数据编号
+     * @return 实际受影响的记录数
      */
     int removeBasicEnumData(Collection<Long> idList);
 
@@ -87,5 +87,4 @@ public interface IBasicEnumDataService extends IService<BasicEnumDataDO> {
      * @return 枚举数据 Map
      */
     Map<Long, BasicEnumDataDO> getBasicEnumDataMap();
-
 }

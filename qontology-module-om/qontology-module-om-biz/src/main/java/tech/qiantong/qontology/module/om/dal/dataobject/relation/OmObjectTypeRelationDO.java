@@ -44,16 +44,18 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class OmObjectTypeRelationDO extends BaseEntity {
+
+    /** 序列化版本号 */
     private static final long serialVersionUID = 1L;
 
     /** ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 工作区id */
+    /** 工作区 ID，用于限定数据所属工作区 */
     private Long workspaceId;
 
-    /** 版本id，当前阶段可为空 */
+    /** 项目版本 ID，用于限定数据所属的本体版本 */
     private Long versionId;
 
     /** 名称 */
@@ -62,33 +64,33 @@ public class OmObjectTypeRelationDO extends BaseEntity {
     /** 描述 */
     private String description;
 
-    /** 起点对象类型id */
+    /** 关系起点的对象类型 ID */
     private Long startTypeId;
 
-    /** 终点对象类型id */
+    /** 关系终点的对象类型 ID */
     private Long endTypeId;
 
-    /** 起点对象类型名称 */
+    /** 关系起点的对象类型名称 */
     @TableField(exist = false)
     private String startTypeName;
 
-    /** 终点对象类型名称 */
+    /** 关系终点的对象类型名称 */
     @TableField(exist = false)
     private String endTypeName;
 
-    /** 是否可逆；0：否，1：是 */
+    /** 关系是否可逆：0 否，1 是 */
     @Builder.Default
     private Integer reversibleFlag = 0;
 
-    /** 反向名称 */
+    /** 可逆关系的反向名称 */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String reverseName;
 
-    /** 是否有效；0：无效，1：有效 */
+    /** 是否有效：true 有效，false 无效 */
     @Builder.Default
     private Boolean validFlag = true;
 
-    /** 删除标志；1：已删除，0：未删除 */
+    /** 逻辑删除标志：true 已删除，false 未删除 */
     @TableLogic
     @Builder.Default
     private Boolean delFlag = false;

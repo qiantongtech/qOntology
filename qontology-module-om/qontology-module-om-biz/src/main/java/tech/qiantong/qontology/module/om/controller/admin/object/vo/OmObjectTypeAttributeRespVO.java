@@ -25,59 +25,67 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
+/**
+ * 对象类型属性响应对象
+ */
 @Schema(description = "对象类型属性响应")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class OmObjectTypeAttributeRespVO extends BaseEntity {
+
     @Schema(description = "ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @Schema(description = "工作区id")
+    @Schema(description = "工作区 ID，用于限定数据所属工作区")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long workspaceId;
 
-    @Schema(description = "版本id，当前阶段可为空")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long versionId;
 
-    @Schema(description = "对象类型id")
+    @Schema(description = "所属对象类型 ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long objectTypeId;
 
     @Schema(description = "名称")
     private String name;
 
-    /** 属性代码，在对象类型内唯一。 */
+    @Schema(description = "属性代码，在所属对象类型内唯一，以字母开头，仅包含字母、数字和下划线")
     private String code;
 
-    @Schema(description = "类型分类；1：基础数据类型，2：业务数据类型")
+    @Schema(description = "类型分类：1 基础数据类型，2 业务数据类型")
     private Integer typeCategory;
 
-    @Schema(description = "基础类型编码：0文本、1整数、2小数、3布尔、4日期、5枚举")
+    @Schema(description = "基础类型编码：0 文本、1 整数、2 小数、3 布尔、4 日期、5 枚举")
     private Integer basicTypeCode;
 
-    @Schema(description = "业务数据类型ID，按来源关联 om_data_type 或 basic_data_type")
+    @Schema(description = "业务数据类型 ID；根据 businessTypeSource 关联 om_data_type 或 basic_data_type")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long businessTypeId;
 
-    /** 业务类型来源：PROJECT 当前项目，GLOBAL 全局。 */
+    @Schema(description = "业务类型来源：PROJECT 当前项目版本（om_data_type），GLOBAL 全局（basic_data_type）")
     private String businessTypeSource;
 
+    @Schema(description = "整数、小数类型的计量单位，例如个、元；其他类型不使用")
     private String unit;
 
+    @Schema(description = "小数类型的小数位数，0 表示不保留小数")
     private Integer decimalPlaces;
 
+    @Schema(description = "日期类型的格式，例如 yyyy-MM-dd HH:mm:ss")
     private String format;
 
+    @Schema(description = "枚举类型编码；与枚举来源共同定位枚举类型，不是枚举记录 ID")
     private String enumType;
 
+    @Schema(description = "枚举来源：PROJECT 当前项目版本，GLOBAL 全局；与 enumType 配合使用")
     private String enumSource;
-
 
     @Schema(description = "描述")
     private String description;
 
-    @Schema(description = "是否有效；0：无效，1：有效")
+    @Schema(description = "是否有效：true 有效，false 无效")
     private Boolean validFlag;
 }

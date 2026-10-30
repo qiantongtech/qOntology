@@ -18,12 +18,12 @@
 
 package tech.qiantong.qontology.module.om.dal.dataobject.term;
 
-import lombok.*;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.*;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 
 /**
@@ -34,7 +34,7 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
  */
 @Data
 @TableName(value = "om_term")
-// 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写。
+// 用于 Oracle、PostgreSQL、Kingbase、DB2、H2 数据库的主键自增。如果是 MySQL 等数据库，可不写
 // @KeySequence("om_term_seq")
 @Builder
 @NoArgsConstructor
@@ -42,12 +42,13 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
 @EqualsAndHashCode(callSuper = true)
 public class OmTermDO extends BaseEntity {
 
-    /** 工作区id */
+    /** 工作区 ID，用于限定数据所属工作区 */
     private Long workspaceId;
 
-    /** 版本id */
+    /** 项目版本 ID，用于限定数据所属的本体版本 */
     private Long versionId;
 
+    /** 序列化版本号 */
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
@@ -55,30 +56,28 @@ public class OmTermDO extends BaseEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 标准名称 */
+    /** 术语的标准名称 */
     private String stdName;
 
-    /** 英文名称 */
+    /** 术语的英文名称 */
     private String enName;
 
-    /** 别名 */
+    /** 术语别名 */
     private String alias;
 
-    /** 缩写 */
+    /** 术语缩写 */
     private String abbr;
 
-    /** 来源 */
+    /** 术语来源 */
     private String source;
 
     /** 描述 */
     private String description;
 
-    /** 是否有效 */
+    /** 是否有效：true 有效，false 无效 */
     private Boolean validFlag;
 
-    /** 删除标志 */
+    /** 逻辑删除标志：true 已删除，false 未删除 */
     @TableLogic
     private Boolean delFlag;
-
-
 }

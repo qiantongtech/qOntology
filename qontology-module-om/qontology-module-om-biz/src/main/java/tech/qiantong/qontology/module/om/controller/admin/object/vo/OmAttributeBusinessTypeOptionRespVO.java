@@ -18,13 +18,18 @@
 
 package tech.qiantong.qontology.module.om.controller.admin.object.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import tech.qiantong.qontology.module.basic.api.dto.dataType.BasicDataTypeOptionDTO;
 
+/**
+ * 业务数据类型选项响应对象
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class OmAttributeBusinessTypeOptionRespVO extends BasicDataTypeOptionDTO {
-    /** PROJECT 当前项目版本；GLOBAL 基础管理。 */
+
+    @Schema(description = "业务类型来源：PROJECT 当前项目版本（om_data_type），GLOBAL 全局（basic_data_type）")
     private String businessTypeSource;
 }

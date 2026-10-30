@@ -18,8 +18,6 @@
 
 package tech.qiantong.qontology.module.om.controller.admin.object;
 
-import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeEnumOptionRespVO;
-import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmAttributeBusinessTypeOptionRespVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -43,6 +41,8 @@ import tech.qiantong.qontology.core.controller.BaseController;
 import tech.qiantong.qontology.core.domain.CommonResult;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
+import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeEnumOptionRespVO;
+import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmAttributeBusinessTypeOptionRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeAttributePageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeAttributeRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeAttributeSaveReqVO;
@@ -60,25 +60,54 @@ import tech.qiantong.qontology.module.om.service.object.IOmObjectTypeAttributeSe
 @RequestMapping("/om/objectTypeAttribute")
 @Validated
 public class OmObjectTypeAttributeController extends BaseController {
+
     @Resource
     private IOmObjectTypeAttributeService attributeService;
 
+    /**
+     * 按项目版本和来源查询可选业务数据类型，兼容通过对象类型确定版本
+     *
+     * @param objectTypeId 所属对象类型 ID，可为空
+     * @param versionId 项目版本 ID，未指定对象类型时使用
+     * @param source 数据来源，PROJECT 当前项目版本，GLOBAL 全局
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询当前项目或全局业务数据类型")
     @PreAuthorize("@ss.hasPermi('om:object:type:edit') or @ss.hasPermi('om:object:type:query')")
     @GetMapping("/businessDataTypes")
     public CommonResult<List<OmAttributeBusinessTypeOptionRespVO>> businessDataTypes(
-            @RequestParam Long objectTypeId, @RequestParam(defaultValue = "GLOBAL") String source) {
-        return CommonResult.success(attributeService.getBusinessDataTypes(objectTypeId, getWorkSpaceId(), source));
+        @RequestParam(required = false) Long objectTypeId,
+        @RequestParam(required = false) Long versionId,
+        @RequestParam(defaultValue = "GLOBAL") String source
+    ) {
+        return CommonResult.success(
+            attributeService.getBusinessDataTypes(objectTypeId, versionId, getWorkSpaceId(), source)
+        );
     }
 
+    /**
+     * 按指定来源查询当前版本或全局可用的枚举类型
+     *
+     * @param objectTypeId 所属对象类型 ID
+     * @param source 数据来源，PROJECT 当前项目版本，GLOBAL 全局
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询属性配置可用枚举")
     @PreAuthorize("@ss.hasPermi('om:object:type:edit') or @ss.hasPermi('om:object:type:query')")
     @GetMapping("/enumOptions")
     public CommonResult<List<OmDataTypeEnumOptionRespVO>> enumOptions(
-            @RequestParam Long objectTypeId, @RequestParam(defaultValue = "PROJECT") String source) {
+        @RequestParam Long objectTypeId,
+        @RequestParam(defaultValue = "PROJECT") String source
+    ) {
         return CommonResult.success(attributeService.getEnumOptions(objectTypeId, getWorkSpaceId(), source));
     }
 
+    /**
+     * 查询对象类型属性列表
+     *
+     * @param request 业务请求参数
+     * @return 分页查询结果
+     */
     @Operation(summary = "查询对象类型属性列表")
     @PreAuthorize("@ss.hasPermi('om:object:type:query')")
     @GetMapping("/list")
@@ -88,15 +117,31 @@ public class OmObjectTypeAttributeController extends BaseController {
         return CommonResult.success(BeanUtils.toBean(page, OmObjectTypeAttributeRespVO.class));
     }
 
+    /**
+     * 查询对象类型属性详情
+     *
+     * @param id 记录 ID
+     * @param objectTypeId 所属对象类型 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询对象类型属性详情")
     @PreAuthorize("@ss.hasPermi('om:object:type:query')")
     @GetMapping("/{id}")
     public CommonResult<OmObjectTypeAttributeRespVO> getInfo(@PathVariable Long id, @RequestParam Long objectTypeId) {
         OmObjectTypeAttributeDO attribute = attributeService.getOmObjectTypeAttributeById(
-                id, objectTypeId, getWorkSpaceId());
+            id,
+            objectTypeId,
+            getWorkSpaceId()
+        );
         return CommonResult.success(BeanUtils.toBean(attribute, OmObjectTypeAttributeRespVO.class));
     }
 
+    /**
+     * 新增对象类型属性
+     *
+     * @param request 业务请求参数
+     * @return 业务处理结果
+     */
     @Operation(summary = "新增对象类型属性")
     @PreAuthorize("@ss.hasPermi('om:object:type:edit')")
     @Log(title = "对象类型属性", businessType = BusinessType.INSERT)
@@ -106,6 +151,12 @@ public class OmObjectTypeAttributeController extends BaseController {
         return CommonResult.success(attributeService.createOmObjectTypeAttribute(request));
     }
 
+    /**
+     * 修改对象类型属性
+     *
+     * @param request 业务请求参数
+     * @return 业务处理结果
+     */
     @Operation(summary = "修改对象类型属性")
     @PreAuthorize("@ss.hasPermi('om:object:type:edit')")
     @Log(title = "对象类型属性", businessType = BusinessType.UPDATE)
@@ -115,11 +166,20 @@ public class OmObjectTypeAttributeController extends BaseController {
         return CommonResult.toAjax(attributeService.updateOmObjectTypeAttribute(request));
     }
 
+    /**
+     * 删除对象类型属性
+     *
+     * @param ids 记录 ID 数组
+     * @param objectTypeId 所属对象类型 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "删除对象类型属性，支持批量删除")
     @PreAuthorize("@ss.hasPermi('om:object:type:edit')")
     @Log(title = "对象类型属性", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public CommonResult<Integer> remove(@PathVariable Long[] ids, @RequestParam Long objectTypeId) {
-        return CommonResult.toAjax(attributeService.removeOmObjectTypeAttribute(Arrays.asList(ids), objectTypeId, getWorkSpaceId()));
+        return CommonResult.toAjax(
+            attributeService.removeOmObjectTypeAttribute(Arrays.asList(ids), objectTypeId, getWorkSpaceId())
+        );
     }
 }

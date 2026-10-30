@@ -32,30 +32,47 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
  * @date 2026-10-13
  */
 public interface OmObjectTypeRelationMapper extends BaseMapperX<OmObjectTypeRelationDO> {
+    /**
+     * 按请求条件分页查询对象关系
+     *
+     * @param request 业务请求参数
+     * @return 分页查询结果
+     */
     default PageResult<OmObjectTypeRelationDO> selectPage(OmObjectTypeRelationPageReqVO request) {
         return selectPageWithLinkedIds(request, null);
     }
 
-    default PageResult<OmObjectTypeRelationDO> selectPageWithLinkedIds(OmObjectTypeRelationPageReqVO request, Collection<Long> linkedIds) {
+    /**
+     * 结合已关联元素 ID 查询对象关系，保留版本、筛选和排序条件
+     *
+     * @param request 业务请求参数
+     * @param linkedIds 已关联的元素 ID 集合
+     * @return 分页查询结果
+     */
+    default PageResult<OmObjectTypeRelationDO> selectPageWithLinkedIds(
+        OmObjectTypeRelationPageReqVO request,
+        Collection<Long> linkedIds
+    ) {
         if (linkedIds != null && linkedIds.isEmpty()) return PageResult.empty();
         LambdaQueryWrapperX<OmObjectTypeRelationDO> query = new LambdaQueryWrapperX<OmObjectTypeRelationDO>()
-                .eq(OmObjectTypeRelationDO::getWorkspaceId, request.getWorkspaceId())
-                .eqIfPresent(OmObjectTypeRelationDO::getVersionId, request.getVersionId())
-                .likeIfPresent(OmObjectTypeRelationDO::getName, request.getName())
-                .eqIfPresent(OmObjectTypeRelationDO::getReversibleFlag, request.getReversibleFlag())
-                .eq(OmObjectTypeRelationDO::getValidFlag, true);
+            .eq(OmObjectTypeRelationDO::getWorkspaceId, request.getWorkspaceId())
+            .eqIfPresent(OmObjectTypeRelationDO::getVersionId, request.getVersionId())
+            .likeIfPresent(OmObjectTypeRelationDO::getName, request.getName())
+            .eqIfPresent(OmObjectTypeRelationDO::getReversibleFlag, request.getReversibleFlag())
+            .eq(OmObjectTypeRelationDO::getValidFlag, true);
         query.in(linkedIds != null, OmObjectTypeRelationDO::getId, linkedIds);
         boolean ascending = !"desc".equalsIgnoreCase(request.getIsAsc());
         if ("id".equals(request.getOrderByColumn())) {
             query.orderBy(true, ascending, OmObjectTypeRelationDO::getId);
-        } else if ("createTime".equals(request.getOrderByColumn()) || "create_time".equals(request.getOrderByColumn())) {
-            query.orderBy(true, ascending, OmObjectTypeRelationDO::getCreateTime)
-                    .orderByDesc(OmObjectTypeRelationDO::getId);
+        } else if (
+            "createTime".equals(request.getOrderByColumn()) || "create_time".equals(request.getOrderByColumn())
+        ) {
+            query
+                .orderBy(true, ascending, OmObjectTypeRelationDO::getCreateTime)
+                .orderByDesc(OmObjectTypeRelationDO::getId);
         } else {
-            query.orderByDesc(OmObjectTypeRelationDO::getCreateTime)
-                    .orderByDesc(OmObjectTypeRelationDO::getId);
+            query.orderByDesc(OmObjectTypeRelationDO::getCreateTime).orderByDesc(OmObjectTypeRelationDO::getId);
         }
         return selectPage(request, query);
     }
-
 }

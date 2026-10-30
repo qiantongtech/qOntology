@@ -58,6 +58,13 @@ export default [
                 component: () => import('@/views/om/aiModeling/detail/index.vue'),
                 name: 'AiModelingDetail',
                 meta: { title: 'AI辅助建模详情', activeMenu: '/om/:versionId/aiModeling' }
+            },
+            {
+                path: ':versionId/projectVersion/diff',
+                hidden: true,
+                component: () => import('@/views/basic/projectVersion/versionDiff.vue'),
+                name: 'projectVersionDiff',
+                meta: { title: '版本对比', activeMenu: '/om/:versionId/projectVersion' }
             }
         ]
     },

@@ -31,21 +31,27 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
  * @date 2026-10-13
  */
 public interface OmObjectTypeAttributeMapper extends BaseMapperX<OmObjectTypeAttributeDO> {
+    /**
+     * 按请求条件分页查询对象类型属性
+     *
+     * @param request 业务请求参数
+     * @return 分页查询结果
+     */
     default PageResult<OmObjectTypeAttributeDO> selectPage(OmObjectTypeAttributePageReqVO request) {
         LambdaQueryWrapperX<OmObjectTypeAttributeDO> query = new LambdaQueryWrapperX<OmObjectTypeAttributeDO>()
-                .eq(OmObjectTypeAttributeDO::getWorkspaceId, request.getWorkspaceId())
-                .eq(OmObjectTypeAttributeDO::getObjectTypeId, request.getObjectTypeId())
-                .likeIfPresent(OmObjectTypeAttributeDO::getName, request.getName());
+            .eq(OmObjectTypeAttributeDO::getWorkspaceId, request.getWorkspaceId())
+            .eq(OmObjectTypeAttributeDO::getObjectTypeId, request.getObjectTypeId())
+            .likeIfPresent(OmObjectTypeAttributeDO::getName, request.getName());
         boolean ascending = !"desc".equalsIgnoreCase(request.getIsAsc());
-        // 仅允许按编号或创建时间排序；同一创建时间以编号保证分页顺序稳定。
+        // 仅允许按编号或创建时间排序；同一创建时间以编号保证分页顺序稳定
         if ("createTime".equals(request.getOrderByColumn()) || "create_time".equals(request.getOrderByColumn())) {
-            query.orderBy(true, ascending, OmObjectTypeAttributeDO::getCreateTime)
-                    .orderByDesc(OmObjectTypeAttributeDO::getId);
+            query
+                .orderBy(true, ascending, OmObjectTypeAttributeDO::getCreateTime)
+                .orderByDesc(OmObjectTypeAttributeDO::getId);
         } else if ("id".equals(request.getOrderByColumn())) {
             query.orderBy(true, ascending, OmObjectTypeAttributeDO::getId);
         } else {
-            query.orderByDesc(OmObjectTypeAttributeDO::getCreateTime)
-                    .orderByDesc(OmObjectTypeAttributeDO::getId);
+            query.orderByDesc(OmObjectTypeAttributeDO::getCreateTime).orderByDesc(OmObjectTypeAttributeDO::getId);
         }
         if (request.getVersionId() != null) {
             query.eq(OmObjectTypeAttributeDO::getVersionId, request.getVersionId());

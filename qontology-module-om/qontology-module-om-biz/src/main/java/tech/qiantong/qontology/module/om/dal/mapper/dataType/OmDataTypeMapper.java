@@ -18,15 +18,14 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.dataType;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypePageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
 import tech.qiantong.qontology.mybatis.core.mapper.BaseMapperX;
 import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * 数据类型Mapper接口
@@ -35,13 +34,19 @@ import java.util.Set;
  * @date 2026-10-16
  */
 public interface OmDataTypeMapper extends BaseMapperX<OmDataTypeDO> {
-
+    /**
+     * 按请求条件分页查询业务数据类型
+     *
+     * @param reqVO 分页查询条件
+     * @return 分页查询结果
+     */
     default PageResult<OmDataTypeDO> selectPage(OmDataTypePageReqVO reqVO) {
         // 定义排序的字段（防止 SQL 注入，与数据库字段名称一致）
         Set<String> allowedColumns = new HashSet<>(Arrays.asList("id", "create_time", "update_time"));
-
         // 构造动态查询条件
-        return selectPage(reqVO, new LambdaQueryWrapperX<OmDataTypeDO>()
+        return selectPage(
+            reqVO,
+            new LambdaQueryWrapperX<OmDataTypeDO>()
                 .eq(OmDataTypeDO::getVersionId, reqVO.getVersionId())
                 .likeIfPresent(OmDataTypeDO::getName, reqVO.getName())
                 .eqIfPresent(OmDataTypeDO::getDataType, reqVO.getDataType())
@@ -50,10 +55,8 @@ public interface OmDataTypeMapper extends BaseMapperX<OmDataTypeDO> {
                 .eqIfPresent(OmDataTypeDO::getDecimalPlaces, reqVO.getDecimalPlaces())
                 .eqIfPresent(OmDataTypeDO::getFormat, reqVO.getFormat())
                 .eqIfPresent(OmDataTypeDO::getCreateTime, reqVO.getCreateTime())
-                // 如果 reqVO.getName() 不为空，则添加 name 的精确匹配条件（name = '<name>'）
-                // .eq(OmDataTypeDO::getVersionId, reqVO.getVersionId())
                 .likeIfPresent(OmDataTypeDO::getName, reqVO.getName())
-                // 按照 createTime 字段降序排序
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns)
+        );
     }
 }

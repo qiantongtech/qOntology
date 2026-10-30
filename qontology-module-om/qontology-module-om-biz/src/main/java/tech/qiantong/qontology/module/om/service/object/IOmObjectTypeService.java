@@ -34,7 +34,6 @@ import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
  * @date 2026-10-12
  */
 public interface IOmObjectTypeService extends IService<OmObjectTypeDO> {
-
     /**
      * 获得对象类型分页列表
      *
@@ -55,6 +54,7 @@ public interface IOmObjectTypeService extends IService<OmObjectTypeDO> {
      * 更新对象类型
      *
      * @param updateReqVO 对象类型信息
+     * @return 实际受影响的记录数
      */
     int updateOmObjectType(OmObjectTypeSaveReqVO updateReqVO);
 
@@ -62,6 +62,7 @@ public interface IOmObjectTypeService extends IService<OmObjectTypeDO> {
      * 删除对象类型
      *
      * @param id 对象类型编号
+     * @return 实际受影响的记录数
      */
     int removeOmObjectType(Long id);
 
@@ -101,8 +102,7 @@ public interface IOmObjectTypeService extends IService<OmObjectTypeDO> {
      * @param importExcelList 对象类型数据列表
      * @param isUpdateSupport 是否更新支持，如果已存在，则进行更新数据
      * @param operName 操作用户
-     * @return 结果
+     * @return 导入处理结果说明
      */
     String importOmObjectType(List<OmObjectTypeRespVO> importExcelList, boolean isUpdateSupport, String operName);
-
 }

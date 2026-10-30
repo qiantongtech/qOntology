@@ -19,10 +19,9 @@
 package tech.qiantong.qontology.module.om.controller.admin.object.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import lombok.Data;
 import tech.qiantong.qontology.core.page.PageParam;
-
-import java.util.List;
 
 /**
  * 对象类型 Request VO 对象 om_object_type
@@ -34,13 +33,16 @@ import java.util.List;
 @Data
 public class OmObjectTypePageReqVO extends PageParam {
 
+    /** 序列化版本号 */
     private static final long serialVersionUID = 1L;
+
     @Schema(description = "ID", example = "")
     private Long id;
-    @Schema(description = "工作区id", example = "")
+
+    @Schema(description = "工作区 ID，用于限定数据所属工作区", example = "")
     private Long workspaceId;
 
-    @Schema(description = "版本id", example = "")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本", example = "")
     private Long versionId;
 
     @Schema(description = "对象类型名称", example = "")
@@ -49,17 +51,15 @@ public class OmObjectTypePageReqVO extends PageParam {
     @Schema(description = "描述", example = "")
     private String description;
 
-    @Schema(description = "父级id", example = "")
+    @Schema(description = "上级对象类型 ID；根节点的父级按对象类型树规则处理", example = "")
     private Long parentId;
 
-    @Schema(description = "祖级列表", example = "")
+    @Schema(description = "祖级对象类型 ID 路径，用于维护对象类型层级", example = "")
     private String ancestors;
 
-    @Schema(description = "显示顺序", example = "")
+    @Schema(description = "对象类型在同级节点中的显示顺序", example = "")
     private Long orderNum;
 
-    @Schema(description = "目标ID列表", example = "")
+    @Schema(description = "用于筛选已关联建模目标的 ID 列表", example = "")
     private List<Long> targetIdList;
-
-
 }

@@ -16,7 +16,7 @@
  * See the LICENSE file in the project root for full license information.
  */
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 // 查询术语列表
 export function listTerm(query) {
@@ -24,7 +24,7 @@ export function listTerm(query) {
         url: '/om/term/list',
         method: 'get',
         params: query
-    })
+    });
 }
 
 // 查询术语详细
@@ -32,7 +32,7 @@ export function getTerm(id) {
     return request({
         url: '/om/term/' + id,
         method: 'get'
-    })
+    });
 }
 
 // 新增术语
@@ -41,7 +41,7 @@ export function addTerm(data) {
         url: '/om/term',
         method: 'post',
         data: data
-    })
+    });
 }
 
 // 修改术语
@@ -50,7 +50,7 @@ export function updateTerm(data) {
         url: '/om/term',
         method: 'put',
         data: data
-    })
+    });
 }
 
 // 删除术语
@@ -58,5 +58,5 @@ export function delTerm(id) {
     return request({
         url: '/om/term/' + id,
         method: 'delete'
-    })
+    });
 }

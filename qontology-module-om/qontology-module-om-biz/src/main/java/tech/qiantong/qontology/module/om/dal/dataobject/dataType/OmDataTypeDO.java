@@ -38,70 +38,49 @@ import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class OmDataTypeDO extends BaseEntity {
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    /**
-     * ID
-     */
+    /** ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 项目版本 ID */
+    /** 项目版本 ID，用于限定数据所属的本体版本 */
     private Long versionId;
 
-    /**
-     * 名称
-     */
+    /** 名称 */
     private String name;
 
-    /**
-     * 数据类型 0-文本、1-整数、2-小数、3-布尔、4-日期
-     */
+    /** 基础类型编码：0 文本、1 整数、2 小数、3 布尔、4 日期、5 枚举 */
     private DataTypeEnum dataType;
 
-    /**
-     * 描述
-     */
+    /** 描述 */
     private String description;
 
-    /**
-     * 单位
-     */
+    /** 整数、小数类型的计量单位，例如个、元；其他类型不使用 */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String unit;
 
-    /**
-     * 小数位数
-     */
+    /** 小数类型的小数位数，0 表示不保留小数 */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Integer decimalPlaces;
 
-    /**
-     * 格式
-     */
+    /** 日期类型的格式，例如 yyyy-MM-dd HH:mm:ss */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String format;
 
-    /**
-     * 枚举类型
-     */
+    /** 枚举类型编码；与枚举来源共同定位枚举类型，不是枚举记录 ID */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String enumType;
 
-    /** 枚举来源：PROJECT 当前项目版本，GLOBAL 全局。 */
+    /** 枚举来源：PROJECT 当前项目版本，GLOBAL 全局；与 enumType 配合使用 */
     private String enumSource;
 
-    /**
-     * 是否有效
-     */
+    /** 是否有效：true 有效，false 无效 */
     private Boolean validFlag;
 
-    /**
-     * 删除标志
-     */
+    /** 逻辑删除标志：true 已删除，false 未删除 */
     @TableLogic
     private Boolean delFlag;
-
-
 }

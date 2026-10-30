@@ -21,7 +21,22 @@ package tech.qiantong.qontology.module.basic.api.service.dataType;
 import java.util.List;
 import tech.qiantong.qontology.module.basic.api.dto.dataType.BasicDataTypeOptionDTO;
 
+/**
+ * 全局业务数据类型跨模块查询接口
+ */
 public interface IBasicDataTypeApiService {
+    /**
+     * 查询有效的全局业务数据类型选项
+     *
+     * @return 按 ID 升序排列的业务数据类型选项集合
+     */
     List<BasicDataTypeOptionDTO> getAvailableDataTypes();
+
+    /**
+     * 根据 ID 查询有效的全局业务数据类型
+     *
+     * @param id 全局业务数据类型 ID
+     * @return 业务数据类型选项，ID 为空、记录不存在或无效时返回 null
+     */
     BasicDataTypeOptionDTO getAvailableDataType(Long id);
 }

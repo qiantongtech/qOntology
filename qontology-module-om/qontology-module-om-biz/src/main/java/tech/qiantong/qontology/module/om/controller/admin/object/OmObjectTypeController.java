@@ -53,11 +53,11 @@ import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectType
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeTargetRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.omtarget.vo.OmTargetPageReqVO;
-import tech.qiantong.qontology.module.om.service.omtarget.IOmObjectTypeTargetService;
 import tech.qiantong.qontology.module.om.convert.object.OmObjectTypeConvert;
 import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
 import tech.qiantong.qontology.module.om.service.object.IOmObjectTypeAttributeService;
 import tech.qiantong.qontology.module.om.service.object.IOmObjectTypeService;
+import tech.qiantong.qontology.module.om.service.omtarget.IOmObjectTypeTargetService;
 import tech.qiantong.qontology.module.om.service.relation.IOmObjectTypeRelationService;
 
 /**
@@ -71,6 +71,7 @@ import tech.qiantong.qontology.module.om.service.relation.IOmObjectTypeRelationS
 @RequestMapping("/om/objectType")
 @Validated
 public class OmObjectTypeController extends BaseController {
+
     @Resource
     private IOmObjectTypeService omObjectTypeService;
 
@@ -83,6 +84,12 @@ public class OmObjectTypeController extends BaseController {
     @Resource
     private IOmObjectTypeTargetService objectTypeTargetService;
 
+    /**
+     * 查询当前版本可关联的建模目标
+     *
+     * @param request 业务请求参数
+     * @return 分页查询结果
+     */
     @Operation(summary = "查询对象类型可关联的建模目标")
     @PreAuthorize("@ss.hasPermi('om:object:type:add') or @ss.hasPermi('om:object:type:edit')")
     @GetMapping("/targetOptions")
@@ -90,6 +97,12 @@ public class OmObjectTypeController extends BaseController {
         return CommonResult.success(objectTypeTargetService.getTargetOptions(request));
     }
 
+    /**
+     * 查询当前模型元素已关联的建模目标
+     *
+     * @param id 记录 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询对象类型已关联的建模目标")
     @PreAuthorize("@ss.hasPermi('om:object:type:query') or @ss.hasPermi('om:object:type:edit')")
     @GetMapping("/{id}/targets")
@@ -97,36 +110,69 @@ public class OmObjectTypeController extends BaseController {
         return CommonResult.success(objectTypeTargetService.getTargets(id));
     }
 
+    /**
+     * 分页查询当前模型元素已关联的建模目标
+     *
+     * @param id 记录 ID
+     * @param request 业务请求参数
+     * @return 分页查询结果
+     */
     @Operation(summary = "分页查询对象类型已关联的建模目标")
     @PreAuthorize("@ss.hasPermi('om:object:type:query') or @ss.hasPermi('om:object:type:edit')")
     @GetMapping("/{id}/targets/page")
-    public CommonResult<PageResult<OmObjectTypeTargetRespVO>> targetsPage(@PathVariable Long id, @Valid OmTargetPageReqVO request) {
+    public CommonResult<PageResult<OmObjectTypeTargetRespVO>> targetsPage(
+        @PathVariable Long id,
+        @Valid OmTargetPageReqVO request
+    ) {
         return CommonResult.success(objectTypeTargetService.getTargetsPage(id, request));
     }
 
+    /**
+     * 查询指定建模目标关联的对象类型
+     *
+     * @param targetId 建模目标 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询建模目标关联的对象类型")
     @PreAuthorize("@ss.hasPermi('om:target:target:query')")
     @GetMapping("/byTarget/{targetId}")
     public CommonResult<List<OmObjectTypeRespVO>> byTarget(@PathVariable Long targetId) {
-        return CommonResult.success(BeanUtils.toBean(objectTypeTargetService.getObjectTypes(targetId), OmObjectTypeRespVO.class));
+        return CommonResult.success(
+            BeanUtils.toBean(objectTypeTargetService.getObjectTypes(targetId), OmObjectTypeRespVO.class)
+        );
     }
 
+    /**
+     * 查询对象类型列表
+     *
+     * @param omObjectType 分页查询条件
+     * @return 分页查询结果
+     */
     @Operation(summary = "查询对象类型列表")
     @PreAuthorize("@ss.hasPermi('om:object:type:list')")
     @GetMapping("/list")
     public CommonResult<PageResult<OmObjectTypeRespVO>> list(OmObjectTypePageReqVO omObjectType) {
         PageResult<OmObjectTypeDO> page = omObjectTypeService.getOmObjectTypePage(omObjectType);
-        Map<Long, Long> counts = attributeService.getOmObjectTypeAttributeCounts(page.getList().stream()
-                .map(OmObjectTypeDO::getId).collect(Collectors.toList()));
-        Map<Long, Long> relationCounts = relationService.getOmObjectTypeRelationCounts(page.getList().stream()
-                .map(OmObjectTypeDO::getId).collect(Collectors.toList()));
-        return CommonResult.success(BeanUtils.toBean(page, OmObjectTypeRespVO.class,
-                item -> {
-                    item.setAttributeCount(counts.getOrDefault(item.getId(), 0L));
-                    item.setRelationCount(relationCounts.getOrDefault(item.getId(), 0L));
-                }));
+        Map<Long, Long> counts = attributeService.getOmObjectTypeAttributeCounts(
+            page.getList().stream().map(OmObjectTypeDO::getId).collect(Collectors.toList())
+        );
+        Map<Long, Long> relationCounts = relationService.getOmObjectTypeRelationCounts(
+            page.getList().stream().map(OmObjectTypeDO::getId).collect(Collectors.toList())
+        );
+        return CommonResult.success(
+            BeanUtils.toBean(page, OmObjectTypeRespVO.class, item -> {
+                item.setAttributeCount(counts.getOrDefault(item.getId(), 0L));
+                item.setRelationCount(relationCounts.getOrDefault(item.getId(), 0L));
+            })
+        );
     }
 
+    /**
+     * 查询排除当前对象类型及其下级节点后的可选类型
+     *
+     * @param id 记录 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "查询上级对象类型列表，排除自身及下级")
     @PreAuthorize("@ss.hasPermi('om:object:type:list')")
     @GetMapping("/list/exclude/{id}")
@@ -135,17 +181,32 @@ public class OmObjectTypeController extends BaseController {
         return CommonResult.success(OmObjectTypeConvert.INSTANCE.convertToRespVOList(types));
     }
 
+    /**
+     * 导出对象类型数据
+     *
+     * @param response 文件下载响应
+     * @param exportReqVO 导出筛选条件
+     */
     @Operation(summary = "导出对象类型列表")
     @PreAuthorize("@ss.hasPermi('om:object:type:export')")
     @Log(title = "对象类型", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, OmObjectTypePageReqVO exportReqVO) {
         exportReqVO.setPageSize(PageParam.PAGE_SIZE_NONE);
-        List<OmObjectTypeDO> list = (List<OmObjectTypeDO>) omObjectTypeService.getOmObjectTypePage(exportReqVO).getRows();
+        List<OmObjectTypeDO> list = (List<OmObjectTypeDO>) omObjectTypeService
+            .getOmObjectTypePage(exportReqVO)
+            .getRows();
         ExcelUtil<OmObjectTypeRespVO> util = new ExcelUtil<>(OmObjectTypeRespVO.class);
         util.exportExcel(response, OmObjectTypeConvert.INSTANCE.convertToRespVOList(list), "应用管理数据");
     }
 
+    /**
+     * 导入对象类型数据
+     *
+     * @param file 导入文件
+     * @param updateSupport 是否覆盖更新已有记录
+     * @return 业务处理结果
+     */
     @Operation(summary = "导入对象类型列表")
     @PreAuthorize("@ss.hasPermi('om:object:type:import')")
     @Log(title = "对象类型", businessType = BusinessType.IMPORT)
@@ -158,6 +219,12 @@ public class OmObjectTypeController extends BaseController {
         return success(message);
     }
 
+    /**
+     * 查询对象类型详情
+     *
+     * @param id 记录 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "获取对象类型详细信息")
     @PreAuthorize("@ss.hasPermi('om:object:type:query')")
     @GetMapping(value = "/{id}")
@@ -165,12 +232,22 @@ public class OmObjectTypeController extends BaseController {
         OmObjectTypeDO omObjectTypeDO = omObjectTypeService.getOmObjectTypeById(id);
         OmObjectTypeRespVO response = BeanUtils.toBean(omObjectTypeDO, OmObjectTypeRespVO.class);
         if (response != null) {
-            response.setAttributeCount(attributeService.getOmObjectTypeAttributeCounts(Collections.singletonList(id)).getOrDefault(id, 0L));
-            response.setRelationCount(relationService.getOmObjectTypeRelationCounts(Collections.singletonList(id)).getOrDefault(id, 0L));
+            response.setAttributeCount(
+                attributeService.getOmObjectTypeAttributeCounts(Collections.singletonList(id)).getOrDefault(id, 0L)
+            );
+            response.setRelationCount(
+                relationService.getOmObjectTypeRelationCounts(Collections.singletonList(id)).getOrDefault(id, 0L)
+            );
         }
         return CommonResult.success(response);
     }
 
+    /**
+     * 新增对象类型
+     *
+     * @param omObjectType 新增或修改的业务信息
+     * @return 业务处理结果
+     */
     @Operation(summary = "新增对象类型")
     @PreAuthorize("@ss.hasPermi('om:object:type:add')")
     @Log(title = "对象类型", businessType = BusinessType.INSERT)
@@ -180,6 +257,12 @@ public class OmObjectTypeController extends BaseController {
         return CommonResult.toAjax(omObjectTypeService.createOmObjectType(omObjectType));
     }
 
+    /**
+     * 修改对象类型
+     *
+     * @param omObjectType 新增或修改的业务信息
+     * @return 业务处理结果
+     */
     @Operation(summary = "修改对象类型")
     @PreAuthorize("@ss.hasPermi('om:object:type:edit')")
     @Log(title = "对象类型", businessType = BusinessType.UPDATE)
@@ -188,6 +271,12 @@ public class OmObjectTypeController extends BaseController {
         return CommonResult.toAjax(omObjectTypeService.updateOmObjectType(omObjectType));
     }
 
+    /**
+     * 删除对象类型
+     *
+     * @param id 记录 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "删除对象类型")
     @PreAuthorize("@ss.hasPermi('om:object:type:remove')")
     @Log(title = "对象类型", businessType = BusinessType.DELETE)
@@ -195,5 +284,4 @@ public class OmObjectTypeController extends BaseController {
     public CommonResult<Integer> remove(@PathVariable Long id) {
         return CommonResult.toAjax(omObjectTypeService.removeOmObjectType(id));
     }
-
 }

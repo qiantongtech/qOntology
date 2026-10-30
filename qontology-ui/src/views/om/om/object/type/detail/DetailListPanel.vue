@@ -17,36 +17,47 @@
 -->
 
 <template>
-  <div>
-    <div class="justify-end mb15">
-      <right-toolbar :search="false" :columns="visibleColumns" @queryTable="emit('refresh')" />
+    <div>
+        <div class="justify-end mb15">
+            <right-toolbar :search="false" :columns="visibleColumns" @queryTable="emit('refresh')" />
+        </div>
+        <el-table :data="rows" row-key="id" stripe height="48vh">
+            <el-table-column
+                v-for="column in visibleColumns.filter((item) => item.visible)"
+                :key="column.prop"
+                :prop="column.prop"
+                :label="column.label"
+                :min-width="column.width"
+                :align="column.prop === 'operation' ? 'center' : 'left'"
+                :fixed="column.prop === 'operation' ? 'right' : undefined"
+                :show-overflow-tooltip="{ effect: 'light' }"
+            >
+                <template #default="{ row }">{{ row[column.prop] ?? '-' }}</template>
+            </el-table-column>
+            <template #empty>
+                <div class="emptyBg">
+                    <img src="@/assets/system/images/no_data/noData.png" :alt="emptyText" />
+                    <p>{{ emptyText }}</p>
+                </div>
+            </template>
+        </el-table>
     </div>
-    <el-table :data="rows" row-key="id" stripe height="48vh">
-      <el-table-column v-for="column in visibleColumns.filter(item => item.visible)" :key="column.prop"
-                       :prop="column.prop" :label="column.label" :min-width="column.width"
-                       :align="column.prop === 'operation' ? 'center' : 'left'"
-                       :fixed="column.prop === 'operation' ? 'right' : undefined"
-                       :show-overflow-tooltip="{ effect: 'light' }"
-      >
-        <template #default="{ row }">{{ row[column.prop] ?? '-' }}</template>
-      </el-table-column>
-      <template #empty>
-        <div class="emptyBg"><img src="@/assets/system/images/no_data/noData.png" :alt="emptyText" /><p>{{ emptyText }}</p></div>
-      </template>
-    </el-table>
-  </div>
 </template>
 
 <script setup>
-import {ref, watch} from 'vue';
-const props = defineProps({
-  columns: {type: Array, required: true},
-  rows: {type: Array, default: () => []},
-  emptyText: {type: String, default: '暂无记录'}
-});
-const emit = defineEmits(['refresh']);
-const visibleColumns = ref([]);
-watch(() => props.columns, columns => {
-  visibleColumns.value = columns.map((column, key) => ({...column, key, visible: true}));
-}, {immediate: true});
+    import { ref, watch } from 'vue';
+    const props = defineProps({
+        columns: { type: Array, required: true },
+        rows: { type: Array, default: () => [] },
+        emptyText: { type: String, default: '暂无记录' }
+    });
+    const emit = defineEmits(['refresh']);
+    const visibleColumns = ref([]);
+    watch(
+        () => props.columns,
+        (columns) => {
+            visibleColumns.value = columns.map((column, key) => ({ ...column, key, visible: true }));
+        },
+        { immediate: true }
+    );
 </script>

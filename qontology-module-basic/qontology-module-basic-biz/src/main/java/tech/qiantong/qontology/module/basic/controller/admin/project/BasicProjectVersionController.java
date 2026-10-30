@@ -30,11 +30,13 @@ import tech.qiantong.qontology.common.enums.BusinessType;
 import tech.qiantong.qontology.core.controller.BaseController;
 import tech.qiantong.qontology.core.domain.CommonResult;
 import tech.qiantong.qontology.core.domain.entity.SysDictData;
+import tech.qiantong.qontology.core.domain.model.LoginUser;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionRespVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionSaveReqVO;
+import tech.qiantong.qontology.module.basic.controller.admin.project.vo.VersionDiffStatsVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
 import tech.qiantong.qontology.module.basic.service.project.IBasicProjectVersionService;
 
@@ -76,7 +78,8 @@ public class BasicProjectVersionController extends BaseController {
     @Log(title = "项目版本", businessType = BusinessType.INSERT)
     @PostMapping
     public CommonResult<Long> add(@Valid @RequestBody BasicProjectVersionSaveReqVO basicProjectVersion) {
-        return CommonResult.toAjax(basicProjectVersionService.createBasicProjectVersion(basicProjectVersion));
+        LoginUser currentUser = super.getLoginUser();
+        return CommonResult.toAjax(basicProjectVersionService.createBasicProjectVersion(basicProjectVersion,currentUser));
     }
 
     @Operation(summary = "修改项目版本")
@@ -102,4 +105,11 @@ public class BasicProjectVersionController extends BaseController {
         return CommonResult.success(list);
     }
 
+    @Operation(summary = "获取版本对比统计数据")
+    @GetMapping("/versionDiffStats")
+    @PreAuthorize("@ss.hasPermi('basic:project:projectversion:diff')")
+    public CommonResult<VersionDiffStatsVO> getVersionDiffStats(Long versionId) {
+        VersionDiffStatsVO versionDiffStatsVO = basicProjectVersionService.queryVersionDiffStats(versionId);
+        return CommonResult.success(versionDiffStatsVO);
+    }
 }

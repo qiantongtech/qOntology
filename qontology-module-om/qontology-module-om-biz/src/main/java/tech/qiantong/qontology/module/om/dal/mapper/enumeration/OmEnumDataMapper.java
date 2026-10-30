@@ -18,13 +18,13 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.enumeration;
 
-import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumDataDO;
-import java.util.Arrays;
 import com.github.yulichang.base.MPJBaseMapper;
-import tech.qiantong.qontology.core.page.PageResult;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumDataPageReqVO;
+import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumDataDO;
 import tech.qiantong.qontology.mybatis.core.mapper.BaseMapperX;
 import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
@@ -35,13 +35,21 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
  * @date 2026-10-10
  */
 public interface OmEnumDataMapper extends BaseMapperX<OmEnumDataDO> {
-
+    /**
+     * 按请求条件分页查询枚举数据
+     *
+     * @param reqVO 分页查询条件
+     * @return 分页查询结果
+     */
     default PageResult<OmEnumDataDO> selectPage(OmEnumDataPageReqVO reqVO) {
         // 定义排序的字段（防止 SQL 注入，与数据库字段名称一致）
-        Set<String> allowedColumns = new HashSet<>(Arrays.asList("enum_code", "enum_sort", "create_time", "update_time"));
-
+        Set<String> allowedColumns = new HashSet<>(
+            Arrays.asList("enum_code", "enum_sort", "create_time", "update_time")
+        );
         // 构造动态查询条件
-        return selectPage(reqVO, new LambdaQueryWrapperX<OmEnumDataDO>()
+        return selectPage(
+            reqVO,
+            new LambdaQueryWrapperX<OmEnumDataDO>()
                 .eqIfPresent(OmEnumDataDO::getWorkspaceId, reqVO.getWorkspaceId())
                 .eqIfPresent(OmEnumDataDO::getVersionId, reqVO.getVersionId())
                 .eqIfPresent(OmEnumDataDO::getEnumSort, reqVO.getEnumSort())
@@ -50,9 +58,7 @@ public interface OmEnumDataMapper extends BaseMapperX<OmEnumDataDO> {
                 .eqIfPresent(OmEnumDataDO::getEnumType, reqVO.getEnumType())
                 .eqIfPresent(OmEnumDataDO::getStatus, reqVO.getStatus())
                 .eqIfPresent(OmEnumDataDO::getCreateTime, reqVO.getCreateTime())
-                // 如果 reqVO.getName() 不为空，则添加 name 的精确匹配条件（name = '<name>'）
-                // .likeIfPresent(OmEnumDataDO::getName, reqVO.getName())
-                // 按照 createTime 字段降序排序
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns)
+        );
     }
 }

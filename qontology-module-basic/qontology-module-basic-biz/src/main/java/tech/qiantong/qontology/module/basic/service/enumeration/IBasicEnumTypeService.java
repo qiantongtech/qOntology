@@ -19,15 +19,14 @@
 package tech.qiantong.qontology.module.basic.service.enumeration;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.enumeration.vo.BasicEnumTypePageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.enumeration.vo.BasicEnumTypeRespVO;
 import tech.qiantong.qontology.module.basic.controller.admin.enumeration.vo.BasicEnumTypeSaveReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.enumeration.BasicEnumTypeDO;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 枚举类型Service接口
@@ -36,7 +35,6 @@ import java.util.Map;
  * @date 2026-10-10
  */
 public interface IBasicEnumTypeService extends IService<BasicEnumTypeDO> {
-
     /**
      * 获得枚举类型分页列表
      *
@@ -57,6 +55,7 @@ public interface IBasicEnumTypeService extends IService<BasicEnumTypeDO> {
      * 更新枚举类型
      *
      * @param updateReqVO 枚举类型信息
+     * @return 实际受影响的记录数
      */
     int updateBasicEnumType(BasicEnumTypeSaveReqVO updateReqVO);
 
@@ -64,6 +63,7 @@ public interface IBasicEnumTypeService extends IService<BasicEnumTypeDO> {
      * 删除枚举类型
      *
      * @param idList 枚举类型编号
+     * @return 实际受影响的记录数
      */
     int removeBasicEnumType(Collection<Long> idList);
 
@@ -95,5 +95,4 @@ public interface IBasicEnumTypeService extends IService<BasicEnumTypeDO> {
      * @return 枚举类型列表
      */
     List<BasicEnumTypeRespVO> queryEnumTypeDict();
-
 }

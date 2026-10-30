@@ -34,33 +34,38 @@ import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
  */
 @Mapper
 public interface OmObjectTypeConvert {
+    /** MapStruct 对象转换器实例 */
     OmObjectTypeConvert INSTANCE = Mappers.getMapper(OmObjectTypeConvert.class);
 
     /**
      * PageReqVO 转换为 DO
+     *
      * @param omObjectTypePageReqVO 请求参数
      * @return OmObjectTypeDO
      */
-     OmObjectTypeDO convertToDO(OmObjectTypePageReqVO omObjectTypePageReqVO);
+    OmObjectTypeDO convertToDO(OmObjectTypePageReqVO omObjectTypePageReqVO);
 
     /**
      * SaveReqVO 转换为 DO
+     *
      * @param omObjectTypeSaveReqVO 保存请求参数
      * @return OmObjectTypeDO
      */
-     OmObjectTypeDO convertToDO(OmObjectTypeSaveReqVO omObjectTypeSaveReqVO);
+    OmObjectTypeDO convertToDO(OmObjectTypeSaveReqVO omObjectTypeSaveReqVO);
 
     /**
      * DO 转换为 RespVO
+     *
      * @param omObjectTypeDO 实体对象
      * @return OmObjectTypeRespVO
      */
-     OmObjectTypeRespVO convertToRespVO(OmObjectTypeDO omObjectTypeDO);
+    OmObjectTypeRespVO convertToRespVO(OmObjectTypeDO omObjectTypeDO);
 
     /**
      * DOList 转换为 RespVOList
+     *
      * @param omObjectTypeDOList 实体对象列表
      * @return List<OmObjectTypeRespVO>
      */
-     List<OmObjectTypeRespVO> convertToRespVOList(List<OmObjectTypeDO> omObjectTypeDOList);
+    List<OmObjectTypeRespVO> convertToRespVOList(List<OmObjectTypeDO> omObjectTypeDOList);
 }

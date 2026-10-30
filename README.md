@@ -7,6 +7,9 @@
  <img src="https://img.shields.io/badge/qOntology-Ontology%20Engineering-blue.svg" alt="qOntology">
  <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt="Gitee Stars"/>
  <img src="https://img.shields.io/github/stars/qiantongtech/qOntology?label=Github%20Stars" alt=""/>
+<a href="https://atomgit.com/qiantongtech/qOntology">
+  <img src="https://atomgit.com/qiantongtech/qOntology/star/badge.svg" alt="AtomGit Star"/>
+</a>
 </p>
 
 <p align="center">
@@ -17,7 +20,7 @@
 
 qOntology 是面向企业级知识工程的开源本体工程平台，以本体论为基础，遵循 OWL、RDF、SHACL 等语义网标准，聚焦企业本体治理与语义治理，通过统一建模与语义资产管理，连接知识图谱、企业运行本体与本体驱动 AI，构建统一、开放、可演进的企业语义基础设施。
 
-✨✨✨**开源版演示地址**✨✨✨ <a href="https://qontology-demo.qiantong.tech" target="_blank"> https://qontology-demo.qiantong.tech </a> ，账号：qOntology 密码：qOntology123
+✨✨✨**开源版演示地址**✨✨✨ <a href="https://demo.qontology.cn" target="_blank"> https://demo.qontology.cn </a> ，账号：qOntology 密码：qOntology123
 
 > 如果 qOntology 对您有帮助，请点个 **Star ⭐️**，这是我们持续更新的最大动力！ 🚀
 
@@ -238,38 +241,22 @@ qOntology 规划 **开源版** 与 **专业版**。开源版聚焦领域建模�
 <table>
     <tr>
         <td><img src=".gitee/system/home.png" alt="系统首页" width="400"/></td>
-        <td><img src=".gitee/system/project.png" alt="基础管理－项目管理" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/globalEnum.png" alt="基础管理－枚举管理" width="400"/></td>
-        <td><img src=".gitee/system/globalBusinessDataType.png" alt="基础管理－业务数据类型" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/dataSource.png" alt="基础管理－数据源" width="400"/></td>
-        <td><img src=".gitee/system/fileCategory.png" alt="基础管理－文件分类" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/fileManagement.png" alt="基础管理－文件管理" width="400"/></td>
         <td><img src=".gitee/system/projectOverview.png" alt="本体建模－项目概览" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/modelingGoal.png" alt="本体建模－建模目标" width="400"/></td>
+        <td><img src=".gitee/system/project.png" alt="基础管理－新增项目" width="400"/></td>
+        <td><img src=".gitee/system/modelingGoal.png" alt="本体建模－建模目标详情与关联对象类型" width="400"/></td>
+    </tr>
+    <tr>
         <td><img src=".gitee/system/term.png" alt="语义资产－术语管理" width="400"/></td>
+        <td><img src=".gitee/system/objectType.png" alt="本体建模－对象类型详情与属性配置" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/businessDataType.png" alt="语义资产－业务数据类型" width="400"/></td>
-        <td><img src=".gitee/system/enum.png" alt="语义资产－枚举管理" width="400"/></td>
-    </tr>
-    <tr>
-        <td><img src=".gitee/system/objectType.png" alt="本体建模－对象类型" width="400"/></td>
-        <td><img src=".gitee/system/objectRelation.png" alt="本体建模－对象关系" width="400"/></td>
-    </tr>
-    <tr>
+        <td><img src=".gitee/system/objectRelation.png" alt="本体建模－对象关系编辑与建模目标关联" width="400"/></td>
         <td><img src=".gitee/system/knowledgeGraph.png" alt="本体应用－知识图谱" width="400"/></td>
-        <td><img src=".gitee/system/unstructuredExtraction.png" alt="本体应用－非结构化抽取" width="400"/></td>
     </tr>
     <tr>
-        <td><img src=".gitee/system/structuredExtraction.png" alt="本体应用－结构化抽取" width="400"/></td>
-        <td><img src=".gitee/system/extractionLog.png" alt="本体应用－抽取日志" width="400"/></td>
+        <td><img src=".gitee/system/unstructuredExtraction.png" alt="本体应用－非结构化抽取结果" width="400"/></td>
+        <td><img src=".gitee/system/structuredExtraction.png" alt="本体应用－结构化抽取字段映射" width="400"/></td>
     </tr>
 </table>

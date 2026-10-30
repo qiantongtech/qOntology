@@ -18,9 +18,11 @@
 
 package tech.qiantong.qontology.module.basic.dal.mapper.project;
 
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
+import tech.qiantong.qontology.module.basic.dto.VersionDiffStatsCountDTO;
 import tech.qiantong.qontology.mybatis.core.mapper.BaseMapperX;
 import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
@@ -43,7 +45,7 @@ public interface BasicProjectVersionMapper extends BaseMapperX<BasicProjectVersi
         // 构造动态查询条件
         return selectPage(reqVO, new LambdaQueryWrapperX<BasicProjectVersionDO>()
                 .eqIfPresent(BasicProjectVersionDO::getProjectId, reqVO.getProjectId())
-                .eqIfPresent(BasicProjectVersionDO::getVersion, reqVO.getVersion())
+                .likeIfPresent(BasicProjectVersionDO::getVersion, reqVO.getVersion())
                 .eqIfPresent(BasicProjectVersionDO::getDescription, reqVO.getDescription())
                 .eqIfPresent(BasicProjectVersionDO::getBaseVersion, reqVO.getBaseVersion())
                 .eqIfPresent(BasicProjectVersionDO::getCreateTime, reqVO.getCreateTime())
@@ -52,4 +54,12 @@ public interface BasicProjectVersionMapper extends BaseMapperX<BasicProjectVersi
                 // 按照 createTime 字段降序排序
                 .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), allowedColumns));
     }
+
+    /**
+     * 根据版本ID一次性获取各业务表统计数据
+     *
+     * @param versionId 版本ID
+     * @return 版本差异统计数量
+     */
+    VersionDiffStatsCountDTO selectVersionDiffStatsCount(@Param("versionId") Long versionId);
 }

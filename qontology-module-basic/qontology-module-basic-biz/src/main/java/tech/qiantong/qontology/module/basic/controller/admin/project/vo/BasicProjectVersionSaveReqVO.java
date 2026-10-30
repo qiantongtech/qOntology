@@ -43,25 +43,24 @@ public class BasicProjectVersionSaveReqVO extends BaseEntity {
     private Long id;
 
     @Schema(description = "项目id", example = "")
-    @NotNull(message = "项目id不能为空")
     private Long projectId;
+
+    @Schema(description = "基础版本id", example = "")
+    private Long baseVersionId;
 
     @Schema(description = "版本号", example = "")
     @NotBlank(message = "版本号不能为空")
     private String version;
 
     @Schema(description = "描述", example = "")
-    @NotBlank(message = "描述不能为空")
     @Size(max = 256, message = "描述长度不能超过256个字符")
     private String description;
 
     @Schema(description = "基准版本", example = "")
-    @NotBlank(message = "基准版本不能为空")
     @Size(max = 128, message = "基准版本长度不能超过128个字符")
     private String baseVersion;
 
     @Schema(description = "备注", example = "")
-    @NotBlank(message = "备注不能为空")
     @Size(max = 512, message = "备注长度不能超过512个字符")
     private String remark;
 

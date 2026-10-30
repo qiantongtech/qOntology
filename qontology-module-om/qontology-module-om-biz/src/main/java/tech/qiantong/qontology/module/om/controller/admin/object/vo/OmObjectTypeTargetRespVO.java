@@ -15,6 +15,7 @@
  * Business License: https://community.qontology.ai/business/policy.html
  * See the LICENSE file in the project root for full license information.
  */
+
 package tech.qiantong.qontology.module.om.controller.admin.object.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -26,10 +27,14 @@ import tech.qiantong.qontology.core.domain.BaseEntity;
 import tech.qiantong.qontology.module.om.enums.AcceptStatusEnum;
 import tech.qiantong.qontology.module.om.enums.TargetPriorityEnum;
 
+/**
+ * 对象类型关联建模目标响应对象
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "对象类型关联建模目标响应")
 public class OmObjectTypeTargetRespVO extends BaseEntity {
+
     @Schema(description = "建模目标ID")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
@@ -49,9 +54,9 @@ public class OmObjectTypeTargetRespVO extends BaseEntity {
     @Schema(description = "验证状态")
     private AcceptStatusEnum acceptStatus;
 
-    @Schema(description = "关联元素数量")
+    @Schema(description = "建模目标关联的模型元素数量")
     private Long relatedElementCount;
 
-    @Schema(description = "是否有效")
+    @Schema(description = "是否有效：true 有效，false 无效")
     private Boolean validFlag;
 }

@@ -26,17 +26,21 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import tech.qiantong.qontology.core.page.PageParam;
 
+/**
+ * 对象类型属性分页查询请求
+ */
 @Schema(description = "对象类型属性分页请求")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class OmObjectTypeAttributePageReqVO extends PageParam {
-    @Schema(description = "工作区id")
+
+    @Schema(description = "工作区 ID，用于限定数据所属工作区")
     private Long workspaceId;
 
-    @Schema(description = "版本id，当前阶段可为空")
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     private Long versionId;
 
-    @Schema(description = "对象类型id")
+    @Schema(description = "所属对象类型 ID")
     @NotNull(message = "对象类型id不能为空")
     @Positive(message = "对象类型id无效")
     private Long objectTypeId;

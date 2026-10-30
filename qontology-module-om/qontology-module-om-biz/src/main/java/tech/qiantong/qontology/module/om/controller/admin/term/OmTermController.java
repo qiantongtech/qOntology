@@ -18,28 +18,28 @@
 
 package tech.qiantong.qontology.module.om.controller.admin.term;
 
+import cn.hutool.core.date.DateUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.Arrays;
-import cn.hutool.core.date.DateUtil;
 import java.util.List;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import tech.qiantong.qontology.core.page.PageParam;
-import tech.qiantong.qontology.core.domain.AjaxResult;
 import tech.qiantong.qontology.common.annotation.Log;
-import tech.qiantong.qontology.core.controller.BaseController;
-import tech.qiantong.qontology.core.domain.CommonResult;
-import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.common.enums.BusinessType;
+import tech.qiantong.qontology.common.exception.enums.GlobalErrorCodeConstants;
+import tech.qiantong.qontology.core.controller.BaseController;
+import tech.qiantong.qontology.core.domain.AjaxResult;
+import tech.qiantong.qontology.core.domain.CommonResult;
+import tech.qiantong.qontology.core.page.PageParam;
+import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.core.utils.poi.ExcelUtil;
-import tech.qiantong.qontology.common.exception.enums.GlobalErrorCodeConstants;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermPageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermSaveReqVO;
@@ -58,9 +58,16 @@ import tech.qiantong.qontology.module.om.service.term.IOmTermService;
 @RequestMapping("/om/term")
 @Validated
 public class OmTermController extends BaseController {
+
     @Resource
     private IOmTermService omTermService;
 
+    /**
+     * 查询术语列表
+     *
+     * @param omTerm 分页查询条件
+     * @return 分页查询结果
+     */
     @Operation(summary = "查询术语列表")
     @PreAuthorize("@ss.hasPermi('om:term:term:list')")
     @GetMapping("/list")
@@ -69,6 +76,12 @@ public class OmTermController extends BaseController {
         return CommonResult.success(BeanUtils.toBean(page, OmTermRespVO.class));
     }
 
+    /**
+     * 导出术语数据
+     *
+     * @param response 文件下载响应
+     * @param exportReqVO 导出筛选条件
+     */
     @Operation(summary = "导出术语列表")
     @PreAuthorize("@ss.hasPermi('om:term:term:export')")
     @Log(title = "术语", businessType = BusinessType.EXPORT)
@@ -80,6 +93,13 @@ public class OmTermController extends BaseController {
         util.exportExcel(response, OmTermConvert.INSTANCE.convertToRespVOList(list), "应用管理数据");
     }
 
+    /**
+     * 导入术语数据
+     *
+     * @param file 导入文件
+     * @param updateSupport 是否覆盖更新已有记录
+     * @return 业务处理结果
+     */
     @Operation(summary = "导入术语列表")
     @PreAuthorize("@ss.hasPermi('om:term:term:import')")
     @Log(title = "术语", businessType = BusinessType.IMPORT)
@@ -92,6 +112,12 @@ public class OmTermController extends BaseController {
         return success(message);
     }
 
+    /**
+     * 查询术语详情
+     *
+     * @param id 记录 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "获取术语详细信息")
     @PreAuthorize("@ss.hasPermi('om:term:term:query')")
     @GetMapping(value = "/{id}")
@@ -100,6 +126,12 @@ public class OmTermController extends BaseController {
         return CommonResult.success(BeanUtils.toBean(omTermDO, OmTermRespVO.class));
     }
 
+    /**
+     * 新增术语
+     *
+     * @param omTerm 新增或修改的业务信息
+     * @return 业务处理结果
+     */
     @Operation(summary = "新增术语")
     @PreAuthorize("@ss.hasPermi('om:term:term:add')")
     @Log(title = "术语", businessType = BusinessType.INSERT)
@@ -109,6 +141,12 @@ public class OmTermController extends BaseController {
         return CommonResult.toAjax(omTermService.createOmTerm(omTerm));
     }
 
+    /**
+     * 修改术语
+     *
+     * @param omTerm 新增或修改的业务信息
+     * @return 业务处理结果
+     */
     @Operation(summary = "修改术语")
     @PreAuthorize("@ss.hasPermi('om:term:term:edit')")
     @Log(title = "术语", businessType = BusinessType.UPDATE)
@@ -117,6 +155,12 @@ public class OmTermController extends BaseController {
         return CommonResult.toAjax(omTermService.updateOmTerm(omTerm));
     }
 
+    /**
+     * 删除术语
+     *
+     * @param ids 记录 ID 数组
+     * @return 业务处理结果
+     */
     @Operation(summary = "删除术语")
     @PreAuthorize("@ss.hasPermi('om:term:term:remove')")
     @Log(title = "术语", businessType = BusinessType.DELETE)
@@ -124,5 +168,4 @@ public class OmTermController extends BaseController {
     public CommonResult<Integer> remove(@PathVariable Long[] ids) {
         return CommonResult.toAjax(omTermService.removeOmTerm(Arrays.asList(ids)));
     }
-
 }

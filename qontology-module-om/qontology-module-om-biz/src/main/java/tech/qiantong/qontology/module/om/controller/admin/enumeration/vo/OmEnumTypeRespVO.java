@@ -19,11 +19,11 @@
 package tech.qiantong.qontology.module.om.controller.admin.enumeration.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.*;
 import io.swagger.v3.oas.annotations.media.Schema;
-import tech.qiantong.qontology.core.annotation.Excel;
-import java.util.Date;
 import java.io.Serializable;
+import java.util.Date;
+import lombok.*;
+import tech.qiantong.qontology.core.annotation.Excel;
 
 /**
  * 枚举类型 Response VO 对象 om_enum_type
@@ -35,69 +35,68 @@ import java.io.Serializable;
 @Data
 public class OmEnumTypeRespVO implements Serializable {
 
+    @Schema(description = "工作区 ID，用于限定数据所属工作区")
     @Excel(name = "工作区id")
-    @Schema(description = "工作区id")
     private Long workspaceId;
 
+    @Schema(description = "项目版本 ID，用于限定数据所属的本体版本")
     @Excel(name = "版本id")
-    @Schema(description = "版本id")
     private Long versionId;
 
+    /** 序列化版本号 */
     private static final long serialVersionUID = 1L;
 
-
+    @Schema(description = "枚举类型记录 ID", example = "")
     @Excel(name = "枚举主键")
-    @Schema(description = "枚举主键", example = "")
     private Long enumId;
 
+    @Schema(description = "枚举类型名称，用于界面展示", example = "")
     @Excel(name = "枚举名称")
-    @Schema(description = "枚举名称", example = "")
     private String enumName;
 
+    @Schema(description = "枚举类型编码；与枚举来源共同定位枚举类型，不是枚举记录 ID", example = "")
     @Excel(name = "枚举类型")
-    @Schema(description = "枚举类型", example = "")
     private String enumType;
 
-    @Excel(name = "状态")
     @Schema(description = "状态", example = "")
+    @Excel(name = "状态")
     private String status;
 
+    @Schema(description = "是否有效：true 有效，false 无效", example = "")
     @Excel(name = "是否有效")
-    @Schema(description = "是否有效", example = "")
     private Boolean validFlag;
 
+    @Schema(description = "逻辑删除标志：true 已删除，false 未删除", example = "")
     @Excel(name = "删除标志")
-    @Schema(description = "删除标志", example = "")
     private Boolean delFlag;
 
-    @Excel(name = "创建人")
     @Schema(description = "创建人", example = "")
+    @Excel(name = "创建人")
     private String createBy;
 
+    @Schema(description = "创建人 ID", example = "")
     @Excel(name = "创建人id")
-    @Schema(description = "创建人id", example = "")
     private Long creatorId;
 
+    @Schema(description = "创建时间", example = "")
     @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(description = "创建时间", example = "")
     private Date createTime;
 
-    @Excel(name = "更新人")
     @Schema(description = "更新人", example = "")
+    @Excel(name = "更新人")
     private String updateBy;
 
+    @Schema(description = "更新人 ID", example = "")
     @Excel(name = "更新人id")
-    @Schema(description = "更新人id", example = "")
     private Long updaterId;
 
+    @Schema(description = "更新时间", example = "")
     @Excel(name = "更新时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Schema(description = "更新时间", example = "")
     private Date updateTime;
 
+    @Schema(description = "备注信息", example = "")
     @Excel(name = "备注")
-    @Schema(description = "备注", example = "")
     private String remark;
-
 }

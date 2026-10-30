@@ -18,24 +18,24 @@
 
 package tech.qiantong.qontology.module.om.controller.admin.enumeration;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import tech.qiantong.qontology.core.page.PageParam;
-import tech.qiantong.qontology.core.domain.AjaxResult;
 import tech.qiantong.qontology.common.annotation.Log;
-import tech.qiantong.qontology.core.controller.BaseController;
-import tech.qiantong.qontology.core.domain.CommonResult;
-import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.common.enums.BusinessType;
+import tech.qiantong.qontology.core.controller.BaseController;
+import tech.qiantong.qontology.core.domain.AjaxResult;
+import tech.qiantong.qontology.core.domain.CommonResult;
+import tech.qiantong.qontology.core.page.PageParam;
+import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.core.utils.poi.ExcelUtil;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumDataPageReqVO;
@@ -56,9 +56,16 @@ import tech.qiantong.qontology.module.om.service.enumeration.IOmEnumDataService;
 @RequestMapping("/om/enumData")
 @Validated
 public class OmEnumDataController extends BaseController {
+
     @Resource
     private IOmEnumDataService omEnumDataService;
 
+    /**
+     * 查询枚举数据列表
+     *
+     * @param omEnumData 分页查询条件
+     * @return 分页查询结果
+     */
     @Operation(summary = "查询枚举数据列表")
     @PreAuthorize("@ss.hasPermi('om:enumeration:data:list')")
     @GetMapping("/list")
@@ -67,6 +74,12 @@ public class OmEnumDataController extends BaseController {
         return CommonResult.success(BeanUtils.toBean(page, OmEnumDataRespVO.class));
     }
 
+    /**
+     * 导出枚举数据数据
+     *
+     * @param response 文件下载响应
+     * @param exportReqVO 导出筛选条件
+     */
     @Operation(summary = "导出枚举数据列表")
     @PreAuthorize("@ss.hasPermi('om:enumeration:data:export')")
     @Log(title = "枚举数据", businessType = BusinessType.EXPORT)
@@ -78,23 +91,45 @@ public class OmEnumDataController extends BaseController {
         util.exportExcel(response, OmEnumDataConvert.INSTANCE.convertToRespVOList(list), "应用管理数据");
     }
 
+    /**
+     * 导入枚举数据数据
+     *
+     * @param file 导入文件
+     * @param updateSupport 是否覆盖更新已有记录
+     * @param enumType 枚举类型编码
+     * @return 业务处理结果
+     */
     @Operation(summary = "导入枚举数据列表")
     @PreAuthorize("@ss.hasPermi('om:enumeration:data:import')")
     @Log(title = "枚举数据", businessType = BusinessType.IMPORT)
     @PostMapping("/importData")
-    public AjaxResult importData(MultipartFile file, boolean updateSupport, @RequestParam(required = false) String enumType) throws Exception {
+    public AjaxResult importData(
+        MultipartFile file,
+        boolean updateSupport,
+        @RequestParam(required = false) String enumType
+    ) throws Exception {
         ExcelUtil<OmEnumDataRespVO> util = new ExcelUtil<>(OmEnumDataRespVO.class);
         List<OmEnumDataRespVO> importExcelList = util.importExcel(file.getInputStream());
         String operName = getUsername();
         if (enumType != null && !enumType.isBlank()) {
             for (OmEnumDataRespVO item : importExcelList) {
-                if (!enumType.equals(item.getEnumType())) throw new tech.qiantong.qontology.common.exception.ServiceException("导入数据的枚举类型与当前类型不一致");
+                if (
+                    !enumType.equals(item.getEnumType())
+                ) throw new tech.qiantong.qontology.common.exception.ServiceException(
+                    "导入数据的枚举类型与当前类型不一致"
+                );
             }
         }
         String message = omEnumDataService.importOmEnumData(importExcelList, updateSupport, operName);
         return success(message);
     }
 
+    /**
+     * 查询枚举数据详情
+     *
+     * @param enumCode 枚举数据记录 ID
+     * @return 业务处理结果
+     */
     @Operation(summary = "获取枚举数据详细信息")
     @PreAuthorize("@ss.hasPermi('om:enumeration:data:query')")
     @GetMapping(value = "/{enumCode}")
@@ -103,6 +138,12 @@ public class OmEnumDataController extends BaseController {
         return CommonResult.success(BeanUtils.toBean(omEnumDataDO, OmEnumDataRespVO.class));
     }
 
+    /**
+     * 新增枚举数据
+     *
+     * @param omEnumData 新增或修改的业务信息
+     * @return 业务处理结果
+     */
     @Operation(summary = "新增枚举数据")
     @PreAuthorize("@ss.hasPermi('om:enumeration:data:add')")
     @Log(title = "枚举数据", businessType = BusinessType.INSERT)
@@ -112,6 +153,12 @@ public class OmEnumDataController extends BaseController {
         return CommonResult.toAjax(omEnumDataService.createOmEnumData(omEnumData));
     }
 
+    /**
+     * 修改枚举数据
+     *
+     * @param omEnumData 新增或修改的业务信息
+     * @return 业务处理结果
+     */
     @Operation(summary = "修改枚举数据")
     @PreAuthorize("@ss.hasPermi('om:enumeration:data:edit')")
     @Log(title = "枚举数据", businessType = BusinessType.UPDATE)
@@ -120,6 +167,12 @@ public class OmEnumDataController extends BaseController {
         return CommonResult.toAjax(omEnumDataService.updateOmEnumData(omEnumData));
     }
 
+    /**
+     * 删除枚举数据
+     *
+     * @param ids 记录 ID 数组
+     * @return 业务处理结果
+     */
     @Operation(summary = "删除枚举数据")
     @PreAuthorize("@ss.hasPermi('om:enumeration:data:remove')")
     @Log(title = "枚举数据", businessType = BusinessType.DELETE)
@@ -127,5 +180,4 @@ public class OmEnumDataController extends BaseController {
     public CommonResult<Integer> remove(@PathVariable("enumCodes") Long[] ids) {
         return CommonResult.toAjax(omEnumDataService.removeOmEnumData(Arrays.asList(ids)));
     }
-
 }
