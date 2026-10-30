@@ -18,8 +18,9 @@ import java.util.stream.Collectors;
 /**
  * 数据规则项目版本复制服务
  */
-@Service
-public class OmDataRuleApiServiceImpl implements IProjectRepeatable {
+// 暂停公理、规则的版本复制，恢复时需适配 ProjectCopyContext 及绑定 ID 映射。
+// @Service
+public class OmDataRuleApiServiceImpl /* implements IProjectRepeatable */ {
 
     @Resource
     private OmDataRuleMapper omDataRuleMapper;
@@ -32,27 +33,27 @@ public class OmDataRuleApiServiceImpl implements IProjectRepeatable {
      * @param currentUser 当前操作用户
      * @return 是否复制成功
      */
-    @Override
-    public Boolean copy(Long sourceVersionId, Long targetVersionId, LoginUser currentUser) {
-        // 按源版本查询，由逻辑删除机制排除已删除记录。
-        LambdaQueryWrapper<OmDataRuleDO> queryWrapper = Wrappers.lambdaQuery(OmDataRuleDO.class)
-                .eq(OmDataRuleDO::getVersionId, sourceVersionId);
-        List<OmDataRuleDO> sourceList = omDataRuleMapper.selectList(queryWrapper);
-        if (CollUtil.isEmpty(sourceList)) {
-            return true;
-        }
-        // 沿用现有复制约定：重新生成主键，更新版本和创建信息，其余配置原样复制。
-        List<OmDataRuleDO> targetList = sourceList.stream()
-                .map(item -> {
-                    OmDataRuleDO target = BeanUtils.toBean(item, OmDataRuleDO.class);
-                    target.setId(null);
-                    target.setVersionId(targetVersionId);
-                    target.setCreatorId(currentUser.getUserId());
-                    target.setCreateBy(currentUser.getUsername());
-                    target.setCreateTime(new Date());
-                    return target;
-                })
-                .collect(Collectors.toList());
-        return omDataRuleMapper.insertBatch(targetList);
-    }
+//     @Override
+//     public Boolean copy(Long sourceVersionId, Long targetVersionId, LoginUser currentUser) {
+//         // 按源版本查询，由逻辑删除机制排除已删除记录。
+//         LambdaQueryWrapper<OmDataRuleDO> queryWrapper = Wrappers.lambdaQuery(OmDataRuleDO.class)
+//                 .eq(OmDataRuleDO::getVersionId, sourceVersionId);
+//         List<OmDataRuleDO> sourceList = omDataRuleMapper.selectList(queryWrapper);
+//         if (CollUtil.isEmpty(sourceList)) {
+//             return true;
+//         }
+//         // 沿用现有复制约定：重新生成主键，更新版本和创建信息，其余配置原样复制。
+//         List<OmDataRuleDO> targetList = sourceList.stream()
+//                 .map(item -> {
+//                     OmDataRuleDO target = BeanUtils.toBean(item, OmDataRuleDO.class);
+//                     target.setId(null);
+//                     target.setVersionId(targetVersionId);
+//                     target.setCreatorId(currentUser.getUserId());
+//                     target.setCreateBy(currentUser.getUsername());
+//                     target.setCreateTime(new Date());
+//                     return target;
+//                 })
+//                 .collect(Collectors.toList());
+//         return omDataRuleMapper.insertBatch(targetList);
+//     }
 }
