@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.basic.service.enumeration.impl;
 
+import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -54,6 +55,9 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class BasicEnumTypeServiceImpl extends ServiceImpl<BasicEnumTypeMapper, BasicEnumTypeDO> implements IBasicEnumTypeService {
+    @Resource
+    private ConstraintReferenceGuard constraintReferenceGuard;
+
     @Resource
     private jakarta.validation.Validator validator;
     @Resource
@@ -104,6 +108,10 @@ public class BasicEnumTypeServiceImpl extends ServiceImpl<BasicEnumTypeMapper, B
                             .isNull(type.getWorkspaceId() == null, BasicEnumDataDO::getWorkspaceId)) > 0) {
                 throw new ServiceException("枚举类型“" + type.getEnumName() + "”存在枚举数据，请先删除数据");
             }
+        }
+        for (Long id : idList) {
+            BasicEnumTypeDO type = baseMapper.selectById(id);
+            if (type != null) constraintReferenceGuard.checkEnum(type.getEnumType(), "GLOBAL", null);
         }
         // 批量删除枚举类型
         return baseMapper.deleteByIds(idList);

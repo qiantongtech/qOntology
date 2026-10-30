@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.om.service.dataType.impl;
 
+import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -53,6 +54,9 @@ import tech.qiantong.qontology.module.om.service.dataType.IOmDataTypeService;
 public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataTypeDO> implements IOmDataTypeService {
 
     @Resource
+    private ConstraintReferenceGuard constraintReferenceGuard;
+
+    @Resource
     private OmDataTypeMapper omDataTypeMapper;
 
     @Resource
@@ -65,7 +69,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
     public List<OmDataTypeEnumOptionRespVO> getEnumOptions(Long versionId, String enumSource) {
         requireVersion(versionId);
         if (!"PROJECT".equals(enumSource) && !"GLOBAL".equals(enumSource)) {
-            throw new ServiceException("枚举来源只能为当前项目或全局");
+            throw new ServiceException("枚举来源只能为当前项目或全局", 601);
         }
         List<OmDataTypeEnumOptionRespVO> options = new ArrayList<>();
         // 分别查询两个来源，任一来源为空或查询失败均不影响另一个来源的请求
@@ -99,6 +103,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
 
     @Override
     public Long createOmDataType(OmDataTypeSaveReqVO createReqVO) {
+        createReqVO.setId(null);
         validateDataType(createReqVO);
         OmDataTypeDO dictType = BeanUtils.toBean(createReqVO, OmDataTypeDO.class);
         dictType.setId(null);
@@ -108,7 +113,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
 
     @Override
     public int updateOmDataType(OmDataTypeSaveReqVO updateReqVO) {
-        if (updateReqVO.getId() == null) throw new ServiceException("数据类型编号不能为空");
+        if (updateReqVO.getId() == null) throw new ServiceException("数据类型编号不能为空", 601);
         getOmDataTypeById(updateReqVO.getId(), updateReqVO.getVersionId());
         validateDataType(updateReqVO);
         // 更新数据类型
@@ -120,6 +125,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
     public int removeOmDataType(Collection<Long> idList, Long versionId) {
         requireVersion(versionId);
         for (Long id : idList) getOmDataTypeById(id, versionId);
+        constraintReferenceGuard.checkBusinessTypes(idList, "PROJECT");
         // 批量删除数据类型
         return omDataTypeMapper.deleteBatchIds(idList);
     }
@@ -129,7 +135,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
         requireVersion(versionId);
         OmDataTypeDO record = omDataTypeMapper.selectById(id);
         if (record == null || !versionId.equals(record.getVersionId())) {
-            throw new ServiceException("当前版本下数据类型不存在");
+            throw new ServiceException("当前版本下数据类型不存在", 601);
         }
         return record;
     }
@@ -141,6 +147,15 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
      */
     private void validateDataType(OmDataTypeSaveReqVO request) {
         requireVersion(request.getVersionId());
+        String name = request.getName() == null ? "" : request.getName().trim();
+        if (name.isEmpty()) throw new ServiceException("业务数据类型名称不能为空", 601);
+        request.setName(name);
+        QueryWrapper<OmDataTypeDO> duplicate = new QueryWrapper<OmDataTypeDO>()
+            .eq("version_id", request.getVersionId()).eq("name", name);
+        if (request.getId() != null) duplicate.ne("id", request.getId());
+        if (omDataTypeMapper.selectCount(duplicate) > 0) {
+            throw new ServiceException("当前项目版本已存在同名业务数据类型，请修改名称", 601);
+        }
         if (request.getDataType() != DataTypeEnum.ENUM) {
             request.setEnumType(null);
             request.setEnumSource("PROJECT");
@@ -155,7 +170,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
         String source = request.getEnumSource() == null ? "PROJECT" : request.getEnumSource();
         request.setEnumSource(source);
         if (!"PROJECT".equals(source) && !"GLOBAL".equals(source)) {
-            throw new ServiceException("枚举来源只能为当前项目或全局");
+            throw new ServiceException("枚举来源只能为当前项目或全局", 601);
         }
         boolean available =
             request.getEnumType() != null &&
@@ -169,7 +184,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
                             .eq("valid_flag", true)
                     ) >
                     0);
-        if (!available) throw new ServiceException("请选择所选来源下的有效枚举类型");
+        if (!available) throw new ServiceException("请选择所选来源下的有效枚举类型", 601);
     }
 
     /**
@@ -178,6 +193,6 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
      * @param versionId 项目版本 ID
      */
     private void requireVersion(Long versionId) {
-        if (versionId == null || versionId <= 0) throw new ServiceException("请选择项目版本");
+        if (versionId == null || versionId <= 0) throw new ServiceException("请选择项目版本", 601);
     }
 }

@@ -155,7 +155,7 @@
         if (typeof id !== 'string' || !/^\d+$/.test(id)) {
             loading.value = false;
             loadFailed.value = true;
-            ElMessage.error('对象类型编号无效');
+            ElMessage.warning('对象类型编号无效');
             return;
         }
         loading.value = true;
@@ -164,7 +164,7 @@
             if (request !== requestId) return;
             if (!response.data || String(response.data.versionId) !== String(route.params.versionId)) {
                 loadFailed.value = true;
-                ElMessage.error('对象类型不存在或已删除');
+                ElMessage.warning('对象类型不存在或已删除');
                 return;
             }
             detail.value = response.data;

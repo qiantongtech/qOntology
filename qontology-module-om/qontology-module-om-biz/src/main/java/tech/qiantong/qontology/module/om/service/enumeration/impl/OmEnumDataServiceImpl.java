@@ -63,7 +63,7 @@ public class OmEnumDataServiceImpl extends ServiceImpl<OmEnumDataMapper, OmEnumD
     @Override
     public PageResult<OmEnumDataDO> getOmEnumDataPage(OmEnumDataPageReqVO pageReqVO) {
         if (pageReqVO.getVersionId() == null || pageReqVO.getVersionId() <= 0) {
-            throw new ServiceException("请选择项目版本后再查询");
+            throw new ServiceException("请选择项目版本后再查询", 601);
         }
         return omEnumDataMapper.selectPage(pageReqVO);
     }
@@ -79,13 +79,13 @@ public class OmEnumDataServiceImpl extends ServiceImpl<OmEnumDataMapper, OmEnumD
 
     @Override
     public int updateOmEnumData(OmEnumDataSaveReqVO updateReqVO) {
-        if (updateReqVO.getEnumCode() == null) throw new ServiceException("枚举数据编号不能为空");
+        if (updateReqVO.getEnumCode() == null) throw new ServiceException("枚举数据编号不能为空", 601);
         OmEnumDataDO existing = omEnumDataMapper.selectById(updateReqVO.getEnumCode());
-        if (existing == null) throw new ServiceException("枚举数据不存在");
+        if (existing == null) throw new ServiceException("枚举数据不存在", 601);
         updateReqVO.setWorkspaceId(existing.getWorkspaceId());
         updateReqVO.setVersionId(existing.getVersionId());
         if (!existing.getEnumType().equals(updateReqVO.getEnumType())) throw new ServiceException(
-            "不能变更枚举数据所属类型"
+            "不能变更枚举数据所属类型", 601
         );
         validateData(updateReqVO);
         // 更新枚举数据
@@ -111,7 +111,7 @@ public class OmEnumDataServiceImpl extends ServiceImpl<OmEnumDataMapper, OmEnumD
      */
     private void validateData(OmEnumDataSaveReqVO request) {
         if (!"0".equals(request.getStatus()) && !"1".equals(request.getStatus())) {
-            throw new ServiceException("状态只能为正常或停用");
+            throw new ServiceException("状态只能为正常或停用", 601);
         }
         if (
             omEnumTypeMapper.selectCount(
@@ -123,7 +123,7 @@ public class OmEnumDataServiceImpl extends ServiceImpl<OmEnumDataMapper, OmEnumD
                     .isNull(request.getVersionId() == null, "version_id")
             ) ==
             0
-        ) throw new ServiceException("所属枚举类型不存在");
+        ) throw new ServiceException("所属枚举类型不存在", 601);
         QueryWrapper<OmEnumDataDO> query = new QueryWrapper<OmEnumDataDO>()
             .eq("enum_type", request.getEnumType())
             .eq(request.getWorkspaceId() != null, "workspace_id", request.getWorkspaceId())
@@ -132,7 +132,7 @@ public class OmEnumDataServiceImpl extends ServiceImpl<OmEnumDataMapper, OmEnumD
             .isNull(request.getVersionId() == null, "version_id")
             .eq("enum_value", request.getEnumValue());
         if (request.getEnumCode() != null) query.ne("enum_code", request.getEnumCode());
-        if (omEnumDataMapper.selectCount(query) > 0) throw new ServiceException("该枚举类型下的键值已存在");
+        if (omEnumDataMapper.selectCount(query) > 0) throw new ServiceException("该枚举类型下的键值已存在", 601);
     }
 
     @Override
@@ -160,7 +160,7 @@ public class OmEnumDataServiceImpl extends ServiceImpl<OmEnumDataMapper, OmEnumD
      */
     @Override
     public String importOmEnumData(List<OmEnumDataRespVO> items, boolean updateSupport, String operName) {
-        if (items == null || items.isEmpty()) throw new ServiceException("导入数据不能为空");
+        if (items == null || items.isEmpty()) throw new ServiceException("导入数据不能为空", 601);
         int count = 0;
         for (OmEnumDataRespVO item : items) {
             OmEnumDataSaveReqVO request = BeanUtils.toBean(item, OmEnumDataSaveReqVO.class);
@@ -168,7 +168,7 @@ public class OmEnumDataServiceImpl extends ServiceImpl<OmEnumDataMapper, OmEnumD
                 request
             );
             if (!errors.isEmpty()) throw new ServiceException(
-                "第" + (count + 1) + "条：" + errors.iterator().next().getMessage()
+                "第" + (count + 1) + "条：" + errors.iterator().next().getMessage(), 601
             );
             request.setEnumCode(null);
             OmEnumDataDO existing = omEnumDataMapper.selectOne(
@@ -182,7 +182,7 @@ public class OmEnumDataServiceImpl extends ServiceImpl<OmEnumDataMapper, OmEnumD
             );
             if (existing != null) {
                 if (!updateSupport) throw new ServiceException(
-                    "第" + (count + 1) + "条：键值已存在，请勾选更新已有数据"
+                    "第" + (count + 1) + "条：键值已存在，请勾选更新已有数据", 601
                 );
                 request.setEnumCode(existing.getEnumCode());
                 updateOmEnumData(request);

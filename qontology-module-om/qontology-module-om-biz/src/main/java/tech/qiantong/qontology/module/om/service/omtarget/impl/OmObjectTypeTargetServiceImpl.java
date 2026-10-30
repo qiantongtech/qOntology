@@ -73,7 +73,7 @@ public class OmObjectTypeTargetServiceImpl
     @Override
     public PageResult<OmObjectTypeTargetRespVO> getTargetOptions(OmTargetPageReqVO request) {
         if (request.getVersionId() == null || request.getVersionId() <= 0) {
-            throw new ServiceException("请选择当前项目版本后再导入建模目标");
+            throw new ServiceException("请选择当前项目版本后再导入建模目标", 601);
         }
         PageResult<OmTargetDO> page = targetMapper.selectPage(request, new QueryWrapper<OmTargetDO>()
                 .eq("valid_flag", true)
@@ -140,7 +140,7 @@ public class OmObjectTypeTargetServiceImpl
     @Override
     public void saveTargets(OmObjectTypeDO objectType, List<Long> targetIds) {
         if (targetIds == null || targetIds.isEmpty() || targetIds.stream().anyMatch(id -> id == null || id <= 0)) {
-            throw new ServiceException("请至少关联一个有效的建模目标");
+            throw new ServiceException("请至少关联一个有效的建模目标", 601);
         }
         // 同一对象类型的并发保存串行执行，避免重复写入关联。
         requireObjectTypeForUpdate(objectType.getId());
@@ -153,7 +153,7 @@ public class OmObjectTypeTargetServiceImpl
                         && java.util.Objects.equals(target.getVersionId(), objectType.getVersionId()))
                 .map(OmTargetDO::getId).collect(Collectors.toSet());
         if (!available.containsAll(selected)) {
-            throw new ServiceException("部分建模目标已不存在、已停用或不属于当前项目版本，请重新选择");
+            throw new ServiceException("部分建模目标已不存在、已停用或不属于当前项目版本，请重新选择", 601);
         }
 
         Set<Long> retained = new HashSet<>();
@@ -178,7 +178,7 @@ public class OmObjectTypeTargetServiceImpl
 
     @Override
     public List<OmObjectTypeDO> getObjectTypes(Long targetId) {
-        if (targetMapper.selectById(targetId) == null) throw new ServiceException("建模目标不存在");
+        if (targetMapper.selectById(targetId) == null) throw new ServiceException("建模目标不存在", 601);
         List<Long> ids = objectTypeTargetMapper.selectList(new QueryWrapper<OmObjectTypeTargetDO>()
                 .eq("target_id", targetId).eq("valid_flag", true)).stream()
                 .map(OmObjectTypeTargetDO::getObjectTypeId).distinct().collect(Collectors.toList());
@@ -194,14 +194,14 @@ public class OmObjectTypeTargetServiceImpl
 
     private OmObjectTypeDO requireObjectType(Long id) {
         OmObjectTypeDO type = objectTypeMapper.selectById(id);
-        if (type == null) throw new ServiceException("对象类型不存在");
+        if (type == null) throw new ServiceException("对象类型不存在", 601);
         return type;
     }
 
     private void requireObjectTypeForUpdate(Long id) {
         OmObjectTypeDO type = objectTypeMapper.selectOne(new QueryWrapper<OmObjectTypeDO>()
                 .eq("id", id).last("FOR UPDATE"));
-        if (type == null) throw new ServiceException("对象类型不存在");
+        if (type == null) throw new ServiceException("对象类型不存在", 601);
     }
 
     private List<OmTargetDO> lockTargets(Collection<Long> ids) {

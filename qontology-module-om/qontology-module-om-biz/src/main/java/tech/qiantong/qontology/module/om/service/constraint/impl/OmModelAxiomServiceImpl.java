@@ -96,7 +96,7 @@ public class OmModelAxiomServiceImpl
     @Override
     public int updateOmModelAxiom(OmModelAxiomSaveReqVO updateReqVO) {
         if (updateReqVO.getId() == null || omModelAxiomMapper.selectById(updateReqVO.getId()) == null) {
-            throw new ServiceException("模型公理不存在或已删除");
+            throw new ServiceException("模型公理不存在或已删除", 601);
         }
         prepareRelationName(updateReqVO);
         validateNameUnique(updateReqVO);
@@ -113,7 +113,7 @@ public class OmModelAxiomServiceImpl
         reqVO.setRelationId(null);
         if ("DOMAIN_RANGE".equals(reqVO.getType())) {
             if (StringUtils.isBlank(reqVO.getRelationName())) {
-                throw new ServiceException("关系名称不能为空");
+                throw new ServiceException("关系名称不能为空", 601);
             }
             reqVO.setRelationName(reqVO.getRelationName().trim());
         } else {
@@ -131,7 +131,7 @@ public class OmModelAxiomServiceImpl
             wrapper.ne("id", reqVO.getId());
         }
         if (omModelAxiomMapper.selectCount(wrapper) > 0) {
-            throw new ServiceException("当前版本已存在同名模型公理");
+            throw new ServiceException("当前版本已存在同名模型公理", 601);
         }
         reqVO.setName(reqVO.getName().trim());
     }
@@ -204,7 +204,7 @@ public class OmModelAxiomServiceImpl
         String operName
     ) {
         if (StringUtils.isNull(importExcelList) || importExcelList.size() == 0) {
-            throw new ServiceException("导入数据不能为空！");
+            throw new ServiceException("导入数据不能为空！", 601);
         }
 
         int successNum = 0;
@@ -255,7 +255,7 @@ public class OmModelAxiomServiceImpl
         if (failureNum > 0) {
             resultMsg.append("很抱歉，导入失败！共 ").append(failureNum).append(" 条数据格式不正确，错误如下：");
             resultMsg.append("<br/>").append(String.join("<br/>", failureMessages));
-            throw new ServiceException(resultMsg.toString());
+            throw new ServiceException(resultMsg.toString(), 601);
         } else {
             resultMsg.append("恭喜您，数据已全部导入成功！共 ").append(successNum).append(" 条。");
         }

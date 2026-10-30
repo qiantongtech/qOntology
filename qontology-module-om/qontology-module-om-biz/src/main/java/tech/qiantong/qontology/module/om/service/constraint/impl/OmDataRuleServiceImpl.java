@@ -93,7 +93,7 @@ public class OmDataRuleServiceImpl extends ServiceImpl<OmDataRuleMapper, OmDataR
     @Override
     public int updateOmDataRule(OmDataRuleSaveReqVO updateReqVO) {
         if (updateReqVO.getId() == null || omDataRuleMapper.selectById(updateReqVO.getId()) == null) {
-            throw new ServiceException("数据规则不存在或已删除");
+            throw new ServiceException("数据规则不存在或已删除", 601);
         }
         validateNameUnique(updateReqVO);
 
@@ -112,7 +112,7 @@ public class OmDataRuleServiceImpl extends ServiceImpl<OmDataRuleMapper, OmDataR
             wrapper.ne("id", reqVO.getId());
         }
         if (omDataRuleMapper.selectCount(wrapper) > 0) {
-            throw new ServiceException("当前版本已存在同名数据规则");
+            throw new ServiceException("当前版本已存在同名数据规则", 601);
         }
         reqVO.setName(reqVO.getName().trim());
     }
@@ -181,7 +181,7 @@ public class OmDataRuleServiceImpl extends ServiceImpl<OmDataRuleMapper, OmDataR
     @Override
     public String importOmDataRule(List<OmDataRuleRespVO> importExcelList, boolean isUpdateSupport, String operName) {
         if (StringUtils.isNull(importExcelList) || importExcelList.size() == 0) {
-            throw new ServiceException("导入数据不能为空！");
+            throw new ServiceException("导入数据不能为空！", 601);
         }
 
         int successNum = 0;
@@ -232,7 +232,7 @@ public class OmDataRuleServiceImpl extends ServiceImpl<OmDataRuleMapper, OmDataR
         if (failureNum > 0) {
             resultMsg.append("很抱歉，导入失败！共 ").append(failureNum).append(" 条数据格式不正确，错误如下：");
             resultMsg.append("<br/>").append(String.join("<br/>", failureMessages));
-            throw new ServiceException(resultMsg.toString());
+            throw new ServiceException(resultMsg.toString(), 601);
         } else {
             resultMsg.append("恭喜您，数据已全部导入成功！共 ").append(successNum).append(" 条。");
         }

@@ -57,7 +57,7 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
     @Override
     public PageResult<OmTermDO> getOmTermPage(OmTermPageReqVO pageReqVO) {
         if (pageReqVO.getVersionId() == null || pageReqVO.getVersionId() <= 0) {
-            throw new ServiceException("请选择项目版本后再查询");
+            throw new ServiceException("请选择项目版本后再查询", 601);
         }
         return omTermMapper.selectPage(pageReqVO);
     }
@@ -65,6 +65,8 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
     @Override
     public Long createOmTerm(OmTermSaveReqVO createReqVO) {
         OmTermDO dictType = BeanUtils.toBean(createReqVO, OmTermDO.class);
+        dictType.setId(null);
+        validateNameUnique(dictType);
         omTermMapper.insert(dictType);
         return dictType.getId();
     }
@@ -72,11 +74,12 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
     @Override
     public int updateOmTerm(OmTermSaveReqVO updateReqVO) {
         OmTermDO existing = omTermMapper.selectById(updateReqVO.getId());
-        if (existing == null) throw new ServiceException("术语不存在或已删除");
+        if (existing == null) throw new ServiceException("术语不存在或已删除", 601);
         OmTermDO updateObj = BeanUtils.toBean(updateReqVO, OmTermDO.class);
         // 修改内容时不能将术语迁移到其他项目版本
         updateObj.setWorkspaceId(existing.getWorkspaceId());
         updateObj.setVersionId(existing.getVersionId());
+        validateNameUnique(updateObj);
         return omTermMapper.updateById(updateObj);
     }
 
@@ -122,7 +125,7 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
     @Override
     public String importOmTerm(List<OmTermRespVO> importExcelList, boolean isUpdateSupport, String operName) {
         if (StringUtils.isNull(importExcelList) || importExcelList.size() == 0) {
-            throw new ServiceException("导入数据不能为空！");
+            throw new ServiceException("导入数据不能为空！", 601);
         }
         int successNum = 0;
         int failureNum = 0;
@@ -136,6 +139,9 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
                     if (omTermId != null) {
                         OmTermDO existingOmTerm = omTermMapper.selectById(omTermId);
                         if (existingOmTerm != null) {
+                            omTermDO.setVersionId(existingOmTerm.getVersionId());
+                            omTermDO.setWorkspaceId(existingOmTerm.getWorkspaceId());
+                            validateNameUnique(omTermDO);
                             omTermMapper.updateById(omTermDO);
                             successNum++;
                             successMessages.add("数据更新成功，ID为 " + omTermId + " 的术语记录。");
@@ -152,6 +158,8 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
                     queryWrapper.eq("id", omTermId);
                     OmTermDO existingOmTerm = omTermMapper.selectOne(queryWrapper);
                     if (existingOmTerm == null) {
+                        omTermDO.setId(null);
+                        validateNameUnique(omTermDO);
                         omTermMapper.insert(omTermDO);
                         successNum++;
                         successMessages.add("数据插入成功，ID为 " + omTermId + " 的术语记录。");
@@ -171,10 +179,25 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
         if (failureNum > 0) {
             resultMsg.append("很抱歉，导入失败！共 ").append(failureNum).append(" 条数据格式不正确，错误如下：");
             resultMsg.append("<br/>").append(String.join("<br/>", failureMessages));
-            throw new ServiceException(resultMsg.toString());
+            throw new ServiceException(resultMsg.toString(), 601);
         } else {
             resultMsg.append("恭喜您，数据已全部导入成功！共 ").append(successNum).append(" 条。");
         }
         return resultMsg.toString();
+    }
+
+    /** 同一项目版本内排除自身及逻辑删除记录，名称去除首尾空格后判重。 */
+    private void validateNameUnique(OmTermDO record) {
+        if (record.getVersionId() == null || record.getVersionId() <= 0) throw new ServiceException("请选择项目版本", 601);
+        String name = record.getStdName() == null ? "" : record.getStdName().trim();
+        if (name.isEmpty()) throw new ServiceException("术语名称不能为空", 601);
+        record.setStdName(name);
+        QueryWrapper<OmTermDO> query = new QueryWrapper<OmTermDO>()
+            .eq("version_id", record.getVersionId())
+            .eq("std_name", name);
+        if (record.getId() != null) query.ne("id", record.getId());
+        if (omTermMapper.selectCount(query) > 0) {
+            throw new ServiceException("当前项目版本已存在同名术语，请修改名称", 601);
+        }
     }
 }

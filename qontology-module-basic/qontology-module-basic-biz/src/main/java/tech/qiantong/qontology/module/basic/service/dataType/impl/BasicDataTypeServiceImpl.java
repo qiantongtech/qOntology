@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.basic.service.dataType.impl;
 
+import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -52,6 +53,9 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Exception.class)
 public class BasicDataTypeServiceImpl extends ServiceImpl<BasicDataTypeMapper, BasicDataTypeDO> implements IBasicDataTypeService {
     @Resource
+    private ConstraintReferenceGuard constraintReferenceGuard;
+
+    @Resource
     private BasicDataTypeMapper basicDataTypeMapper;
 
     @Override
@@ -77,6 +81,7 @@ public class BasicDataTypeServiceImpl extends ServiceImpl<BasicDataTypeMapper, B
 
     @Override
     public int removeBasicDataType(Collection<Long> idList) {
+        constraintReferenceGuard.checkBusinessTypes(idList, "GLOBAL");
         // 批量删除数据类型
         return basicDataTypeMapper.deleteBatchIds(idList);
     }

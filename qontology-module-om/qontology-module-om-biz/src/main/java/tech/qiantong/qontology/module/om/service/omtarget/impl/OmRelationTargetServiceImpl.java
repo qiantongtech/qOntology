@@ -102,7 +102,7 @@ public class OmRelationTargetServiceImpl
     @Override
     public void saveTargets(OmObjectTypeRelationDO relation, List<Long> targetIds) {
         if (targetIds == null || targetIds.isEmpty() || targetIds.stream().anyMatch(id -> id == null || id <= 0)) {
-            throw new ServiceException("请至少关联一个有效的建模目标");
+            throw new ServiceException("请至少关联一个有效的建模目标", 601);
         }
         // 同一关系的并发保存串行执行，保留未变更关联的编号和创建信息。
         requireRelation(relation.getId(), relation.getWorkspaceId(), true);
@@ -116,7 +116,7 @@ public class OmRelationTargetServiceImpl
                         && java.util.Objects.equals(target.getVersionId(), relation.getVersionId()))
                 .map(OmTargetDO::getId).collect(Collectors.toSet());
         if (!available.containsAll(selected)) {
-            throw new ServiceException("部分建模目标已不存在、已停用或不属于当前项目版本，请重新选择");
+            throw new ServiceException("部分建模目标已不存在、已停用或不属于当前项目版本，请重新选择", 601);
         }
         Set<Long> retained = new HashSet<>();
         for (OmRelationTargetDO link : existing) {
@@ -139,7 +139,7 @@ public class OmRelationTargetServiceImpl
         List<OmObjectTypeRelationDO> relations = relationMapper.selectList(new QueryWrapper<OmObjectTypeRelationDO>()
                 .eq("workspace_id", workspaceId).in("id", ids).orderByAsc("id").last("FOR UPDATE"));
         if (relations.size() != ids.size()) {
-            throw new ServiceException("部分关系已不存在，请刷新后重试");
+            throw new ServiceException("部分关系已不存在，请刷新后重试", 601);
         }
         relationTargetMapper.delete(new QueryWrapper<OmRelationTargetDO>()
                 .eq("workspace_id", workspaceId).in("relation_id", ids));
@@ -147,7 +147,7 @@ public class OmRelationTargetServiceImpl
 
     @Override
     public List<OmObjectTypeRelationDO> getRelations(Long targetId, Long workspaceId) {
-        if (targetMapper.selectById(targetId) == null) throw new ServiceException("建模目标不存在");
+        if (targetMapper.selectById(targetId) == null) throw new ServiceException("建模目标不存在", 601);
         List<Long> ids = relationTargetMapper.selectList(new QueryWrapper<OmRelationTargetDO>()
                 .eq("target_id", targetId).eq("workspace_id", workspaceId).eq("valid_flag", true)
                 .isNotNull("relation_id")).stream().map(OmRelationTargetDO::getRelationId)
@@ -178,11 +178,11 @@ public class OmRelationTargetServiceImpl
     }
 
     private void requireRelation(Long id, Long workspaceId, boolean lock) {
-        if (id == null || workspaceId == null) throw new ServiceException("关系id和工作区id不能为空");
+        if (id == null || workspaceId == null) throw new ServiceException("关系id和工作区id不能为空", 601);
         QueryWrapper<OmObjectTypeRelationDO> query = new QueryWrapper<OmObjectTypeRelationDO>()
                 .eq("id", id).eq("workspace_id", workspaceId);
         if (lock) query.last("FOR UPDATE");
-        if (relationMapper.selectOne(query) == null) throw new ServiceException("关系不存在或不属于当前工作区");
+        if (relationMapper.selectOne(query) == null) throw new ServiceException("关系不存在或不属于当前工作区", 601);
     }
 
     private List<OmTargetDO> lockTargets(Collection<Long> ids) {

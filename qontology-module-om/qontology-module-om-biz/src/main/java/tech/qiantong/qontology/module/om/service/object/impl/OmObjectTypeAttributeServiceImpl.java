@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.om.service.object.impl;
 
+import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -62,6 +63,9 @@ public class OmObjectTypeAttributeServiceImpl
     implements IOmObjectTypeAttributeService {
 
     @Resource
+    private ConstraintReferenceGuard constraintReferenceGuard;
+
+    @Resource
     private OmObjectTypeAttributeMapper omObjectTypeAttributeMapper;
 
     @Resource
@@ -87,7 +91,7 @@ public class OmObjectTypeAttributeServiceImpl
         Long resolvedVersionId = objectTypeId == null
             ? versionId
             : requireObjectType(objectTypeId, workspaceId).getVersionId();
-        if (resolvedVersionId == null || resolvedVersionId <= 0) throw new ServiceException("请选择项目版本");
+        if (resolvedVersionId == null || resolvedVersionId <= 0) throw new ServiceException("请选择项目版本", 601);
         requireSource(source);
         List<OmAttributeBusinessTypeOptionRespVO> result = new ArrayList<>();
         if ("GLOBAL".equals(source)) {
@@ -118,7 +122,7 @@ public class OmObjectTypeAttributeServiceImpl
      */
     private void requireSource(String source) {
         if (!Set.of("PROJECT", "GLOBAL").contains(source == null ? "" : source)) {
-            throw new ServiceException("类型来源只能为当前项目或全局");
+            throw new ServiceException("类型来源只能为当前项目或全局", 601);
         }
     }
 
@@ -158,10 +162,10 @@ public class OmObjectTypeAttributeServiceImpl
      */
     private OmAttributeBusinessTypeOptionRespVO requireBusinessType(Long id, String source, OmObjectTypeDO parent) {
         requireSource(source);
-        if (id == null) throw new ServiceException("请选择业务数据类型");
+        if (id == null) throw new ServiceException("请选择业务数据类型", 601);
         if ("GLOBAL".equals(source)) {
             BasicDataTypeOptionDTO type = dataTypeApiService.getAvailableDataType(id);
-            if (type == null) throw new ServiceException("全局业务数据类型不存在或已停用");
+            if (type == null) throw new ServiceException("全局业务数据类型不存在或已停用", 601);
             return toGlobalOption(type);
         }
         OmDataTypeDO type = projectDataTypeMapper.selectById(id);
@@ -171,7 +175,7 @@ public class OmObjectTypeAttributeServiceImpl
             parent.getVersionId() == null ||
             !Objects.equals(type.getVersionId(), parent.getVersionId())
         ) {
-            throw new ServiceException("业务数据类型不存在、已停用或不属于当前项目版本");
+            throw new ServiceException("业务数据类型不存在、已停用或不属于当前项目版本", 601);
         }
         return toProjectOption(type);
     }
@@ -192,13 +196,14 @@ public class OmObjectTypeAttributeServiceImpl
             !Objects.equals(attribute.getObjectTypeId(), objectTypeId) ||
             !Objects.equals(attribute.getWorkspaceId(), workspaceId)
         ) {
-            throw new ServiceException("对象类型属性不存在或不属于当前对象类型");
+            throw new ServiceException("对象类型属性不存在或不属于当前对象类型", 601);
         }
         return attribute;
     }
 
     @Override
     public Long createOmObjectTypeAttribute(OmObjectTypeAttributeSaveReqVO request) {
+        request.setId(null);
         request.setId(null);
         OmObjectTypeDO parent = requireObjectType(request.getObjectTypeId(), request.getWorkspaceId());
         OmObjectTypeAttributeDO attribute = buildAttribute(request, parent);
@@ -209,7 +214,7 @@ public class OmObjectTypeAttributeServiceImpl
     @Override
     public int updateOmObjectTypeAttribute(OmObjectTypeAttributeSaveReqVO request) {
         if (request.getId() == null) {
-            throw new ServiceException("属性id不能为空");
+            throw new ServiceException("属性id不能为空", 601);
         }
         OmObjectTypeDO parent = requireObjectType(request.getObjectTypeId(), request.getWorkspaceId());
         OmObjectTypeAttributeDO existing = getOmObjectTypeAttributeById(
@@ -230,7 +235,7 @@ public class OmObjectTypeAttributeServiceImpl
     @Override
     public int removeOmObjectTypeAttribute(Collection<Long> idList, Long objectTypeId, Long workspaceId) {
         if (idList == null || idList.isEmpty() || idList.stream().anyMatch(id -> id == null || id <= 0)) {
-            throw new ServiceException("请选择需要删除的属性");
+            throw new ServiceException("请选择需要删除的属性", 601);
         }
         requireObjectType(objectTypeId, workspaceId);
         Set<Long> ids = new LinkedHashSet<>(idList);
@@ -242,8 +247,9 @@ public class OmObjectTypeAttributeServiceImpl
                 .last("FOR UPDATE")
         );
         if (attributes.size() != ids.size()) {
-            throw new ServiceException("部分属性已不存在或不属于当前对象类型，请刷新后重试");
+            throw new ServiceException("部分属性已不存在或不属于当前对象类型，请刷新后重试", 601);
         }
+        constraintReferenceGuard.checkAttributes(ids);
         return omObjectTypeAttributeMapper.delete(
             new QueryWrapper<OmObjectTypeAttributeDO>()
                 .eq("object_type_id", objectTypeId)
@@ -280,11 +286,11 @@ public class OmObjectTypeAttributeServiceImpl
      */
     private OmObjectTypeDO requireObjectType(Long id, Long workspaceId) {
         if (id == null || workspaceId == null) {
-            throw new ServiceException("对象类型id和工作区id不能为空");
+            throw new ServiceException("对象类型id和工作区id不能为空", 601);
         }
         OmObjectTypeDO parent = objectTypeMapper.selectById(id);
         if (parent == null || !Objects.equals(parent.getWorkspaceId(), workspaceId)) {
-            throw new ServiceException("对象类型不存在或不属于当前工作区");
+            throw new ServiceException("对象类型不存在或不属于当前工作区", 601);
         }
         return parent;
     }
@@ -301,21 +307,21 @@ public class OmObjectTypeAttributeServiceImpl
         String description = request.getDescription() == null ? "" : request.getDescription().trim();
         String remark = request.getRemark() == null ? "" : request.getRemark().trim();
         if (name.isEmpty() || name.length() > 128) {
-            throw new ServiceException("属性名称不能为空，长度不能超过128个字符");
+            throw new ServiceException("属性名称不能为空，长度不能超过128个字符", 601);
         }
         if (request.getTypeCategory() == null || (request.getTypeCategory() != 1 && request.getTypeCategory() != 2)) {
-            throw new ServiceException("请选择基础数据类型或业务数据类型");
+            throw new ServiceException("请选择基础数据类型或业务数据类型", 601);
         }
         String code = request.getCode() == null ? "" : request.getCode().trim();
         if (code.length() > 128 || !code.matches("[A-Za-z][A-Za-z0-9_]*")) {
-            throw new ServiceException("属性代码须以字母开头，仅允许字母、数字和下划线，长度不超过128");
+            throw new ServiceException("属性代码须以字母开头，仅允许字母、数字和下划线，长度不超过128", 601);
         }
         QueryWrapper<OmObjectTypeAttributeDO> duplicate = new QueryWrapper<OmObjectTypeAttributeDO>()
             .eq("object_type_id", parent.getId())
             .eq("code", code);
         if (request.getId() != null) duplicate.ne("id", request.getId());
         if (omObjectTypeAttributeMapper.selectCount(duplicate) > 0) throw new ServiceException(
-            "当前对象类型下属性代码已存在"
+            "当前对象类型下属性代码已存在，请修改属性代码", 601
         );
         Integer basicTypeCode;
         Long businessTypeId = null;
@@ -328,21 +334,21 @@ public class OmObjectTypeAttributeServiceImpl
         if (request.getTypeCategory() == 1) {
             basicTypeCode = request.getBasicTypeCode();
             if (basicTypeCode == null || !Set.of(0, 1, 2, 3, 4, 5).contains(basicTypeCode)) {
-                throw new ServiceException("请选择有效的基础数据类型");
+                throw new ServiceException("请选择有效的基础数据类型", 601);
             }
             if (basicTypeCode == 1 || basicTypeCode == 2) {
                 unit = request.getUnit() == null || request.getUnit().isBlank() ? null : request.getUnit().trim();
-                if (unit != null && unit.length() > 32) throw new ServiceException("单位长度不超过32");
+                if (unit != null && unit.length() > 32) throw new ServiceException("单位长度不超过32", 601);
             }
             if (basicTypeCode == 2) {
                 decimalPlaces = request.getDecimalPlaces();
-                if (decimalPlaces != null && decimalPlaces < 0) throw new ServiceException("请填写有效的小数位数");
+                if (decimalPlaces != null && decimalPlaces < 0) throw new ServiceException("请填写有效的小数位数", 601);
             }
             if (basicTypeCode == 4) {
                 format = request.getFormat() == null || request.getFormat().isBlank()
                     ? null
                     : request.getFormat().trim();
-                if (format != null && format.length() > 128) throw new ServiceException("日期格式长度不超过128");
+                if (format != null && format.length() > 128) throw new ServiceException("日期格式长度不超过128", 601);
             }
             if (basicTypeCode == 5 && request.getEnumType() != null && !request.getEnumType().isBlank()) {
                 enumType = request.getEnumType().trim();
@@ -356,7 +362,7 @@ public class OmObjectTypeAttributeServiceImpl
                         .stream()
                         .noneMatch(option -> Objects.equals(option.getEnumType(), selectedCode))
                 ) {
-                    throw new ServiceException("请选择对应来源下的有效枚举类型");
+                    throw new ServiceException("请选择对应来源下的有效枚举类型", 601);
                 }
             }
         } else {
@@ -364,7 +370,7 @@ public class OmObjectTypeAttributeServiceImpl
             businessSource = request.getBusinessTypeSource() == null ? "GLOBAL" : request.getBusinessTypeSource();
             OmAttributeBusinessTypeOptionRespVO selected = requireBusinessType(businessTypeId, businessSource, parent);
             if (selected.getDataType() == null || !selected.getDataType().matches("[0-5]")) {
-                throw new ServiceException("所选业务数据类型配置无效");
+                throw new ServiceException("所选业务数据类型配置无效", 601);
             }
             // 只读配置一律从服务端来源读取，不采用客户端提交的配置
             basicTypeCode = Integer.valueOf(selected.getDataType());
@@ -375,10 +381,10 @@ public class OmObjectTypeAttributeServiceImpl
             enumSource = selected.getEnumSource();
         }
         if (description.length() > 512) {
-            throw new ServiceException("属性描述长度不能超过512个字符");
+            throw new ServiceException("属性描述长度不能超过512个字符", 601);
         }
         if (remark.length() > 512) {
-            throw new ServiceException("备注长度不能超过512个字符");
+            throw new ServiceException("备注长度不能超过512个字符", 601);
         }
         OmObjectTypeAttributeDO attribute = OmObjectTypeAttributeDO.builder()
             .workspaceId(parent.getWorkspaceId())

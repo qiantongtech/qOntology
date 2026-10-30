@@ -77,7 +77,9 @@
                     min-width="260"
                     align="left"
                     :show-overflow-tooltip="{ effect: 'light' }"
-                />
+                >
+                    <template #default="{ row }">{{ row.description?.trim() || '-' }}</template>
+                </el-table-column>
                 <el-table-column v-if="visible('orderNum')" prop="orderNum" label="显示顺序" width="100" align="center">
                     <template #default="{ row }">{{ row.orderNum ?? '-' }}</template>
                 </el-table-column>

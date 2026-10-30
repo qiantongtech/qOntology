@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.om.service.object.impl;
 
+import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -61,6 +62,9 @@ public class OmObjectTypeServiceImpl
     implements IOmObjectTypeService {
 
     @Resource
+    private ConstraintReferenceGuard constraintReferenceGuard;
+
+    @Resource
     private OmObjectTypeMapper omObjectTypeMapper;
 
     @Resource
@@ -75,7 +79,7 @@ public class OmObjectTypeServiceImpl
     @Override
     public PageResult<OmObjectTypeDO> getOmObjectTypePage(OmObjectTypePageReqVO pageReqVO) {
         if (pageReqVO.getVersionId() == null || pageReqVO.getVersionId() <= 0) {
-            throw new ServiceException("请选择项目版本后再查询");
+            throw new ServiceException("请选择项目版本后再查询", 601);
         }
         pageReqVO.setName(pageReqVO.getName() == null ? null : pageReqVO.getName().trim());
         List<Long> linkedIds = null;
@@ -101,6 +105,7 @@ public class OmObjectTypeServiceImpl
     public Long createOmObjectType(OmObjectTypeSaveReqVO createReqVO) {
         OmObjectTypeDO objectType = BeanUtils.toBean(createReqVO, OmObjectTypeDO.class);
         objectType.setId(null);
+        validateNameUnique(objectType);
         prepareTree(objectType);
         omObjectTypeMapper.insert(objectType);
         objectTypeTargetService.saveTargets(objectType, createReqVO.getTargetIds());
@@ -111,18 +116,19 @@ public class OmObjectTypeServiceImpl
     public int updateOmObjectType(OmObjectTypeSaveReqVO updateReqVO) {
         OmObjectTypeDO existing = omObjectTypeMapper.selectById(updateReqVO.getId());
         if (existing == null) {
-            throw new ServiceException("对象类型不存在");
+            throw new ServiceException("对象类型不存在", 601);
         }
         if (
             (existing.getParentId() == null || existing.getParentId() == 0L) &&
             updateReqVO.getParentId() != null &&
             updateReqVO.getParentId() != 0L
         ) {
-            throw new ServiceException("顶级对象类型不能修改上级对象类型");
+            throw new ServiceException("顶级对象类型不能修改上级对象类型", 601);
         }
         OmObjectTypeDO updateObj = BeanUtils.toBean(updateReqVO, OmObjectTypeDO.class);
         updateObj.setWorkspaceId(existing.getWorkspaceId());
         updateObj.setVersionId(existing.getVersionId());
+        validateNameUnique(updateObj);
         prepareTree(updateObj);
         // 包括移到顶级：移动节点时同步更新全部后代的祖级路径
         String oldPrefix = existing.getAncestors() + "," + existing.getId();
@@ -146,13 +152,13 @@ public class OmObjectTypeServiceImpl
     @Override
     public int removeOmObjectType(Long id) {
         if (omObjectTypeMapper.selectById(id) == null) {
-            throw new ServiceException("对象类型不存在");
+            throw new ServiceException("对象类型不存在", 601);
         }
         if (omObjectTypeMapper.selectCount(new QueryWrapper<OmObjectTypeDO>().eq("parent_id", id)) > 0) {
-            throw new ServiceException("存在下级对象类型，请先删除下级");
+            throw new ServiceException("存在下级对象类型，请先删除下级", 601);
         }
         if (attributeMapper.selectCount(new QueryWrapper<OmObjectTypeAttributeDO>().eq("object_type_id", id)) > 0) {
-            throw new ServiceException("存在对象类型属性，请先删除属性");
+            throw new ServiceException("存在对象类型属性，请先删除属性", 601);
         }
         if (
             relationMapper.selectCount(
@@ -162,8 +168,9 @@ public class OmObjectTypeServiceImpl
             ) >
             0
         ) {
-            throw new ServiceException("对象类型已被关系引用，请先删除相关关系");
+            throw new ServiceException("对象类型已被关系引用，请先删除相关关系", 601);
         }
+        constraintReferenceGuard.checkObjectTypes(java.util.Collections.singleton(id));
         objectTypeTargetService.removeByObjectType(id);
         return omObjectTypeMapper.deleteById(id);
     }
@@ -191,13 +198,13 @@ public class OmObjectTypeServiceImpl
      */
     private void prepareTree(OmObjectTypeDO type) {
         if (type.getName() == null || type.getName().trim().isEmpty() || type.getName().length() > 128) {
-            throw new ServiceException("名称不能为空，长度不能超过128个字符");
+            throw new ServiceException("名称不能为空，长度不能超过128个字符", 601);
         }
         if (type.getDescription() == null) {
             type.setDescription("");
         }
         if (type.getDescription().length() > 512) {
-            throw new ServiceException("描述长度不能超过512个字符");
+            throw new ServiceException("描述长度不能超过512个字符", 601);
         }
         Long parentId = type.getParentId() == null ? 0L : type.getParentId();
         type.setParentId(parentId);
@@ -205,7 +212,7 @@ public class OmObjectTypeServiceImpl
             type.setOrderNum(0L);
         }
         if (type.getOrderNum() < 0 || type.getOrderNum() > Integer.MAX_VALUE) {
-            throw new ServiceException("显示顺序须为有效的非负整数");
+            throw new ServiceException("显示顺序须为有效的非负整数", 601);
         }
         if (parentId == 0L) {
             type.setAncestors("0");
@@ -216,16 +223,16 @@ public class OmObjectTypeServiceImpl
                 !Objects.equals(parent.getWorkspaceId(), type.getWorkspaceId()) ||
                 !Objects.equals(parent.getVersionId(), type.getVersionId())
             ) {
-                throw new ServiceException("上级对象类型必须属于当前项目版本");
+                throw new ServiceException("上级对象类型必须属于当前项目版本", 601);
             }
             if (parent.getAncestors() == null) {
-                throw new ServiceException("父级祖级路径缺失，请先修复父级数据");
+                throw new ServiceException("父级祖级路径缺失，请先修复父级数据", 601);
             }
             if (
                 Objects.equals(type.getId(), parentId) ||
                 Arrays.asList(parent.getAncestors().split(",")).contains(String.valueOf(type.getId()))
             ) {
-                throw new ServiceException("不能将自身或下级设为父级");
+                throw new ServiceException("不能将自身或下级设为父级", 601);
             }
             type.setAncestors(parent.getAncestors() + "," + parentId);
         }
@@ -239,7 +246,7 @@ public class OmObjectTypeServiceImpl
      */
     private void checkPathLength(String path) {
         if (path.length() > 128) {
-            throw new ServiceException("对象类型层级过深，祖级路径不能超过128个字符");
+            throw new ServiceException("对象类型层级过深，祖级路径不能超过128个字符", 601);
         }
     }
 
@@ -257,7 +264,7 @@ public class OmObjectTypeServiceImpl
     public List<OmObjectTypeDO> getOmObjectTypeListExcludeChild(Long id) {
         OmObjectTypeDO current = omObjectTypeMapper.selectById(id);
         if (current == null) {
-            throw new ServiceException("对象类型不存在");
+            throw new ServiceException("对象类型不存在", 601);
         }
         List<OmObjectTypeDO> types = scopedTypes(current);
         types.removeIf(
@@ -299,7 +306,7 @@ public class OmObjectTypeServiceImpl
         String operName
     ) {
         if (StringUtils.isNull(importExcelList) || importExcelList.size() == 0) {
-            throw new ServiceException("导入数据不能为空！");
+            throw new ServiceException("导入数据不能为空！", 601);
         }
         int successNum = 0;
         int failureNum = 0;
@@ -347,10 +354,25 @@ public class OmObjectTypeServiceImpl
         if (failureNum > 0) {
             resultMsg.append("很抱歉，导入失败！共 ").append(failureNum).append(" 条数据格式不正确，错误如下：");
             resultMsg.append("<br/>").append(String.join("<br/>", failureMessages));
-            throw new ServiceException(resultMsg.toString());
+            throw new ServiceException(resultMsg.toString(), 601);
         } else {
             resultMsg.append("恭喜您，数据已全部导入成功！共 ").append(successNum).append(" 条。");
         }
         return resultMsg.toString();
+    }
+
+    /** 同一项目版本内排除自身及逻辑删除记录，名称去除首尾空格后判重。 */
+    private void validateNameUnique(OmObjectTypeDO record) {
+        if (record.getVersionId() == null || record.getVersionId() <= 0) throw new ServiceException("请选择项目版本", 601);
+        String name = record.getName() == null ? "" : record.getName().trim();
+        if (name.isEmpty()) throw new ServiceException("对象类型名称不能为空", 601);
+        record.setName(name);
+        QueryWrapper<OmObjectTypeDO> query = new QueryWrapper<OmObjectTypeDO>()
+            .eq("version_id", record.getVersionId())
+            .eq("name", name);
+        if (record.getId() != null) query.ne("id", record.getId());
+        if (omObjectTypeMapper.selectCount(query) > 0) {
+            throw new ServiceException("当前项目版本已存在同名对象类型，请修改名称", 601);
+        }
     }
 }

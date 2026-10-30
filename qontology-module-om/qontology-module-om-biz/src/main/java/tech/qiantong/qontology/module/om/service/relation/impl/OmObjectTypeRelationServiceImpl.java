@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.om.service.relation.impl;
 
+import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -58,6 +59,9 @@ public class OmObjectTypeRelationServiceImpl
     implements IOmObjectTypeRelationService {
 
     @Resource
+    private ConstraintReferenceGuard constraintReferenceGuard;
+
+    @Resource
     private OmObjectTypeRelationMapper omObjectTypeRelationMapper;
 
     @Resource
@@ -71,7 +75,7 @@ public class OmObjectTypeRelationServiceImpl
         requireWorkspace(request.getWorkspaceId());
         request.setName(request.getName() == null ? null : request.getName().trim());
         if (request.getVersionId() == null || request.getVersionId() <= 0) {
-            throw new ServiceException("请选择项目版本后再查询");
+            throw new ServiceException("请选择项目版本后再查询", 601);
         }
         List<Long> linkedIds = null;
         if (request.getTargetIdList() != null && !request.getTargetIdList().isEmpty()) {
@@ -105,6 +109,7 @@ public class OmObjectTypeRelationServiceImpl
 
     @Override
     public Long createOmObjectTypeRelation(OmObjectTypeRelationSaveReqVO request) {
+        request.setId(null);
         OmObjectTypeRelationDO relation = buildRelation(request);
         omObjectTypeRelationMapper.insert(relation);
         relationTargetService.saveTargets(relation, request.getTargetIds());
@@ -135,15 +140,16 @@ public class OmObjectTypeRelationServiceImpl
     @Override
     public int removeOmObjectTypeRelation(Collection<Long> idList, Long workspaceId) {
         if (idList == null || idList.isEmpty() || idList.stream().anyMatch(id -> id == null || id <= 0)) {
-            throw new ServiceException("请选择需要删除的关系");
+            throw new ServiceException("请选择需要删除的关系", 601);
         }
         Set<Long> ids = new HashSet<>(idList);
         Long count = omObjectTypeRelationMapper.selectCount(
             new QueryWrapper<OmObjectTypeRelationDO>().eq("workspace_id", workspaceId).in("id", ids)
         );
         if (count != ids.size()) {
-            throw new ServiceException("部分关系已不存在，请刷新后重试");
+            throw new ServiceException("部分关系已不存在，请刷新后重试", 601);
         }
+        constraintReferenceGuard.checkRelations(ids);
         relationTargetService.removeByRelations(ids, workspaceId);
         return omObjectTypeRelationMapper.delete(
             new QueryWrapper<OmObjectTypeRelationDO>().eq("workspace_id", workspaceId).in("id", ids)
@@ -198,13 +204,13 @@ public class OmObjectTypeRelationServiceImpl
     private OmObjectTypeRelationDO requireRelation(Long id, Long workspaceId) {
         requireWorkspace(workspaceId);
         if (id == null) {
-            throw new ServiceException("关系id不能为空");
+            throw new ServiceException("关系id不能为空", 601);
         }
         OmObjectTypeRelationDO relation = omObjectTypeRelationMapper.selectOne(
             new QueryWrapper<OmObjectTypeRelationDO>().eq("id", id).eq("workspace_id", workspaceId)
         );
         if (relation == null) {
-            throw new ServiceException("关系不存在或不属于当前工作区");
+            throw new ServiceException("关系不存在或不属于当前工作区", 601);
         }
         return relation;
     }
@@ -221,26 +227,34 @@ public class OmObjectTypeRelationServiceImpl
         String description = trim(request.getDescription());
         String reverseName = trim(request.getReverseName());
         if (name.isEmpty() || name.length() > 128) {
-            throw new ServiceException("关系名称不能为空，长度不能超过128个字符");
+            throw new ServiceException("关系名称不能为空，长度不能超过128个字符", 601);
         }
         if (description.length() > 256) {
-            throw new ServiceException("关系描述不能超过256个字符");
+            throw new ServiceException("关系描述不能超过256个字符", 601);
         }
         if (reverseName.length() > 128) {
-            throw new ServiceException("反向名称不能超过128个字符");
+            throw new ServiceException("反向名称不能超过128个字符", 601);
         }
         Integer reversible = request.getReversibleFlag();
         if (reversible == null || reversible < 0 || reversible > 1) {
-            throw new ServiceException("是否可逆只能为0或1");
+            throw new ServiceException("是否可逆只能为0或1", 601);
         }
         if (reversible == 1 && reverseName.isEmpty()) {
-            throw new ServiceException("可逆关系的反向名称不能为空");
+            throw new ServiceException("可逆关系的反向名称不能为空", 601);
         }
         requireType(request.getStartTypeId(), request.getWorkspaceId(), request.getVersionId());
         requireType(request.getEndTypeId(), request.getWorkspaceId(), request.getVersionId());
+        QueryWrapper<OmObjectTypeRelationDO> duplicate = new QueryWrapper<OmObjectTypeRelationDO>()
+            .eq("version_id", request.getVersionId())
+            .eq("start_type_id", request.getStartTypeId())
+            .eq("name", name).eq("end_type_id", request.getEndTypeId());
+        if (request.getId() != null) duplicate.ne("id", request.getId());
+        if (omObjectTypeRelationMapper.selectCount(duplicate) > 0) {
+            throw new ServiceException("当前项目版本已存在相同的起始对象类型、关系名称和结束对象类型，请勿重复添加", 601);
+        }
         String remark = trim(request.getRemark());
         if (remark.length() > 512) {
-            throw new ServiceException("备注不能超过512个字符");
+            throw new ServiceException("备注不能超过512个字符", 601);
         }
         OmObjectTypeRelationDO relation = OmObjectTypeRelationDO.builder()
             .workspaceId(request.getWorkspaceId())
@@ -265,7 +279,7 @@ public class OmObjectTypeRelationServiceImpl
      */
     private void requireType(Long id, Long workspaceId, Long versionId) {
         if (id == null) {
-            throw new ServiceException("请选择起点和终点类型");
+            throw new ServiceException("请选择起点和终点类型", 601);
         }
         OmObjectTypeDO type = objectTypeMapper.selectById(id);
         if (
@@ -274,7 +288,7 @@ public class OmObjectTypeRelationServiceImpl
             !Objects.equals(type.getWorkspaceId(), workspaceId) ||
             !Objects.equals(type.getVersionId(), versionId)
         ) {
-            throw new ServiceException("起点、终点类型必须有效且属于当前项目版本");
+            throw new ServiceException("起点、终点类型必须有效且属于当前项目版本", 601);
         }
     }
 
@@ -314,7 +328,7 @@ public class OmObjectTypeRelationServiceImpl
      */
     private void requireWorkspace(Long id) {
         if (id == null) {
-            throw new ServiceException("工作区id不能为空");
+            throw new ServiceException("工作区id不能为空", 601);
         }
     }
 

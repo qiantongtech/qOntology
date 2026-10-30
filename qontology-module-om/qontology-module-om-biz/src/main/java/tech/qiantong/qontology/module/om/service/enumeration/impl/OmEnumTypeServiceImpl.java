@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.om.service.enumeration.impl;
 
+import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -52,6 +53,9 @@ import tech.qiantong.qontology.module.om.service.enumeration.IOmEnumTypeService;
 public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumTypeDO> implements IOmEnumTypeService {
 
     @Resource
+    private ConstraintReferenceGuard constraintReferenceGuard;
+
+    @Resource
     private OmEnumTypeMapper omEnumTypeMapper;
 
     @Resource
@@ -63,13 +67,14 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
     @Override
     public PageResult<OmEnumTypeDO> getOmEnumTypePage(OmEnumTypePageReqVO pageReqVO) {
         if (pageReqVO.getVersionId() == null || pageReqVO.getVersionId() <= 0) {
-            throw new ServiceException("请选择项目版本后再查询");
+            throw new ServiceException("请选择项目版本后再查询", 601);
         }
         return omEnumTypeMapper.selectPage(pageReqVO);
     }
 
     @Override
     public Long createOmEnumType(OmEnumTypeSaveReqVO createReqVO) {
+        createReqVO.setEnumId(null);
         validateType(createReqVO);
         OmEnumTypeDO dictType = BeanUtils.toBean(createReqVO, OmEnumTypeDO.class);
         dictType.setEnumId(null);
@@ -79,9 +84,9 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
 
     @Override
     public int updateOmEnumType(OmEnumTypeSaveReqVO updateReqVO) {
-        if (updateReqVO.getEnumId() == null) throw new ServiceException("枚举编号不能为空");
+        if (updateReqVO.getEnumId() == null) throw new ServiceException("枚举编号不能为空", 601);
         OmEnumTypeDO existing = omEnumTypeMapper.selectById(updateReqVO.getEnumId());
-        if (existing == null) throw new ServiceException("枚举类型不存在");
+        if (existing == null) throw new ServiceException("枚举类型不存在", 601);
         updateReqVO.setWorkspaceId(existing.getWorkspaceId());
         updateReqVO.setVersionId(existing.getVersionId());
         validateType(updateReqVO);
@@ -97,7 +102,7 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
             ) >
             0
         ) {
-            throw new ServiceException("该枚举类型已有数据，不能修改类型编码");
+            throw new ServiceException("该枚举类型已有数据，不能修改类型编码", 601);
         }
         // 更新枚举类型
         OmEnumTypeDO updateObj = BeanUtils.toBean(updateReqVO, OmEnumTypeDO.class);
@@ -120,8 +125,12 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
                 ) >
                 0
             ) {
-                throw new ServiceException("枚举类型“" + type.getEnumName() + "”存在枚举数据，请先删除数据");
+                throw new ServiceException("枚举类型“" + type.getEnumName() + "”存在枚举数据，请先删除数据", 601);
             }
+        }
+        for (Long id : idList) {
+            OmEnumTypeDO type = omEnumTypeMapper.selectById(id);
+            if (type != null) constraintReferenceGuard.checkEnum(type.getEnumType(), "PROJECT", type.getVersionId());
         }
         // 批量删除枚举类型
         return omEnumTypeMapper.deleteBatchIds(idList);
@@ -138,11 +147,22 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
      * @param request 业务请求参数
      */
     private void validateType(OmEnumTypeSaveReqVO request) {
+        if (request.getVersionId() == null || request.getVersionId() <= 0) throw new ServiceException("请选择项目版本", 601);
+        String name = request.getEnumName() == null ? "" : request.getEnumName().trim();
+        if (name.isEmpty()) throw new ServiceException("枚举名称不能为空", 601);
+        request.setEnumName(name);
+        request.setEnumType(request.getEnumType() == null ? "" : request.getEnumType().trim());
+        QueryWrapper<OmEnumTypeDO> duplicate = new QueryWrapper<OmEnumTypeDO>()
+            .eq("version_id", request.getVersionId()).eq("enum_name", name);
+        if (request.getEnumId() != null) duplicate.ne("enum_id", request.getEnumId());
+        if (omEnumTypeMapper.selectCount(duplicate) > 0) {
+            throw new ServiceException("当前项目版本已存在同名枚举，请修改名称", 601);
+        }
         if (!"0".equals(request.getStatus()) && !"1".equals(request.getStatus())) {
-            throw new ServiceException("状态只能为正常或停用");
+            throw new ServiceException("状态只能为正常或停用", 601);
         }
         if (!request.getEnumType().matches("[A-Za-z][A-Za-z0-9_]*")) {
-            throw new ServiceException("枚举类型须以字母开头，仅允许字母、数字和下划线");
+            throw new ServiceException("枚举类型须以字母开头，仅允许字母、数字和下划线", 601);
         }
         QueryWrapper<OmEnumTypeDO> query = new QueryWrapper<OmEnumTypeDO>()
             .eq("enum_type", request.getEnumType())
@@ -151,7 +171,7 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
             .eq(request.getVersionId() != null, "version_id", request.getVersionId())
             .isNull(request.getVersionId() == null, "version_id");
         if (request.getEnumId() != null) query.ne("enum_id", request.getEnumId());
-        if (omEnumTypeMapper.selectCount(query) > 0) throw new ServiceException("枚举类型编码已存在");
+        if (omEnumTypeMapper.selectCount(query) > 0) throw new ServiceException("当前项目版本枚举类型编码已存在", 601);
     }
 
     @Override
@@ -179,7 +199,7 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
      */
     @Override
     public String importOmEnumType(List<OmEnumTypeRespVO> items, boolean updateSupport, String operName) {
-        if (items == null || items.isEmpty()) throw new ServiceException("导入数据不能为空");
+        if (items == null || items.isEmpty()) throw new ServiceException("导入数据不能为空", 601);
         int count = 0;
         for (OmEnumTypeRespVO item : items) {
             OmEnumTypeSaveReqVO request = BeanUtils.toBean(item, OmEnumTypeSaveReqVO.class);
@@ -187,7 +207,7 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
                 request
             );
             if (!errors.isEmpty()) throw new ServiceException(
-                "第" + (count + 1) + "条：" + errors.iterator().next().getMessage()
+                "第" + (count + 1) + "条：" + errors.iterator().next().getMessage(), 601
             );
             request.setEnumId(null);
             QueryWrapper<OmEnumTypeDO> query = new QueryWrapper<OmEnumTypeDO>()
@@ -199,7 +219,7 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
             OmEnumTypeDO existing = omEnumTypeMapper.selectOne(query);
             if (existing != null) {
                 if (!updateSupport) throw new ServiceException(
-                    "第" + (count + 1) + "条：编码已存在，请勾选更新已有数据"
+                    "第" + (count + 1) + "条：编码已存在，请勾选更新已有数据", 601
                 );
                 request.setEnumId(existing.getEnumId());
                 updateOmEnumType(request);
