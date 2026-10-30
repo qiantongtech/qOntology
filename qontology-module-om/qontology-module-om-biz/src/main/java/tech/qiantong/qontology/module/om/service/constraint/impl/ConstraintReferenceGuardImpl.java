@@ -34,13 +34,27 @@ import tech.qiantong.qontology.module.om.dal.dataobject.constraint.OmDataRuleDO;
 import tech.qiantong.qontology.module.om.dal.mapper.constraint.OmModelAxiomMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.constraint.OmDataRuleMapper;
 
+/**
+ * 公理、规则绑定目标的删除引用校验实现
+ *
+ * <p>公理按绑定字段查询；规则解析待删目标所属版本的条件数组。
+ * 命中引用时返回包含公理或规则名称的业务警告，由调用方在删除前执行校验。</p>
+ *
+ * @author qOntology
+ * @date 2026-10-30
+ */
 @Service
 public class ConstraintReferenceGuardImpl implements ConstraintReferenceGuard {
+    /** 模型公理数据访问组件 */
     @Resource
     private OmModelAxiomMapper axiomMapper;
+    /** 数据规则数据访问组件 */
     @Resource
     private OmDataRuleMapper ruleMapper;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void checkObjectTypes(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
@@ -49,6 +63,9 @@ public class ConstraintReferenceGuardImpl implements ConstraintReferenceGuard {
         checkRules(ids, "objectTypeId", "对象类型", "om_object_type");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void checkAttributes(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
@@ -56,12 +73,18 @@ public class ConstraintReferenceGuardImpl implements ConstraintReferenceGuard {
         checkRules(ids, "attributeId", "属性", "om_object_type_attribute");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void checkRelations(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
         checkAxioms(new QueryWrapper<OmModelAxiomDO>().in("relation_id", ids), "关系");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void checkBusinessTypes(Collection<Long> ids, String source) {
         if (ids == null || ids.isEmpty()) return;
@@ -72,6 +95,9 @@ public class ConstraintReferenceGuardImpl implements ConstraintReferenceGuard {
             }), "业务类型");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void checkEnum(String code, String source, Long versionId) {
         if (code == null || code.isEmpty()) return;
@@ -83,6 +109,13 @@ public class ConstraintReferenceGuardImpl implements ConstraintReferenceGuard {
             }), "枚举类型");
     }
 
+    /**
+     * 查询公理引用，命中时以公理名称提示解除绑定。
+     *
+     * @param query 按目标绑定字段及来源、版本构造的查询条件
+     * @param target 待删除目标的中文类型名称，用于提示
+     * @throws ServiceException 存在未逻辑删除的公理引用时抛出业务警告
+     */
     private void checkAxioms(QueryWrapper<OmModelAxiomDO> query, String target) {
         // 逻辑删除记录不参与校验；停用的公理仍持有绑定。
         for (OmModelAxiomDO axiom : axiomMapper.selectList(query.select("name").orderByAsc("id"))) {
@@ -90,6 +123,15 @@ public class ConstraintReferenceGuardImpl implements ConstraintReferenceGuard {
         }
     }
 
+    /**
+     * 校验待删目标所属版本的规则条件，精确匹配数字或字符串形式的 ID。
+     *
+     * @param ids 非空的待删除目标 ID 集合
+     * @param field 条件对象中的绑定字段名，由调用方指定 objectTypeId 或 attributeId
+     * @param target 待删除目标的中文类型名称，用于提示
+     * @param targetTable 目标表名，仅允许由内部调用传入固定表名，不接受外部输入
+     * @throws ServiceException 存在规则引用或规则条件结构异常时抛出业务警告
+     */
     private void checkRules(Collection<Long> ids, String field, String target, String targetTable) {
         Set<String> targetIds = ids.stream().map(String::valueOf).collect(Collectors.toSet());
         // 表名由内部常量指定；参数仍由 MyBatis 绑定，避免把 ID 拼入 SQL。

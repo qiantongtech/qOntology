@@ -186,7 +186,14 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
         return resultMsg.toString();
     }
 
-    /** 同一项目版本内排除自身及逻辑删除记录，名称去除首尾空格后判重。 */
+    /**
+     * 校验同一项目版本内的术语名称唯一性。
+     *
+     * <p>名称去除首尾空格后保存；修改时排除自身，逻辑删除记录不参与判重。</p>
+     *
+     * @param record 待新增或修改的术语，包含所属版本及自身 ID
+     * @throws ServiceException 版本无效、名称为空或同版本存在同名记录时抛出业务警告
+     */
     private void validateNameUnique(OmTermDO record) {
         if (record.getVersionId() == null || record.getVersionId() <= 0) throw new ServiceException("请选择项目版本", 601);
         String name = record.getStdName() == null ? "" : record.getStdName().trim();
