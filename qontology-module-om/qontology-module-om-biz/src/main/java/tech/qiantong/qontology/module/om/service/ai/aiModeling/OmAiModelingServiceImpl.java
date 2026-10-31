@@ -195,12 +195,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     /** 查询指定版本的 AI 建模任务分页列表。 */
     @Override
     public PageResult<OmAiTaskDO> page(OmAiTaskPageReqVO request) {
-        return taskMapper.selectPage(request, new QueryWrapper<OmAiTaskDO>()
-                .eq("version_id", request.getVersionId())
-                .like(request.getTaskName() != null && !request.getTaskName().isBlank(),
-                        "task_name", request.getTaskName())
-                .eq(request.getStatus() != null, "status", request.getStatus())
-                .orderByDesc("id"));
+        return taskMapper.selectPage(request);
     }
 
     /** 查询 AI 建模任务详情。 */

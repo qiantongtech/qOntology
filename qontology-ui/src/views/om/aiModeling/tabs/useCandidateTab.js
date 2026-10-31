@@ -12,8 +12,8 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     taskId,
     pageNum: 1,
     pageSize: options.pageSize ?? 10,
-    orderByColumn: 'id',
-    isAsc: 'descending'
+    orderByColumn: 'createTime',
+    isAsc: 'desc'
   })
   const evidenceVisible = ref(false)
   const evidences = ref([])
@@ -32,8 +32,8 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
   }
 
   function handleSortChange({ prop, order }) {
-    query.orderByColumn = order ? prop : 'id'
-    query.isAsc = order || 'descending'
+    query.orderByColumn = order ? prop : 'createTime'
+    query.isAsc = order === 'ascending' ? 'asc' : 'desc'
     query.pageNum = 1
     load()
   }

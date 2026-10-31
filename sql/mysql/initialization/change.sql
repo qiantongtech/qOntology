@@ -713,3 +713,206 @@ UPDATE `system_dict_data` SET `create_by` = '吴同' WHERE `dict_code` = 100;
 UPDATE `system_dict_data` SET `create_by` = '吴同' WHERE `dict_code` = 101;
 UPDATE `system_dict_data` SET `create_by` = '吴同' WHERE `dict_code` = 102;
 
+
+INSERT INTO `om_ai_attribute` VALUES (1, 1, 1, '订单状态', 'order_status', '记录订单生命周期流转节点', 1, 5, NULL, NULL, '', NULL, '', 'order_status', 'PROJECT', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_attribute` VALUES (2, 1, 1, '订单金额', 'order_amount', '订单总交易金额，必须大于零', 2, NULL, 25, 'PROJECT', '元', 2, '', '', '', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_attribute` VALUES (3, 1, 2, '供应商编码', 'supplier_code', '唯一标识供应商，S开头后接6位数字', 1, 0, NULL, NULL, '', NULL, 'S[0-9]{6}', '', '', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_attribute` VALUES (4, 1, 2, '供应商分类', 'supplier_category', '区分物料供应商与服务供应商', 1, 5, NULL, NULL, '', NULL, '', 'supplier_category', 'PROJECT', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_attribute` VALUES (5, 1, 2, '成立日期', 'establishment_date', '供应商注册成立的时间，须早于当前日期', 1, 4, NULL, NULL, '', NULL, 'yyyy-MM-dd', '', '', 0, NULL, NULL, 0.90000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_attribute` VALUES (6, 1, 4, '订购数量', 'order_quantity', '单次采购的物料件数，必须为正整数', 1, 1, NULL, NULL, '件', NULL, '', '', '', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_attribute` VALUES (7, 1, 4, '采购单价', 'unit_price', '单件物料的采购价格', 2, NULL, 19, 'PROJECT', '元/件', 4, '', '', '', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+
+INSERT INTO `om_ai_axiom` VALUES (1, 1, '采购订单指定供应商关系约束', '采购订单必须关联至供应商对象，明确业务归属', 'DOMAIN_RANGE', 'INFO', NULL, NULL, '指定供应商', 1, 2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:32:33', NULL, NULL, '2026-10-31 20:32:33', NULL);
+INSERT INTO `om_ai_axiom` VALUES (2, 1, '采购订单包含明细关系约束', '采购订单与采购明细之间为包含关系，支撑明细溯源', 'DOMAIN_RANGE', 'INFO', NULL, NULL, '包含明细', 1, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:32:33', NULL, NULL, '2026-10-31 20:32:33', NULL);
+
+INSERT INTO `om_ai_data_evidence` VALUES (1, 1, 'target', 1, 3, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (2, 1, 'target', 1, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (3, 1, 'target', 1, 24, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (4, 1, 'target', 2, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (5, 1, 'target', 2, 24, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (6, 1, 'target', 3, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (7, 1, 'target', 3, 24, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (8, 1, 'term', 1, 4, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (9, 1, 'term', 1, 7, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (10, 1, 'term', 1, 9, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (11, 1, 'term', 2, 4, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (12, 1, 'term', 2, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (13, 1, 'term', 2, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (14, 1, 'term', 3, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (15, 1, 'term', 3, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (16, 1, 'term', 4, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (17, 1, 'term', 4, 21, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (18, 1, 'term', 5, 9, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (19, 1, 'enum_type', 1, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (20, 1, 'enum_type', 1, 19, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (21, 1, 'enum_data', 1, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (22, 1, 'enum_data', 1, 19, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (23, 1, 'enum_data', 2, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (24, 1, 'enum_data', 2, 19, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (25, 1, 'enum_data', 3, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (26, 1, 'enum_data', 3, 19, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (27, 1, 'enum_data', 4, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (28, 1, 'enum_data', 4, 19, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (29, 1, 'enum_type', 2, 7, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (30, 1, 'enum_data', 5, 7, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (31, 1, 'enum_data', 6, 7, 'POSITIVE', 1, '吴同', '2026-10-31 20:25:43', NULL, NULL, '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (32, 1, 'object', 1, 3, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (33, 1, 'object', 1, 4, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (34, 1, 'object', 1, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (35, 1, 'object', 1, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (36, 1, 'object', 1, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (37, 1, 'object', 1, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (38, 1, 'object', 1, 17, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (39, 1, 'object', 1, 18, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (40, 1, 'object', 1, 19, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (41, 1, 'object', 1, 24, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (42, 1, 'object', 2, 3, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (43, 1, 'object', 2, 4, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (44, 1, 'object', 2, 7, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (45, 1, 'object', 2, 9, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (46, 1, 'object', 2, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (47, 1, 'object', 2, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (48, 1, 'object', 2, 17, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (49, 1, 'object', 2, 20, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (50, 1, 'object', 2, 22, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (51, 1, 'object', 2, 24, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (52, 1, 'object', 3, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (53, 1, 'object', 3, 11, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (54, 1, 'object', 3, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (55, 1, 'object', 3, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (56, 1, 'object', 3, 24, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (57, 1, 'object', 4, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (58, 1, 'object', 4, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (59, 1, 'object', 4, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (60, 1, 'object', 4, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (61, 1, 'object', 4, 21, 'POSITIVE', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (62, 1, 'attribute', 1, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:48', NULL, NULL, '2026-10-31 20:29:48', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (63, 1, 'attribute', 1, 19, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:48', NULL, NULL, '2026-10-31 20:29:48', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (64, 1, 'attribute', 2, 18, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (65, 1, 'attribute', 3, 9, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (66, 1, 'attribute', 3, 20, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (67, 1, 'attribute', 4, 7, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (68, 1, 'attribute', 5, 22, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (69, 1, 'attribute', 6, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (70, 1, 'attribute', 6, 21, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (71, 1, 'attribute', 7, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (72, 1, 'relation', 1, 17, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (73, 1, 'relation', 1, 24, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (74, 1, 'relation', 2, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (75, 1, 'relation', 2, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (76, 1, 'relation', 3, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (77, 1, 'relation', 3, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (78, 1, 'relation', 4, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (79, 1, 'relation', 4, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (80, 1, 'axiom', 1, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (81, 1, 'axiom', 1, 14, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (82, 1, 'axiom', 1, 17, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (83, 1, 'axiom', 2, 10, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (84, 1, 'axiom', 2, 13, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (85, 1, 'data_rule', 1, 18, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (86, 1, 'data_rule', 2, 6, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (87, 1, 'data_rule', 2, 19, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (88, 1, 'data_rule', 3, 21, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+INSERT INTO `om_ai_data_evidence` VALUES (89, 1, 'data_rule', 4, 7, 'POSITIVE', 1, '吴同', '2026-10-31 20:32:32', NULL, NULL, '2026-10-31 20:32:32', NULL);
+
+INSERT INTO `om_ai_data_rule` VALUES (1, 1, '订单金额正数校验', '订单金额必须大于零，禁止零或负数录入', 'RANGE', 'ERROR', 'AND', '[{\"objectCandidateId\":1,\"attributeCandidateId\":2,\"operator\":\"GT\",\"value\":\"0\"}]', '订单金额必须大于0元', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:32:33', NULL, NULL, '2026-10-31 20:32:33', NULL);
+INSERT INTO `om_ai_data_rule` VALUES (2, 1, '订单状态枚举限制', '订单状态仅限系统预设的四种状态流转', 'ENUM', 'ERROR', 'AND', '[{\"objectCandidateId\":1,\"attributeCandidateId\":1,\"value\":\"草稿,已提交,已审批,已取消\"}]', '订单状态只能选择草稿、已提交、已审批或已取消', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:32:33', NULL, NULL, '2026-10-31 20:32:33', NULL);
+INSERT INTO `om_ai_data_rule` VALUES (3, 1, '订购数量正整数校验', '采购明细的订购数量必须为正整数，禁止小数', 'RANGE', 'ERROR', 'AND', '[{\"objectCandidateId\":4,\"attributeCandidateId\":6,\"operator\":\"GT\",\"value\":\"0\"}]', '订购数量必须为大于0的整数', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:32:33', NULL, NULL, '2026-10-31 20:32:33', NULL);
+INSERT INTO `om_ai_data_rule` VALUES (4, 1, '供应商分类枚举限制', '供应商分类仅限物料供应商与服务供应商两类', 'ENUM', 'WARNING', 'AND', '[{\"objectCandidateId\":2,\"attributeCandidateId\":4,\"value\":\"物料供应商,服务供应商\"}]', '供应商分类只能选择物料供应商或服务供应商', 0, NULL, NULL, 0.90000, 0, 1, '吴同', '2026-10-31 20:32:33', NULL, NULL, '2026-10-31 20:32:33', NULL);
+
+INSERT INTO `om_ai_enum_data` VALUES (1, 1, 1, 0, '草稿', '草稿', '0', 0, NULL, NULL, NULL, 0, 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (2, 1, 1, 1, '已提交', '已提交', '0', 0, NULL, NULL, NULL, 0, 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (3, 1, 1, 2, '已审批', '已审批', '0', 0, NULL, NULL, NULL, 0, 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (4, 1, 1, 3, '已取消', '已取消', '0', 0, NULL, NULL, NULL, 0, 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (5, 1, 2, 0, '物料供应商', '物料供应商', '0', 0, NULL, NULL, NULL, 0, 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (6, 1, 2, 1, '服务供应商', '服务供应商', '0', 0, NULL, NULL, NULL, 0, 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+
+INSERT INTO `om_ai_enum_type` VALUES (1, 1, '订单状态', 'order_status', '0', 0, NULL, NULL, 0.90000, 0, 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_type` VALUES (2, 1, '供应商分类', 'supplier_category', '0', 0, NULL, NULL, 0.90000, 0, 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+
+INSERT INTO `om_ai_evidence` VALUES (1, 1, 1, 1, 'PARAGRAPH', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '采购业务资料汇编（客户交付原始材料）', '9a283b5f201738f78458b342eabe52af9a6397439042c7f201588da237dd81e5', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (2, 1, 1, 2, 'PARAGRAPH', NULL, NULL, 2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '一、业务概况', '6fa564367cce9ce0422295f9b2ba95454e66030066d7a47a9d00d2ff5d059dda', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (3, 1, 1, 3, 'PARAGRAPH', NULL, NULL, 3, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '我们采购部负责全公司的生产物资与办公物资采购。目前最头疼的问题是，每张采购单最后到底由哪个供应商承接的，经常要翻纸质单据和多个系统才能查出来，出了质量问题找不到责任源头。领导要求把这块理顺。', '62e243f99312eb73e07e72931a8dd002ea3c7b640526b4c7661aea8ae4ef8d65', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (4, 1, 1, 4, 'PARAGRAPH', NULL, NULL, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '现在公司没有统一的采购口径，不同部门对\"供应商\"的理解不一样：有的把给物料的地方叫供应商，有的把提供服务的也叫供应商。订单在系统里的叫法也不统一，有人叫采购单，有人叫订购单，其实都是一个东西。', '4ff79a95706074125d81bc3aaa3a9b14b04402f58f20acbe773d191c2b7782a5', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (5, 1, 1, 5, 'PARAGRAPH', NULL, NULL, 5, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '二、采购流程', '0f53ae98dd296129b998f8e5e2394bf1b30763a60a4f165a0e4d5d7ef365f308', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (6, 1, 1, 6, 'PARAGRAPH', NULL, NULL, 6, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '一个典型流程是这样的：业务部门提出采购需求 → 采购员登记成一张订单 → 订单里明确要买哪些东西、各买多少、单价多少 → 报给部门负责人审批 → 审批通过后生成正式订单 → 安排供应商供货。订单整个过程中有几种状态，一开始是草稿，登记完提交上去是已提交，领导批了就是已审批，如果中途不买了或者错了，就作废，叫已取消。', 'c9ccf95745597f6f1773b0fc214103aec0aa991e5ef57c8e12113961f867ec94', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (7, 1, 1, 7, 'PARAGRAPH', NULL, NULL, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '供应商有分类。一种是给我们供货的物料供应商，一种是提供安装、维护这类服务的服务供应商，两类要分开管理，考核指标也不一样。', 'cd51274917dec346b165a2ff309048a44f60eed90b6747c450dfa711a405a4f3', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (8, 1, 1, 8, 'PARAGRAPH', NULL, NULL, 8, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '三、对象与基础数据', 'eda4948ffc391e94428930f906599de2d18568c7a85dc391b60fd11b321ed226', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (9, 1, 1, 9, 'PARAGRAPH', NULL, NULL, 9, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '公司层面的组织是一个大的概念，集团、各分厂、各事业部都算组织，供应商从本质上也属于组织这一类，只是它是外部组织，给我们供货。每个供应商我们给编一个固定的编码，规则是大写S开头后面跟6位数字，比如S123456，这个编码在系统里要唯一，不能重复。', '9dff4393beb517bae2a8286bab62be6a887d7f1d311d556b1fc4964f01a8549e', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (10, 1, 1, 10, 'PARAGRAPH', NULL, NULL, 10, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '物料是我们采购的物资，每个物料也有个编码。一张采购订单会包含多个采购明细，明细就是\"这张单子里某一种物料买了多少、单价多少\"这样的记录。', '7200541cc528b9fe37b7f3ea61c0d87df6f36f34362ef904c8c92b7e83819486', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (11, 1, 1, 11, 'PARAGRAPH', NULL, NULL, 11, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '物料平时要归类，我们有个物料分类的概念，方便查找，不过这个分类目前还没完全建起来，系统里只是有个字段挂着，暂时不急着细管。', '6f166fad7226480ba02b332fd7425fa13201d73302a21efbe02bab681fd3807e', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (12, 1, 1, 12, 'PARAGRAPH', NULL, NULL, 12, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '四、系统间的关系', 'c17ea613e413c2feeeec63ab3cc96bd851ca4ef1a0bb07a36eb46b74c81f84ef', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (13, 1, 1, 13, 'PARAGRAPH', NULL, NULL, 13, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '供应商和物料之间是\"提供\"的关系，反过来就是说物料\"由供应商提供\"。采购订单和采购明细之间是\"包含\"关系，反过来明细\"归属\"于那张订单。物料归属到物料分类。', '2b989de8b9a52c7c47f9f3795e209e5973e38104e989885b220121939cfe17cb', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (14, 1, 1, 14, 'PARAGRAPH', NULL, NULL, 14, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '这些关系主要用来支撑几件事：第一，查某个订单的供货源头；第二，汇总一个供应商到底供了哪些料，好给他做绩效打分；第三，统计某个物料被多少张订单用到，做需求分析。', 'e2144b985a441f8520294da628dc524541a0ee9e9a9604c30273a83ae50d3ae2', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (15, 1, 1, 15, 'PARAGRAPH', NULL, NULL, 15, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '五、录入规范与要求（制度原文）', 'dd302f206b7dbed52f4c2b819cc326a152bdf88812f7840866b4a4619b8a3122', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (16, 1, 1, 16, 'PARAGRAPH', NULL, NULL, 16, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '根据采购管理制度，录入时有几条硬性要求，业务人员必须遵守：', '272040e08d31302340862ded77b95f1dc7b96342b6ee897a0ba4bd416171cb57', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (17, 1, 1, 17, 'PARAGRAPH', NULL, NULL, 17, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '每张采购订单必须指定供应商，不能空着。', '137f5bf04814545791a784b9a7a55ff656171c4918bb4c37c2a036a96f22bfe0', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (18, 1, 1, 18, 'PARAGRAPH', NULL, NULL, 18, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '订单金额必须大于零，负数或者零都不允许。', 'c2acda8e8afe957491d93b5c7198b53eaf7a511ca97c5f8376f4fc15d54f9d5d', NULL, NULL, '2026-10-31 20:23:35', NULL, NULL, '2026-10-31 20:23:35', NULL);
+INSERT INTO `om_ai_evidence` VALUES (19, 1, 1, 19, 'PARAGRAPH', NULL, NULL, 19, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '订单状态只能从上面说的那几种状态里选，不能随便填。', 'a5e68933a018dcfc680efe268080712ba2ce76b8c40701bcb637fcf24cc0fd65', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_evidence` VALUES (20, 1, 1, 20, 'PARAGRAPH', NULL, NULL, 20, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '供应商编码必须符合格式，S开头6位数字，不规范的不能保存。', '690927ee9f4db840ff578975e945f7f1cf6e1f5191be261d1f03076df70bc9b9', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_evidence` VALUES (21, 1, 1, 21, 'PARAGRAPH', NULL, NULL, 21, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '采购明细里的订购数量必须是正整数，不能是小数。', '2a4b6b60a5dbb399c4e2abd28893bcaf7b2aaa21b038e7b214be2a94b833f715', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_evidence` VALUES (22, 1, 1, 22, 'PARAGRAPH', NULL, NULL, 22, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '供应商成立日期必须在当前日期之前，新注册的不能是未来日期。', '7ec7c944c75573ae56fdeb263d9be9d4c2efb5ed42d1861409d5adb1b6890cc0', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_evidence` VALUES (23, 1, 1, 23, 'PARAGRAPH', NULL, NULL, 23, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '六、历史访谈记录摘录', '4285d9353ae9510dceb23788b2f29237a975e6e3a127b5d457570188534627d3', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_evidence` VALUES (24, 1, 1, 24, 'PARAGRAPH', NULL, NULL, 24, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '采购主管张工：我们现在想做一个系统，输入订单号就能直接看到是哪家供应商接的单，这是最基本的需求。另外领导还要看每家供应商给我们供了哪些货，方便年底考核。物料那边，市场部的人老问某个料这半年被多少订单用，我们现在都统计不出来，只能人工翻。', '973ad0b98b052fcd0e143dce192fed89ec4e98776e4247d4ff795111a40b2d77', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_evidence` VALUES (25, 1, 1, 25, 'PARAGRAPH', NULL, NULL, 25, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '信息部王工：数据这块之前做过一些规则校验，主要是采购单不能没供应商、金额不能为负这些，都是写在旧系统里的。新系统我们希望规则能配出来，不用写死代码。', '925a920ccc641b02506268f4a75e88b7d5c619e66796ce699a40be0de8649ec9', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_evidence` VALUES (26, 1, 1, 26, 'PARAGRAPH', NULL, NULL, 26, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '七、其他说明', 'a4985be13f99994c48edc939b27836cd4259e0d2c55c2d99af635e9ffe59322f', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_evidence` VALUES (27, 1, 1, 27, 'PARAGRAPH', NULL, NULL, 27, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '文档里提到的\"采购单\"\"订购单\"\"采购订单\"指的是同一个业务单据，历史文档里叫法乱。供应商这个词在流程、对象、制度各个地方都反复提到，都是同一个主体。物料分类这块先放一放，不属于近期要做的重点，暂时不用纳入建模范围，也不用跟上面那几个目标挂钩。', '2a0e46fd5dd903c9ee3db4c8e19ce0fc75057f28e2dba517f0d9da1f949dd992', NULL, NULL, '2026-10-31 20:23:36', NULL, NULL, '2026-10-31 20:23:36', NULL);
+
+INSERT INTO `om_ai_file` VALUES (1, 1, '采购业务文档.docx', 'http://localhost:8099/profile/ai-modeling/2026/10/31/6ae5ddc5eefcfb2beff78a88.docx', 'docx', 15813, '3966d7c2d7abc98d8ff9efaae0baa777ffe0cb3da99f0d50758f802aa23e5299', 2, NULL, 27, 0, 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:23:36', NULL);
+
+INSERT INTO `om_ai_object` VALUES (1, 1, '采购订单', '记录采购业务需求的单据，包含状态、金额及指定供应商等信息', NULL, 0, 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object` VALUES (2, 1, '供应商', '提供物料或服务的外部组织实体，具有唯一编码与分类属性', NULL, 0, 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object` VALUES (3, 1, '物料', '被采购的物资实体，具有唯一编码，用于需求统计与分类管理', NULL, 0, 0, NULL, NULL, 0.90000, 0, 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object` VALUES (4, 1, '采购明细', '订单内具体物料的采购记录，包含数量与单价，归属于特定订单', 1, 0, 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+
+INSERT INTO `om_ai_object_target` VALUES (1, 1, 1, 1, NULL, NULL, '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object_target` VALUES (2, 1, 1, 2, NULL, NULL, '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object_target` VALUES (3, 1, 2, 1, NULL, NULL, '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object_target` VALUES (4, 1, 2, 2, NULL, NULL, '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object_target` VALUES (5, 1, 3, 3, NULL, NULL, '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object_target` VALUES (6, 1, 4, 1, NULL, NULL, '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object_target` VALUES (7, 1, 4, 2, NULL, NULL, '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object_target` VALUES (8, 1, 4, 3, NULL, NULL, '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+
+INSERT INTO `om_ai_relation` VALUES (1, 1, '指定供应商', '采购订单必须关联承接的供应商', 1, 2, 0, '承接订单', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_relation` VALUES (2, 1, '包含明细', '一张采购订单包含多条采购明细记录', 1, 4, 0, '归属订单', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_relation` VALUES (3, 1, '提供物料', '供应商向企业供应具体物料', 2, 3, 0, '由供应商提供', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_relation` VALUES (4, 1, '对应物料', '采购明细记录具体采购的物料种类', 4, 3, 0, '被明细记录', 0, NULL, NULL, 0.95000, 0, 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+
+INSERT INTO `om_ai_relation_target` VALUES (1, 1, 1, 1, NULL, NULL, '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_relation_target` VALUES (2, 1, 2, 1, NULL, NULL, '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_relation_target` VALUES (3, 1, 3, 2, NULL, NULL, '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_relation_target` VALUES (4, 1, 4, 3, NULL, NULL, '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+
+INSERT INTO `om_ai_stage` VALUES (1, 1, 'FILE_PARSE', '文档结构化解析', 2, 1, 100, NULL, NULL, NULL, 1, 27, 0, 1793, '已解析 1 个文件，生成 27 个带原文位置的证据块', NULL, NULL, '2026-10-31 20:23:34', '2026-10-31 20:23:36', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_stage` VALUES (2, 1, 'EVIDENCE_INDEX', '证据索引构建', 2, 2, 100, NULL, NULL, NULL, 0, 0, 0, 40, '已按文件、页码、章节、段落和表格位置建立证据索引；抽取轮次只读取证据窗口和前序候选索引', NULL, NULL, '2026-10-31 20:23:36', '2026-10-31 20:23:36', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_stage` VALUES (3, 1, 'ROUND_1_FOUNDATION', '第1轮：目标、术语和枚举', 2, 3, 100, NULL, 'qwen3.6-plus', NULL, 27, 1, 0, 128331, '文本模型已完成第 1 个证据窗口分析。模型分析摘要：本批证据围绕企业采购业务的核心痛点与规范化需求展开。明确依据包括：证据块6与19定义了订单全生命周期状态流转及强制校验规则；证据块7与20明确了供应商分类标准及编码格式；证据块24与27确认了业务目标聚焦于订单溯源、供应商考核与物料统计，并明确排除物料分类。证据不足项为：部分术语（如采购单/订购单）存在历史叫法混用，需统一为“采购订单”；供应商成立日期等校验规则缺乏具体系统实现方案，暂不纳入本轮枚举或目标。', NULL, NULL, '2026-10-31 20:23:36', '2026-10-31 20:25:43', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:25:43', NULL);
+INSERT INTO `om_ai_stage` VALUES (4, 1, 'ROUND_2_OBJECT_ATTR', '第2轮：对象与属性抽取', 2, 4, 100, NULL, 'qwen3.6-plus', NULL, 27, 1, 0, 142122, '完成对象、属性候选抽取，识别采购订单、供应商、物料、采购明细4个对象以及对应7个属性', NULL, NULL, '2026-10-31 20:25:43', '2026-10-31 20:27:13', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_stage` VALUES (5, 1, 'ROUND_3_REL_AXIOM', '第3轮：关系与公理抽取', 2, 5, 100, NULL, 'qwen3.6-plus', NULL, 27, 1, 0, 96445, '完成关系、公理候选抽取，识别4条对象关系，2条业务约束公理', NULL, NULL, '2026-10-31 20:27:13', '2026-10-31 20:29:49', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_stage` VALUES (6, 1, 'ROUND_4_RULE', '第4轮：业务规则抽取', 2, 6, 100, NULL, 'qwen3.6-plus', NULL, 27, 1, 0, 84217, '完成业务校验规则候选抽取，生成4条数据校验规则', NULL, NULL, '2026-10-31 20:29:49', '2026-10-31 20:32:33', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:32:33', NULL);
+INSERT INTO `om_ai_stage` VALUES (7, 1, 'FINISH', '任务完成', 2, 7, 100, NULL, NULL, NULL, 0, 0, 0, 0, '全部候选抽取流程执行完毕，等待人工采纳审核', NULL, NULL, '2026-10-31 20:32:33', '2026-10-31 20:32:33', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:32:33', NULL);
+
+
+INSERT INTO `om_ai_target` VALUES (1, 1, 'target:订单溯源追踪', '订单溯源追踪', '我们采购部负责全公司的生产物资与办公物资采购。目前最头疼的问题是，每张采购单最后到底由哪个供应商承接的，经常要翻纸质单据和多个系统才能查出来，出了质量问题找不到责任源头。领导要求把这块理顺。；这些关系主要用来支撑几件事：第一，查某个订单的供货源头；第二，汇总一个供应商到底供了哪些料，好给他做绩效打分；第三，统计某个物料被多少张订单用到，做需求分析。；采购主管张工：我们现在想做一个系统，输入订单号就能直接看到是哪家供应商接的单，这是最基本的需求。另外领导还要看每家供应商给我们供了哪些货，方便年底考核。物料那', '采购订单执行与质量追溯', 2, '', '0', 5, 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_target` VALUES (2, 1, 'target:供应商绩效汇总', '供应商绩效汇总', '这些关系主要用来支撑几件事：第一，查某个订单的供货源头；第二，汇总一个供应商到底供了哪些料，好给他做绩效打分；第三，统计某个物料被多少张订单用到，做需求分析。；采购主管张工：我们现在想做一个系统，输入订单号就能直接看到是哪家供应商接的单，这是最基本的需求。另外领导还要看每家供应商给我们供了哪些货，方便年底考核。物料那边，市场部的人老问某个料这半年被多少订单用，我们现在都统计不出来，只能人工翻。', '供应商年度考核与评估', 2, '', '0', 4, 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_target` VALUES (3, 1, 'target:物料需求统计', '物料需求统计', '这些关系主要用来支撑几件事：第一，查某个订单的供货源头；第二，汇总一个供应商到底供了哪些料，好给他做绩效打分；第三，统计某个物料被多少张订单用到，做需求分析。；采购主管张工：我们现在想做一个系统，输入订单号就能直接看到是哪家供应商接的单，这是最基本的需求。另外领导还要看每家供应商给我们供了哪些货，方便年底考核。物料那边，市场部的人老问某个料这半年被多少订单用，我们现在都统计不出来，只能人工翻。', '物料使用频次与需求预测', 2, '', '0', 3, 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:29:49', NULL);
+
+INSERT INTO `om_ai_task` VALUES (1, '采购业务抽取', '解析采购申请单、采购订单、入库单、采购发票、供应商对账单据，抽取供应商、物料、采购数量、单价、金额、交付周期、结算方式等实体，构建采购领域知识图谱本体关系', 1001, 1, 2, 'FINISH', 37, '2026-10-31 20:23:34', '2026-10-31 20:32:33', NULL, b'0', 1, '吴同', '2026-10-31 20:23:33', NULL, '吴同', '2026-10-31 22:50:36', NULL);
+INSERT INTO `om_ai_task` VALUES (2, '销售订单业务抽取', '针对销售订单、发货单、回款单据做本体抽取，识别客户、商品、订单、回款关系，构建销售业务知识图谱', 1001, 1, 2, 'FINISH', 42, '2026-10-31 19:23:34', '2026-10-31 19:32:33', NULL, b'0', 1, '吴同', '2026-10-31 19:23:33', NULL, '吴同', '2026-10-31 19:32:33', NULL);
+INSERT INTO `om_ai_task` VALUES (3, '库存出入库业务抽取', '解析入库单、出库单、盘点单数据，提取物料、仓库、批次、数量变动信息，建立库存流转本体模型', 1001, 1, 2, 'FINISH', 31, '2026-10-31 18:23:34', '2026-10-31 18:32:33', NULL, b'0', 1, '吴同', '2026-10-31 18:23:33', NULL, '吴同', '2026-10-31 18:32:33', NULL);
+INSERT INTO `om_ai_task` VALUES (4, '生产工单业务抽取', '读取生产工单、工序流转卡、报工记录，抽取产品、工序、班组、设备、产量等生产核心实体与关联关系', 1001, 1, 2, 'PARSE', 55, '2026-10-31 17:23:34', NULL, NULL, b'0', 1, '吴同', '2026-10-31 17:23:33', NULL, '吴同', '2026-10-31 22:49:27', NULL);
+INSERT INTO `om_ai_task` VALUES (5, '财务应收单据抽取', '对接应收台账、发票、收款核销记录，识别客户应收、账期、核销流水，构建财务应收领域本体', 1001, 1, 0, 'WAIT', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 16:23:33', NULL, '吴同', '2026-10-31 22:51:08', NULL);
+INSERT INTO `om_ai_task` VALUES (6, '财务应付单据抽取', '解析采购发票、付款申请、付款回单，抽取供应商、应付账款、付款计划、核销关系数据', 1001, 1, 3, 'FAIL', 0, '2026-10-31 15:23:34', '2026-10-31 15:28:11', '源文件格式异常，部分Excel单元格存在合并单元格，字段无法正常拆分识别', b'0', 1, '吴同', '2026-10-31 15:23:33', NULL, '吴同', '2026-10-31 22:51:10', NULL);
+INSERT INTO `om_ai_task` VALUES (7, '人力资源人事抽取', '解析员工档案、劳动合同、考勤、绩效数据，抽取人员、岗位、部门、考勤绩效相关实体关系', 1001, 1, 2, 'FINISH', 47, '2026-10-31 14:23:34', '2026-10-31 14:32:33', NULL, b'0', 1, '吴同', '2026-10-31 14:23:33', NULL, '吴同', '2026-10-31 14:32:33', NULL);
+INSERT INTO `om_ai_task` VALUES (8, '设备运维工单抽取', '解析设备台账、维修工单、保养计划、故障记录，提取设备、故障类型、维保人员、备件更换信息', 1001, 1, 3, 'FAIL', 0, '2026-10-31 13:23:34', '2026-10-31 13:29:05', '模型调用超时，大模型接口响应长时间无返回，任务执行中断', b'0', 1, '吴同', '2026-10-31 13:23:33', NULL, '吴同', '2026-10-31 22:51:12', NULL);
+INSERT INTO `om_ai_task` VALUES (9, '质量检验单据抽取', '解析来料检验、过程检验、成品检验报告，抽取检验项、检验结果、不良原因、检验批次信息', 1001, 1, 2, 'PARSE', 39, '2026-10-31 12:23:34', NULL, NULL, b'0', 1, '吴同', '2026-10-31 12:23:33', NULL, '吴同', '2026-10-31 22:49:24', NULL);
+INSERT INTO `om_ai_task` VALUES (10, '仓储调拨单抽取', '解析仓库调拨、移库单、出库调拨单据，识别调出仓库、调入仓库、物料、调拨数量、调拨原因', 1001, 1, 0, 'WAIT', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 11:23:33', NULL, '吴同', '2026-10-31 22:51:13', NULL);
+INSERT INTO `om_ai_task` VALUES (11, '项目合同信息抽取', '解析项目合同、变更单、结算单，抽取项目、甲方乙方、合同金额、交付节点、结算进度信息', 1001, 1, 3, 'FAIL', 0, '2026-10-31 10:23:34', '2026-10-31 10:27:42', '文档内缺少预设本体中必须的合同编号字段，校验不通过直接终止解析', b'0', 1, '吴同', '2026-10-31 10:23:33', NULL, '吴同', '2026-10-31 22:51:16', NULL);
+
+INSERT INTO `om_ai_term` VALUES (1, 1, '供应商', '', '物料供应商、服务供应商', '', '现在公司没有统一的采购口径，不同部门对\"供应商\"的理解不一样：有的把给物料的地方叫供应商，有的把提供服务的也叫供应商。订单在系统里的叫法也不统一，有人叫采购单，有人叫订购单，其实都是一个东西。；供应商有分类。一种是给我们供货的物料供应商，一种是提供安装、维护这类服务的服务供应商，两类要分开管理，考核指标也不一样。；公司层面的组织是一个大的概念，集团、各分厂、各事业部都算组织，供应商从本质上也属于组织这一类，只是它是外部组织，给我们供货。每个供应商我们给编一个固定的编码，规则是大写S开头后面跟6位数字，比如', '为采购方提供物资或安装维护等服务的商业实体，需分配唯一编码', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_term` VALUES (2, 1, '采购订单', '', '采购单、订购单', '', '现在公司没有统一的采购口径，不同部门对\"供应商\"的理解不一样：有的把给物料的地方叫供应商，有的把提供服务的也叫供应商。订单在系统里的叫法也不统一，有人叫采购单，有人叫订购单，其实都是一个东西。；一个典型流程是这样的：业务部门提出采购需求 → 采购员登记成一张订单 → 订单里明确要买哪些东西、各买多少、单价多少 → 报给部门负责人审批 → 审批通过后生成正式订单 → 安排供应商供货。订单整个过程中有几种状态，一开始是草稿，登记完提交上去是已提交，领导批了就是已审批，如果中途不买了或者错了，就作废，叫已取消。', '记录采购物资、数量、单价及审批状态的正式业务凭证', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_term` VALUES (3, 1, '物料', '', '', '', '物料是我们采购的物资，每个物料也有个编码。一张采购订单会包含多个采购明细，明细就是\"这张单子里某一种物料买了多少、单价多少\"这样的记录。；供应商和物料之间是\"提供\"的关系，反过来就是说物料\"由供应商提供\"。采购订单和采购明细之间是\"包含\"关系，反过来明细\"归属\"于那张订单。物料归属到物料分类。', '具有唯一编码的采购对象，可被归类并记录于采购明细中', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_term` VALUES (4, 1, '采购明细', '', '', '', '物料是我们采购的物资，每个物料也有个编码。一张采购订单会包含多个采购明细，明细就是\"这张单子里某一种物料买了多少、单价多少\"这样的记录。；采购明细里的订购数量必须是正整数，不能是小数。', '采购订单的组成部分，用于记录单一物料的具体采购数量与单价', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_term` VALUES (5, 1, '组织', '', '', '', '公司层面的组织是一个大的概念，集团、各分厂、各事业部都算组织，供应商从本质上也属于组织这一类，只是它是外部组织，给我们供货。每个供应商我们给编一个固定的编码，规则是大写S开头后面跟6位数字，比如S123456，这个编码在系统里要唯一，不能重复。', '企业架构与外部合作方的广义分类，包含内部机构与外部供应商', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+
+

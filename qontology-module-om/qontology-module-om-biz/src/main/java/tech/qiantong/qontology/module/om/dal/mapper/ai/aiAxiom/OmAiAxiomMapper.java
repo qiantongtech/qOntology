@@ -15,6 +15,8 @@ public interface OmAiAxiomMapper extends BaseMapperX<OmAiAxiomDO> {
                 .likeIfPresent(OmAiAxiomDO::getName, reqVO.getName())
                 .eqIfPresent(OmAiAxiomDO::getType, reqVO.getType())
                 .eqIfPresent(OmAiAxiomDO::getAdoptStatus, reqVO.getAdoptStatus())
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time")));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time"))
+                .orderByDesc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
+                        OmAiAxiomDO::getCreateTime, OmAiAxiomDO::getId));
     }
 }

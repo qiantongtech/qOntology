@@ -18,6 +18,8 @@ public interface OmAiDataRuleMapper extends BaseMapperX<OmAiDataRuleDO> {
                 .eqIfPresent(OmAiDataRuleDO::getType, reqVO.getType())
                 .eqIfPresent(OmAiDataRuleDO::getAdoptStatus, reqVO.getAdoptStatus())
                 .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(),
-                        Set.of("id", "create_time", "update_time")));
+                        Set.of("id", "create_time", "update_time"))
+                .orderByDesc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
+                        OmAiDataRuleDO::getCreateTime, OmAiDataRuleDO::getId));
     }
 }

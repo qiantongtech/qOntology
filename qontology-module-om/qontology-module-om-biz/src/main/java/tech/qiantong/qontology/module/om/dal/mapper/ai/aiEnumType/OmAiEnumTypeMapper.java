@@ -44,6 +44,8 @@ public interface OmAiEnumTypeMapper extends BaseMapperX<OmAiEnumTypeDO> {
                 .likeIfPresent(OmAiEnumTypeDO::getEnumType, reqVO.getEnumType())
                 .eqIfPresent(OmAiEnumTypeDO::getStatus, reqVO.getStatus())
                 .eqIfPresent(OmAiEnumTypeDO::getAdoptStatus, reqVO.getAdoptStatus())
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time")));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time"))
+                .orderByDesc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
+                        OmAiEnumTypeDO::getCreateTime, OmAiEnumTypeDO::getId));
     }
 }

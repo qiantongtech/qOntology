@@ -46,7 +46,7 @@
       row-key="id"
       stripe
       @sort-change="handleSortChange"
-      :default-sort="{ prop: 'id', order: 'descending' }"
+      :default-sort="{ prop: 'createTime', order: 'descending' }"
       @selection-change="select"
     >
       <el-table-column

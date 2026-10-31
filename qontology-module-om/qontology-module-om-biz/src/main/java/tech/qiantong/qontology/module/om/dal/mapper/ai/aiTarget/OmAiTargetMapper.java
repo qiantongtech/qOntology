@@ -50,6 +50,8 @@ public interface OmAiTargetMapper extends BaseMapperX<OmAiTargetDO> {
                 .likeIfPresent(OmAiTargetDO::getQuestion, reqVO.getQuestion())
                 .likeIfPresent(OmAiTargetDO::getQuestionSource, reqVO.getQuestionSource())
                 .eqIfPresent(OmAiTargetDO::getAdoptStatus, reqVO.getAdoptStatus())
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time")));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time"))
+                .orderByDesc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
+                        OmAiTargetDO::getCreateTime, OmAiTargetDO::getId));
     }
 }

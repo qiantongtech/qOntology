@@ -368,7 +368,7 @@ const query = reactive({
   pageNum: 1,
   pageSize: 10,
   orderByColumn: defaultSort.value.prop,
-  isAsc: defaultSort.value.order,
+  isAsc: "desc",
 });
 
 /** 查询任务分页列表。 */
@@ -542,7 +542,7 @@ function handleSelectionChange(selection) {
 /** 列头排序变化后更新排序参数并重新查询。 */
 function handleSortChange({ prop, order }) {
   query.orderByColumn = order ? prop : defaultSort.value.prop;
-  query.isAsc = order || defaultSort.value.order;
+  query.isAsc = order === "ascending" ? "asc" : "desc";
   query.pageNum = 1;
   loadTasks();
 }

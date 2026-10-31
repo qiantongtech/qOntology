@@ -43,6 +43,8 @@
       :data="rows"
       stripe
       row-key="id"
+      :default-sort="{ prop: 'createTime', order: 'descending' }"
+      @sort-change="handleSortChange"
       @selection-change="selected = $event"
       ><el-table-column
         type="selection"
@@ -110,10 +112,12 @@
         }}</template></el-table-column
       ><el-table-column
         v-if="visible('createTime')"
+        prop="createTime"
         label="创建时间"
         width="180"
         align="center"
-        sortable
+        sortable="custom"
+        :sort-orders="['descending', 'ascending', null]"
         ><template #default="{ row }">{{
           proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
         }}</template></el-table-column
@@ -348,7 +352,13 @@ const loading = ref(false),
   evidenceOpen = ref(false),
   evidenceRows = ref([]),
   evidenceTitle = ref("");
-const query = reactive({ pageNum: 1, pageSize: 10, taskId: props.taskId });
+const query = reactive({
+  pageNum: 1,
+  pageSize: 10,
+  taskId: props.taskId,
+  orderByColumn: "createTime",
+  isAsc: "desc",
+});
 const columns = reactive([
   { key: "id", label: "编号", visible: true },
   { key: "name", label: "名称", visible: true },
@@ -412,6 +422,12 @@ async function load() {
   } finally {
     loading.value = false;
   }
+}
+function handleSortChange({ prop, order }) {
+  query.orderByColumn = order ? prop : "createTime";
+  query.isAsc = order === "ascending" ? "asc" : "desc";
+  query.pageNum = 1;
+  load();
 }
 async function openForm(row, view) {
   readonly.value = view;

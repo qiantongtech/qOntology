@@ -45,6 +45,8 @@ public interface OmAiRelationMapper extends BaseMapperX<OmAiRelationDO> {
                 .eqIfPresent(OmAiRelationDO::getTaskId, reqVO.getTaskId())
                 .likeIfPresent(OmAiRelationDO::getName, reqVO.getName())
                 .eqIfPresent(OmAiRelationDO::getAdoptStatus, reqVO.getAdoptStatus())
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time")));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time"))
+                .orderByDesc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
+                        OmAiRelationDO::getCreateTime, OmAiRelationDO::getId));
     }
 }

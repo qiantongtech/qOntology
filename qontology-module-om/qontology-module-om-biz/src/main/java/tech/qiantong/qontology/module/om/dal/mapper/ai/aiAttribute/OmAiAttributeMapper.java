@@ -48,6 +48,8 @@ public interface OmAiAttributeMapper extends BaseMapperX<OmAiAttributeDO> {
                 .eqIfPresent(OmAiAttributeDO::getTaskId, reqVO.getTaskId())
                 .likeIfPresent(OmAiAttributeDO::getName, reqVO.getName())
                 .eqIfPresent(OmAiAttributeDO::getAdoptStatus, reqVO.getAdoptStatus())
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time")));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time"))
+                .orderByDesc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
+                        OmAiAttributeDO::getCreateTime, OmAiAttributeDO::getId));
     }
 }

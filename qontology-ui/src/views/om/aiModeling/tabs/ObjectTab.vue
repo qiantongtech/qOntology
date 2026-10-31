@@ -68,6 +68,15 @@
         :selectable="(row) => row.adoptStatus !== 1"
       />
       <el-table-column
+        v-if="visible('id')"
+        prop="id"
+        label="编号"
+        width="80"
+        align="center"
+        sortable="custom"
+        :sort-orders="['descending', 'ascending', null]"
+      />
+      <el-table-column
         v-if="visible('name')"
         prop="name"
         label="对象类型名称"
@@ -333,6 +342,7 @@ const targetPickerOpen = ref(false);
 const termPickerOpen = ref(false);
 const form = ref({});
 const columns = ref([
+  { key: "id", label: "编号", visible: true },
   { key: "name", label: "对象类型名称", visible: true },
   { key: "description", label: "描述", visible: true },
   { key: "orderNum", label: "显示顺序", visible: true },

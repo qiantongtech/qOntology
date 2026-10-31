@@ -52,6 +52,8 @@ public interface OmAiEnumDataMapper extends BaseMapperX<OmAiEnumDataDO> {
                 .eqIfPresent(OmAiEnumDataDO::getStatus, reqVO.getStatus())
                 .eqIfPresent(OmAiEnumDataDO::getAdoptStatus, reqVO.getAdoptStatus())
                 .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(),
-                        Set.of("id", "enum_sort", "create_time", "update_time")));
+                        Set.of("id", "enum_sort", "create_time", "update_time"))
+                .orderByDesc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
+                        OmAiEnumDataDO::getCreateTime, OmAiEnumDataDO::getId));
     }
 }

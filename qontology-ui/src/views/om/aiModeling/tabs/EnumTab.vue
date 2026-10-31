@@ -49,7 +49,7 @@
         v-loading="loading"
         :data="rows"
         stripe
-        :default-sort="{ prop: 'id', order: 'descending' }"
+        :default-sort="{ prop: 'createTime', order: 'descending' }"
         @selection-change="select"
         @sort-change="handleSortChange"
       >
@@ -230,7 +230,7 @@
         v-loading="valueLoading"
         :data="valueRows"
         stripe
-        :default-sort="{ prop: 'enumSort', order: 'ascending' }"
+        :default-sort="{ prop: 'createTime', order: 'descending' }"
         @selection-change="selectValues"
         @sort-change="handleValueSort"
       >
@@ -543,8 +543,8 @@ const valueQuery = reactive({
   enumTypeId: null,
   pageNum: 1,
   pageSize: 10,
-  orderByColumn: "enumSort",
-  isAsc: "ascending",
+  orderByColumn: "createTime",
+  isAsc: "desc",
 });
 const typeColumns = ref([
   { key: "id", label: "编号", visible: true },
@@ -686,8 +686,8 @@ async function loadValues() {
   }
 }
 function handleValueSort({ prop, order }) {
-  valueQuery.orderByColumn = order ? prop : "enumSort";
-  valueQuery.isAsc = order || "ascending";
+  valueQuery.orderByColumn = order ? prop : "createTime";
+  valueQuery.isAsc = order === "ascending" ? "asc" : "desc";
   valueQuery.pageNum = 1;
   loadValues();
 }
