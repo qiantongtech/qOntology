@@ -18,7 +18,10 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiDataEvidence;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiDataEvidence.vo.OmAiDataEvidencePageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiDataEvidence.OmAiDataEvidenceDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -27,6 +30,13 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI候选数据证据关联 Mapper 接口。 */
 public interface OmAiDataEvidenceMapper extends BaseMapperX<OmAiDataEvidenceDO> {
+    /** 查询候选数据关联的原始证据和文件信息。 */
+    List<Map<String, Object>> selectEvidence(@Param("dataType") String dataType,
+                                             @Param("dataId") Long dataId);
+
+    /** 新增候选数据与证据关联，重复关联直接忽略。 */
+    int insertOrIgnore(OmAiDataEvidenceDO link);
+
     /** 根据分页条件查询AI候选数据证据关联。 */
     default PageResult<OmAiDataEvidenceDO> selectPage(OmAiDataEvidencePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiDataEvidenceDO>()

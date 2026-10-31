@@ -18,7 +18,9 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiEvidence;
 
+import java.util.List;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiEvidence.vo.OmAiEvidencePageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiEvidence.OmAiEvidenceDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -27,6 +29,10 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI解析来源证据 Mapper 接口。 */
 public interface OmAiEvidenceMapper extends BaseMapperX<OmAiEvidenceDO> {
+    /** 查询指定证据编号对应的原文内容。 */
+    List<String> selectContents(@Param("taskId") Long taskId,
+                                @Param("evidenceIds") List<Long> evidenceIds);
+
     /** 根据分页条件查询AI解析来源证据。 */
     default PageResult<OmAiEvidenceDO> selectPage(OmAiEvidencePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiEvidenceDO>()

@@ -43,8 +43,6 @@ public class OmAiTaskDO extends BaseEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 任务编号。 */
-    private String taskCode;
     /** 任务名称。 */
     private String taskName;
     /** 任务描述。 */

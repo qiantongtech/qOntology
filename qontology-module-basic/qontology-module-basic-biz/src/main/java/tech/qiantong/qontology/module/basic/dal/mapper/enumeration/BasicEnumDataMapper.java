@@ -27,6 +27,7 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * 枚举数据Mapper接口
@@ -35,6 +36,9 @@ import java.util.Set;
  * @date 2026-10-10
  */
 public interface BasicEnumDataMapper extends BaseMapperX<BasicEnumDataDO> {
+    /** 统计全局枚举值是否存在。 */
+    Integer countAiValue(@Param("enumType") String enumType, @Param("value") String value);
+
 
     default PageResult<BasicEnumDataDO> selectPage(BasicEnumDataPageReqVO reqVO) {
         // 定义排序的字段（防止 SQL 注入，与数据库字段名称一致）

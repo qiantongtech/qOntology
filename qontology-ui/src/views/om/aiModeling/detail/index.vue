@@ -173,7 +173,6 @@
         :key="currentTab.name"
         :task-id="taskId"
       />
-      <Placeholder v-else :title="currentTab.label" />
     </div>
   </div>
 </template>
@@ -181,13 +180,14 @@
 <script setup name="AiModelingDetail">
 import { useRoute, useRouter } from "vue-router";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
-import Placeholder from "../tabs/Placeholder.vue";
 import TargetTab from "../tabs/TargetTab.vue";
 import TermTab from "../tabs/TermTab.vue";
 import EnumTab from "../tabs/EnumTab.vue";
 import ObjectTab from "../tabs/ObjectTab.vue";
 import AttributeTab from "../tabs/AttributeTab.vue";
 import RelationTab from "../tabs/RelationTab.vue";
+import AxiomTab from "../tabs/AxiomTab.vue";
+import DataRuleTab from "../tabs/DataRuleTab.vue";
 import TimelineTab from "../tabs/TimelineTab.vue";
 import { adoptAll, getAiFiles, getAiTask } from "@/api/om/aiModeling";
 
@@ -210,8 +210,8 @@ const tabs = [
   { name: "object", label: "对象类型", component: ObjectTab },
   { name: "attribute", label: "对象类型属性", component: AttributeTab },
   { name: "relation", label: "对象类型关系", component: RelationTab },
-  { name: "axiom", label: "模型公理" },
-  { name: "rule", label: "数据规则" },
+  { name: "axiom", label: "模型公理", component: AxiomTab },
+  { name: "rule", label: "数据规则", component: DataRuleTab },
   { name: "timeline", label: "解析过程", component: TimelineTab },
 ];
 
@@ -233,7 +233,7 @@ async function loadDetail() {
 
 /** 返回 AI 辅助建模任务列表。 */
 function goBack() {
-  router.push(`/om/${versionId.value}/aiModeling`);
+  proxy.$tab.closeOpenPage({ path: `/om/${versionId.value}/aiModeling` });
 }
 
 /** 按依赖顺序采纳全部候选数据。 */

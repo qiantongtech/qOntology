@@ -18,7 +18,10 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiEnumType;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiEnumType.vo.OmAiEnumTypePageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiEnumType.OmAiEnumTypeDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -27,6 +30,11 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI候选枚举类型 Mapper 接口。 */
 public interface OmAiEnumTypeMapper extends BaseMapperX<OmAiEnumTypeDO> {
+    /** 统计任务下指定编码的候选枚举类型。 */
+    Integer countTaskEnumType(@Param("taskId") Long taskId, @Param("enumType") String enumType);
+    /** 查询任务下的候选枚举类型索引。 */
+    List<Map<String, Object>> selectCandidateIndex(Long taskId);
+
     /** 根据分页条件查询AI候选枚举类型。 */
     default PageResult<OmAiEnumTypeDO> selectPage(OmAiEnumTypePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiEnumTypeDO>()

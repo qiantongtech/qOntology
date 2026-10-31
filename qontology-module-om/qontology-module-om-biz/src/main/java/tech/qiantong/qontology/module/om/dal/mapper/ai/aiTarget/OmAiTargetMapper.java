@@ -18,7 +18,10 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiTarget;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTarget.vo.OmAiTargetPageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiTarget.OmAiTargetDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -27,6 +30,18 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI候选建模目标 Mapper 接口。 */
 public interface OmAiTargetMapper extends BaseMapperX<OmAiTargetDO> {
+    /** 统计建模目标关联的对象和关系候选数量。 */
+    Integer selectRelatedElementCount(Long targetId);
+
+    /** 查询任务下的候选建模目标索引。 */
+    List<Map<String, Object>> selectCandidateIndex(Long taskId);
+
+    /** 统计指定任务中的有效建模目标数量。 */
+    Integer countTaskTargets(@Param("taskId") Long taskId, @Param("targetIds") List<Long> targetIds);
+
+    /** 刷新任务下建模目标的关联元素数量。 */
+    int refreshRelatedElementCounts(Long taskId);
+
     /** 根据分页条件查询AI候选建模目标。 */
     default PageResult<OmAiTargetDO> selectPage(OmAiTargetPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiTargetDO>()

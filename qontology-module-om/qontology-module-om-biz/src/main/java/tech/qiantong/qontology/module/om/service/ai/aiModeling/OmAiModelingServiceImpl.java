@@ -5,7 +5,6 @@ import jakarta.annotation.Resource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -16,7 +15,6 @@ import java.util.Set;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.dromara.x.file.storage.core.FileInfo;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +23,8 @@ import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.file.util.FileUploadUtil;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiTaskCreateReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiTaskPageReqVO;
+import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmDataRuleSaveReqVO;
+import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmModelAxiomSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumDataSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumTypeSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.object.vo.OmObjectTypeAttributeSaveReqVO;
@@ -33,13 +33,60 @@ import tech.qiantong.qontology.module.om.controller.admin.omtarget.vo.OmTargetSa
 import tech.qiantong.qontology.module.om.controller.admin.relation.vo.OmObjectTypeRelationSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiEvidence.OmAiEvidenceDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiAdoptLog.OmAiAdoptLogDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiAttribute.OmAiAttributeDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiAxiom.OmAiAxiomDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiDataEvidence.OmAiDataEvidenceDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiDataRule.OmAiDataRuleDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.constraint.OmDataRuleDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.constraint.OmModelAxiomDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumTypeDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttributeDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.omtarget.OmTargetDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.relation.OmObjectTypeRelationDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.term.OmTermDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiEnumData.OmAiEnumDataDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiEnumType.OmAiEnumTypeDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiFile.OmAiFileDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiObject.OmAiObjectDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiObjectTarget.OmAiObjectTargetDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiRelation.OmAiRelationDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiRelationTarget.OmAiRelationTargetDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiStage.OmAiStageDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiTarget.OmAiTargetDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiTask.OmAiTaskDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiTerm.OmAiTermDO;
+import tech.qiantong.qontology.module.basic.dal.mapper.dataType.BasicDataTypeMapper;
+import tech.qiantong.qontology.module.basic.dal.mapper.enumeration.BasicEnumTypeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiAdoptLog.OmAiAdoptLogMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiAttribute.OmAiAttributeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiAxiom.OmAiAxiomMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiDataEvidence.OmAiDataEvidenceMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiDataRule.OmAiDataRuleMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiEnumData.OmAiEnumDataMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiEnumType.OmAiEnumTypeMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiEvidence.OmAiEvidenceMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiFile.OmAiFileMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiObject.OmAiObjectMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiObjectTarget.OmAiObjectTargetMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiRelation.OmAiRelationMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiRelationTarget.OmAiRelationTargetMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiStage.OmAiStageMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiTarget.OmAiTargetMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiTask.OmAiTaskMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.ai.aiTerm.OmAiTermMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.enumeration.OmEnumTypeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.constraint.OmDataRuleMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.constraint.OmModelAxiomMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeAttributeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.omtarget.OmTargetMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.relation.OmObjectTypeRelationMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.term.OmTermMapper;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiAxiom.OmAiAxiomDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiDataRule.OmAiDataRuleDO;
 import tech.qiantong.qontology.module.om.enums.AcceptStatusEnum;
 import tech.qiantong.qontology.module.om.enums.TargetPriorityEnum;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiAdoptStatusEnum;
@@ -53,6 +100,11 @@ import tech.qiantong.qontology.module.om.service.object.IOmObjectTypeService;
 import tech.qiantong.qontology.module.om.service.omtarget.IOmTargetService;
 import tech.qiantong.qontology.module.om.service.relation.IOmObjectTypeRelationService;
 import tech.qiantong.qontology.module.om.service.term.IOmTermService;
+import tech.qiantong.qontology.module.om.service.constraint.IOmDataRuleService;
+import tech.qiantong.qontology.module.om.service.constraint.IOmModelAxiomService;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 
 /** AI 辅助建模任务、候选数据和采纳流程服务实现。 */
 @Service
@@ -74,7 +126,53 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     @Resource(name = "threadPoolTaskExecutor")
     private TaskExecutor taskExecutor;
     @Resource
-    private JdbcTemplate jdbcTemplate;
+    private OmAiTargetMapper aiTargetMapper;
+    @Resource
+    private OmAiTermMapper aiTermMapper;
+    @Resource
+    private OmAiEnumTypeMapper aiEnumTypeMapper;
+    @Resource
+    private OmAiEnumDataMapper aiEnumDataMapper;
+    @Resource
+    private OmAiObjectMapper aiObjectMapper;
+    @Resource
+    private OmAiAttributeMapper aiAttributeMapper;
+    @Resource
+    private OmAiRelationMapper aiRelationMapper;
+    @Resource
+    private OmAiAxiomMapper aiAxiomMapper;
+    @Resource
+    private OmAiDataRuleMapper aiDataRuleMapper;
+    @Resource
+    private OmAiObjectTargetMapper objectTargetMapper;
+    @Resource
+    private OmAiRelationTargetMapper relationTargetMapper;
+    @Resource
+    private OmAiDataEvidenceMapper dataEvidenceMapper;
+    @Resource
+    private OmAiAdoptLogMapper adoptLogMapper;
+    @Resource
+    private OmDataTypeMapper dataTypeMapper;
+    @Resource
+    private BasicDataTypeMapper basicDataTypeMapper;
+    @Resource
+    private OmEnumTypeMapper formalEnumTypeMapper;
+    @Resource
+    private BasicEnumTypeMapper basicEnumTypeMapper;
+    @Resource
+    private OmTargetMapper formalTargetMapper;
+    @Resource
+    private OmTermMapper formalTermMapper;
+    @Resource
+    private OmObjectTypeMapper formalObjectMapper;
+    @Resource
+    private OmObjectTypeAttributeMapper formalAttributeMapper;
+    @Resource
+    private OmObjectTypeRelationMapper formalRelationMapper;
+    @Resource
+    private OmModelAxiomMapper formalAxiomMapper;
+    @Resource
+    private OmDataRuleMapper formalDataRuleMapper;
     @Resource
     private IOmTargetService targetService;
     @Resource
@@ -89,6 +187,10 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     private IOmObjectTypeAttributeService attributeService;
     @Resource
     private IOmObjectTypeRelationService relationService;
+    @Resource
+    private IOmModelAxiomService modelAxiomService;
+    @Resource
+    private IOmDataRuleService dataRuleService;
 
     /** 查询指定版本的 AI 建模任务分页列表。 */
     @Override
@@ -114,7 +216,6 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
             throw new ServiceException("请至少上传一个文件");
         }
         OmAiTaskDO task = OmAiTaskDO.builder()
-                .taskCode("AI_MODEL_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date()))
                 .taskName(request.getTaskName())
                 .description(request.getDescription())
                 .workspaceId(workspaceId)
@@ -150,12 +251,24 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
                 || OmAiTaskStatusEnum.FAILED.getCode().equals(task.getStatus())) {
             return;
         }
+        if (!asyncProcessor.reserve(id)) {
+            return;
+        }
         task.setStatus(OmAiTaskStatusEnum.RUNNING.getCode());
         task.setCurrentStage("FILE_PARSE");
         task.setStartedTime(new Date());
         task.setFailureReason(null);
         taskMapper.updateById(task);
-        taskExecutor.execute(() -> asyncProcessor.process(id));
+        try {
+            taskExecutor.execute(() -> asyncProcessor.process(id));
+        } catch (RuntimeException exception) {
+            asyncProcessor.release(id);
+            task.setStatus(OmAiTaskStatusEnum.FAILED.getCode());
+            task.setFailureReason("后台解析任务提交失败：" + exception.getMessage());
+            task.setFinishedTime(new Date());
+            taskMapper.updateById(task);
+            throw exception;
+        }
     }
 
     /** 保存原始文件；结构化解析由异步处理器执行。 */
@@ -192,23 +305,43 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     /** 清空旧结果并对任务执行全量重新解析。 */
     @Override
-    public void reparse(Long id) {
+    public synchronized void reparse(Long id) {
         OmAiTaskDO task = getRequiredTask(id);
-        if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus())) {
+        if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus()) && asyncProcessor.isRunning(id)) {
             throw new ServiceException("任务正在解析");
+        }
+        if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus())) {
+            task.setStatus(OmAiTaskStatusEnum.FAILED.getCode());
+            task.setFailureReason("应用进程已中断，上一次解析未正常结束，现已重新启动解析");
+            task.setFinishedTime(new Date());
+            taskMapper.updateById(task);
         }
         long fileCount = fileMapper.selectCount(new QueryWrapper<OmAiFileDO>().eq("task_id", id));
         if (fileCount == 0) {
             throw new ServiceException("任务没有原始文件，无法重新解析，请删除任务后重新上传文件");
         }
         clearTaskResults(id);
-        task.setStatus(OmAiTaskStatusEnum.WAITING.getCode());
+        task.setStatus(OmAiTaskStatusEnum.RUNNING.getCode());
+        task.setCurrentStage("FILE_PARSE");
+        task.setStartedTime(new Date());
         task.setCandidateCount(0);
         task.setFinishedTime(null);
         task.setFailureReason(null);
         taskMapper.updateById(task);
         asyncProcessor.initializeStages(task);
-        taskExecutor.execute(() -> asyncProcessor.process(id));
+        if (!asyncProcessor.reserve(id)) {
+            throw new ServiceException("任务正在解析");
+        }
+        try {
+            taskExecutor.execute(() -> asyncProcessor.process(id));
+        } catch (RuntimeException exception) {
+            asyncProcessor.release(id);
+            task.setStatus(OmAiTaskStatusEnum.FAILED.getCode());
+            task.setFailureReason("后台解析任务提交失败：" + exception.getMessage());
+            task.setFinishedTime(new Date());
+            taskMapper.updateById(task);
+            throw new ServiceException("后台解析任务提交失败，请稍后重试");
+        }
     }
 
     /**
@@ -272,16 +405,24 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     /** 清除任务的候选数据、关联关系、证据关联、采纳日志和阶段记录。 */
     private void clearTaskResults(Long taskId) {
-        for (OmAiCandidateTypeEnum candidateType : OmAiCandidateTypeEnum.values()) {
-            jdbcTemplate.update("DELETE FROM " + candidateType.getTableName() + " WHERE task_id = ?", taskId);
-        }
-        jdbcTemplate.update("DELETE FROM om_ai_object_target WHERE task_id = ?", taskId);
-        jdbcTemplate.update("DELETE FROM om_ai_relation_target WHERE task_id = ?", taskId);
-        jdbcTemplate.update("DELETE FROM om_ai_data_evidence WHERE task_id = ?", taskId);
-        jdbcTemplate.update("DELETE FROM om_ai_adopt_log WHERE task_id = ?", taskId);
+        objectTargetMapper.delete(new QueryWrapper<OmAiObjectTargetDO>().eq("task_id", taskId));
+        relationTargetMapper.delete(new QueryWrapper<OmAiRelationTargetDO>().eq("task_id", taskId));
+        dataEvidenceMapper.delete(new QueryWrapper<OmAiDataEvidenceDO>().eq("task_id", taskId));
+        adoptLogMapper.delete(new QueryWrapper<OmAiAdoptLogDO>().eq("task_id", taskId));
+        aiDataRuleMapper.delete(new QueryWrapper<OmAiDataRuleDO>().eq("task_id", taskId));
+        aiAxiomMapper.delete(new QueryWrapper<OmAiAxiomDO>().eq("task_id", taskId));
+        aiRelationMapper.delete(new QueryWrapper<OmAiRelationDO>().eq("task_id", taskId));
+        aiAttributeMapper.delete(new QueryWrapper<OmAiAttributeDO>().eq("task_id", taskId));
+        aiObjectMapper.delete(new QueryWrapper<OmAiObjectDO>().eq("task_id", taskId));
+        aiEnumDataMapper.delete(new QueryWrapper<OmAiEnumDataDO>().eq("task_id", taskId));
+        aiEnumTypeMapper.delete(new QueryWrapper<OmAiEnumTypeDO>().eq("task_id", taskId));
+        aiTermMapper.delete(new QueryWrapper<OmAiTermDO>().eq("task_id", taskId));
+        aiTargetMapper.delete(new QueryWrapper<OmAiTargetDO>().eq("task_id", taskId));
         evidenceMapper.delete(new QueryWrapper<OmAiEvidenceDO>().eq("task_id", taskId));
-        jdbcTemplate.update("UPDATE om_ai_file SET parse_status = ?, page_count = NULL, block_count = 0 WHERE task_id = ?",
-                OmAiFileParseStatusEnum.WAITING.getCode(), taskId);
+        fileMapper.resetParseStatus(OmAiFileDO.builder()
+                .taskId(taskId)
+                .parseStatus(OmAiFileParseStatusEnum.WAITING.getCode())
+                .build());
         stageMapper.delete(new QueryWrapper<OmAiStageDO>().eq("task_id", taskId));
     }
 
@@ -301,77 +442,56 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     @Override
     public List<Map<String, Object>> candidateTargets(String type, Long id) {
-        String table = "object".equals(type) ? "om_ai_object_target"
-                : "relation".equals(type) ? "om_ai_relation_target" : null;
-        String column = "object".equals(type) ? "object_candidate_id" : "relation_candidate_id";
-        if (table == null) throw new ServiceException("仅对象类型和对象关系支持关联建模目标");
-        return jdbcTemplate.queryForList("SELECT t.id,t.question,t.question_source AS questionSource,"
-                        + "t.business_scenarios AS businessScenarios,t.priority,t.related_element_count AS relatedElementCount "
-                        + "FROM " + table + " l JOIN om_ai_target t ON t.id=l.target_candidate_id "
-                        + "WHERE l." + column + "=? AND t.del_flag=0 ORDER BY t.id", id);
+        if ("object".equals(type)) return objectTargetMapper.selectTargets(id);
+        if ("relation".equals(type)) return relationTargetMapper.selectTargets(id);
+        throw new ServiceException("仅对象类型和对象关系支持关联建模目标");
     }
 
     @Override
     public void saveCandidateTargets(String type, Long id, List<Long> targetIds) {
-        String table = "object".equals(type) ? "om_ai_object_target"
-                : "relation".equals(type) ? "om_ai_relation_target" : null;
-        String column = "object".equals(type) ? "object_candidate_id" : "relation_candidate_id";
-        if (table == null) throw new ServiceException("仅对象类型和对象关系支持关联建模目标");
+        if (!("object".equals(type) || "relation".equals(type))) throw new ServiceException("仅对象类型和对象关系支持关联建模目标");
         if (targetIds == null || targetIds.isEmpty()) throw new ServiceException("请至少关联一个建模目标");
         Map<String, Object> candidate = getCandidate("object".equals(type)
                 ? OmAiCandidateTypeEnum.OBJECT : OmAiCandidateTypeEnum.RELATION, id);
         Long taskId = longValue(candidate, "task_id");
-        jdbcTemplate.update("DELETE FROM " + table + " WHERE " + column + "=?", id);
-        for (Long targetId : targetIds.stream().distinct().toList()) {
-            Integer count = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM om_ai_target WHERE id=? AND task_id=? AND del_flag=0",
-                    Integer.class, targetId, taskId);
-            if (count == null || count == 0) throw new ServiceException("关联建模目标不存在或不属于当前任务");
-            jdbcTemplate.update("INSERT INTO " + table + "(task_id," + column + ",target_candidate_id) VALUES (?,?,?)",
-                    taskId, id, targetId);
+        List<Long> distinctTargetIds = targetIds.stream().distinct().toList();
+        Integer count = aiTargetMapper.countTaskTargets(taskId, distinctTargetIds);
+        if (count == null || count != distinctTargetIds.size()) throw new ServiceException("关联建模目标不存在或不属于当前任务");
+        if ("object".equals(type)) {
+            objectTargetMapper.delete(new QueryWrapper<OmAiObjectTargetDO>().eq("object_candidate_id", id));
+            objectTargetMapper.insertBatch(taskId, id, distinctTargetIds);
+        } else {
+            relationTargetMapper.delete(new QueryWrapper<OmAiRelationTargetDO>().eq("relation_candidate_id", id));
+            relationTargetMapper.insertBatch(taskId, id, distinctTargetIds);
         }
-        jdbcTemplate.update("UPDATE om_ai_target t SET related_element_count="
-                + "(SELECT COUNT(*) FROM om_ai_object_target ot WHERE ot.target_candidate_id=t.id)+"
-                + "(SELECT COUNT(*) FROM om_ai_relation_target rt WHERE rt.target_candidate_id=t.id) WHERE t.task_id=?", taskId);
+        aiTargetMapper.refreshRelatedElementCounts(taskId);
     }
 
     @Override
     public List<Map<String, Object>> attributeBusinessTypes(Long taskId, String source) {
         OmAiTaskDO task = getRequiredTask(taskId);
         if ("PROJECT".equals(source)) {
-            return jdbcTemplate.queryForList("SELECT id,name,data_type AS dataType,description,unit,"
-                    + "decimal_places AS decimalPlaces,format,enum_type AS enumType,enum_source AS enumSource,"
-                    + "'PROJECT' AS businessTypeSource FROM om_data_type WHERE version_id=? AND valid_flag=1 AND del_flag=0 ORDER BY id DESC",
-                    task.getVersionId());
+            return dataTypeMapper.selectAiOptions(task.getVersionId());
         }
         if (!"GLOBAL".equals(source)) throw new ServiceException("类型来源只能为当前项目或全局");
-        return jdbcTemplate.queryForList("SELECT id,name,data_type AS dataType,description,unit,"
-                + "decimal_places AS decimalPlaces,format,enum_type AS enumType,'GLOBAL' AS enumSource,"
-                + "'GLOBAL' AS businessTypeSource FROM basic_data_type WHERE valid_flag=1 AND del_flag=0");
+        return basicDataTypeMapper.selectAiOptions();
     }
 
     @Override
     public List<Map<String, Object>> attributeEnumOptions(Long taskId, String source) {
         OmAiTaskDO task = getRequiredTask(taskId);
         if ("PROJECT".equals(source)) {
-            return jdbcTemplate.queryForList("SELECT enum_name AS enumName,enum_type AS enumType,'PROJECT' AS enumSource "
-                    + "FROM om_enum_type WHERE version_id=? AND status='0' AND del_flag=0", task.getVersionId());
+            return formalEnumTypeMapper.selectAiOptions(task.getVersionId());
         }
         if (!"GLOBAL".equals(source)) throw new ServiceException("枚举来源只能为当前项目或全局");
-        return jdbcTemplate.queryForList("SELECT enum_name AS enumName,enum_type AS enumType,'GLOBAL' AS enumSource "
-                + "FROM basic_enum_type WHERE status='0' AND del_flag=0");
+        return basicEnumTypeMapper.selectAiOptions();
     }
 
     /** 查询候选数据的原始文件来源和精确位置。 */
     @Override
     public List<Map<String, Object>> evidence(String type, Long id) {
         OmAiCandidateTypeEnum.fromCode(type);
-        return jdbcTemplate.queryForList(
-                "SELECT e.*, f.file_name, f.file_url, de.evidence_role "
-                        + "FROM om_ai_data_evidence de JOIN om_ai_evidence e ON e.id = de.evidence_id "
-                        + "JOIN om_ai_file f ON f.id = e.file_id "
-                        + "WHERE de.data_type = ? AND de.data_id = ? ORDER BY e.file_id, e.block_no",
-                type, id);
+        return dataEvidenceMapper.selectEvidence(type, id);
     }
 
     /** 查询一键采纳前置条件。 */
@@ -391,16 +511,12 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         }
         try {
             Long formalId = adoptCandidate(candidateType, candidate);
-            jdbcTemplate.update("UPDATE " + candidateType.getTableName()
-                            + " SET adopt_status = ?, adopted_id = ?, adopt_message = NULL WHERE id = ?",
-                    OmAiAdoptStatusEnum.ADOPTED.getCode(), formalId, id);
+            updateCandidateAdoptStatus(candidateType, id, OmAiAdoptStatusEnum.ADOPTED, formalId, null);
             insertAdoptLog(candidate, candidateType, formalId, OmAiAdoptStatusEnum.ADOPTED, "采纳成功");
             return 1;
         } catch (Exception exception) {
             String message = limitMessage(exception.getMessage());
-            jdbcTemplate.update("UPDATE " + candidateType.getTableName()
-                            + " SET adopt_status = ?, adopt_message = ? WHERE id = ?",
-                    OmAiAdoptStatusEnum.FAILED.getCode(), message, id);
+            updateCandidateAdoptStatus(candidateType, id, OmAiAdoptStatusEnum.FAILED, null, message);
             insertAdoptLog(candidate, candidateType, null, OmAiAdoptStatusEnum.FAILED, message);
             if (exception instanceof RuntimeException runtimeException) {
                 throw runtimeException;
@@ -420,6 +536,8 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
             case OBJECT -> adoptObject(task, row);
             case ATTRIBUTE -> adoptAttribute(task, row);
             case RELATION -> adoptRelation(task, row);
+            case AXIOM -> adoptAxiom(task, row);
+            case DATA_RULE -> adoptDataRule(task, row);
         };
     }
 
@@ -429,8 +547,11 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         requireText(row, "question_source", "问题来源");
         requireText(row, "business_scenarios", "业务场景");
         requireText(row, "accept_criterion", "验收标准");
-        requireNotExists("SELECT COUNT(*) FROM om_target WHERE version_id=? AND question=? AND del_flag=0",
-                "建模目标已存在，不能重复采纳", task.getVersionId(), stringValue(row, "question"));
+        requireNotExists(formalTargetMapper.selectCount(new QueryWrapper<OmTargetDO>()
+                        .eq("version_id", task.getVersionId())
+                        .eq("question", stringValue(row, "question"))
+                        .eq("del_flag", 0)),
+                "建模目标已存在，不能重复采纳");
         OmTargetSaveReqVO request = new OmTargetSaveReqVO();
         request.setVersionId(task.getVersionId());
         request.setQuestion(stringValue(row, "question"));
@@ -449,9 +570,12 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         requireText(row, "alias", "别名");
         requireText(row, "abbr", "缩写");
         requireText(row, "source", "来源");
-        requireNotExists("SELECT COUNT(*) FROM om_term WHERE workspace_id=? AND version_id=? AND std_name=? AND del_flag=0",
-                "术语名称已存在，不能重复采纳", task.getWorkspaceId(), task.getVersionId(),
-                stringValue(row, "std_name"));
+        requireNotExists(formalTermMapper.selectCount(new QueryWrapper<OmTermDO>()
+                        .eq("workspace_id", task.getWorkspaceId())
+                        .eq("version_id", task.getVersionId())
+                        .eq("std_name", stringValue(row, "std_name"))
+                        .eq("del_flag", 0)),
+                "术语名称已存在，不能重复采纳");
         OmTermSaveReqVO request = new OmTermSaveReqVO();
         request.setWorkspaceId(task.getWorkspaceId());
         request.setVersionId(task.getVersionId());
@@ -468,10 +592,13 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     private Long adoptEnumType(OmAiTaskDO task, Map<String, Object> row) {
         requireText(row, "enum_name", "枚举名称");
         requireText(row, "enum_type", "枚举类型");
-        requireNotExists("SELECT COUNT(*) FROM om_enum_type WHERE workspace_id=? AND version_id=? "
-                        + "AND enum_name=? AND enum_type=? AND del_flag=0",
-                "枚举名称和枚举类型已存在，不能重复采纳", task.getWorkspaceId(), task.getVersionId(),
-                stringValue(row, "enum_name"), stringValue(row, "enum_type"));
+        requireNotExists(formalEnumTypeMapper.selectCount(new QueryWrapper<OmEnumTypeDO>()
+                        .eq("workspace_id", task.getWorkspaceId())
+                        .eq("version_id", task.getVersionId())
+                        .eq("enum_name", stringValue(row, "enum_name"))
+                        .eq("enum_type", stringValue(row, "enum_type"))
+                        .eq("del_flag", 0)),
+                "枚举名称和枚举类型已存在，不能重复采纳");
         OmEnumTypeSaveReqVO request = new OmEnumTypeSaveReqVO();
         request.setWorkspaceId(task.getWorkspaceId());
         request.setVersionId(task.getVersionId());
@@ -480,9 +607,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         request.setStatus(Optional.ofNullable(stringValue(row, "status")).orElse("0"));
         request.setRemark(stringValue(row, "remark"));
         Long formalTypeId = enumTypeService.createOmEnumType(request);
-        List<Map<String, Object>> children = jdbcTemplate.queryForList(
-                "SELECT * FROM om_ai_enum_data WHERE enum_type_id = ? AND del_flag = 0 "
-                        + "AND adopt_status <> ? ORDER BY enum_sort, id",
+        List<Map<String, Object>> children = aiEnumDataMapper.selectPendingByEnumType(
                 longValue(row, "id"), OmAiAdoptStatusEnum.ADOPTED.getCode());
         for (Map<String, Object> child : children) {
             OmEnumDataSaveReqVO childRequest = new OmEnumDataSaveReqVO();
@@ -495,8 +620,8 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
             childRequest.setStatus(Optional.ofNullable(stringValue(child, "status")).orElse("0"));
             childRequest.setRemark(stringValue(child, "remark"));
             Long formalChildId = enumDataService.createOmEnumData(childRequest);
-            jdbcTemplate.update("UPDATE om_ai_enum_data SET adopt_status = ?, adopted_id = ? WHERE id = ?",
-                    OmAiAdoptStatusEnum.ADOPTED.getCode(), formalChildId, longValue(child, "id"));
+            updateCandidateAdoptStatus(OmAiCandidateTypeEnum.ENUM_DATA, longValue(child, "id"),
+                    OmAiAdoptStatusEnum.ADOPTED, formalChildId, null);
         }
         return formalTypeId;
     }
@@ -504,9 +629,12 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     /** 采纳对象类型；父对象和关联建模目标必须已采纳。 */
     private Long adoptObject(OmAiTaskDO task, Map<String, Object> row) {
         requireText(row, "name", "对象类型名称");
-        requireNotExists("SELECT COUNT(*) FROM om_object_type WHERE workspace_id=? AND version_id=? AND name=? AND del_flag=0",
-                "对象类型名称已存在，不能重复采纳", task.getWorkspaceId(), task.getVersionId(),
-                stringValue(row, "name"));
+        requireNotExists(formalObjectMapper.selectCount(new QueryWrapper<OmObjectTypeDO>()
+                        .eq("workspace_id", task.getWorkspaceId())
+                        .eq("version_id", task.getVersionId())
+                        .eq("name", stringValue(row, "name"))
+                        .eq("del_flag", 0)),
+                "对象类型名称已存在，不能重复采纳");
         Long parentCandidateId = nullableLongValue(row, "parent_candidate_id");
         Long parentId = 0L;
         if (parentCandidateId != null) {
@@ -515,8 +643,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
             parentId = longValue(parent, "adopted_id");
         }
         List<Long> targetIds = requireLinkedTargetsAdopted(
-                "SELECT target_candidate_id FROM om_ai_object_target WHERE object_candidate_id = ?",
-                longValue(row, "id"));
+                objectTargetMapper.selectTargetIds(longValue(row, "id")));
         if (targetIds.isEmpty()) {
             throw new ServiceException("对象类型至少需要一个建模目标");
         }
@@ -539,10 +666,13 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         Map<String, Object> objectCandidate = requireAdopted(
                 OmAiCandidateTypeEnum.OBJECT, objectCandidateId, "所属对象类型");
         Long objectTypeId = longValue(objectCandidate, "adopted_id");
-        requireNotExists("SELECT COUNT(*) FROM om_object_type_attribute WHERE workspace_id=? AND version_id=? "
-                        + "AND object_type_id=? AND name=? AND del_flag=0",
-                "当前对象类型下属性名称已存在，不能重复采纳", task.getWorkspaceId(), task.getVersionId(),
-                objectTypeId, stringValue(row, "name"));
+        requireNotExists(formalAttributeMapper.selectCount(new QueryWrapper<OmObjectTypeAttributeDO>()
+                        .eq("workspace_id", task.getWorkspaceId())
+                        .eq("version_id", task.getVersionId())
+                        .eq("object_type_id", objectTypeId)
+                        .eq("name", stringValue(row, "name"))
+                        .eq("del_flag", 0)),
+                "当前对象类型下属性名称已存在，不能重复采纳");
         OmObjectTypeAttributeSaveReqVO request = new OmObjectTypeAttributeSaveReqVO();
         request.setWorkspaceId(task.getWorkspaceId());
         request.setVersionId(task.getVersionId());
@@ -573,13 +703,16 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
                 OmAiCandidateTypeEnum.OBJECT, endCandidateId, "终点对象类型");
         Long startTypeId = longValue(startObject, "adopted_id");
         Long endTypeId = longValue(endObject, "adopted_id");
-        requireNotExists("SELECT COUNT(*) FROM om_object_type_relation WHERE workspace_id=? AND version_id=? "
-                        + "AND start_type_id=? AND name=? AND end_type_id=? AND del_flag=0",
-                "相同起点类型、关系名称和终点类型的关系已存在，不能重复采纳", task.getWorkspaceId(),
-                task.getVersionId(), startTypeId, stringValue(row, "name"), endTypeId);
+        requireNotExists(formalRelationMapper.selectCount(new QueryWrapper<OmObjectTypeRelationDO>()
+                        .eq("workspace_id", task.getWorkspaceId())
+                        .eq("version_id", task.getVersionId())
+                        .eq("start_type_id", startTypeId)
+                        .eq("name", stringValue(row, "name"))
+                        .eq("end_type_id", endTypeId)
+                        .eq("del_flag", 0)),
+                "相同起点类型、关系名称和终点类型的关系已存在，不能重复采纳");
         List<Long> targetIds = requireLinkedTargetsAdopted(
-                "SELECT target_candidate_id FROM om_ai_relation_target WHERE relation_candidate_id = ?",
-                longValue(row, "id"));
+                relationTargetMapper.selectTargetIds(longValue(row, "id")));
         if (targetIds.isEmpty()) {
             throw new ServiceException("对象关系至少需要一个建模目标");
         }
@@ -596,11 +729,116 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         return relationService.createOmObjectTypeRelation(request);
     }
 
+    /** 采纳模型公理；公理引用的对象和属性候选必须已经采纳。 */
+    private Long adoptAxiom(OmAiTaskDO task, Map<String, Object> row) {
+        requireText(row, "name", "模型公理名称");
+        requireText(row, "type", "公理类型");
+        requireNotExists(formalAxiomMapper.selectCount(new QueryWrapper<OmModelAxiomDO>()
+                        .eq("version_id", task.getVersionId())
+                        .eq("name", stringValue(row, "name"))
+                        .eq("del_flag", 0)),
+                "当前版本已存在同名模型公理，不能重复采纳");
+        OmModelAxiomSaveReqVO request = new OmModelAxiomSaveReqVO();
+        request.setVersionId(task.getVersionId()); request.setName(stringValue(row, "name"));
+        request.setDescription(stringValue(row, "description")); request.setType(stringValue(row, "type"));
+        request.setLevel(Optional.ofNullable(stringValue(row, "level")).orElse("INFO"));
+        request.setObjectTypeId(adoptedDependencyId(OmAiCandidateTypeEnum.OBJECT, row, "object_candidate_id", "对象类型"));
+        request.setOtherTypeId(adoptedDependencyId(OmAiCandidateTypeEnum.OBJECT, row, "other_object_candidate_id", "另一对象类型"));
+        request.setDomainId(adoptedDependencyId(OmAiCandidateTypeEnum.OBJECT, row, "domain_candidate_id", "Domain对象类型"));
+        request.setRangeId(adoptedDependencyId(OmAiCandidateTypeEnum.OBJECT, row, "range_candidate_id", "Range对象类型"));
+        request.setAttributeId(adoptedDependencyId(OmAiCandidateTypeEnum.ATTRIBUTE, row, "attribute_candidate_id", "对象属性"));
+        request.setRelationName(stringValue(row, "relation_name")); request.setTypeCategory(stringValue(row, "type_category"));
+        request.setBasicTypeCode(stringValue(row, "basic_type_code")); request.setBusinessTypeId(nullableLongValue(row, "business_type_id"));
+        request.setBusinessTypeSource(stringValue(row, "business_type_source")); request.setUnit(stringValue(row, "unit"));
+        request.setDecimalPlaces(nullableLongValue(row, "decimal_places")); request.setFormat(stringValue(row, "format"));
+        request.setEnumType(stringValue(row, "enum_type")); request.setEnumSource(stringValue(row, "enum_source"));
+        validateAxiomDependencies(request);
+        return modelAxiomService.createOmModelAxiom(request);
+    }
+
+    /** 按正式模型公理页面规则校验类型专属必填项。 */
+    private void validateAxiomDependencies(OmModelAxiomSaveReqVO request) {
+        if ("DOMAIN_RANGE".equals(request.getType())) {
+            if (request.getRelationName() == null || request.getRelationName().isBlank()
+                    || request.getDomainId() == null || request.getRangeId() == null) {
+                throw new ServiceException("Domain/Range公理的关系、Domain和Range必须完整，请先修改候选数据");
+            }
+            return;
+        }
+        if ("PROPERTY_RANGE".equals(request.getType())) {
+            if (request.getObjectTypeId() == null || request.getAttributeId() == null
+                    || request.getTypeCategory() == null || request.getTypeCategory().isBlank()) {
+                throw new ServiceException("属性范围公理的对象类型、属性和数据类型必须完整，请先修改候选数据");
+            }
+            return;
+        }
+        if (request.getObjectTypeId() == null || request.getOtherTypeId() == null) {
+            throw new ServiceException("该模型公理的两个对象类型必须完整，请先修改候选数据");
+        }
+    }
+
+    /** 采纳数据规则，并把条件中的候选编号转换为正式对象及属性编号。 */
+    private Long adoptDataRule(OmAiTaskDO task, Map<String, Object> row) {
+        requireText(row, "name", "数据规则名称"); requireText(row, "type", "规则类型");
+        requireText(row, "conditions", "失败条件"); requireText(row, "failure_message", "失败提示");
+        requireNotExists(formalDataRuleMapper.selectCount(new QueryWrapper<OmDataRuleDO>()
+                        .eq("version_id", task.getVersionId())
+                        .eq("name", stringValue(row, "name"))
+                        .eq("del_flag", 0)),
+                "当前版本已存在同名数据规则，不能重复采纳");
+        JSONArray candidates = JSON.parseArray(stringValue(row, "conditions"));
+        if (candidates == null || candidates.isEmpty()) throw new ServiceException("数据规则至少需要一个失败条件");
+        JSONArray conditions = new JSONArray();
+        for (Object value : candidates) {
+            JSONObject candidate = (JSONObject) value;
+            Long objectCandidateId = candidate.getLong("objectCandidateId");
+            Long attributeCandidateId = candidate.getLong("attributeCandidateId");
+            if (objectCandidateId == null || attributeCandidateId == null) throw new ServiceException("规则条件的对象类型或属性未抽取到，请先修改补充");
+            JSONObject condition = new JSONObject();
+            condition.put("objectTypeId", longValue(requireAdopted(OmAiCandidateTypeEnum.OBJECT, objectCandidateId, "规则对象类型"), "adopted_id"));
+            condition.put("attributeId", longValue(requireAdopted(OmAiCandidateTypeEnum.ATTRIBUTE, attributeCandidateId, "规则对象属性"), "adopted_id"));
+            condition.put("operator", candidate.getString("operator")); condition.put("value", candidate.get("value")); conditions.add(condition);
+        }
+        validateDataRuleConditions(stringValue(row, "type"), conditions);
+        OmDataRuleSaveReqVO request = new OmDataRuleSaveReqVO(); request.setVersionId(task.getVersionId());
+        request.setName(stringValue(row, "name")); request.setDescription(stringValue(row, "description"));
+        request.setType(stringValue(row, "type")); request.setLevel(Optional.ofNullable(stringValue(row, "level")).orElse("INFO"));
+        request.setConditionRelation(Optional.ofNullable(stringValue(row, "condition_relation")).orElse("OR"));
+        request.setConditions(conditions.toJSONString()); request.setFailureMessage(stringValue(row, "failure_message"));
+        return dataRuleService.createOmDataRule(request);
+    }
+
+    /** 按正式数据规则页面规则校验条件结构和类型专属值。 */
+    private void validateDataRuleConditions(String type, JSONArray conditions) {
+        for (Object value : conditions) {
+            JSONObject condition = (JSONObject) value;
+            if ("RANGE".equals(type)) {
+                String operator = condition.getString("operator");
+                if (!Set.of("LT", "LE", "EQ", "NE", "GE", "GT").contains(operator)) {
+                    throw new ServiceException("取值范围规则的比较符无效，请先修改候选数据");
+                }
+                try {
+                    new java.math.BigDecimal(String.valueOf(condition.get("value")));
+                } catch (Exception exception) {
+                    throw new ServiceException("取值范围规则的条件值必须为数字，请先修改候选数据");
+                }
+            } else if (("ENUM".equals(type) || "FORMAT".equals(type))
+                    && (condition.get("value") == null || String.valueOf(condition.get("value")).isBlank())) {
+                throw new ServiceException("枚举或格式规则的条件值不能为空，请先修改候选数据");
+            }
+        }
+    }
+
+    /** 读取可空候选依赖；存在引用时要求对应候选已采纳。 */
+    private Long adoptedDependencyId(OmAiCandidateTypeEnum type, Map<String, Object> row, String key, String label) {
+        Long candidateId = nullableLongValue(row, key);
+        return candidateId == null ? null : longValue(requireAdopted(type, candidateId, label), "adopted_id");
+    }
+
     /** 校验关联表中的建模目标均已采纳，并返回正式目标编号。 */
-    private List<Long> requireLinkedTargetsAdopted(String sql, Long candidateId) {
+    private List<Long> requireLinkedTargetsAdopted(List<Long> candidateTargetIds) {
         List<Long> targetIds = new ArrayList<>();
-        for (Map<String, Object> link : jdbcTemplate.queryForList(sql, candidateId)) {
-            Long targetCandidateId = longValue(link, "target_candidate_id");
+        for (Long targetCandidateId : candidateTargetIds) {
             Map<String, Object> target = requireAdopted(
                     OmAiCandidateTypeEnum.TARGET, targetCandidateId, "关联建模目标");
             targetIds.add(longValue(target, "adopted_id"));
@@ -619,8 +857,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     }
 
     /** 校验正式表中不存在满足唯一业务键的数据。 */
-    private void requireNotExists(String sql, String message, Object... args) {
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, args);
+    private void requireNotExists(Long count, String message) {
         if (count != null && count > 0) {
             throw new ServiceException(message);
         }
@@ -633,15 +870,12 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         int failed = 0;
         List<OmAiCandidateTypeEnum> order = List.of(OmAiCandidateTypeEnum.TARGET, OmAiCandidateTypeEnum.TERM,
                 OmAiCandidateTypeEnum.ENUM_TYPE, OmAiCandidateTypeEnum.OBJECT,
-                OmAiCandidateTypeEnum.ATTRIBUTE, OmAiCandidateTypeEnum.RELATION);
+                OmAiCandidateTypeEnum.ATTRIBUTE, OmAiCandidateTypeEnum.RELATION,
+                OmAiCandidateTypeEnum.AXIOM, OmAiCandidateTypeEnum.DATA_RULE);
         for (OmAiCandidateTypeEnum type : order) {
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                    "SELECT id FROM " + type.getTableName()
-                            + " WHERE task_id = ? AND adopt_status <> ? AND del_flag = 0 ORDER BY id",
-                    taskId, OmAiAdoptStatusEnum.ADOPTED.getCode());
-            for (Map<String, Object> row : rows) {
+            for (Long candidateId : selectPendingCandidateIds(type, taskId)) {
                 try {
-                    adopt(type.getCode(), longValue(row, "id"));
+                    adopt(type.getCode(), candidateId);
                     success++;
                 } catch (RuntimeException exception) {
                     failed++;
@@ -653,22 +887,171 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     /** 查询候选数据，不存在时抛出业务异常。 */
     private Map<String, Object> getCandidate(OmAiCandidateTypeEnum type, Long id) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT * FROM " + type.getTableName() + " WHERE id = ? AND del_flag = 0", id);
-        if (rows.isEmpty()) {
+        Object candidate = switch (type) {
+            case TARGET -> aiTargetMapper.selectById(id);
+            case TERM -> aiTermMapper.selectById(id);
+            case ENUM_TYPE -> aiEnumTypeMapper.selectById(id);
+            case ENUM_DATA -> aiEnumDataMapper.selectById(id);
+            case OBJECT -> aiObjectMapper.selectById(id);
+            case ATTRIBUTE -> aiAttributeMapper.selectById(id);
+            case RELATION -> aiRelationMapper.selectById(id);
+            case AXIOM -> aiAxiomMapper.selectById(id);
+            case DATA_RULE -> aiDataRuleMapper.selectById(id);
+        };
+        if (candidate == null) {
             throw new ServiceException("候选数据不存在");
         }
-        return rows.get(0);
+        return JSON.parseObject(JSON.toJSONString(candidate), Map.class);
     }
 
     /** 写入候选数据采纳日志。 */
     private void insertAdoptLog(Map<String, Object> row, OmAiCandidateTypeEnum type, Long formalId,
                                 OmAiAdoptStatusEnum status, String message) {
-        jdbcTemplate.update("INSERT INTO om_ai_adopt_log"
-                        + "(task_id, data_type, data_id, formal_id, status, message, create_time) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, NOW())",
-                longValue(row, "task_id"), type.getCode(), longValue(row, "id"), formalId,
-                status.getCode(), message);
+        OmAiAdoptLogDO log = new OmAiAdoptLogDO();
+        log.setTaskId(longValue(row, "task_id"));
+        log.setDataType(type.getCode());
+        log.setDataId(longValue(row, "id"));
+        log.setFormalId(formalId);
+        log.setStatus(status.getCode());
+        log.setMessage(message);
+        adoptLogMapper.insert(log);
+    }
+
+    /** 查询指定候选类型下尚未采纳的数据编号。 */
+    private List<Long> selectPendingCandidateIds(OmAiCandidateTypeEnum type, Long taskId) {
+        Integer adoptedStatus = OmAiAdoptStatusEnum.ADOPTED.getCode();
+        return switch (type) {
+            case TARGET -> aiTargetMapper.selectList(new QueryWrapper<OmAiTargetDO>()
+                            .select("id").eq("task_id", taskId).ne("adopt_status", adoptedStatus)
+                            .eq("del_flag", 0).orderByAsc("id"))
+                    .stream().map(OmAiTargetDO::getId).toList();
+            case TERM -> aiTermMapper.selectList(new QueryWrapper<OmAiTermDO>()
+                            .select("id").eq("task_id", taskId).ne("adopt_status", adoptedStatus)
+                            .eq("del_flag", 0).orderByAsc("id"))
+                    .stream().map(OmAiTermDO::getId).toList();
+            case ENUM_TYPE -> aiEnumTypeMapper.selectList(new QueryWrapper<OmAiEnumTypeDO>()
+                            .select("id").eq("task_id", taskId).ne("adopt_status", adoptedStatus)
+                            .eq("del_flag", 0).orderByAsc("id"))
+                    .stream().map(OmAiEnumTypeDO::getId).toList();
+            case ENUM_DATA -> List.of();
+            case OBJECT -> aiObjectMapper.selectList(new QueryWrapper<OmAiObjectDO>()
+                            .select("id").eq("task_id", taskId).ne("adopt_status", adoptedStatus)
+                            .eq("del_flag", 0).orderByAsc("id"))
+                    .stream().map(OmAiObjectDO::getId).toList();
+            case ATTRIBUTE -> aiAttributeMapper.selectList(new QueryWrapper<OmAiAttributeDO>()
+                            .select("id").eq("task_id", taskId).ne("adopt_status", adoptedStatus)
+                            .eq("del_flag", 0).orderByAsc("id"))
+                    .stream().map(OmAiAttributeDO::getId).toList();
+            case RELATION -> aiRelationMapper.selectList(new QueryWrapper<OmAiRelationDO>()
+                            .select("id").eq("task_id", taskId).ne("adopt_status", adoptedStatus)
+                            .eq("del_flag", 0).orderByAsc("id"))
+                    .stream().map(OmAiRelationDO::getId).toList();
+            case AXIOM -> aiAxiomMapper.selectList(new QueryWrapper<OmAiAxiomDO>()
+                            .select("id").eq("task_id", taskId).ne("adopt_status", adoptedStatus)
+                            .eq("del_flag", 0).orderByAsc("id"))
+                    .stream().map(OmAiAxiomDO::getId).toList();
+            case DATA_RULE -> aiDataRuleMapper.selectList(new QueryWrapper<OmAiDataRuleDO>()
+                            .select("id").eq("task_id", taskId).ne("adopt_status", adoptedStatus)
+                            .eq("del_flag", 0).orderByAsc("id"))
+                    .stream().map(OmAiDataRuleDO::getId).toList();
+        };
+    }
+
+    /** 更新候选数据采纳状态。 */
+    private void updateCandidateAdoptStatus(OmAiCandidateTypeEnum type, Long id,
+                                            OmAiAdoptStatusEnum status, Long formalId, String message) {
+        switch (type) {
+            case TARGET -> aiTargetMapper.updateById(adoptTargetStatus(id, status, formalId, message));
+            case TERM -> aiTermMapper.updateById(adoptTermStatus(id, status, formalId, message));
+            case ENUM_TYPE -> aiEnumTypeMapper.updateById(adoptEnumTypeStatus(id, status, formalId, message));
+            case ENUM_DATA -> aiEnumDataMapper.updateById(adoptEnumDataStatus(id, status, formalId, message));
+            case OBJECT -> aiObjectMapper.updateById(adoptObjectStatus(id, status, formalId, message));
+            case ATTRIBUTE -> aiAttributeMapper.updateById(adoptAttributeStatus(id, status, formalId, message));
+            case RELATION -> aiRelationMapper.updateById(adoptRelationStatus(id, status, formalId, message));
+            case AXIOM -> aiAxiomMapper.updateById(adoptAxiomStatus(id, status, formalId, message));
+            case DATA_RULE -> aiDataRuleMapper.updateById(adoptDataRuleStatus(id, status, formalId, message));
+        }
+    }
+
+    private OmAiTargetDO adoptTargetStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiTargetDO candidate = new OmAiTargetDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
+    }
+
+    private OmAiTermDO adoptTermStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiTermDO candidate = new OmAiTermDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
+    }
+
+    private OmAiEnumTypeDO adoptEnumTypeStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiEnumTypeDO candidate = new OmAiEnumTypeDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
+    }
+
+    private OmAiEnumDataDO adoptEnumDataStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiEnumDataDO candidate = new OmAiEnumDataDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
+    }
+
+    private OmAiObjectDO adoptObjectStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiObjectDO candidate = new OmAiObjectDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
+    }
+
+    private OmAiAttributeDO adoptAttributeStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiAttributeDO candidate = new OmAiAttributeDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
+    }
+
+    private OmAiRelationDO adoptRelationStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiRelationDO candidate = new OmAiRelationDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
+    }
+
+    private OmAiAxiomDO adoptAxiomStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiAxiomDO candidate = new OmAiAxiomDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
+    }
+
+    private OmAiDataRuleDO adoptDataRuleStatus(Long id, OmAiAdoptStatusEnum status, Long formalId, String message) {
+        OmAiDataRuleDO candidate = new OmAiDataRuleDO();
+        candidate.setId(id);
+        candidate.setAdoptStatus(status.getCode());
+        candidate.setAdoptedId(formalId);
+        candidate.setAdoptMessage(message);
+        return candidate;
     }
 
     /** 查询任务，不存在时抛出业务异常。 */

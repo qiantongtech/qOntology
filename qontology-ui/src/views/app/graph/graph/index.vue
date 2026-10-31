@@ -163,13 +163,13 @@
                         label="属性名称"
                         align="center"
                         prop="name"
-                        show-overflow-tooltip
+                        :show-overflow-tooltip="{ effect: 'light' }"
                       />
                       <el-table-column
                         label="数据类型"
                         prop="dataType"
                         align="center"
-                        show-overflow-tooltip
+                        :show-overflow-tooltip="{ effect: 'light' }"
                       >
                         <template #default="scope">
                           <dict-tag
@@ -182,7 +182,7 @@
                         label="属性值"
                         prop="dataValue"
                         align="center"
-                        show-overflow-tooltip
+                        :show-overflow-tooltip="{ effect: 'light' }"
                       >
                         <template #default="scope">
                           {{ scope.row.dataValue ? scope.row.dataValue : "-" }}
@@ -232,13 +232,13 @@
                         label="起点"
                         key="startName"
                         prop="startName"
-                        show-overflow-tooltip
+                        :show-overflow-tooltip="{ effect: 'light' }"
                       />
                       <el-table-column
                         label="关系"
                         key="name"
                         prop="name"
-                        show-overflow-tooltip
+                        :show-overflow-tooltip="{ effect: 'light' }"
                       >
                         <template #default="scope">
                           <span
@@ -263,7 +263,7 @@
                         label="终点"
                         key="endName"
                         prop="endName"
-                        show-overflow-tooltip
+                        :show-overflow-tooltip="{ effect: 'light' }"
                       />
                       <el-table-column
                         label="操作"
@@ -354,7 +354,7 @@
                           label="表字段"
                           align="center"
                           prop="field"
-                          show-overflow-tooltip
+                          :show-overflow-tooltip="{ effect: 'light' }"
                         />
                         <el-table-column
                           label="数据"
@@ -736,7 +736,6 @@ const ENTITY_COLOR_PALETTE = [
   "#2d78b5", // 钢蓝
   "#378a46", // 墨绿
 ];
-
 
 /** 用 entity 的 id（数字或字符串）哈希到调色板下标。 */
 function pickColorByEntityId(entityId) {

@@ -23,7 +23,6 @@ import jakarta.annotation.Resource;
 import java.util.Collection;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.jdbc.core.JdbcTemplate;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTarget.vo.*;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiTarget.OmAiTargetDO;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiTarget.OmAiTargetMapper;
@@ -39,22 +38,13 @@ import tech.qiantong.qontology.core.utils.object.BeanUtils;
 public class OmAiTargetServiceImpl extends ServiceImpl<OmAiTargetMapper, OmAiTargetDO> implements IOmAiTargetService {
     @Resource
     private OmAiTargetMapper mapper;
-    @Resource
-    private JdbcTemplate jdbcTemplate;
 
     /** 获得AI候选建模目标分页列表。 */
     @Override
     public PageResult<OmAiTargetDO> getOmAiTargetPage(OmAiTargetPageReqVO reqVO) {
         PageResult<OmAiTargetDO> result = mapper.selectPage(reqVO);
         for (OmAiTargetDO target : result.getList()) {
-            Integer count = jdbcTemplate.queryForObject(
-                    "SELECT ((SELECT COUNT(*) FROM om_ai_object_target link "
-                            + "JOIN om_ai_object candidate ON candidate.id=link.object_candidate_id "
-                            + "WHERE link.target_candidate_id=? AND candidate.del_flag=0) + "
-                            + "(SELECT COUNT(*) FROM om_ai_relation_target link "
-                            + "JOIN om_ai_relation candidate ON candidate.id=link.relation_candidate_id "
-                            + "WHERE link.target_candidate_id=? AND candidate.del_flag=0))",
-                    Integer.class, target.getId(), target.getId());
+            Integer count = mapper.selectRelatedElementCount(target.getId());
             target.setRelatedElementCount(count == null ? 0 : count);
         }
         return result;

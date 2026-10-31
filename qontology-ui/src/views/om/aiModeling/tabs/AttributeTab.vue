@@ -259,13 +259,13 @@
           ><el-input
             v-model="form.name"
             placeholder="请输入属性名称"
-            maxlength="128"
+            maxlength="128个字符"
         /></el-form-item>
         <el-form-item label="属性代码" prop="code"
           ><el-input
             v-model="form.code"
             placeholder="例如 purchase_amount"
-            maxlength="128"
+            maxlength="128个字符"
         /></el-form-item>
         <el-form-item label="描述" prop="description"
           ><el-input

@@ -235,12 +235,12 @@
         ><el-form-item label="名称" prop="stdName"
           ><el-input
             v-model="form.stdName"
-            maxlength="256"
+            maxlength="200个字符"
             placeholder="请输入名称" /></el-form-item
         ><el-form-item label="英文名称" prop="enName"
           ><el-input
             v-model="form.enName"
-            maxlength="256"
+            maxlength="200个字符"
             placeholder="请输入英文名称" /></el-form-item
         ><el-form-item label="别名" prop="alias"
           ><div class="flex gap-2 alias-tags">
@@ -270,14 +270,14 @@
         ><el-form-item label="缩写" prop="abbr"
           ><el-input
             v-model="form.abbr"
-            maxlength="256"
+            maxlength="200个字符"
             placeholder="请输入缩写" /></el-form-item
         ><el-form-item label="来源" prop="source"
           ><el-input
             v-model="form.source"
             type="textarea"
             :rows="3"
-            maxlength="200"
+            maxlength="200个字符"
             show-word-limit
             placeholder="请输入来源" /></el-form-item
         ><el-form-item label="描述"
@@ -285,7 +285,7 @@
             v-model="form.description"
             type="textarea"
             :rows="4"
-            maxlength="500"
+            maxlength="500个字符"
             show-word-limit
             placeholder="请输入描述" /></el-form-item></el-form
       ><template #footer

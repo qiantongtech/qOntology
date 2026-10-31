@@ -58,6 +58,17 @@ export function updateAiTask(data) {
   return request({ url: '/om/aiTask', method: 'put', data })
 }
 
+/** 更新 AI 辅助建模任务的文件列表（FormData：taskId + retainedFileIds[] + files[]）。 */
+export function updateAiTaskFiles(formData) {
+  return request({
+    url: '/om/aiTask/files',
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data', repeatSubmit: false },
+    timeout: 0
+  })
+}
+
 /** 删除 AI 辅助建模任务。 */
 export function deleteAiTask(ids) {
   return request({ url: `/om/aiTask/${ids}`, method: 'delete' })

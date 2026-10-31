@@ -18,7 +18,10 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiEnumData;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiEnumData.vo.OmAiEnumDataPageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiEnumData.OmAiEnumDataDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -27,6 +30,18 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI候选枚举数据 Mapper 接口。 */
 public interface OmAiEnumDataMapper extends BaseMapperX<OmAiEnumDataDO> {
+    /** 查询任务下的候选枚举数据索引。 */
+    List<Map<String, Object>> selectCandidateIndex(Long taskId);
+
+    /** 统计候选枚举值是否存在。 */
+    Integer countCandidateValue(@Param("taskId") Long taskId,
+                                @Param("enumType") String enumType,
+                                @Param("value") String value);
+
+    /** 查询枚举类型下尚未采纳的枚举数据。 */
+    List<Map<String, Object>> selectPendingByEnumType(@Param("enumTypeId") Long enumTypeId,
+                                                      @Param("adoptedStatus") Integer adoptedStatus);
+
     /** 根据分页条件查询AI候选枚举数据。 */
     default PageResult<OmAiEnumDataDO> selectPage(OmAiEnumDataPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiEnumDataDO>()

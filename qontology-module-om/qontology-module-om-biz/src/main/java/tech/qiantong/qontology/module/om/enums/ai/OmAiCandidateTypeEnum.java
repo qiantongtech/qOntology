@@ -12,16 +12,18 @@ import tech.qiantong.qontology.common.exception.ServiceException;
 @AllArgsConstructor
 public enum OmAiCandidateTypeEnum {
 
-    TARGET("target", "om_ai_target"),
-    TERM("term", "om_ai_term"),
-    ENUM_TYPE("enum_type", "om_ai_enum_type"),
-    ENUM_DATA("enum_data", "om_ai_enum_data"),
-    OBJECT("object", "om_ai_object"),
-    ATTRIBUTE("attribute", "om_ai_attribute"),
-    RELATION("relation", "om_ai_relation");
+    TARGET("target", "建模目标"),
+    TERM("term", "术语"),
+    ENUM_TYPE("enum_type", "枚举类型"),
+    ENUM_DATA("enum_data", "枚举数据"),
+    OBJECT("object", "对象类型"),
+    ATTRIBUTE("attribute", "对象属性"),
+    RELATION("relation", "对象关系"),
+    AXIOM("axiom", "模型公理"),
+    DATA_RULE("data_rule", "数据规则");
 
     private final String code;
-    private final String tableName;
+    private final String label;
 
     /**
      * 根据编码获得候选数据类型。

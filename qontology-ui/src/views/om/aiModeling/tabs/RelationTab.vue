@@ -249,16 +249,14 @@
                   v-for="item in objects"
                   :key="item.id"
                   :label="item.name"
-                  :value="item.id" /></el-select
-            ></el-form-item
+                  :value="item.id" /></el-select></el-form-item
           ></el-col>
           <el-col :span="24"
             ><el-form-item label="关系名称" prop="name"
               ><el-input
                 v-model="form.name"
                 placeholder="请输入关系名称"
-                maxlength="128"
-            /></el-form-item
+                maxlength="128个字符" /></el-form-item
           ></el-col>
           <el-col :span="24"
             ><el-form-item label="终点类型" prop="endObjectCandidateId"
@@ -271,8 +269,7 @@
                   v-for="item in objects"
                   :key="item.id"
                   :label="item.name"
-                  :value="item.id" /></el-select
-            ></el-form-item
+                  :value="item.id" /></el-select></el-form-item
           ></el-col>
           <el-col :span="24"
             ><el-form-item label="是否可逆" prop="reversibleFlag"
@@ -286,17 +283,14 @@
                   >{{ dict.label }}</el-radio
                 ></el-radio-group
               ></el-form-item
-            ></el-col>
+            ></el-col
+          >
           <el-col v-if="form.reversibleFlag === 1" :span="24"
-            ><el-form-item
-              label="反向名称"
-              prop="reverseName"
-              required
+            ><el-form-item label="反向名称" prop="reverseName" required
               ><el-input
                 v-model="form.reverseName"
                 placeholder="请输入反向名称"
-                maxlength="128"
-            /></el-form-item
+                maxlength="128个字符" /></el-form-item
           ></el-col>
           <el-col :span="24"
             ><el-form-item label="描述" prop="description"
@@ -306,9 +300,8 @@
                 type="textarea"
                 :rows="4"
                 placeholder="请输入描述"
-                maxlength="512"
-                show-word-limit
-            /></el-form-item
+                maxlength="512个字符"
+                show-word-limit /></el-form-item
           ></el-col>
           <el-col :span="24"
             ><el-form-item label="关联建模目标" prop="targetIds"
@@ -323,7 +316,7 @@
                 @remove="removeTarget"
               />
             </div>
-          ></el-col>
+          </el-col>
         </el-row>
       </el-form>
       <template #footer
@@ -371,8 +364,7 @@
           ><div class="form-readonly textarea">
             {{ detail.description || "-" }}
           </div></el-form-item
-        ><el-form-item label="关联建模目标"
-          ><TargetTable :targets="detailTargets" /></el-form-item></el-form
+        ></el-form
       ><template #footer
         ><div class="dialog-footer">
           <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
@@ -427,7 +419,6 @@ const detail = ref({});
 const objects = ref([]);
 const targetPickerOpen = ref(false);
 const selectedTargets = ref([]);
-const detailTargets = ref([]);
 const required = (row) => {
   const missing = [];
   if (!row.startObjectCandidateId) missing.push("起点类型");
@@ -535,8 +526,6 @@ async function edit(row) {
 }
 async function showDetail(row) {
   detail.value = { ...row };
-  const response = await getCandidateTargets("relation", row.id);
-  detailTargets.value = response.data || [];
   detailOpen.value = true;
 }
 async function save() {
@@ -560,4 +549,18 @@ async function save() {
 loadObjects();
 load();
 </script>
+
+<style scoped lang="scss">
+.target-table {
+  margin: 0 0 10px 120px;
+}
+@media (max-width: 600px) {
+  .target-table {
+    margin-left: 0;
+  }
+}
+.character-count :deep(.el-input__count) {
+  background: transparent;
+}
+</style>
 

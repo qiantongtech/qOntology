@@ -379,12 +379,12 @@
           ><el-input
             v-model="typeForm.enumName"
             placeholder="请输入枚举名称"
-            maxlength="128" /></el-form-item
+            maxlength="128个字符" /></el-form-item
         ><el-form-item label="枚举类型" prop="enumType"
           ><el-input
             v-model="typeForm.enumType"
             placeholder="请输入枚举类型"
-            maxlength="100" /></el-form-item
+            maxlength="100个字符" /></el-form-item
         ><el-form-item label="状态" prop="status"
           ><el-radio-group v-model="typeForm.status"
             ><el-radio
@@ -399,7 +399,7 @@
             v-model="typeForm.remark"
             type="textarea"
             :rows="3"
-            maxlength="512"
+            maxlength="512个字符"
             show-word-limit
             placeholder="请输入备注" /></el-form-item></el-form
       ><template #footer
@@ -442,12 +442,12 @@
           ><el-input
             v-model="valueForm.enumLabel"
             placeholder="请输入枚举标签"
-            maxlength="128" /></el-form-item
+            maxlength="128个字符" /></el-form-item
         ><el-form-item label="枚举键值" prop="enumValue"
           ><el-input
             v-model="valueForm.enumValue"
             placeholder="请输入枚举键值"
-            maxlength="128" /></el-form-item
+            maxlength="128个字符" /></el-form-item
         ><el-form-item label="排序" prop="enumSort"
           ><el-input-number
             v-model="valueForm.enumSort"
@@ -467,7 +467,7 @@
             v-model="valueForm.remark"
             type="textarea"
             :rows="3"
-            maxlength="512"
+            maxlength="512个字符"
             show-word-limit
             placeholder="请输入备注" /></el-form-item></el-form
       ><template #footer

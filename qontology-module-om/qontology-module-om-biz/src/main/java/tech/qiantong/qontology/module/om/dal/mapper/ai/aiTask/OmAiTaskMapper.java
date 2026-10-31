@@ -27,6 +27,9 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI辅助建模任务 Mapper 接口。 */
 public interface OmAiTaskMapper extends BaseMapperX<OmAiTaskDO> {
+    /** 统计任务下全部候选数据数量。 */
+    Integer countAllCandidates(Long taskId);
+
     /** 根据分页条件查询AI辅助建模任务。 */
     default PageResult<OmAiTaskDO> selectPage(OmAiTaskPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiTaskDO>()

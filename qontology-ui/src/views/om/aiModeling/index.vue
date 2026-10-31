@@ -191,7 +191,6 @@
               link
               type="primary"
               icon="Refresh"
-              :disabled="row.status === 1"
               @click="reparseTask(row)"
             >
               重新解析
@@ -262,13 +261,75 @@
         @pagination="loadTasks"
       />
     </div>
+
+    <!-- 修改任务弹框：基础信息 + 文件 -->
+    <el-dialog
+      v-model="editOpen"
+      title="修改AI辅助建模任务"
+      width="800px"
+      draggable
+      :close-on-press-escape="!editSaving"
+      :before-close="handleEditBeforeClose"
+      @closed="clearEditValidation"
+    >
+      <el-form
+        v-loading="editLoading"
+        ref="editFormRef"
+        :model="editForm"
+        :rules="editRules"
+        label-width="100px"
+      >
+        <el-form-item label="任务名称" prop="taskName">
+          <el-input
+            v-model="editForm.taskName"
+            placeholder="请输入任务名称"
+            maxlength="100"
+          />
+        </el-form-item>
+        <el-form-item label="任务描述">
+          <el-input
+            v-model="editForm.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入任务描述"
+            maxlength="500"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="上传文件">
+          <AiFileUpload
+            v-model="editForm.files"
+            :disabled="editSaving"
+            :limit="5"
+            :file-size="20"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button :disabled="editSaving" @click="editOpen = false">
+          取消
+        </el-button>
+        <el-button type="primary" :loading="editSaving" @click="submitEdit">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="AiModeling">
 import { useRouter } from "vue-router";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
-import { deleteAiTask, listAiTasks, reparseAiTask } from "@/api/om/aiModeling";
+import AiFileUpload from "./components/AiFileUpload.vue";
+import {
+  deleteAiTask,
+  getAiFiles,
+  getAiTask,
+  listAiTasks,
+  reparseAiTask,
+  updateAiTask,
+  updateAiTaskFiles,
+} from "@/api/om/aiModeling";
 import auth from "@/plugins/auth";
 
 const { proxy } = getCurrentInstance();
@@ -349,13 +410,111 @@ function openCreateDialog() {
   router.push(`/om/${versionId.value}/aiModeling/add`);
 }
 
-/** 进入与新增一致的三步式任务修改页面。 */
-function openEditDialog(row) {
+/** 弹框相关状态与表单。 */
+const editOpen = ref(false);
+const editSaving = ref(false);
+const editLoading = ref(false);
+const editFormRef = ref();
+const editForm = reactive({
+  id: null,
+  taskName: "",
+  description: "",
+  files: [],
+});
+const editRules = {
+  taskName: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
+};
+let editOriginalPersistedFileIds = [];
+let editOriginalBasicInfo = { taskName: "", description: "" };
+
+async function openEditDialog(row) {
   if (!requireVersion()) return;
-  router.push({
-    path: `/om/${versionId.value}/aiModeling/add`,
-    query: { id: row.id },
-  });
+  editForm.id = row.id;
+  editOpen.value = true;
+  editLoading.value = true;
+  try {
+    const [taskResponse, fileResponse] = await Promise.all([
+      getAiTask(row.id),
+      getAiFiles(row.id),
+    ]);
+    const task = taskResponse.data || {};
+    const files = fileResponse.data || [];
+    editForm.taskName = task.taskName || "";
+    editForm.description = task.description || "";
+    editForm.files = files.map((file) => ({
+      uid: `persisted-${file.id}`,
+      id: file.id,
+      name: file.fileName,
+      url: file.fileUrl,
+      persisted: true,
+    }));
+    editOriginalPersistedFileIds = files.map((file) => file.id);
+    editOriginalBasicInfo = {
+      taskName: task.taskName || "",
+      description: task.description || "",
+    };
+  } finally {
+    editLoading.value = false;
+  }
+}
+
+function clearEditValidation() {
+  proxy.resetForm("editFormRef");
+}
+
+function handleEditBeforeClose(done) {
+  if (editSaving.value) return;
+  done();
+}
+
+async function submitEdit() {
+  const valid = await editFormRef.value.validate().catch(() => false);
+  if (!valid) return;
+  editSaving.value = true;
+  try {
+    const currentPersistedIds = editForm.files
+      .filter((f) => f.persisted)
+      .map((f) => f.id);
+    const hasNewFiles = editForm.files.some((f) => f.raw);
+    const hasRemovedFiles = editOriginalPersistedFileIds.some(
+      (id) => !currentPersistedIds.includes(id)
+    );
+    const fileChanged = hasNewFiles || hasRemovedFiles;
+    const basicInfoChanged =
+      editForm.taskName !== editOriginalBasicInfo.taskName ||
+      editForm.description !== editOriginalBasicInfo.description;
+
+    if (basicInfoChanged) {
+      await updateAiTask({
+        id: editForm.id,
+        taskName: editForm.taskName,
+        description: editForm.description || "",
+        versionId: versionId.value,
+      });
+    }
+
+    if (fileChanged) {
+      const formData = new FormData();
+      formData.append("taskId", editForm.id);
+      currentPersistedIds.forEach((id) =>
+        formData.append("retainedFileIds", id)
+      );
+      editForm.files
+        .filter((f) => f.raw)
+        .forEach((f) => formData.append("files", f.raw));
+      await updateAiTaskFiles(formData);
+      proxy.$modal.msgSuccess('文件已更新，请点击"重新解析"按钮执行解析');
+    } else if (basicInfoChanged) {
+      proxy.$modal.msgSuccess("修改成功");
+    } else {
+      proxy.$modal.msgSuccess("未检测到变更");
+    }
+
+    editOpen.value = false;
+    loadTasks();
+  } finally {
+    editSaving.value = false;
+  }
 }
 
 /** 打开任务详情页。 */
@@ -426,10 +585,6 @@ watch(
   },
   { immediate: true }
 );
-const refreshTimer = setInterval(() => {
-  if (rows.value.some((item) => item.status === 1)) loadTasks();
-}, 3000);
-onUnmounted(() => clearInterval(refreshTimer));
 </script>
 
 <style scoped lang="scss">

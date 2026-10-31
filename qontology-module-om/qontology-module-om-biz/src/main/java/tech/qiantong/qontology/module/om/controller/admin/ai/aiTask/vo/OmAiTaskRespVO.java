@@ -33,8 +33,6 @@ public class OmAiTaskRespVO implements Serializable {
     @Schema(description = "主键ID")
     private Long id;
 
-    @Schema(description = "任务编号")
-    private String taskCode;
     @Schema(description = "任务名称")
     private String taskName;
     @Schema(description = "任务描述")

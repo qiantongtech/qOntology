@@ -18,7 +18,10 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiRelation;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiRelation.vo.OmAiRelationPageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiRelation.OmAiRelationDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -27,6 +30,14 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI候选对象类型关系 Mapper 接口。 */
 public interface OmAiRelationMapper extends BaseMapperX<OmAiRelationDO> {
+    /** 查询任务下的候选关系索引。 */
+    List<Map<String, Object>> selectCandidateIndex(Long taskId);
+
+    /** 查询指定起止对象之间的候选关系名称。 */
+    List<String> selectNamesByObjects(@Param("taskId") Long taskId,
+                                      @Param("startObjectCandidateId") Long startObjectCandidateId,
+                                      @Param("endObjectCandidateId") Long endObjectCandidateId);
+
     /** 根据分页条件查询AI候选对象类型关系。 */
     default PageResult<OmAiRelationDO> selectPage(OmAiRelationPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiRelationDO>()

@@ -61,8 +61,6 @@
             class="stage-meta"
           >
             <span v-if="stage.modelName">模型：{{ stage.modelName }}</span>
-            <span v-if="stage.inputCount">输入：{{ stage.inputCount }}</span>
-            <span v-if="stage.outputCount">输出：{{ stage.outputCount }}</span>
             <span v-if="stage.durationMs"
               >耗时：{{ formatDuration(stage.durationMs) }}</span
             >
@@ -132,7 +130,18 @@ async function load() {
   } finally {
     loading.value = false;
   }
+  scheduleRefresh();
 }
+
+/** 存在执行中的阶段时轮询刷新，解析结束后自动停止。 */
+let refreshTimer = null;
+function scheduleRefresh() {
+  clearTimeout(refreshTimer);
+  if (stages.value.some((stage) => stage.status === 1)) {
+    refreshTimer = setTimeout(load, 2500);
+  }
+}
+onUnmounted(() => clearTimeout(refreshTimer));
 
 watch(
   () => props.taskId,

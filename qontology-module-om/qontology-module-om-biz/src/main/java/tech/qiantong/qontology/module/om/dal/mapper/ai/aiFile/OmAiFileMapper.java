@@ -27,6 +27,9 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI辅助建模文件 Mapper 接口。 */
 public interface OmAiFileMapper extends BaseMapperX<OmAiFileDO> {
+    /** 重置任务文件的解析状态。 */
+    int resetParseStatus(OmAiFileDO file);
+
     /** 根据分页条件查询AI辅助建模文件。 */
     default PageResult<OmAiFileDO> selectPage(OmAiFilePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiFileDO>()

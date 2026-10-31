@@ -22,6 +22,7 @@ import com.github.yulichang.base.MPJBaseMapper;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumDataPageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumDataDO;
@@ -35,6 +36,11 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
  * @date 2026-10-10
  */
 public interface OmEnumDataMapper extends BaseMapperX<OmEnumDataDO> {
+    /** 统计项目枚举值是否存在。 */
+    Integer countAiValue(@Param("taskId") Long taskId,
+                         @Param("enumType") String enumType,
+                         @Param("value") String value);
+
     /**
      * 按请求条件分页查询枚举数据
      *

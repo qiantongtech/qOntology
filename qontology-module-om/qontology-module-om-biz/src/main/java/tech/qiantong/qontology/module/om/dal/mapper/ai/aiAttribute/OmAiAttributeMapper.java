@@ -18,7 +18,10 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiAttribute;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiAttribute.vo.OmAiAttributePageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiAttribute.OmAiAttributeDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -27,6 +30,17 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI候选对象类型属性 Mapper 接口。 */
 public interface OmAiAttributeMapper extends BaseMapperX<OmAiAttributeDO> {
+    /** 查询任务下的候选属性索引。 */
+    List<Map<String, Object>> selectCandidateIndex(Long taskId);
+
+    /** 查询指定对象类型下的候选属性。 */
+    List<Map<String, Object>> selectByObjectCandidate(@Param("taskId") Long taskId,
+                                                      @Param("objectCandidateId") Long objectCandidateId);
+
+    /** 查询指定候选属性的权威类型配置。 */
+    Map<String, Object> selectTypeConfiguration(@Param("taskId") Long taskId,
+                                                @Param("attributeCandidateId") Long attributeCandidateId);
+
     /** 根据分页条件查询AI候选对象类型属性。 */
     default PageResult<OmAiAttributeDO> selectPage(OmAiAttributePageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiAttributeDO>()

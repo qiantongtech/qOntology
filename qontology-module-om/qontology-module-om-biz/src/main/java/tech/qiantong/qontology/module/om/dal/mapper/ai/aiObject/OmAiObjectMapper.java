@@ -18,6 +18,8 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiObject;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiObject.vo.OmAiObjectPageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiObject.OmAiObjectDO;
@@ -27,6 +29,9 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI候选对象类型 Mapper 接口。 */
 public interface OmAiObjectMapper extends BaseMapperX<OmAiObjectDO> {
+    /** 查询任务下的候选对象类型索引。 */
+    List<Map<String, Object>> selectCandidateIndex(Long taskId);
+
     /** 根据分页条件查询AI候选对象类型。 */
     default PageResult<OmAiObjectDO> selectPage(OmAiObjectPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiObjectDO>()

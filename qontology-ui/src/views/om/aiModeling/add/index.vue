@@ -69,7 +69,7 @@
                   type="textarea"
                   :rows="4"
                   placeholder="请输入任务描述"
-                  maxlength="500"
+                  maxlength="500个字符"
                   show-word-limit
                 />
               </el-form-item>
@@ -77,8 +77,8 @@
                 <AiFileUpload
                   v-model="form.files"
                   :disabled="submitting || isEditMode"
-                  :limit="10"
-                  :file-size="50"
+                  :limit="5"
+                  :file-size="20"
                 />
               </el-form-item>
             </el-form>
@@ -193,12 +193,6 @@
                       <span v-if="stage.modelName"
                         >模型：{{ stage.modelName }}</span
                       >
-                      <span v-if="stage.inputCount"
-                        >输入：{{ stage.inputCount }}</span
-                      >
-                      <span v-if="stage.outputCount"
-                        >输出：{{ stage.outputCount }}</span
-                      >
                       <span v-if="stage.durationMs"
                         >耗时：{{ formatDuration(stage.durationMs) }}</span
                       >
@@ -241,11 +235,9 @@
             </el-tabs>
             <component
               :is="currentTab.component"
-              v-if="currentTab.component"
               :key="currentTab.name"
               :task-id="taskId"
             />
-            <Placeholder v-else :title="currentTab.label" />
           </section>
         </div>
 
@@ -257,12 +249,12 @@
             >
           </template>
           <template v-else-if="activeStep === 1">
-            <el-button @click="goList">取消</el-button>
+            <!-- <el-button @click="goList">取消</el-button> -->
             <el-button
               type="primary"
               plain
               :disabled="submitting || !taskId"
-              @click="runInBackground"
+              @click="goList"
               >后端运行</el-button
             >
             <el-button
@@ -285,14 +277,14 @@
 import { useRoute, useRouter } from "vue-router";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 import AiFileUpload from "../components/AiFileUpload.vue";
-import Placeholder from "../tabs/Placeholder.vue";
 import TargetTab from "../tabs/TargetTab.vue";
 import TermTab from "../tabs/TermTab.vue";
 import EnumTab from "../tabs/EnumTab.vue";
 import ObjectTab from "../tabs/ObjectTab.vue";
 import AttributeTab from "../tabs/AttributeTab.vue";
 import RelationTab from "../tabs/RelationTab.vue";
-import TimelineTab from "../tabs/TimelineTab.vue";
+import AxiomTab from "../tabs/AxiomTab.vue";
+import DataRuleTab from "../tabs/DataRuleTab.vue";
 import {
   adoptAll,
   createAiTask,
@@ -332,6 +324,7 @@ const rules = computed(() => ({
           trigger: "change",
         },
       ],
+  files: [{ required: true, message: "上传文件不能为空", trigger: "change" }],
 }));
 
 const tabs = [
@@ -341,9 +334,8 @@ const tabs = [
   { name: "object", label: "对象类型", component: ObjectTab },
   { name: "attribute", label: "对象类型属性", component: AttributeTab },
   { name: "relation", label: "对象类型关系", component: RelationTab },
-  { name: "axiom", label: "模型公理" },
-  { name: "rule", label: "数据规则" },
-  { name: "timeline", label: "解析过程", component: TimelineTab },
+  { name: "axiom", label: "模型公理", component: AxiomTab },
+  { name: "rule", label: "数据规则", component: DataRuleTab },
 ];
 const currentTab = computed(
   () => tabs.find((item) => item.name === activeTab.value) || tabs[0]
@@ -533,7 +525,7 @@ function stopAnalysisStream() {
 }
 
 function runInBackground() {
-  proxy.$modal.msgSuccess("任务将在后台继续解析");
+  // proxy.$modal.msgSuccess("任务将在后台继续解析");
   goList();
 }
 

@@ -217,7 +217,7 @@
               ><div class="name-input">
                 <el-input
                   v-model="form.name"
-                  maxlength="128"
+                  maxlength="128个字符"
                   placeholder="请输入对象类型名称"
                 /><el-button type="primary" @click="termPickerOpen = true"
                   >从术语表中选择</el-button
@@ -238,10 +238,9 @@
             ><el-form-item label="描述"
               ><el-input
                 v-model="form.description"
-                class="character-count"
                 type="textarea"
                 :rows="4"
-                maxlength="512"
+                maxlength="512个字符"
                 show-word-limit
                 placeholder="请输入对象类型描述" /></el-form-item
           ></el-col>
@@ -303,8 +302,7 @@
           ><div class="form-readonly textarea">
             {{ detail.description || "-" }}
           </div></el-form-item
-        ><el-form-item label="关联建模目标"
-          ><TargetTable :targets="detailTargets" /></el-form-item></el-form
+        ></el-form
       ><template #footer
         ><el-button @click="detailOpen = false">关闭</el-button></template
       ></el-dialog
@@ -348,7 +346,6 @@ const visible = (key) =>
 
 const detail = ref({});
 const selectedTargets = ref([]);
-const detailTargets = ref([]);
 const isExpandAll = ref(true);
 const refreshTable = ref(true);
 const editingRoot = ref(false);
@@ -430,8 +427,6 @@ async function edit(row) {
 }
 async function showDetail(row) {
   detail.value = row;
-  const response = await getCandidateTargets("object", row.id);
-  detailTargets.value = response.data || [];
   detailOpen.value = true;
 }
 async function save() {
@@ -465,14 +460,6 @@ load();
 
 .candidate-tab-page :deep(.el-dialog) {
   max-width: calc(100vw - 32px);
-}
-
-.character-count :deep(.el-input__count)::after {
-  content: " 个字符";
-}
-
-.character-count :deep(.el-textarea__inner) {
-  padding-bottom: 24px;
 }
 
 @media (max-width: 600px) {

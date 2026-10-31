@@ -18,7 +18,10 @@
 
 package tech.qiantong.qontology.module.om.dal.mapper.ai.aiRelationTarget;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiRelationTarget.vo.OmAiRelationTargetPageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiRelationTarget.OmAiRelationTargetDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -27,6 +30,20 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 /** AI候选关系目标关联 Mapper 接口。 */
 public interface OmAiRelationTargetMapper extends BaseMapperX<OmAiRelationTargetDO> {
+    /** 查询关系候选关联的建模目标。 */
+    List<Map<String, Object>> selectTargets(Long relationCandidateId);
+
+    /** 查询关系候选关联的建模目标编号。 */
+    List<Long> selectTargetIds(Long relationCandidateId);
+
+    /** 批量新增关系候选与建模目标关联。 */
+    int insertBatch(@Param("taskId") Long taskId,
+                    @Param("relationCandidateId") Long relationCandidateId,
+                    @Param("targetIds") List<Long> targetIds);
+
+    /** 新增关系候选与建模目标关联，重复关联直接忽略。 */
+    int insertOrIgnore(OmAiRelationTargetDO link);
+
     /** 根据分页条件查询AI候选关系目标关联。 */
     default PageResult<OmAiRelationTargetDO> selectPage(OmAiRelationTargetPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiRelationTargetDO>()
