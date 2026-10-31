@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiAttribute.OmAiAttributeMapper">
+
+    <!-- 查询任务下的候选属性索引。 -->
+    <select id="selectCandidateIndex" resultType="java.util.LinkedHashMap">
+        SELECT attribute.id,
+               attribute.object_candidate_id AS objectCandidateId,
+               object.name AS objectName,
+               attribute.name,
+               attribute.code,
+               attribute.type_category AS typeCategory,
+               attribute.basic_type_code AS basicTypeCode,
+               attribute.business_type_id AS businessTypeId,
+               attribute.business_type_source AS businessTypeSource,
+               attribute.unit,
+               attribute.decimal_places AS decimalPlaces,
+               attribute.format,
+               attribute.enum_type AS enumType,
+               attribute.enum_source AS enumSource
+        FROM om_ai_attribute attribute
+                 INNER JOIN om_ai_object object
+                            ON object.id = attribute.object_candidate_id
+                           AND object.del_flag = 0
+        WHERE attribute.task_id = #{taskId}
+          AND attribute.del_flag = 0
+        ORDER BY attribute.id
+        LIMIT 1000
+    </select>
+
+    <!-- 查询指定对象类型下的候选属性。 -->
+    <select id="selectByObjectCandidate" resultType="java.util.LinkedHashMap">
+        SELECT id, name
+        FROM om_ai_attribute
+        WHERE task_id = #{taskId}
+          AND object_candidate_id = #{objectCandidateId}
+          AND del_flag = 0
+        ORDER BY id DESC
+    </select>
+
+    <!-- 查询指定候选属性的权威类型配置。 -->
+    <select id="selectTypeConfiguration" resultType="java.util.LinkedHashMap">
+        SELECT id,
+               object_candidate_id,
+               name,
+               type_category,
+               basic_type_code,
+               business_type_id,
+               business_type_source,
+               unit,
+               decimal_places,
+               format,
+               enum_type,
+               enum_source
+        FROM om_ai_attribute
+        WHERE task_id = #{taskId}
+          AND id = #{attributeCandidateId}
+          AND del_flag = 0
+        LIMIT 1
+    </select>
+
+</mapper>

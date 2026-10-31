@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.basic.dal.mapper.dataType.BasicDataTypeMapper">
+
+    <!-- 查询可供 AI 建模使用的全局业务数据类型。 -->
+    <select id="selectAiOptions" resultType="java.util.LinkedHashMap">
+        SELECT id,
+               name,
+               data_type AS dataType,
+               description,
+               unit,
+               decimal_places AS decimalPlaces,
+               format,
+               enum_type AS enumType,
+               'GLOBAL' AS enumSource,
+               'GLOBAL' AS businessTypeSource
+        FROM basic_data_type
+        WHERE valid_flag = 1
+          AND del_flag = 0
+    </select>
+
+    <!-- 查询全局业务数据类型对应的基础类型编码。 -->
+    <select id="selectBasicTypeCode" resultType="java.lang.Integer">
+        SELECT data_type
+        FROM basic_data_type
+        WHERE id = #{businessTypeId}
+          AND valid_flag = 1
+          AND del_flag = 0
+        LIMIT 1
+    </select>
+
+</mapper>

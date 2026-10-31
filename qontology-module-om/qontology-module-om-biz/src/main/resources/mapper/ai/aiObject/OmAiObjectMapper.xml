@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiObject.OmAiObjectMapper">
+
+    <!-- 查询任务下的候选对象类型索引。 -->
+    <select id="selectCandidateIndex" resultType="java.util.LinkedHashMap">
+        SELECT id,
+               name,
+               parent_candidate_id AS parentCandidateId
+        FROM om_ai_object
+        WHERE task_id = #{taskId}
+          AND del_flag = 0
+        ORDER BY id
+        LIMIT 500
+    </select>
+
+</mapper>

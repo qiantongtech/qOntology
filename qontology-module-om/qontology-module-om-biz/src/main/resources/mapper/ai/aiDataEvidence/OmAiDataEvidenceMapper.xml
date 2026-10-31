@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiDataEvidence.OmAiDataEvidenceMapper">
+
+    <!-- 新增候选数据与证据关联，重复关联直接忽略。 -->
+    <insert id="insertOrIgnore">
+        INSERT IGNORE INTO om_ai_data_evidence
+            (task_id, data_type, data_id, evidence_id, evidence_role, creator_id, create_by)
+        VALUES
+            (#{taskId}, #{dataType}, #{dataId}, #{evidenceId}, #{evidenceRole}, #{creatorId}, #{createBy})
+    </insert>
+
+    <!-- 查询候选数据关联的原始证据和文件信息。 -->
+    <select id="selectEvidence" resultType="java.util.LinkedHashMap">
+        SELECT evidence.*,
+               file.file_name,
+               file.file_url,
+               data_evidence.evidence_role
+        FROM om_ai_data_evidence data_evidence
+                 INNER JOIN om_ai_evidence evidence ON evidence.id = data_evidence.evidence_id
+                 INNER JOIN om_ai_file file ON file.id = evidence.file_id
+        WHERE data_evidence.data_type = #{dataType}
+          AND data_evidence.data_id = #{dataId}
+        ORDER BY evidence.file_id, evidence.block_no
+    </select>
+
+</mapper>

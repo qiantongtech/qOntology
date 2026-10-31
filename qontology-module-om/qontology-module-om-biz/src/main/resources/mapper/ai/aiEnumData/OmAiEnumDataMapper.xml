@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiEnumData.OmAiEnumDataMapper">
+
+    <!-- 查询任务下的候选枚举数据索引。 -->
+    <select id="selectCandidateIndex" resultType="java.util.LinkedHashMap">
+        SELECT enum_type.enum_type AS enumType,
+               enum_data.enum_label AS enumLabel,
+               enum_data.enum_value AS enumValue
+        FROM om_ai_enum_data enum_data
+                 INNER JOIN om_ai_enum_type enum_type ON enum_type.id = enum_data.enum_type_id
+        WHERE enum_type.task_id = #{taskId}
+          AND enum_type.del_flag = 0
+          AND enum_data.del_flag = 0
+        ORDER BY enum_type.id, enum_data.enum_sort, enum_data.id
+        LIMIT 2000
+    </select>
+
+    <!-- 统计候选枚举值是否存在。 -->
+    <select id="countCandidateValue" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM om_ai_enum_data enum_data
+                 INNER JOIN om_ai_enum_type enum_type ON enum_type.id = enum_data.enum_type_id
+        WHERE enum_type.task_id = #{taskId}
+          AND enum_type.enum_type = #{enumType}
+          AND enum_type.del_flag = 0
+          AND enum_data.del_flag = 0
+          AND (enum_data.enum_value = #{value} OR enum_data.enum_label = #{value})
+    </select>
+
+    <!-- 查询枚举类型下尚未采纳的枚举数据。 -->
+    <select id="selectPendingByEnumType" resultType="java.util.LinkedHashMap">
+        SELECT *
+        FROM om_ai_enum_data
+        WHERE enum_type_id = #{enumTypeId}
+          AND del_flag = 0
+          AND adopt_status &lt;&gt; #{adoptedStatus}
+        ORDER BY enum_sort, id
+    </select>
+
+</mapper>

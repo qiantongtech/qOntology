@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.basic.dal.mapper.enumeration.BasicEnumTypeMapper">
+
+    <!-- 查询可供 AI 建模使用的全局枚举类型。 -->
+    <select id="selectAiOptions" resultType="java.util.LinkedHashMap">
+        SELECT enum_name AS enumName,
+               enum_type AS enumType,
+               'GLOBAL' AS enumSource
+        FROM basic_enum_type
+        WHERE status = '0'
+          AND del_flag = 0
+    </select>
+
+</mapper>
