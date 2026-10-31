@@ -8,7 +8,9 @@ const candidatePaths = {
   enum_data: 'aiEnumData',
   object: 'aiObject',
   attribute: 'aiAttribute',
-  relation: 'aiRelation'
+  relation: 'aiRelation',
+  axiom: 'aiAxiom',
+  data_rule: 'aiDataRule'
 }
 
 /** 候选数据类型与关键字查询字段的映射。 */
@@ -19,7 +21,9 @@ const keywordFields = {
   enum_data: 'enumLabel',
   object: 'name',
   attribute: 'name',
-  relation: 'name'
+  relation: 'name',
+  axiom: 'name',
+  data_rule: 'name'
 }
 
 /** 获取候选类型对应的后端资源路径。 */

@@ -1090,11 +1090,17 @@ public class OmAiModelingAsyncProcessor {
             String rangeObjectName = firstString(object, "rangeObjectName", "endObjectName");
             String relationName = firstString(object, "relationName", "propertyName");
             String attributeName = firstString(object, "attributeName", "propertyName");
-            Long objectId = findObjectCandidateId(taskId, objectName);
-            Long otherObjectId = findObjectCandidateId(taskId, otherObjectName);
-            Long domainId = findObjectCandidateId(taskId, domainObjectName);
-            Long rangeId = findObjectCandidateId(taskId, rangeObjectName);
-            Long attributeId = findAttributeCandidateId(taskId, objectId, attributeName);
+            Long objectId = resolveObjectCandidateId(taskId,
+                    firstLong(object, "objectCandidateId", "objectId"), objectName);
+            Long otherObjectId = resolveObjectCandidateId(taskId,
+                    firstLong(object, "otherObjectCandidateId", "otherObjectId", "parentObjectCandidateId"),
+                    otherObjectName);
+            Long domainId = resolveObjectCandidateId(taskId,
+                    firstLong(object, "domainCandidateId", "domainObjectCandidateId"), domainObjectName);
+            Long rangeId = resolveObjectCandidateId(taskId,
+                    firstLong(object, "rangeCandidateId", "rangeObjectCandidateId"), rangeObjectName);
+            Long attributeId = resolveAttributeCandidateId(taskId, objectId,
+                    firstLong(object, "attributeCandidateId", "attributeId"), attributeName);
             Map<String, Object> attribute = attributeId == null ? null : loadAttributeCandidate(taskId, attributeId);
             String resolvedRelationName = "DOMAIN_RANGE".equals(type)
                     ? resolveRelationName(taskId, relationName, domainId, rangeId) : relationName;
@@ -1154,8 +1160,10 @@ public class OmAiModelingAsyncProcessor {
                     String objectName = firstString(condition, "objectName", "objectTypeName");
                     String attributeName = firstString(condition, "attributeName", "propertyName");
                     normalizeRuleCondition(condition);
-                    Long objectId = findObjectCandidateId(taskId, objectName);
-                    Long attributeId = findAttributeCandidateId(taskId, objectId, attributeName);
+                    Long objectId = resolveObjectCandidateId(taskId,
+                            firstLong(condition, "objectCandidateId", "objectId"), objectName);
+                    Long attributeId = resolveAttributeCandidateId(taskId, objectId,
+                            firstLong(condition, "attributeCandidateId", "attributeId"), attributeName);
                     Map<String, Object> attribute = attributeId == null ? null : loadAttributeCandidate(taskId, attributeId);
                     if (objectId == null || attribute == null || !isValidRuleCondition(taskId, type, condition, attribute)) {
                         log.warn("数据规则条件校验失败，taskId={}, rule={}, type={}, object={}, attribute={}, operator={}, value={}",
@@ -1217,6 +1225,17 @@ public class OmAiModelingAsyncProcessor {
         return null;
     }
 
+    /** 获取模型可能使用的兼容长整数字段。 */
+    private Long firstLong(JSONObject object, String... fieldNames) {
+        for (String fieldName : fieldNames) {
+            Long value = object.getLong(fieldName);
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
     /** 兼容常见公理类型别名，最终仍保存系统标准编码。 */
     private String normalizeAxiomType(String type) {
         String value = Optional.ofNullable(type).orElse("").trim().toUpperCase(Locale.ROOT)
@@ -1273,6 +1292,22 @@ public class OmAiModelingAsyncProcessor {
         return values.stream()
                 .filter(item -> normalized.equals(normalizeReference(String.valueOf(item.get("name")))))
                 .map(item -> ((Number) item.get("id")).longValue()).findFirst().orElse(null);
+    }
+
+    /**
+     * 优先使用模型从前序索引复制的属性候选 ID，并校验该属性确实属于当前任务和指定对象；
+     * 旧模型未返回 ID 时再按对象名称和属性名称兼容解析。
+     */
+    private Long resolveAttributeCandidateId(Long taskId, Long objectCandidateId,
+                                             Long attributeCandidateId, String attributeName) {
+        if (attributeCandidateId != null && objectCandidateId != null) {
+            Map<String, Object> attribute = loadAttributeCandidate(taskId, attributeCandidateId);
+            if (attribute != null
+                    && objectCandidateId.equals(numberLongValue(attribute.get("object_candidate_id")))) {
+                return attributeCandidateId;
+            }
+        }
+        return findAttributeCandidateId(taskId, objectCandidateId, attributeName);
     }
 
     /** 读取属性候选的权威数据类型配置。 */
@@ -1549,6 +1584,18 @@ public class OmAiModelingAsyncProcessor {
         return objectMapper.selectCandidateIndex(taskId).stream()
                 .filter(item -> normalized.equals(normalizeReference(String.valueOf(item.get("name")))))
                 .map(item -> ((Number) item.get("id")).longValue()).findFirst().orElse(null);
+    }
+
+    /**
+     * 优先使用模型从前序索引复制的对象候选 ID，并校验该 ID 属于当前任务；
+     * 旧模型未返回 ID 或 ID 无效时再按名称兼容解析。
+     */
+    private Long resolveObjectCandidateId(Long taskId, Long objectCandidateId, String objectName) {
+        if (objectCandidateId != null && objectMapper.selectCandidateIndex(taskId).stream()
+                .anyMatch(item -> objectCandidateId.equals(numberLongValue(item.get("id"))))) {
+            return objectCandidateId;
+        }
+        return findObjectCandidateId(taskId, objectName);
     }
 
     /** 补充候选数据创建人信息。 */

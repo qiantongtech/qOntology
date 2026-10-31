@@ -6,13 +6,13 @@ analysisProcess 必须放在 JSON 的第一个字段，输出面向审核人员�
 
 输入包括当前证据窗口与前 3 轮候选索引。前序候选索引是本轮引用和数据类型判断的唯一事实源。
 索引中的 attributes 包含属性自身的类型配置；projectBusinessTypes 和 globalBusinessTypes 用于解析业务数据类型的底层基础类型；enumValues 是 ENUM 规则可引用的唯一值集合。
-对象类型、属性、关系必须按索引中的名称精确匹配，不允许用序号、近义词、猜测名称或不存在的 ID 代替。
+对象类型、属性、关系必须直接引用索引中的真实候选 ID，并同步复制索引中的名称用于人工审核；不允许使用近义词、猜测名称或不存在的 ID。
 找不到完全匹配的“对象类型 + 所属属性”时，不输出对应公理或规则，只在 issues 中说明。宁可漏抽，也不能编造或输出无法落库的数据。
 
 模型公理类型：SUBCLASS、EQUIVALENT、DISJOINT、DOMAIN_RANGE、PROPERTY_RANGE。
-- SUBCLASS、EQUIVALENT、DISJOINT：输出 objectName、otherObjectName。
-- DOMAIN_RANGE：输出 relationName、domainObjectName、rangeObjectName。
-- PROPERTY_RANGE：只输出 objectName、attributeName。属性的数据类型分类、基础类型、业务类型、单位、精度、格式和枚举配置全部继承前序属性候选，禁止重新判断或改变。
+- SUBCLASS、EQUIVALENT、DISJOINT：输出 objectCandidateId、objectName、otherObjectCandidateId、otherObjectName。
+- DOMAIN_RANGE：输出 relationName、domainCandidateId、domainObjectName、rangeCandidateId、rangeObjectName。
+- PROPERTY_RANGE：输出 objectCandidateId、objectName、attributeCandidateId、attributeName。属性的数据类型分类、基础类型、业务类型、单位、精度、格式和枚举配置全部由后端继承前序属性候选，模型禁止重新判断或改变。
 
 数据规则必须以候选索引中的对象类型和对象类型属性为基准，先验证引用和属性类型，再判断是否能够形成规则。每条规则至少一个条件，任一条件无法精确引用时整条规则不输出。
 严格遵守以下类型矩阵：
@@ -31,19 +31,22 @@ JSON 格式：
     "name": "", "description": "",
     "type": "SUBCLASS|EQUIVALENT|DISJOINT|DOMAIN_RANGE|PROPERTY_RANGE",
     "level": "INFO|WARNING|ERROR",
-    "objectName": "", "otherObjectName": "",
-    "relationName": "", "domainObjectName": "", "rangeObjectName": "",
-    "attributeName": "",
+    "objectCandidateId": null, "objectName": "",
+    "otherObjectCandidateId": null, "otherObjectName": "",
+    "relationName": "",
+    "domainCandidateId": null, "domainObjectName": "",
+    "rangeCandidateId": null, "rangeObjectName": "",
+    "attributeCandidateId": null, "attributeName": "",
     "evidenceBlockNos": [], "confidence": 0.0
   }],
   "dataRules": [{
     "name": "", "description": "",
     "type": "REQUIRED|ENUM|RANGE|FORMAT", "level": "INFO|WARNING|ERROR",
     "conditionRelation": "OR|AND",
-    "conditions": [{"objectName":"","attributeName":"","operator":null,"value":""}],
+    "conditions": [{"objectCandidateId":null,"objectName":"","attributeCandidateId":null,"attributeName":"","operator":null,"value":""}],
     "failureMessage": "", "evidenceBlockNos": [], "confidence": 0.0
   }],
   "issues": [{"level":"ERROR|WARNING","message":"","evidenceBlockNos":[]}]
 }
 关系引用要求：DOMAIN_RANGE 公理的 domainObjectName、rangeObjectName 必须与前序候选对象名称完全一致；relationName 必须优先直接复制前序 relations 索引中的 name，不得自行扩写成“对象+关系+对象”的描述性名称。
-属性引用要求：数据规则的 objectName、attributeName 必须直接复制前序 attributes 索引中的对象名和属性名；规则类型必须以该属性的 typeCategory、basicTypeCode 以及业务类型底层基础类型为准，不得改变属性的数据类型。
+属性引用要求：数据规则的 objectCandidateId、attributeCandidateId 必须直接复制前序 attributes 索引中的真实 ID，并同步复制 objectName、attributeName；规则类型必须以该属性的 typeCategory、basicTypeCode 以及业务类型底层基础类型为准，不得改变属性的数据类型。
