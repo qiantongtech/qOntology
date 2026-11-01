@@ -1,17 +1,17 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
  You may use qOntology for commercial purposes, but you may not remove, hide,
  modify, or replace the qOntology logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
@@ -217,7 +217,6 @@ function routeTo(link, row) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(448px, 1fr));
   gap: 14px;
-  padding: 16px 0px;
   box-sizing: border-box;
   width: 100%;
   transition: all 0.3s ease;
