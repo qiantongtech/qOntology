@@ -105,7 +105,11 @@
               >
             </template>
             <div class="task-action-list">
-              <el-button icon="List" link type="primary" @click="showLogs(row)"
+              <el-button
+                icon="List"
+                link
+                type="primary"
+                @click="showLogs(row)"
                 >执行日志</el-button
               ><el-button
                 class="btn-icon-offset"
@@ -123,6 +127,13 @@
                 type="danger"
                 @click="handleDelete(row)"
                 >删除</el-button
+              ><el-button
+                class="btn-icon-offset"
+                icon="Document"
+                link
+                type="primary"
+                @click="handleDetail"
+                >详情</el-button
               >
             </div>
           </el-popover>
@@ -560,6 +571,11 @@ function handleExecute(row) {
 /** 打开任务执行日志。 */
 function showLogs(row) {
   taskLogDialogRef.value.show(row.id, 1);
+}
+
+/** 任务详情页面待开发。 */
+function handleDetail() {
+  proxy.$modal.msg("功能开发中");
 }
 
 /** 查看非结构化抽取结果。 */

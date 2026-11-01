@@ -173,6 +173,14 @@
                 v-hasPermi="['app:appStructTask:struct:remove']"
                 >删除</el-button
               >
+              <el-button
+                class="btn-icon-offset"
+                link
+                type="primary"
+                icon="Document"
+                @click="handleDetail"
+                >详情</el-button
+              >
             </div>
           </el-popover>
         </template>
@@ -396,6 +404,11 @@ function handleEnableChange(row, value) {
 /** 点击执行状态标签查看任务日志，结构化任务 taskType 为 0 */
 function showLogs(row) {
   taskLogDialogRef.value.show(row.id, 0);
+}
+
+/** 任务详情页面待开发。 */
+function handleDetail() {
+  proxy.$modal.msg("功能开发中");
 }
 
 /** 判断任务是否执行中或队列中（不可执行/修改/删除） */
