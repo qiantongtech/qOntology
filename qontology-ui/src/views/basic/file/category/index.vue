@@ -48,6 +48,14 @@
           <dict-tag v-if="row.validFlag !== '—'" :options="categoryStatusOptions" :value="row.validFlag"/>
           <span v-else>—</span>
         </template>
+        <template #validFlag="{ row }">
+          <el-switch
+              v-model="row.validFlag"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+          >
+          </el-switch>
+        </template>
         <!-- 沿用责任人双行样式，创建人电话通过用户接口关联，未维护时只显示姓名。 -->
         <template #creator="{row}">
           <div class="flex-column overflow-hidden">
@@ -151,7 +159,10 @@ const tableStore = reactive({
       showOverflowTooltip: {effect: 'light'}
     },
     {label: '描述', prop: 'remark', slot: 'text', minWidth: 220, align: 'left', showOverflowTooltip: {effect: 'light'}},
-    {label: '状态', prop: 'validFlag', slot: 'status', width: 100},
+    {
+      label: "状态", prop: "validFlag", slot: "validFlag",
+      width: 100, minWidth: 100,
+    },
     {label: '排序', prop: 'orderNum', slot: 'text', width: 150, sortable: true},
     {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
@@ -162,6 +173,11 @@ const tableStore = reactive({
   events: {formatParams: formatListParams, formatData: formatListData}
 });
 
+// 默认展开顶级分类及下一层节点，深层分类由用户按需展开；选项异步加载后同步更新。
+const parentExpandedKeys = computed(() => categoryOptions.value.flatMap(node => [
+  node.id, ...(node.children || []).map(child => child.id)
+]));
+
 // 查询草稿与已提交条件分离，刷新和排序不自动应用尚未提交的输入。
 const searchStore = computed(() => ({
   items: [
@@ -171,7 +187,7 @@ const searchStore = computed(() => ({
       label: '父级分类', prop: 'parentId', component: {
         is: 'tree-select', data: categoryOptions.value,
         props: {value: 'id', label: 'name', children: 'children'},
-        valueKey: 'id', checkStrictly: true
+        valueKey: 'id', checkStrictly: true, defaultExpandedKeys: parentExpandedKeys.value
       }
     }
   ]

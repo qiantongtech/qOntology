@@ -71,12 +71,6 @@
             <el-button v-if="auth.hasPermi('om:enumeration:data:remove')" link type="danger" icon="Delete" :disabled="deleting" @click="handleDelete(row)">删除</el-button>
           </el-popover>
         </template>
-        <template #empty>
-          <div class="emptyBg">
-            <img src="@/assets/system/images/no_data/noData.png" alt="暂无记录"/>
-            <p>{{ defaultEnumType ? '暂无记录' : '请先选择枚举类型并查询' }}</p>
-          </div>
-        </template>
       </qt-table>
     </qt-wrap>
     <el-dialog

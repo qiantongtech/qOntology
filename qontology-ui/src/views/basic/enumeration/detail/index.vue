@@ -41,7 +41,7 @@
           <EnumData :key="detail.enumId" :enum-type="detail.enumType" @data-change="loadDataCount"/>
         </el-tab-pane>
         <!-- 直接复用业务数据类型页面；首次切换时加载，并以内嵌模式管理当前枚举的关联业务数据类型。 -->
-        <el-tab-pane v-if="auth.hasPermi('basic:dataType:datatype:list')" label="关联业务数据类型" name="related" lazy>
+        <el-tab-pane v-if="auth.hasPermi('basic:dataType:datatype:list')" label="业务数据类型" name="related" lazy>
           <BusinessDataTypes :key="detail.enumId" :enum-type="detail.enumType" embedded/>
         </el-tab-pane>
       </el-tabs>
@@ -107,6 +107,11 @@ watch(() => route.params.enumId, async (enumId) => {
   } finally {
     if (request === requestVersion) loading.value = false;
   }
+}, {immediate: true});
+
+// 同一枚举只变更路由页签参数时也切回首个页签，无需重新请求枚举详情。
+watch(() => route.query.tab, tab => {
+  if (tab === 'data' && auth.hasPermi('basic:enumeration:data:list')) activeName.value = 'data';
 }, {immediate: true});
 
 /** 查询当前枚举的全部数据条数；首次加载和数据增删改成功后调用，不使用表格筛选总数。 */

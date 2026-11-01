@@ -265,11 +265,7 @@ const tableStore = reactive({
   columns: computed(() => [
     ...(!props.readOnly ? [{type: 'selection', width: 55}] : []),
     {label: '编号', prop: 'id', slot: 'text', width: 80, sortable: true},
-    {label: '名称', prop: 'name', slot: 'text', minWidth: 180, align: 'left', showOverflowTooltip: {effect: 'light'}},
-    // 枚举详情传入固定关联键时，所有记录均为枚举类型，无需重复显示数据类型列。
-    ...(props.enumType === undefined ? [{label: '数据类型', prop: 'dataType', slot: 'dataType', width: 120}] : []),
-    // 单位沿用接口 unit 字段，未配置时由统一文本格式化逻辑显示占位符。
-    {label: '单位', prop: 'unit', slot: 'text', width: 120, showOverflowTooltip: {effect: 'light'}},
+    {label: '业务数据名称', prop: 'name', slot: 'text', minWidth: 180, align: 'left', showOverflowTooltip: {effect: 'light'}},
     {
       label: '描述',
       prop: 'description',
@@ -278,6 +274,10 @@ const tableStore = reactive({
       align: 'left',
       showOverflowTooltip: {effect: 'light'}
     },
+    // 枚举详情传入固定关联键时，所有记录均为枚举类型，无需重复显示数据类型列。
+    ...(props.enumType === undefined ? [{label: '业务数据类型', prop: 'dataType', slot: 'dataType', width: 120}] : []),
+    // 单位沿用接口 unit 字段，未配置时由统一文本格式化逻辑显示占位符。
+    {label: '单位', prop: 'unit', slot: 'text', width: 120, showOverflowTooltip: {effect: 'light'}},
     {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
     ...(!props.readOnly ? [{label: '操作', slot: 'handle', width: 240, fixed: 'right'}] : [])
@@ -392,7 +392,7 @@ function cancel() {
   reset();
 }
 
-/** 重置表单；关联入口默认使用当前枚举，独立入口仍由用户选择数据类型。 */
+/** 重置表单；独立入口默认文本类型，关联入口固定使用当前枚举。 */
 function reset() {
   // 先清理旧表单校验和字段，再赋初值，防止 resetFields 将固定关联值恢复为空。
   proxy.resetForm("dataTypeRef");
@@ -400,7 +400,7 @@ function reset() {
     id: null,
     name: null,
     type: null,
-    dataType: props.enumType !== undefined ? dataTypeConstant.ENUM : null,
+    dataType: props.enumType !== undefined ? dataTypeConstant.ENUM : dataTypeConstant.TEXT,
     enumType: props.enumType ?? null,
     description: null,
     unit: null,
@@ -444,7 +444,7 @@ function handleAdd() {
   if (props.readOnly) return;
   reset();
   open.value = true;
-  title.value = "新增数据类型";
+  title.value = "新增业务数据类型";
 }
 
 /** 修改按钮操作 */
@@ -456,7 +456,7 @@ function handleUpdate(row) {
   getDataType(_id).then(response => {
     form.value = response.data;
     open.value = true;
-    title.value = "修改数据类型";
+    title.value = "修改业务数据类型";
   });
 }
 
@@ -467,7 +467,7 @@ function handleDetail(row) {
   getDataType(_id).then(response => {
     form.value = response.data;
     openDetail.value = true;
-    title.value = "数据类型详情";
+    title.value = "业务数据类型详情";
   });
 }
 

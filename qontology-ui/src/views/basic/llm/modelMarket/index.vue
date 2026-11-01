@@ -24,7 +24,7 @@
       <QtSearchBar
         :items="searchItems"
         :params="queryParams"
-        :config="{collapsedCount: 3}"
+        :config="{collapsedCount: 4}"
         :table-ref="searchActions"
       />
     </div>

@@ -63,10 +63,11 @@
           </el-link>
           <span v-else>{{ row.enumName }}</span>
         </template>
+        <!-- 枚举类型进入详情的枚举数据页签，名称与操作列继续沿用默认详情入口。 -->
         <template #enumType="{row}">
           <router-link
-              v-if="auth.hasPermi('basic:enumeration:data:list')"
-              :to="{name: 'BasicEnumData', params: {enumId: row.enumId}}"
+              v-if="auth.hasPermi('basic:enumeration:type:query') && auth.hasPermi('basic:enumeration:data:list')"
+              :to="{name: 'BasicEnumDetail', params: {enumId: row.enumId}, query: {tab: 'data'}}"
               class="link-type"
           >{{ row.enumType }}
           </router-link>
@@ -150,7 +151,7 @@
               class="character-count"
               type="textarea"
               :rows="3"
-              maxlength="256 个字符"
+              maxlength="256个字符"
               show-word-limit
               placeholder="请输入备注"
           />

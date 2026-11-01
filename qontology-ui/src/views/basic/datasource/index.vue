@@ -189,13 +189,6 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="描述" prop="description">
-              <el-input v-model="form.description" type="textarea" :rows="3" :maxlength="256" show-word-limit placeholder="请输入描述"/>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="状态" prop="validFlag">
               <el-radio-group v-model="form.validFlag">
@@ -207,8 +200,15 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="24">
+            <el-form-item label="描述" prop="description">
+              <el-input v-model="form.description" type="textarea" :rows="3" maxlength="256个字符" show-word-limit placeholder="请输入描述"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24">
             <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" type="textarea" :rows="3" :maxlength="256" show-word-limit placeholder="请输入备注"/>
+              <el-input v-model="form.remark" type="textarea" :rows="3" maxlength="256个字符" show-word-limit placeholder="请输入备注"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -217,8 +217,8 @@
       <el-alert v-if="testResult" :title="testResult.message" :type="testResult.success ? 'success' : 'error'" :closable="false" show-icon/>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">取 消</el-button>
           <el-button type="primary" size="mini" :loading="testLoading" @click="handleTestFormConnection">测试连接</el-button>
+          <el-button size="mini" @click="cancel">取 消</el-button>
           <el-button type="primary" size="mini" :disabled="testLoading" @click="submitForm">确 定</el-button>
         </div>
       </template>
@@ -289,16 +289,16 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="描述" prop="description">
-              <div class="form-readonly textarea">{{ form.description || '—' }}</div>
+          <el-col :span="12">
+            <el-form-item label="状态" prop="validFlag">
+              <div class="form-readonly">{{ form.validFlag === true ? '启用' : form.validFlag === false ? '禁用' : '—' }}</div>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="状态" prop="validFlag">
-              <div class="form-readonly">{{ form.validFlag === true ? '启用' : form.validFlag === false ? '禁用' : '—' }}</div>
+          <el-col :span="24">
+            <el-form-item label="描述" prop="description">
+              <div class="form-readonly textarea">{{ form.description || '—' }}</div>
             </el-form-item>
           </el-col>
         </el-row>

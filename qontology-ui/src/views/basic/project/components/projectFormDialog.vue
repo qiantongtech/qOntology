@@ -79,13 +79,6 @@
         <!-- 初始版本仅在新增时录入，编辑项目时沿用已有版本。 -->
         <el-input v-model="localForm.currentVersion" :disabled="mode === 'edit'" placeholder="请输入初始版本"/>
       </qt-form-item>
-      <qt-form-item label="状态" prop="status" class="row-full">
-        <el-radio-group v-model="localForm.status">
-          <el-radio v-for="dict in statusOptions" :key="Number(dict.value)" :value="Number(dict.value)">
-            {{ dict.label }}
-          </el-radio>
-        </el-radio-group>
-      </qt-form-item>
       <qt-form-item label="责任人" prop="responsibleUserId" class="row-full">
         <el-select v-model="localForm.responsibleUserId" placeholder="请选择责任人" clearable filterable :loading="usersLoading">
           <el-option v-for="user in userOptions" :key="user.value" :label="user.label" :value="user.value"/>
@@ -93,16 +86,23 @@
       </qt-form-item>
       <qt-form-item label="联系电话" class="row-full">
         <!-- 电话随所选系统用户变化，只读展示，不允许在项目表单中修改用户资料。 -->
-        <el-input :model-value="responsiblePhone" disabled/>
+        <el-input :model-value="responsiblePhone" disabled placeholder="请输入联系电话"/>
+      </qt-form-item>
+      <qt-form-item label="状态" prop="status" class="row-full">
+        <el-radio-group v-model="localForm.status">
+          <el-radio v-for="dict in statusOptions" :key="Number(dict.value)" :value="Number(dict.value)">
+            {{ dict.label }}
+          </el-radio>
+        </el-radio-group>
       </qt-form-item>
       <qt-form-item label="包含范围" prop="includeRange" class="row-full">
-        <el-input v-model="localForm.includeRange" type="textarea" maxlength="256 个字符" show-word-limit placeholder="请输入包含范围"/>
+        <el-input v-model="localForm.includeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入包含范围"/>
       </qt-form-item>
       <qt-form-item label="排除范围" prop="excludeRange" class="row-full">
-        <el-input v-model="localForm.excludeRange" type="textarea" maxlength="256 个字符" show-word-limit placeholder="请输入排除范围"/>
+        <el-input v-model="localForm.excludeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入排除范围"/>
       </qt-form-item>
       <qt-form-item label="描述" prop="description" class="row-full">
-        <el-input v-model="localForm.description" type="textarea" maxlength="256 个字符" show-word-limit placeholder="请输入描述"/>
+        <el-input v-model="localForm.description" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入描述"/>
       </qt-form-item>
     </el-form>
     <template #footer>

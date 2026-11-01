@@ -48,10 +48,10 @@
         class="column-form"
         @submit.prevent="submitForm"
     >
-      <qt-form-item label="名称" prop="name" class="row-full">
+      <qt-form-item label="业务数据名称" prop="name" class="row-full">
         <el-input v-model="localForm.name" :maxlength="128" placeholder="请输入名称"/>
       </qt-form-item>
-      <qt-form-item label="数据类型" prop="dataType" class="row-full">
+      <qt-form-item label="业务数据类型" prop="dataType" class="row-full">
         <!-- 类型选择只切换配置区，不触发选择框校验；点击确定时统一校验。 -->
         <el-select v-model="localForm.dataType" :validate-event="false" :disabled="fixedEnumType !== undefined" placeholder="请选择数据类型">
           <el-option v-for="item in dataTypeOptions" :key="item.value" :label="item.label" :value="item.value"/>
@@ -153,7 +153,7 @@
         </el-select>
       </qt-form-item>
       <qt-form-item label="描述" prop="description" class="row-full">
-        <el-input v-model="localForm.description" type="textarea" :rows="3" maxlength="256 个字符" show-word-limit
+        <el-input v-model="localForm.description" type="textarea" :rows="3" maxlength="256个字符" show-word-limit
                   placeholder="请输入描述"
         />
       </qt-form-item>
@@ -194,7 +194,8 @@ function createEmptyForm() {
   return {
     id: null,
     name: null,
-    dataType: null,
+    // 新增默认文本类型，父页面传入的编辑数据或固定枚举类型会覆盖该初值。
+    dataType: DATA_TYPE.TEXT,
     description: null,
     unit: null,
     decimalPlaces: 2,
