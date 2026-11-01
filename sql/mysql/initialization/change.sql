@@ -16,7 +16,7 @@
  * See the LICENSE file in the project root for full license information.
  */
 
-UPDATE system_menu SET menu_name='模型市场', parent_id=1080, order_num=10, `path`='llm', component=NULL, query='', route_name='', is_frame=1, is_cache=0, menu_type='M', visible='0', status='0', perms='', icon='book-ai-line', create_by='吴同', create_time='2026-10-22 19:56:02', update_by='', update_time=NULL, remark='AI 模型与密钥管理目录' WHERE menu_id=1061;
+UPDATE system_menu SET menu_name='模型市场', parent_id=1080, order_num=10, `path`='llm', component=NULL, query='', route_name='', is_frame=1, is_cache=0, menu_type='M', visible='0', status='0', perms='', icon='模型市场', create_by='吴同', create_time='2026-10-22 19:56:02', update_by='', update_time=NULL, remark='AI 模型与密钥管理目录' WHERE menu_id=1061;
 
 UPDATE om_target SET version_id=1, question='指定成品由哪些零部件组成？某零部件用于哪些成品？', question_source='产品研发部门提出', business_scenarios='产品组成与影响范围分析', accept_criterion='能够查询成品包含的零部件，并支持按零部件反向查询其应用的成品。', accept_status=1, object_type_num=11, object_attribute_num=0, object_relationship_num=11, valid_flag=1, del_flag=0, create_by='吴同', creator_id=1, create_time='2026-10-20 10:05:00', update_by='吴同', updater_id=1, update_time='2026-10-20 10:05:00', remark=NULL WHERE id=1 AND priority=3;
 UPDATE om_target SET version_id=1, question='指定出库单的收货方是谁，实际发往哪个地址？', question_source='销售及物流部门提出', business_scenarios='发货与收货核对', accept_criterion='能够查询出库单关联的采购方，并展示收货地址及采购方联系信息。', accept_status=0, object_type_num=11, object_attribute_num=0, object_relationship_num=11, valid_flag=1, del_flag=0, create_by='吴同', creator_id=1, create_time='2026-10-20 10:05:30', update_by='吴同', updater_id=1, update_time='2026-10-20 10:05:30', remark=NULL WHERE id=2 AND priority=2;

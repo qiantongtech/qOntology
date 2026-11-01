@@ -224,6 +224,9 @@
                 </el-button>
               </div>
             </div>
+            <div v-if="form.type === 'RANGE'" class="condition-hint">
+              取值范围仅支持整数、小数类型的属性
+            </div>
           </div>
         </el-form-item>
         <el-form-item label="失败提示" prop="failureMessage">
@@ -428,7 +431,7 @@ let listRequest = 0;
 let dialogRequest = 0;
 let contextRequest = 0;
 const attributePlaceholder = computed(() => {
-  if (form.value.type === 'RANGE') return '请选择整数或小数属性';
+  if (form.value.type === 'RANGE') return '请选择数值属性';
   return form.value.type === 'FORMAT' ? '请选择日期属性' : '请选择属性';
 });
 const conditionOperatorLabel = computed(() => form.value.type === 'ENUM' ? '不属于' : '不匹配');
@@ -915,6 +918,12 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.condition-hint {
+  color: #909399;
+  font-size: 12px;
+  line-height: 20px;
 }
 
 .condition-label {
