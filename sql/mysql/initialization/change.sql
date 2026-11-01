@@ -663,6 +663,11 @@ CREATE TABLE `om_ai_adopt_log` (
   KEY `idx_om_ai_adopt_log_task` (`task_id`, `data_type`, `data_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI候选采纳日志';
 
+-- 结构化抽取更新类型：0 全量更新，1 增量更新。
+INSERT INTO `system_dict_type` VALUES (31, '结构化抽取更新类型', 'app_update_type', '0', 'admin', '2026-10-22 20:06:16', '', NULL, '结构化抽取全量或增量更新');
+INSERT INTO `system_dict_data` VALUES (101, 0, '全量更新', '0', 'app_update_type', NULL, 'default', 'N', '0', 'admin', '2026-10-22 20:06:17', '', NULL, '');
+INSERT INTO `system_dict_data` VALUES (102, 1, '增量更新', '1', 'app_update_type', NULL, 'default', 'N', '0', 'admin', '2026-10-22 20:06:17', '', NULL, '');
+
 INSERT INTO `system_dict_type` VALUES (32, '发布状态', 'publish_status', '0', '吴同', '2026-04-24 10:01:38', '', NULL, '发布状态列表');
 INSERT INTO `system_dict_type` VALUES (33, 'AI建模任务状态', 'om_ai_task_status', '0', '吴同', '2026-10-30 11:48:21', '', NULL, 'AI辅助建模任务状态');
 INSERT INTO `system_dict_type` VALUES (34, 'AI候选采纳状态', 'om_ai_adopt_status', '0', '吴同', '2026-10-30 11:48:21', '', NULL, 'AI辅助建模候选采纳状态');
@@ -921,3 +926,11 @@ INSERT INTO `om_ai_term` VALUES (5, 1, '组织', '', '', '', '公司层面的组
 
 
 UPDATE basic_project SET name='供应链采购与仓储协同本体', `domain`='供应链管理', namespace='https://qontology.com/ontology/supply-chain', status=1, current_version='v1.0.0', include_range='涵盖组织、供应商、采购方、物流服务商、物料、原材料、零部件、成品、采购订单、入库单和出库单等对象，以及相关术语、枚举、属性和关系。重点描述采购订单管理、供应商供货、物料采购、到货入库、出库发运、收货方关联及零部件与成品的组成关系。', exclude_range='暂不包含财务核算、发票与付款结算、合同审批、人力资源、生产工序与排程、设备运维及运输路线优化等业务。不涉及业务系统中的实际单据处理、库存计算和流程执行。', description='面向企业采购与仓储物流协同场景。', valid_flag=1, del_flag=0, create_by='吴同', creator_id=1, create_time='2026-10-23 09:47:23', update_by='', updater_id=NULL, update_time='2026-10-20 18:49:07', remark=NULL WHERE id=1;
+
+ALTER TABLE `basic_project`
+    ADD COLUMN `responsible_user_id` BIGINT NULL DEFAULT NULL COMMENT '责任人用户编号',
+    ADD COLUMN `responsible_person_name` VARCHAR(128) NULL DEFAULT NULL COMMENT '责任人姓名（保存时用户资料快照）',
+    ADD COLUMN `responsible_person_phone` VARCHAR(64) NULL DEFAULT NULL COMMENT '联系电话（保存时用户资料快照）';
+
+ALTER TABLE `basic_project`
+    ADD COLUMN `icon` VARCHAR(512) NULL DEFAULT NULL COMMENT '项目图标路径';

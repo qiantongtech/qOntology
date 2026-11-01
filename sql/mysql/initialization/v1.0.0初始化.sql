@@ -870,6 +870,10 @@ CREATE TABLE `basic_project`  (
                                   `updater_id` bigint(20) NULL DEFAULT NULL COMMENT '更新人id',
                                   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
                                   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+                                  `icon` varchar(512) NULL DEFAULT NULL COMMENT '项目图标路径',
+                                  `responsible_user_id` bigint NULL DEFAULT NULL COMMENT '责任人用户编号',
+                                  `responsible_person_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '责任人姓名（保存时用户资料快照）',
+                                  `responsible_person_phone` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '联系电话（保存时用户资料快照）',
                                   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '项目管理' ROW_FORMAT = DYNAMIC;
 
