@@ -71,9 +71,9 @@
         <!-- 模块3 -->
         <div class="module-3">
           <div
-              class="module-item"
-              v-for="(item, index) in module1"
-              :key="index"
+            class="module-item"
+            v-for="(item, index) in module1"
+            :key="index"
           >
             <!-- <router-link to="/sy/index"> -->
             <div class="module-item-t">
@@ -89,7 +89,7 @@
             <div class="module-item-data">
               <span>周同比：</span>
               <span :class="[item.up ? 'data-up' : 'data-down']"
-              >{{ item.speed }}%
+                >{{ item.speed }}%
               </span>
             </div>
           </div>
@@ -126,15 +126,15 @@
           <div class="border-item-head">
             <span class="head-title">新闻公告 </span>
             <el-link type="primary" :underline="false" @click="goxinwen('list')"
-            >查看更多
+              >查看更多
             </el-link>
           </div>
           <div class="border-item-body">
             <div
-                class="module-item"
-                v-for="(item, index) in module6"
-                :key="index"
-                @click="goxinwen(item)"
+              class="module-item"
+              v-for="(item, index) in module6"
+              :key="index"
+              @click="goxinwen(item)"
             >
               <dict-tag :options="sys_notice_type" :value="item.noticeType" />
               <div class="value" :title="item.noticeTitle">
@@ -156,15 +156,15 @@
               <div class="border-item-body">
                 <div class="all-entrance">
                   <div
-                      class="entrance-item"
-                      v-for="item in visibleEntranceList"
-                      :key="item.name"
-                      role="button"
-                      tabindex="0"
-                      :aria-label="item.name"
-                      @click="openEntrance(item)"
-                      @keydown.enter="openEntrance(item)"
-                      @keydown.space.prevent="openEntrance(item)"
+                    class="entrance-item"
+                    v-for="item in visibleEntranceList"
+                    :key="item.name"
+                    role="button"
+                    tabindex="0"
+                    :aria-label="item.name"
+                    @click="openEntrance(item)"
+                    @keydown.enter="openEntrance(item)"
+                    @keydown.space.prevent="openEntrance(item)"
                   >
                     <div class="image">
                       <img :src="item.iconPath" class="icon" />
@@ -194,59 +194,69 @@
         <div class="module-9 border-item">
           <div class="border-item-head">
             <span class="head-title">建模目标</span>
-            <el-select v-model="targetProjectId" class="target-project-select" placeholder="请选择项目" size="default"
-                       filterable aria-label="切换建模目标项目"
+            <el-select
+              v-model="targetProjectId"
+              class="target-project-select"
+              placeholder="请选择项目"
+              size="default"
+              filterable
+              aria-label="切换建模目标项目"
             >
-              <el-option v-for="project in targetProjects" :key="project.dictValue" :label="project.dictLabel" :value="String(project.dictValue)"/>
+              <el-option
+                v-for="project in targetProjects"
+                :key="project.dictValue"
+                :label="project.dictLabel"
+                :value="String(project.dictValue)"
+              />
             </el-select>
           </div>
           <div class="border-item-body">
             <el-table :data="module9" style="width: 100%" height="100%">
               <el-table-column
-                  fixed
-                  prop="id"
-                  label="编号"
-                  align="center"
-                  width="80"
-                  sortable
+                fixed
+                prop="id"
+                label="编号"
+                align="center"
+                width="80"
+                sortable
               >
                 <template #default="scope">
                   <div class="table-column-code">{{ scope.row.id }}</div>
                 </template>
               </el-table-column>
               <el-table-column
-                  prop="name"
-                  label="目标问题"
-                  width="300"
-                  :show-overflow-tooltip="{ effect: 'light' }"
+                prop="name"
+                label="目标问题"
+                width="300"
+                :show-overflow-tooltip="{ effect: 'light' }"
               />
-              <el-table-column prop="acceptStatus" align="center" label="验证状态">
-                <template #default="scope">
-                  <dict-tag
-                      :options="om_accept_status"
-                      :value="scope.row.acceptStatus"
-                  />
-                </template>
-              </el-table-column>
               <el-table-column
-                  prop="priority"
-                  align="center"
-                  label="优先级"
+                prop="acceptStatus"
+                align="center"
+                label="验证状态"
               >
                 <template #default="scope">
                   <dict-tag
-                      :options="om_target_priority"
-                      :value="scope.row.priority"
+                    :options="om_accept_status"
+                    :value="scope.row.acceptStatus"
+                  />
+                </template>
+              </el-table-column>
+              <el-table-column prop="priority" align="center" label="优先级">
+                <template #default="scope">
+                  <dict-tag
+                    :options="om_target_priority"
+                    :value="scope.row.priority"
                   />
                 </template>
               </el-table-column>
               <el-table-column prop="createBy" align="center" label="创建人" />
               <el-table-column
-                  prop="createTime"
-                  sortable
-                  align="center"
-                  label="创建时间"
-                  width="180"
+                prop="createTime"
+                sortable
+                align="center"
+                label="创建时间"
+                width="180"
               />
             </el-table>
           </div>
@@ -256,25 +266,25 @@
 
     <!-- License agreement pop-up window -->
     <el-dialog
-        v-model="licenseDialogVisible"
-        :title="license.title"
-        :close-on-click-modal="false"
-        :show-close="false"
-        @close="handleLicenseClose"
+      v-model="licenseDialogVisible"
+      :title="license.title"
+      :close-on-click-modal="false"
+      :show-close="false"
+      @close="handleLicenseClose"
     >
       <div class="license-content">
         <p
-            v-for="item in license.text.intro"
-            :key="item"
-            class="license-paragraph"
+          v-for="item in license.text.intro"
+          :key="item"
+          class="license-paragraph"
         >
           {{ item }}
         </p>
 
         <div
-            v-for="(item, index) in license.text.terms"
-            :key="item.title"
-            class="license-term"
+          v-for="(item, index) in license.text.terms"
+          :key="item.title"
+          class="license-term"
         >
           <div class="license-term-title">
             <span class="license-term-index">{{ index + 1 }}</span>
@@ -288,9 +298,9 @@
         <div class="license-notice">
           <span>{{ license.text.notice.before }}</span>
           <a
-              :href="license.text.notice.link"
-              target="_blank"
-              rel="noopener noreferrer"
+            :href="license.text.notice.link"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             {{ license.text.notice.linkText }}
           </a>
@@ -298,9 +308,9 @@
         </div>
 
         <p
-            v-for="item in license.text.footer"
-            :key="item"
-            class="license-footer-text"
+          v-for="item in license.text.footer"
+          :key="item"
+          class="license-footer-text"
         >
           {{ item }}
         </p>
@@ -308,15 +318,15 @@
       <template #footer>
         <el-button @click="toPolicy">商用授权</el-button>
         <el-button
-            type="primary"
-            class="license-aware-btn"
-            :disabled="licenseCountdown > 0"
-            @click="handleLicenseClose"
+          type="primary"
+          class="license-aware-btn"
+          :disabled="licenseCountdown > 0"
+          @click="handleLicenseClose"
         >
           {{
             licenseCountdown > 0
-                ? `我已知晓 (${licenseCountdown}s)`
-                : "我已知晓"
+              ? `我已知晓 (${licenseCountdown}s)`
+              : "我已知晓"
           }}
         </el-button>
       </template>
@@ -328,8 +338,8 @@
 import useUserStore from "@/store/system/user";
 import { listNotice } from "@/api/system/system/notice.js";
 import Weather from "@/components/Weather/index.vue";
-import {projectDict} from '@/api/basic/project/project';
-import {getProjectVersionDict} from '@/api/basic/project/projectVersion';
+import { projectDict } from "@/api/basic/project/project";
+import { getProjectVersionDict } from "@/api/basic/project/projectVersion";
 import * as echarts from "echarts";
 // eslint-disable-next-line no-unused-vars
 import {
@@ -345,20 +355,31 @@ import {
 } from "vue";
 
 let { proxy } = getCurrentInstance();
-const {om_accept_status, om_target_priority} = proxy.useDict('om_accept_status', 'om_target_priority');
+const { om_accept_status, om_target_priority } = proxy.useDict(
+  "om_accept_status",
+  "om_target_priority"
+);
 const greeting = computed(() => {
   const hour = new Date().getHours();
-  return hour < 6 ? '凌晨好' : hour < 12 ? '上午好' : hour < 18 ? '下午好' : '晚上好';
+  return hour < 6
+    ? "凌晨好"
+    : hour < 12
+    ? "上午好"
+    : hour < 18
+    ? "下午好"
+    : "晚上好";
 });
 const router = useRouter();
 const { sys_notice_type } = proxy.useDict("sys_notice_type");
 const getAssetsFile = (url) => {
   return new URL(`../../assets/system/images/index/${url}`, import.meta.url)
-      .href;
+    .href;
 };
 const getEntranceIcon = (url) => {
-  return new URL(`../../assets/system/images/entrance/ontology/${url}`, import.meta.url)
-      .href;
+  return new URL(
+    `../../assets/system/images/entrance/ontology/${url}`,
+    import.meta.url
+  ).href;
 };
 
 const license = {
@@ -372,7 +393,7 @@ const license = {
     terms: [
       {
         title:
-            "您可以将  qOntology 用于商业目的，但不得移除、隐藏或修改  qOntology 中显示的  qOntology 标识、版权声明、许可声明或归属信息。",
+          "您可以将  qOntology 用于商业目的，但不得移除、隐藏或修改  qOntology 中显示的  qOntology 标识、版权声明、许可声明或归属信息。",
         desc: [
           "如果您希望移除、隐藏、遮蔽、替换或修改上述标识、版权声明、许可声明或归属信息，包括但不限于白标使用、OEM 分发、品牌重塑或将  qOntology 作为其他产品展示，您必须向制作方另行申请商业许可。",
         ],
@@ -387,7 +408,7 @@ const license = {
     ],
     notice: {
       before:
-          "除上述特定条件外，其他所有权利和限制均遵循 Apache License 2.0 协议。有关 Apache License 2.0 的详细信息，请访问 ",
+        "除上述特定条件外，其他所有权利和限制均遵循 Apache License 2.0 协议。有关 Apache License 2.0 的详细信息，请访问 ",
       link: "http://www.apache.org/licenses/LICENSE-2.0",
       linkText: "http://www.apache.org/licenses/LICENSE-2.0",
       after: "。",
@@ -454,36 +475,83 @@ function toPolicy() {
 
 // 首页展示用的本体工程快捷入口；图标来自平台提供的素材。
 const entranceList = [
-  {name: '项目管理', path: '/basic/project', perm: ['basic:project:project:list']},
-  {name: '枚举管理', path: '/basic/basicEnum', perm: ['basic:enumeration:type:list']},
-  {name: '数据源', path: '/basic/datasource', perm: ['basic:datasource:datasource:list']},
-  {name: '文件分类', path: '/basic/file/fileCategory', perm: ['basic:file:category:list']},
-  {name: '文件管理', path: '/basic/file/fileManager', perm: ['basic:file:manager:list']},
-  {name: '建模目标', path: '/om/:versionId/target', perm: ['om:target:target:list']},
-  {name: '语义资产', path: '/om/:versionId/semantic/term', perm: ['om:term:term:list']},
-  {name: '本体建模', path: '/om/:versionId/ontology/objectType', perm: ['om:object:type:list']},
-].map(item => ({...item, iconPath: getEntranceIcon(`${item.name}.png`)}));
+  {
+    name: "项目管理",
+    path: "/basic/project",
+    perm: ["basic:project:project:list"],
+  },
+  {
+    name: "枚举管理",
+    path: "/basic/basicEnum",
+    perm: ["basic:enumeration:type:list"],
+  },
+  {
+    name: "数据源",
+    path: "/basic/datasource",
+    perm: ["basic:datasource:datasource:list"],
+  },
+  {
+    name: "文件分类",
+    path: "/basic/file/fileCategory",
+    perm: ["basic:file:category:list"],
+  },
+  {
+    name: "文件管理",
+    path: "/basic/file/fileManager",
+    perm: ["basic:file:manager:list"],
+  },
+  {
+    name: "建模目标",
+    path: "/om/:versionId/target",
+    perm: ["om:target:target:list"],
+  },
+  {
+    name: "语义资产",
+    path: "/om/:versionId/semantic/term",
+    perm: ["om:term:term:list"],
+  },
+  {
+    name: "本体建模",
+    path: "/om/:versionId/ontology/objectType",
+    perm: ["om:object:type:list"],
+  },
+].map((item) => ({ ...item, iconPath: getEntranceIcon(`${item.name}.png`) }));
 const visibleEntranceList = computed(() => {
   const permissions = userStore.permissions || [];
   const routes = router.getRoutes();
-  return entranceList.filter(item => {
-    const allowed = !item.perm.length || permissions.some(permission => permission === '*:*:*' || item.perm.includes(permission));
-    return allowed && routes.some(route => route.path === item.path);
+  return entranceList.filter((item) => {
+    const allowed =
+      !item.perm.length ||
+      permissions.some(
+        (permission) => permission === "*:*:*" || item.perm.includes(permission)
+      );
+    return allowed && routes.some((route) => route.path === item.path);
   });
 });
 let entranceOpening = false;
 async function openEntrance(item) {
-  if (!item.path.includes(':versionId')) return routeTo(item.path);
+  if (!item.path.includes(":versionId")) return routeTo(item.path);
   if (entranceOpening) return;
   entranceOpening = true;
   try {
     // 业务跳转读取真实版本，避免把演示数据中的编号带入业务页面。
-    const projects = targetProjects.value.length ? targetProjects.value : (await projectDict())?.data || [];
-    if (!projects.length) return proxy.$modal.msgWarning('请先创建项目');
-    const project = projects.find(project => String(project.dictValue) === targetProjectId.value) || projects[0];
-    const versions = (await getProjectVersionDict(project.dictValue))?.data || [];
-    if (!versions.length) return proxy.$modal.msgWarning('当前项目暂无版本');
-    await routeTo(item.path.replace(':versionId', encodeURIComponent(String(versions[0].dictValue))));
+    const projects = targetProjects.value.length
+      ? targetProjects.value
+      : (await projectDict())?.data || [];
+    if (!projects.length) return proxy.$modal.msgWarning("请先创建项目");
+    const project =
+      projects.find(
+        (project) => String(project.dictValue) === targetProjectId.value
+      ) || projects[0];
+    const versions =
+      (await getProjectVersionDict(project.dictValue))?.data || [];
+    if (!versions.length) return proxy.$modal.msgWarning("当前项目暂无版本");
+    await routeTo(
+      item.path.replace(
+        ":versionId",
+        encodeURIComponent(String(versions[0].dictValue))
+      )
+    );
   } catch {
     // 请求失败由统一拦截器提示，保留在首页。
   } finally {
@@ -496,20 +564,52 @@ const chartIntances = [];
 const userStore = useUserStore();
 // 以下统计、图表与建模目标均为首页演示数据。
 const module1 = ref([
-  {name: '项目总数', value: 12, up: true, speed: 20, img: getAssetsFile('1.png')},
-  {name: '建模目标总数', value: 36, up: false, speed: 12.5, img: getAssetsFile('2.png')},
-  {name: '对象类型总数', value: 128, up: true, speed: 16.4, img: getAssetsFile('3.png')},
-  {name: '对象关系总数', value: 86, up: false, speed: 10.3, img: getAssetsFile('4.png')},
-  {name: '术语总数', value: 298, up: true, speed: 18.3, img: getAssetsFile('5.png')},
+  {
+    name: "项目总数",
+    value: 12,
+    up: true,
+    speed: 20,
+    img: getAssetsFile("1.png"),
+  },
+  {
+    name: "建模目标总数",
+    value: 36,
+    up: false,
+    speed: 12.5,
+    img: getAssetsFile("2.png"),
+  },
+  {
+    name: "对象类型总数",
+    value: 128,
+    up: true,
+    speed: 16.4,
+    img: getAssetsFile("3.png"),
+  },
+  {
+    name: "对象关系总数",
+    value: 86,
+    up: false,
+    speed: 10.3,
+    img: getAssetsFile("4.png"),
+  },
+  {
+    name: "术语总数",
+    value: 298,
+    up: true,
+    speed: 18.3,
+    img: getAssetsFile("5.png"),
+  },
 ]);
 
 // 项目下拉仅切换展示选项，当前首页演示目标暂不联动过滤。
-const targetProjectId = ref('');
+const targetProjectId = ref("");
 const targetProjects = ref([]);
 async function initTargetProjects() {
   try {
     targetProjects.value = (await projectDict())?.data || [];
-    targetProjectId.value = targetProjects.value.length ? String(targetProjects.value[0].dictValue) : '';
+    targetProjectId.value = targetProjects.value.length
+      ? String(targetProjects.value[0].dictValue)
+      : "";
   } catch {
     targetProjects.value = [];
   }
@@ -543,19 +643,19 @@ function logout() {
     cancelButtonText: "取消",
     type: "warning",
   })
-      .then(() => {
-        userStore.logOut().then(() => {
-          if (authType === "sso") {
-            // 退出统一认证中心的登录状态
-            loginOut(userStore.userId).then(() => {
-              location.href = "/index";
-            });
-          } else {
+    .then(() => {
+      userStore.logOut().then(() => {
+        if (authType === "sso") {
+          // 退出统一认证中心的登录状态
+          loginOut(userStore.userId).then(() => {
             location.href = "/index";
-          }
-        });
-      })
-      .catch(() => {});
+          });
+        } else {
+          location.href = "/index";
+        }
+      });
+    })
+    .catch(() => {});
 }
 
 async function routeTo(link, query = {}) {
@@ -593,11 +693,11 @@ const module4ChartRef = ref(null);
 function initModule4() {
   const intance = echarts.init(module4ChartRef.value, "macarons");
   let m2R2Data = [
-    {value: 128, legendname: '对象类型', name: '对象类型'},
-    {value: 312, legendname: '对象属性', name: '对象属性'},
-    {value: 86, legendname: '对象关系', name: '对象关系'},
-    {value: 256, legendname: '术语', name: '术语'},
-    {value: 42, legendname: '枚举', name: '枚举'},
+    { value: 128, legendname: "对象类型", name: "对象类型" },
+    { value: 312, legendname: "对象属性", name: "对象属性" },
+    { value: 86, legendname: "对象关系", name: "对象关系" },
+    { value: 256, legendname: "术语", name: "术语" },
+    { value: 42, legendname: "枚举", name: "枚举" },
   ];
 
   let option = {
@@ -631,18 +731,18 @@ function initModule4() {
       trigger: "item",
       formatter: function (parms) {
         let str =
-            parms.seriesName +
-            "</br>" +
-            parms.marker +
-            "" +
-            parms.data.legendname +
-            "</br>" +
-            "数量：" +
-            parms.data.value +
-            "</br>" +
-            "占比：" +
-            parms.percent +
-            "%";
+          parms.seriesName +
+          "</br>" +
+          parms.marker +
+          "" +
+          parms.data.legendname +
+          "</br>" +
+          "数量：" +
+          parms.data.value +
+          "</br>" +
+          "占比：" +
+          parms.percent +
+          "%";
         return str;
       },
     },
@@ -669,8 +769,8 @@ function initModule4() {
         let item = m2R2Data.find((item) => item.name === name);
         // eslint-disable-next-line no-unused-vars
         let percent = item
-            ? ((item.value / total) * 100).toFixed(2) + "%"
-            : "0%";
+          ? ((item.value / total) * 100).toFixed(2) + "%"
+          : "0%";
         // return `${name} |  ${percent}  ${item.value}`; // 自定义图例显示
         // 使用 HTML 语法自定义颜色
         let arr = [
@@ -784,7 +884,7 @@ function initModule5() {
       trigger: "axis",
       confine: true,
       axisPointer: { type: "shadow" },
-      valueFormatter: value => `${value} 条`,
+      valueFormatter: (value) => `${value} 条`,
     },
     grid: {
       top: "15%",
@@ -808,10 +908,12 @@ function initModule5() {
     },
     xAxis: {
       type: "category",
-      data: Array.from({length: 7}, (_, index) => {
+      data: Array.from({ length: 7 }, (_, index) => {
         const day = new Date();
         day.setDate(day.getDate() - 6 + index);
-        return `${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+        return `${String(day.getMonth() + 1).padStart(2, "0")}-${String(
+          day.getDate()
+        ).padStart(2, "0")}`;
       }),
     },
     yAxis: {
@@ -826,21 +928,21 @@ function initModule5() {
         itemStyle: {
           normal: {
             color: new echarts.graphic.LinearGradient(
-                0,
-                0,
-                0,
-                1,
-                [
-                  {
-                    offset: 0,
-                    color: "#5b8dfe",
-                  },
-                  {
-                    offset: 1,
-                    color: "#2263fc",
-                  },
-                ],
-                false
+              0,
+              0,
+              0,
+              1,
+              [
+                {
+                  offset: 0,
+                  color: "#5b8dfe",
+                },
+                {
+                  offset: 1,
+                  color: "#2263fc",
+                },
+              ],
+              false
             ),
           },
         },
@@ -871,7 +973,7 @@ function initModule8() {
       trigger: "axis",
       confine: true,
       axisPointer: { type: "line" },
-      valueFormatter: value => `${value} 条`,
+      valueFormatter: (value) => `${value} 条`,
     },
     // title: [
     //     {
@@ -905,11 +1007,13 @@ function initModule8() {
     },
     xAxis: {
       type: "category",
-      data: Array.from({length: 6}, (_, index) => {
+      data: Array.from({ length: 6 }, (_, index) => {
         const month = new Date();
         month.setDate(1);
         month.setMonth(month.getMonth() - 5 + index);
-        return `${String(month.getFullYear()).slice(-2)}年${month.getMonth() + 1}月`;
+        return `${String(month.getFullYear()).slice(-2)}年${
+          month.getMonth() + 1
+        }月`;
       }),
     },
     yAxis: {
@@ -940,21 +1044,21 @@ function initModule8() {
         areaStyle: {
           normal: {
             color: new echarts.graphic.LinearGradient(
-                0,
-                0,
-                0,
-                1,
-                [
-                  {
-                    offset: 0,
-                    color: "rgba(204, 220, 254,1)",
-                  },
-                  {
-                    offset: 1,
-                    color: "rgba(204, 220, 254,0)",
-                  },
-                ],
-                false
+              0,
+              0,
+              0,
+              1,
+              [
+                {
+                  offset: 0,
+                  color: "rgba(204, 220, 254,1)",
+                },
+                {
+                  offset: 1,
+                  color: "rgba(204, 220, 254,0)",
+                },
+              ],
+              false
             ),
             // shadowColor: 'rgba(204, 220, 254,0.1)',
             // shadowBlur: 20
@@ -971,23 +1075,61 @@ function initModule8() {
 function demoDate(daysAgo) {
   const date = new Date();
   date.setDate(date.getDate() - daysAgo);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} 09:30`;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}-${String(date.getDate()).padStart(2, "0")} 09:30`;
 }
 const module9 = ref([
-  {id: '1', name: '各组织负责哪些采购订单的维护和管理？', acceptStatus: '1', priority: '3', createBy: '吴同', createTime: demoDate(0)},
-  {id: '2', name: '指定供应商能够提供哪些物料？', acceptStatus: '1', priority: '3', createBy: '吴同', createTime: demoDate(1)},
-  {id: '3', name: '设备发生故障时需要检查哪些部件？', acceptStatus: '0', priority: '3', createBy: '吴同', createTime: demoDate(2)},
-  {id: '4', name: '产品涉及哪些技术标准与质量要求？', acceptStatus: '0', priority: '2', createBy: '吴同', createTime: demoDate(3)},
-  {id: '5', name: '物料通过哪些出库单流向哪些客户？', acceptStatus: '1', priority: '2', createBy: '吴同', createTime: demoDate(4)},
+  {
+    id: "1",
+    name: "各组织负责哪些采购订单的维护和管理？",
+    acceptStatus: "1",
+    priority: "3",
+    createBy: "吴同",
+    createTime: demoDate(0),
+  },
+  {
+    id: "2",
+    name: "指定供应商能够提供哪些物料？",
+    acceptStatus: "1",
+    priority: "3",
+    createBy: "吴同",
+    createTime: demoDate(1),
+  },
+  {
+    id: "3",
+    name: "设备发生故障时需要检查哪些部件？",
+    acceptStatus: "0",
+    priority: "3",
+    createBy: "吴同",
+    createTime: demoDate(2),
+  },
+  {
+    id: "4",
+    name: "产品涉及哪些技术标准与质量要求？",
+    acceptStatus: "0",
+    priority: "2",
+    createBy: "吴同",
+    createTime: demoDate(3),
+  },
+  {
+    id: "5",
+    name: "物料通过哪些出库单流向哪些客户？",
+    acceptStatus: "1",
+    priority: "2",
+    createBy: "吴同",
+    createTime: demoDate(4),
+  },
 ]);
 
 function chartIntancesResize() {
   const charts = [
-    {element: module4ChartRef.value, init: initModule4},
-    {element: module5ChartRef.value, init: initModule5},
-    {element: module8ChartRef.value, init: initModule8},
+    { element: module4ChartRef.value, init: initModule4 },
+    { element: module5ChartRef.value, init: initModule5 },
+    { element: module8ChartRef.value, init: initModule8 },
   ];
-  charts.forEach(({element, init}) => {
+  charts.forEach(({ element, init }) => {
     // 缓存页或路由切换期间容器可能隐藏，等尺寸恢复后再绘制。
     if (!element || !element.clientWidth || !element.clientHeight) return;
     const chart = echarts.getInstanceByDom(element);
@@ -1013,7 +1155,8 @@ function stopChartResize() {
 function scheduleChartResize() {
   nextTick(() => {
     if (!chartsActive || chartsDestroyed) return;
-    if (chartResizeFrame !== null) window.cancelAnimationFrame(chartResizeFrame);
+    if (chartResizeFrame !== null)
+      window.cancelAnimationFrame(chartResizeFrame);
     chartResizeFrame = window.requestAnimationFrame(() => {
       chartResizeFrame = null;
       if (chartsActive && !chartsDestroyed) chartIntancesResize();
@@ -1023,9 +1166,13 @@ function scheduleChartResize() {
 
 function observeChartContainers() {
   if (!chartsActive || chartsDestroyed) return;
-  if (!chartResizeObserver && typeof ResizeObserver !== 'undefined') {
+  if (!chartResizeObserver && typeof ResizeObserver !== "undefined") {
     chartResizeObserver = new ResizeObserver(scheduleChartResize);
-    [module4ChartRef.value, module5ChartRef.value, module8ChartRef.value].forEach(element => {
+    [
+      module4ChartRef.value,
+      module5ChartRef.value,
+      module8ChartRef.value,
+    ].forEach((element) => {
       if (element) chartResizeObserver.observe(element);
     });
   }
@@ -1043,15 +1190,15 @@ const handleSidebarStatusChange = () => {
 onBeforeUnmount(() => {
   chartsDestroyed = true;
   stopChartResize();
-  chartIntances.forEach(chart => {
+  chartIntances.forEach((chart) => {
     if (!chart.isDisposed()) chart.dispose();
   });
   chartIntances.length = 0;
   clearLicenseCountdown();
   window.removeEventListener("resize", scheduleChartResize);
   instance.appContext.config.globalProperties.$bus.off(
-      "getsidebarStatus",
-      handleSidebarStatusChange
+    "getsidebarStatus",
+    handleSidebarStatusChange
   );
 });
 
@@ -1063,8 +1210,8 @@ onMounted(() => {
   checkLicense();
   window.addEventListener("resize", scheduleChartResize);
   instance.appContext.config.globalProperties.$bus.on(
-      "getsidebarStatus",
-      handleSidebarStatusChange
+    "getsidebarStatus",
+    handleSidebarStatusChange
   );
 });
 
@@ -1534,13 +1681,15 @@ onDeactivated(() => {
 
 .module-6 {
   .border-item-body {
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 12px 0px;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 10px 0;
   }
   .module-item {
     display: flex;
     align-items: center;
+    box-sizing: border-box;
+    height: 36px;
     padding: 6px 20px;
     cursor: pointer;
   }
@@ -1642,36 +1791,36 @@ onDeactivated(() => {
           // 背景色：主色
           .color-primary {
             background-image: linear-gradient(
-                to bottom right,
-                #2162fc 30%,
-                #4f84fd 80%
+              to bottom right,
+              #2162fc 30%,
+              #4f84fd 80%
             );
           }
 
           // 背景色：橙色
           .color-orange {
             background-image: linear-gradient(
-                to bottom right,
-                #f59040 30%,
-                #f9bd77 90%
+              to bottom right,
+              #f59040 30%,
+              #f9bd77 90%
             );
           }
 
           // 背景色：淡蓝色
           .color-pale-blue {
             background-image: linear-gradient(
-                to bottom right,
-                #348bf2 10%,
-                #63abff 60%
+              to bottom right,
+              #348bf2 10%,
+              #63abff 60%
             );
           }
 
           // 背景色：粉红色
           .color-pink {
             background-image: linear-gradient(
-                to bottom right,
-                #fb6594 20%,
-                #fc92bb 80%
+              to bottom right,
+              #fb6594 20%,
+              #fc92bb 80%
             );
           }
         }
