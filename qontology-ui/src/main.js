@@ -83,6 +83,8 @@ import Editor from '@/components/Editor';
 import FileUpload from '@/components/FileUpload2';
 // 提示组件
 import GuideTip from '@/components/GuideTip';
+// 页面提示面板组件
+import GuideTipPanel from '@/components/GuideTip/GuideTipPanel.vue';
 // 文件上传组件
 // 图片上传组件
 import ImageUpload from '@/components/ImageUpload';
@@ -129,6 +131,7 @@ app.component('QtTagGroup', QtTagGroup);
 app.component('QtWrap', QtWrap);
 app.component('Editor', Editor);
 app.component('GuideTip', GuideTip);
+app.component('GuideTipPanel', GuideTipPanel);
 app.component('QtFormItem', QtFormItem);
 app.use(router);
 app.use(store);

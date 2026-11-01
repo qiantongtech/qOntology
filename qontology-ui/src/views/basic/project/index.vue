@@ -18,6 +18,7 @@
 
 <template>
   <div class="app-container" ref="app-container">
+  
     <GuideTip tip-id="basic/project.list" />
 
     <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
@@ -52,6 +53,16 @@
         </el-button>
       </template>
       <qt-table v-bind="tableStore" ref="tableRef">
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            :active-value="1"
+            :inactive-value="0"
+            @change="(e) => handleStatusChange(row.id, row, e)"
+          />
+        </template>
         <template #handle="{ row }">
           <el-button
             link
@@ -183,7 +194,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
     >
@@ -192,6 +203,11 @@
           {{ title }}
         </span>
       </template>
+        <GuideTipPanel
+      title="创建本体项目，明确所属业务领域、命名空间及建模范围，为后续业务对象、属性和关系的定义与管理提供基础。"
+      type="hint"
+      class="mb15"
+    />
       <el-form
         ref="projectRef"
         :model="form"
@@ -200,10 +216,10 @@
         class="column-form"
         @submit.prevent
       >
-        <el-form-item label="项目名称" prop="name">
+        <el-form-item label="项目名称" prop="name" class="row-full">
           <el-input v-model="form.name" placeholder="请输入项目名称" />
         </el-form-item>
-        <el-form-item label="项目领域" prop="domain">
+        <el-form-item label="项目领域" prop="domain" class="row-full">
           <el-input v-model="form.domain" placeholder="请输入项目领域" />
         </el-form-item>
         <qt-form-item
@@ -214,31 +230,11 @@
         >
           <el-input v-model="form.namespace" placeholder="请输入命名空间" />
         </qt-form-item>
-        <el-form-item label="包含范围" prop="includeRange" class="row-full">
+          <el-form-item label="初始版本" prop="currentVersion" class="row-full">
           <el-input
-            v-model="form.includeRange"
-            type="textarea"
-            placeholder="请输入包含范围"
-            maxlength="500 个字符"
-            show-word-limit
-          />
-        </el-form-item>
-        <el-form-item label="排除范围" prop="excludeRange" class="row-full">
-          <el-input
-            v-model="form.excludeRange"
-            type="textarea"
-            placeholder="请输入排除范围"
-            maxlength="500 个字符"
-            show-word-limit
-          />
-        </el-form-item>
-        <el-form-item label="描述" prop="description" class="row-full">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            placeholder="请输入描述"
-            maxlength="500 个字符"
-            show-word-limit
+            :disabled="dialogMode === 'edit'"
+            v-model="form.currentVersion"
+            placeholder="请输入初始版本"
           />
         </el-form-item>
         <el-form-item label="状态" prop="status">
@@ -251,11 +247,31 @@
             </el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="初始版本" prop="currentVersion">
+        <el-form-item label="包含范围" prop="includeRange" class="row-full">
           <el-input
-            :disabled="dialogMode === 'edit'"
-            v-model="form.currentVersion"
-            placeholder="请输入初始版本"
+            v-model="form.includeRange"
+            type="textarea"
+            placeholder="请输入包含范围"
+            maxlength="256 个字符"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="排除范围" prop="excludeRange" class="row-full">
+          <el-input
+            v-model="form.excludeRange"
+            type="textarea"
+            placeholder="请输入排除范围"
+            maxlength="256 个字符"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="描述" prop="description" class="row-full">
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            placeholder="请输入描述"
+            maxlength="256 个字符"
+            show-word-limit
           />
         </el-form-item>
       </el-form>
@@ -302,6 +318,18 @@
             {{ form.namespace }}
           </div>
         </el-form-item>
+        <el-form-item label="当前版本" prop="currentVersion" class="row-full">
+          <div class="form-readonly">
+            {{ form.currentVersion }}
+          </div>
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <dict-tag
+            :options="project_status"
+            :value="form.status"
+            class="con-value access-tag"
+          />
+        </el-form-item>
         <el-form-item label="包含范围" prop="includeRange" class="row-full">
           <div class="form-readonly textarea">
             {{ form.includeRange }}
@@ -317,16 +345,24 @@
             {{ form.description }}
           </div>
         </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <dict-tag
-            :options="project_status"
-            :value="form.status"
-            class="con-value access-tag"
-          />
-        </el-form-item>
-        <el-form-item label="当前版本" prop="currentVersion">
+        <el-form-item label="修改人" prop="updateBy">
           <div class="form-readonly">
-            {{ form.currentVersion }}
+            {{ form.updateBy }}
+          </div>
+        </el-form-item>
+        <el-form-item label="修改时间" prop="updateTime">
+          <div class="form-readonly">
+            {{ form.updateTime }}
+          </div>
+        </el-form-item>
+        <el-form-item label="创建人" prop="createBy">
+          <div class="form-readonly">
+            {{ form.createBy }}
+          </div>
+        </el-form-item>
+        <el-form-item label="创建时间" prop="createTime">
+          <div class="form-readonly">
+            {{ form.createTime }}
           </div>
         </el-form-item>
       </el-form>
@@ -508,7 +544,7 @@ const tableStore = reactive({
     {
       label: "状态",
       prop: "status",
-      dict: "project_status",
+      slot: "status",
       width: 100,
       align: "center",
     },
@@ -524,7 +560,7 @@ const tableStore = reactive({
     {
       label: "操作",
       slot: "handle",
-      width: 240,
+      width: 200,
       align: "left",
       fixed: "right",
     },
@@ -582,7 +618,6 @@ const data = reactive({
         trigger: "blur",
       },
     ],
-    status: [{ required: true, message: "状态不能为空", trigger: "blur" }],
     currentVersion: [
       { required: true, message: "初始版本不能为空", trigger: "blur" },
     ],
@@ -591,8 +626,7 @@ const data = reactive({
     ],
     excludeRange: [
       { required: true, message: "排除范围不能为空", trigger: "blur" },
-    ],
-    description: [{ required: true, message: "描述不能为空", trigger: "blur" }],
+    ]
   },
 });
 
@@ -629,6 +663,22 @@ function reset() {
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.id);
   multiple.value = !selection.length;
+}
+
+/** 启用禁用开关 */
+function handleStatusChange(id, row, e) {
+  const text = e === 1 ? "启用" : "禁用";
+  proxy.$modal
+    .confirm('确认要"' + text + '","' + row.name + '"项目吗？')
+    .then(function () {
+      return updateProject({ id: id, status: row.status });
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess("操作成功");
+    })
+    .catch(function () {
+      row.status = row.status === 1 ? 0 : 1;
+    });
 }
 
 /** 新增按钮操作 */
