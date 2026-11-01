@@ -53,6 +53,13 @@
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 负责人沿用姓名、灰色电话的双行样式，联系电话复用公共用户关联方法。 -->
+        <template #responsiblePerson="{row}">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+          </div>
+        </template>
         <template #runControl="{ row }">
           <div class="flex-column fz12 run-control">
             <div class="flex-center mb2">
@@ -66,12 +73,18 @@
             </div>
             <div class="flex-center">
               <span class="black-label mr5">调度状态:</span>
-              <el-switch
-                v-model="row.updateStatus"
-                :active-value="0"
-                :inactive-value="1"
-                @change="handleStatusChange(row)"
-              />
+              <!-- 禁用开关由外层元素承接悬浮事件，确保任务关闭时仍可显示提示。 -->
+              <el-tooltip content="请先开启任务状态" placement="top" :disabled="row.enableStatus === 1">
+                <span class="schedule-switch-wrapper">
+                  <el-switch
+                    v-model="row.updateStatus"
+                    :active-value="0"
+                    :inactive-value="1"
+                    :disabled="row.enableStatus !== 1"
+                    @change="(value) => handleStatusChange(row, value)"
+                  />
+                </span>
+              </el-tooltip>
             </div>
           </div>
         </template>
@@ -115,6 +128,14 @@
 
         <template #action="{ row }">
           <el-button
+              class="btn-icon-offset"
+              link
+              type="primary"
+              icon="view"
+              @click="handleDetail"
+          >详情</el-button
+          >
+<!--          <el-button
             link
             type="primary"
             icon="VideoPlay"
@@ -122,7 +143,7 @@
             @click="extraction(row)"
             v-hasPermi="['app:appStructTask:struct:edit']"
             >执行</el-button
-          >
+          >-->
           <el-button
             link
             type="primary"
@@ -173,14 +194,6 @@
                 v-hasPermi="['app:appStructTask:struct:remove']"
                 >删除</el-button
               >
-              <el-button
-                class="btn-icon-offset"
-                link
-                type="primary"
-                icon="Document"
-                @click="handleDetail"
-                >详情</el-button
-              >
             </div>
           </el-popover>
         </template>
@@ -198,12 +211,14 @@ import {
   extExecuteExtraction,
   runStructTask,
 } from "@/api/app/structTask";
+import {useCreatorPhones} from '@/utils/useCreatorPhones';
 import { cronToZh } from "@/utils/cronUtils";
 import { timeAgo } from "@/utils/time";
 import { Clock } from "@element-plus/icons-vue";
 import TaskLogDialog from "@/views/app/taskLog/taskLogDialog.vue";
 
 const { proxy } = getCurrentInstance();
+const {creatorPhones} = useCreatorPhones();
 const { app_task_status, publish_status, app_update_type } = proxy.useDict(
   "app_task_status",
   "publish_status",
@@ -284,9 +299,12 @@ const tableStore = reactive({
     },
     {
       label: "负责人",
-      width: 120,
+      prop: "createBy",
+      slot: "responsiblePerson",
+      width: 130,
       align: "left",
-      list: [{ prop: "createBy" }, { prop: "createPhone" }],
+      headerAlign: "left",
+      showOverflowTooltip: {effect: "light"},
     },
     {
       label: "发布时间",
@@ -309,7 +327,7 @@ const tableStore = reactive({
     {
       label: "操作",
       slot: "action",
-      width: 240,
+      width: 260,
       fixed: "right",
     },
   ],
@@ -366,7 +384,7 @@ const searchStore = reactive({
   ],
 });
 
-/** 最近执行时间、执行耗时、发布人/负责人电话、任务启用状态后端暂未返回，先按约定字段名占位 */
+/** 将执行耗时转换为秒或分秒展示，缺少数据时使用占位符。 */
 function formatDuration(value) {
   if (value === null || value === undefined || value === "") return "-";
   const seconds = Math.max(Math.round(Number(value)), 0);
@@ -374,11 +392,12 @@ function formatDuration(value) {
   return `${Math.floor(seconds / 60)}分${seconds % 60}秒`;
 }
 
-/** 后端暂未返回 enableStatus，列表数据缺省按启用展示 */
+/** 任务开关映射已有 validFlag，调度沿用 0 开启、1 关闭的接口约定。 */
 function formatData(rows) {
   return rows.map((row) => ({
     ...row,
-    enableStatus: Number(row.enableStatus ?? 1),
+    enableStatus: Number(row.validFlag ?? 1),
+    updateStatus: Number(row.updateStatus ?? 1),
   }));
 }
 
@@ -388,17 +407,21 @@ function handleSelectionChange(selection) {
   multiple.value = !selection.length;
 }
 
-// 调度状态开关
-function handleStatusChange(row) {
-  const original = row.updateStatus === 0 ? 1 : 0;
-  proxy.$modal.msgWarning("当前可用资源不足，暂不支持操作");
-  row.updateStatus = original;
+/** 任务关闭时拦截调度操作，并恢复开关变更前的状态。 */
+function handleStatusChange(row, value) {
+  if (row.enableStatus !== 1) {
+    row.updateStatus = value === 0 ? 1 : 0;
+    proxy.$modal.msgWarning('请先开启任务状态');
+  }
 }
 
-// 任务状态（启用/停用）开关，后端启用接口待接入
+/** 调度上线期间禁止关闭任务，需先下线调度后再关闭。 */
 function handleEnableChange(row, value) {
-  proxy.$modal.msgWarning("当前可用资源不足，暂不支持操作");
-  row.enableStatus = value === 1 ? 0 : 1;
+  if (value === 0 && row.updateStatus === 0) {
+    // v-model 已更新开关值，拦截关闭时需恢复任务的开启状态。
+    row.enableStatus = 1;
+    proxy.$modal.msgWarning('调度上线中，请先下线调度！');
+  }
 }
 
 /** 点击执行状态标签查看任务日志，结构化任务 taskType 为 0 */
@@ -545,6 +568,12 @@ function routeTo(link, row) {
 </script>
 
 <style scoped lang="scss">
+// 由可交互的外层承接禁用开关的悬浮提示，同时保持行内对齐。
+.schedule-switch-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
 .run-control {
   align-items: center;
 }
