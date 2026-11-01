@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="208" height="208" viewBox="0 0 208 208">
+  <defs>
+    <filter id="椭圆形" x="0" y="0" width="208" height="208" filterUnits="userSpaceOnUse">
+      <feOffset dy="1" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-opacity="0.098"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="组_5" data-name="组 5" transform="translate(-294 -538)">
+    <g transform="matrix(1, 0, 0, 1, 294, 538)" filter="url(#椭圆形)">
+      <circle id="椭圆形-2" data-name="椭圆形" cx="95" cy="95" r="95" transform="translate(9 8)" fill="rgba(0,0,0,0.04)"/>
+    </g>
+    <g id="椭圆形-3" data-name="椭圆形" transform="translate(349 592)" fill="#fff" stroke="rgba(0,0,0,0.08)" stroke-miterlimit="10" stroke-width="1">
+      <circle cx="49" cy="49" r="49" stroke="none"/>
+      <circle cx="49" cy="49" r="48.5" fill="none"/>
+    </g>
+    <g id="上箭头" transform="translate(390 561)">
+      <rect id="矩形" width="16" height="16" opacity="0"/>
+      <path id="路径" d="M6.979.472,11.8,6.794a1.2,1.2,0,0,1-.955,1.928H1.2A1.2,1.2,0,0,1,.246,6.794L5.071.472a1.2,1.2,0,0,1,1.908,0Z" transform="translate(1.975 3.778)" fill="#8b8b8b"/>
+    </g>
+    <g id="上箭头备份_3" data-name="上箭头备份 3" transform="translate(406 721) rotate(180)">
+      <rect id="矩形-2" data-name="矩形" width="16" height="16" opacity="0"/>
+      <path id="路径-2" data-name="路径" d="M6.979.472,11.8,6.794a1.2,1.2,0,0,1-.955,1.928H1.2A1.2,1.2,0,0,1,.246,6.794L5.071.472a1.2,1.2,0,0,1,1.908,0Z" transform="translate(1.975 3.778)" fill="#8b8b8b"/>
+    </g>
+    <g id="上箭头备份" transform="translate(477 633) rotate(90)">
+      <rect id="矩形-3" data-name="矩形" width="16" height="16" fill="#8b8b8b" opacity="0"/>
+      <path id="路径-3" data-name="路径" d="M6.979.472,11.8,6.794a1.2,1.2,0,0,1-.955,1.928H1.2A1.2,1.2,0,0,1,.246,6.794L5.071.472a1.2,1.2,0,0,1,1.908,0Z" transform="translate(1.975 3.778)" fill="#8b8b8b"/>
+    </g>
+    <g id="上箭头备份_2" data-name="上箭头备份 2" transform="translate(318 649) rotate(-90)">
+      <rect id="矩形-4" data-name="矩形" width="16" height="16" opacity="0"/>
+      <path id="路径-4" data-name="路径" d="M6.979.472,11.8,6.794a1.2,1.2,0,0,1-.955,1.928H1.2A1.2,1.2,0,0,1,.246,6.794L5.071.472a1.2,1.2,0,0,1,1.908,0Z" transform="translate(1.975 3.778)" fill="#8b8b8b"/>
+    </g>
+    <text id="ok" transform="translate(384 650)" fill="rgba(0,0,0,0.24)" font-size="24" font-family="PingFangSC-Semibold, PingFang SC" font-weight="600"><tspan x="0" y="0"></tspan>
+</text>
+  </g>
+</svg>

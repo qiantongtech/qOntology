@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="52" height="52" viewBox="0 0 52 52">
+  <defs>
+    <filter id="Rectangle_26_Copy_7备份_26" x="0" y="0" width="52" height="52" filterUnits="userSpaceOnUse">
+      <feOffset dy="1" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feFlood flood-opacity="0.078"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="组_6" data-name="组 6" transform="translate(-240.5 -761)">
+    <g transform="matrix(1, 0, 0, 1, 240.5, 761)" filter="url(#Rectangle_26_Copy_7备份_26)">
+      <rect id="Rectangle_26_Copy_7备份_26-2" data-name="Rectangle 26 Copy 7备份 26" width="40" height="40" rx="2" transform="translate(6 5)" fill="#fff"/>
+    </g>
+    <g id="zoom-in-line" transform="translate(254.5 774)" opacity="0.452">
+      <path id="路径" d="M0,0H24V24H0Z" fill="none"/>
+    </g>
+    <path id="路径_1" data-name="路径 1" d="M94.632,90.5a1.033,1.033,0,0,1,1.033,1.033V93.6h2.066a1.033,1.033,0,0,1,1.026.912l.007.121a1.033,1.033,0,0,1-1.033,1.033H95.665v2.066a1.033,1.033,0,0,1-.912,1.026l-.121.007A1.033,1.033,0,0,1,93.6,97.732V95.665H91.532a1.033,1.033,0,0,1-1.026-.912l-.007-.121A1.033,1.033,0,0,1,91.532,93.6H93.6V91.532a1.033,1.033,0,0,1,.912-1.026Zm0-3.1a7.232,7.232,0,1,0,5.027,12.433l.08-.093a.978.978,0,0,1,.092-.082,7.232,7.232,0,0,0-5.2-12.258Zm0-2.066a9.3,9.3,0,0,1,7.266,15.1l3.8,3.8a1.033,1.033,0,0,1-1.461,1.461l-3.8-3.8a9.3,9.3,0,1,1-5.8-16.564Z" transform="translate(170.167 690.667)" fill="#8b8b8b"/>
+  </g>
+</svg>

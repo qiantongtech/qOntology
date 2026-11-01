@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="52" height="52" viewBox="0 0 52 52">
+  <defs>
+    <filter id="Rectangle_26_Copy_7备份_28" x="0" y="0" width="52" height="52" filterUnits="userSpaceOnUse">
+      <feOffset dy="1" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feFlood flood-opacity="0.078"/>
+      <feComposite operator="in" in2="blur"/>
+    </filter>
+  </defs>
+  <g id="组_9" data-name="组 9" transform="translate(-494.5 -761)">
+    <g id="Rectangle_26_Copy_7备份_28-2" data-name="Rectangle 26 Copy 7备份 28" transform="translate(-603 6583)">
+      <g transform="matrix(1, 0, 0, 1, 1097.5, -5822)" filter="url(#Rectangle_26_Copy_7备份_28)">
+        <rect id="Rectangle_26_Copy_7备份_28-3" data-name="Rectangle 26 Copy 7备份 28" width="40" height="40" rx="2" transform="translate(6 5)" fill="#fff"/>
+      </g>
+      <rect id="Rectangle_26_Copy_7备份_28-4" data-name="Rectangle 26 Copy 7备份 28" width="40" height="40" rx="2" transform="translate(1103.5 -5817)" fill="#fff"/>
+      <rect id="Rectangle_26_Copy_7备份_28-5" data-name="Rectangle 26 Copy 7备份 28" width="40" height="40" rx="2" transform="translate(1103.5 -5817)" fill="none"/>
+    </g>
+    <g id="组_4" data-name="组 4" transform="translate(470.826 741.286)">
+      <path id="路径_5" data-name="路径 5" d="M3.9,4.908l.281.281a1.034,1.034,0,0,1,0,1.487,1,1,0,0,1-.744.309,1.041,1.041,0,0,1-.744-.309L.351,4.332A1.337,1.337,0,0,1,0,3.49a1.337,1.337,0,0,1,.351-.842L2.694.305a1.058,1.058,0,0,1,1.487,0,1.034,1.034,0,0,1,0,1.487L3.171,2.8H7.282a8.078,8.078,0,0,1,8.068,8.068,1.052,1.052,0,0,1-2.1,0A5.977,5.977,0,0,0,7.282,4.908Z" transform="translate(36.674 51.064) rotate(-90)" fill="#8b8b8b"/>
+      <path id="路径_6" data-name="路径 6" d="M234.16,401.92H220.353a1.473,1.473,0,0,0-1.473,1.473v9.639a1.473,1.473,0,0,0,1.473,1.473H234.16a1.473,1.473,0,0,0,1.473-1.473v-9.625A1.476,1.476,0,0,0,234.16,401.92Zm-.631,10.5H220.971v-8.391h12.558Z" transform="translate(-174.019 -360.414)" fill="#8b8b8b"/>
+    </g>
+  </g>
+</svg>
