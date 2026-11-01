@@ -50,6 +50,7 @@
     "anivia-components": "^1.0.0",
     "axios": "0.28.1",
     "codemirror": "^5.65.21",
+    "cronstrue": "^2.59.0",
     "crypto-js": "^4.2.0",
     "echarts": "5.5.1",
     "element-plus": "2.7.6",
@@ -71,6 +72,7 @@
     "spark-md5": "^3.0.2",
     "swiper": "8.4.7",
     "vis-network": "^9.1.9",
+    "vis-timeline": "^7.7.4",
     "vue": "3.4.31",
     "vue-clipboard3": "^2.0.0",
     "vue-codemirror": "^4.0.6",
@@ -80,8 +82,7 @@
     "vuedraggable": "^4.1.0",
     "weixin-js-sdk": "^1.0.0",
     "weixin-jsapi": "^1.1.0",
-    "wordcloud": "^1.2.3",
-    "vis-timeline": "^7.7.4"
+    "wordcloud": "^1.2.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
