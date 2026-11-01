@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.enumeration.OmEnumTypeMapper">
+
+    <!-- 统计任务所属版本下指定编码的枚举类型。 -->
+    <select id="countTaskEnumType" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM om_enum_type enum_type
+                 INNER JOIN om_ai_task task
+                            ON task.workspace_id = enum_type.workspace_id
+                           AND task.version_id = enum_type.version_id
+        WHERE task.id = #{taskId}
+          AND enum_type.enum_type = #{enumType}
+          AND enum_type.del_flag = 0
+    </select>
+
+    <!-- 查询当前版本可供 AI 建模使用的枚举类型。 -->
+    <select id="selectAiOptions" resultType="java.util.LinkedHashMap">
+        SELECT enum_name AS enumName,
+               enum_type AS enumType,
+               'PROJECT' AS enumSource
+        FROM om_enum_type
+        WHERE version_id = #{versionId}
+          AND status = '0'
+          AND del_flag = 0
+    </select>
+
+</mapper>

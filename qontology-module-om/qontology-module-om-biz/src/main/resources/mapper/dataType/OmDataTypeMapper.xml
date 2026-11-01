@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper">
+
+    <!-- 查询当前版本可供 AI 建模使用的业务数据类型。 -->
+    <select id="selectAiOptions" resultType="java.util.LinkedHashMap">
+        SELECT id,
+               name,
+               data_type AS dataType,
+               description,
+               unit,
+               decimal_places AS decimalPlaces,
+               format,
+               enum_type AS enumType,
+               enum_source AS enumSource,
+               'PROJECT' AS businessTypeSource
+        FROM om_data_type
+        WHERE version_id = #{versionId}
+          AND valid_flag = 1
+          AND del_flag = 0
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据 AI 建模任务查询项目业务数据类型。 -->
+    <select id="selectAiOptionsByTaskId" resultType="java.util.LinkedHashMap">
+        SELECT data_type.id,
+               data_type.name,
+               data_type.data_type AS basicTypeCode,
+               data_type.unit,
+               data_type.decimal_places AS decimalPlaces,
+               data_type.format,
+               data_type.enum_type AS enumType,
+               data_type.enum_source AS enumSource
+        FROM om_data_type data_type
+                 INNER JOIN om_ai_task task ON task.version_id = data_type.version_id
+        WHERE task.id = #{taskId}
+          AND data_type.valid_flag = 1
+          AND data_type.del_flag = 0
+        ORDER BY data_type.id
+        LIMIT 500
+    </select>
+
+    <!-- 查询项目业务数据类型对应的基础类型编码。 -->
+    <select id="selectBasicTypeCode" resultType="java.lang.Integer">
+        SELECT data_type.data_type
+        FROM om_data_type data_type
+                 INNER JOIN om_ai_task task ON task.version_id = data_type.version_id
+        WHERE task.id = #{taskId}
+          AND data_type.id = #{businessTypeId}
+          AND data_type.valid_flag = 1
+          AND data_type.del_flag = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据编号查询项目业务数据类型对应的基础类型编码。 -->
+    <select id="selectBasicTypeCodeById" resultType="java.lang.Integer">
+        SELECT data_type
+        FROM om_data_type
+        WHERE id = #{businessTypeId}
+          AND valid_flag = 1
+          AND del_flag = 0
+        LIMIT 1
+    </select>
+
+</mapper>

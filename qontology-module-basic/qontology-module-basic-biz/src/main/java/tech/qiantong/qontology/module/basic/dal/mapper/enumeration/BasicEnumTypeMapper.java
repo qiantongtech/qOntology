@@ -26,6 +26,8 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,6 +37,9 @@ import java.util.Set;
  * @date 2026-10-10
  */
 public interface BasicEnumTypeMapper extends BaseMapperX<BasicEnumTypeDO> {
+    /** 查询可供 AI 建模使用的全局枚举类型。 */
+    List<Map<String, Object>> selectAiOptions();
+
 
     default PageResult<BasicEnumTypeDO> selectPage(BasicEnumTypePageReqVO reqVO) {
         // 定义排序的字段（防止 SQL 注入，与数据库字段名称一致）

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.basic.dal.mapper.enumeration.BasicEnumDataMapper">
+
+    <!-- 统计全局枚举值是否存在。 -->
+    <select id="countAiValue" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM basic_enum_data
+        WHERE enum_type = #{enumType}
+          AND status = 0
+          AND valid_flag = 1
+          AND del_flag = 0
+          AND (enum_value = #{value} OR enum_label = #{value})
+    </select>
+
+</mapper>

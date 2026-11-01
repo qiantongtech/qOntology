@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiFile.OmAiFileMapper">
+
+    <!-- 重置任务文件的解析状态。 -->
+    <update id="resetParseStatus">
+        UPDATE om_ai_file
+        SET parse_status = #{parseStatus},
+            page_count = NULL,
+            block_count = 0
+        WHERE task_id = #{taskId}
+    </update>
+
+</mapper>

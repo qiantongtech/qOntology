@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiTask.OmAiTaskMapper">
+
+    <!-- 统计任务下全部候选数据数量。 -->
+    <select id="countAllCandidates" resultType="java.lang.Integer">
+        SELECT (SELECT COUNT(*) FROM om_ai_target WHERE task_id = #{taskId} AND del_flag = 0)
+             + (SELECT COUNT(*) FROM om_ai_term WHERE task_id = #{taskId} AND del_flag = 0)
+             + (SELECT COUNT(*) FROM om_ai_enum_type WHERE task_id = #{taskId} AND del_flag = 0)
+             + (SELECT COUNT(*) FROM om_ai_enum_data WHERE task_id = #{taskId} AND del_flag = 0)
+             + (SELECT COUNT(*) FROM om_ai_object WHERE task_id = #{taskId} AND del_flag = 0)
+             + (SELECT COUNT(*) FROM om_ai_attribute WHERE task_id = #{taskId} AND del_flag = 0)
+             + (SELECT COUNT(*) FROM om_ai_relation WHERE task_id = #{taskId} AND del_flag = 0)
+             + (SELECT COUNT(*) FROM om_ai_axiom WHERE task_id = #{taskId} AND del_flag = 0)
+             + (SELECT COUNT(*) FROM om_ai_data_rule WHERE task_id = #{taskId} AND del_flag = 0)
+    </select>
+
+</mapper>

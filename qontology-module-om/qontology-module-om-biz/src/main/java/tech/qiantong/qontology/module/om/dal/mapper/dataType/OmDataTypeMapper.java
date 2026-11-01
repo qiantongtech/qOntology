@@ -20,7 +20,10 @@ package tech.qiantong.qontology.module.om.dal.mapper.dataType;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypePageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
@@ -34,6 +37,19 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
  * @date 2026-10-16
  */
 public interface OmDataTypeMapper extends BaseMapperX<OmDataTypeDO> {
+    /** 查询当前版本可供 AI 建模使用的业务数据类型。 */
+    List<Map<String, Object>> selectAiOptions(Long versionId);
+
+    /** 根据 AI 建模任务查询项目业务数据类型。 */
+    List<Map<String, Object>> selectAiOptionsByTaskId(Long taskId);
+
+    /** 查询项目业务数据类型对应的基础类型编码。 */
+    Integer selectBasicTypeCode(@Param("taskId") Long taskId,
+                                @Param("businessTypeId") Long businessTypeId);
+
+    /** 根据编号查询项目业务数据类型对应的基础类型编码。 */
+    Integer selectBasicTypeCodeById(Long businessTypeId);
+
     /**
      * 按请求条件分页查询业务数据类型
      *

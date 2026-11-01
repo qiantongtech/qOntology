@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiTarget.OmAiTargetMapper">
+
+    <!-- 查询任务下的候选建模目标索引。 -->
+    <select id="selectCandidateIndex" resultType="java.util.LinkedHashMap">
+        SELECT id,
+               candidate_key AS candidateKey,
+               question
+        FROM om_ai_target
+        WHERE task_id = #{taskId}
+          AND del_flag = 0
+        ORDER BY id
+        LIMIT 500
+    </select>
+
+    <!-- 统计指定任务中的有效建模目标数量。 -->
+    <select id="countTaskTargets" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM om_ai_target
+        WHERE task_id = #{taskId}
+          AND del_flag = 0
+          AND id IN
+        <foreach collection="targetIds" item="targetId" open="(" separator="," close=")">
+            #{targetId}
+        </foreach>
+    </select>
+
+    <!-- 刷新任务下建模目标的关联元素数量。 -->
+    <update id="refreshRelatedElementCounts">
+        UPDATE om_ai_target target
+        SET related_element_count =
+                (SELECT COUNT(*)
+                 FROM om_ai_object_target object_target
+                 WHERE object_target.target_candidate_id = target.id)
+              + (SELECT COUNT(*)
+                 FROM om_ai_relation_target relation_target
+                 WHERE relation_target.target_candidate_id = target.id)
+        WHERE target.task_id = #{taskId}
+    </update>
+
+    <!-- 统计建模目标关联的有效对象候选和关系候选数量。 -->
+    <select id="selectRelatedElementCount" resultType="java.lang.Integer">
+        SELECT (SELECT COUNT(*) FROM om_ai_object_target link
+                JOIN om_ai_object candidate ON candidate.id=link.object_candidate_id
+                WHERE link.target_candidate_id=#{targetId} AND candidate.del_flag=0)
+             + (SELECT COUNT(*) FROM om_ai_relation_target link
+                JOIN om_ai_relation candidate ON candidate.id=link.relation_candidate_id
+                WHERE link.target_candidate_id=#{targetId} AND candidate.del_flag=0)
+    </select>
+
+</mapper>

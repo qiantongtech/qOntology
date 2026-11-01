@@ -21,7 +21,10 @@ package tech.qiantong.qontology.module.om.dal.mapper.enumeration;
 import com.github.yulichang.base.MPJBaseMapper;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumTypePageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumTypeDO;
@@ -35,6 +38,11 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
  * @date 2026-10-10
  */
 public interface OmEnumTypeMapper extends BaseMapperX<OmEnumTypeDO> {
+    /** 统计任务所属版本下指定编码的枚举类型。 */
+    Integer countTaskEnumType(@Param("taskId") Long taskId, @Param("enumType") String enumType);
+    /** 查询当前版本可供 AI 建模使用的枚举类型。 */
+    List<Map<String, Object>> selectAiOptions(Long versionId);
+
     /**
      * 按请求条件分页查询枚举类型
      *

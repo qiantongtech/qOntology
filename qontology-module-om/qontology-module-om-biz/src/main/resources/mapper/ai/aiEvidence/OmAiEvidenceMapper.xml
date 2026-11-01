@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiEvidence.OmAiEvidenceMapper">
+
+    <!-- 查询指定证据编号对应的原文内容。 -->
+    <select id="selectContents" resultType="java.lang.String">
+        SELECT content
+        FROM om_ai_evidence
+        WHERE task_id = #{taskId}
+          AND id IN
+        <foreach collection="evidenceIds" item="evidenceId" open="(" separator="," close=")">
+            #{evidenceId}
+        </foreach>
+        ORDER BY block_no
+    </select>
+
+</mapper>

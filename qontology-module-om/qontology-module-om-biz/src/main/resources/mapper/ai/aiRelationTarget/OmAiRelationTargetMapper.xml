@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tech.qiantong.qontology.module.om.dal.mapper.ai.aiRelationTarget.OmAiRelationTargetMapper">
+
+    <!-- 查询关系候选关联的建模目标。 -->
+    <select id="selectTargets" resultType="java.util.LinkedHashMap">
+        SELECT target.id,
+               target.question,
+               target.question_source AS questionSource,
+               target.business_scenarios AS businessScenarios,
+               target.priority,
+               target.related_element_count AS relatedElementCount
+        FROM om_ai_relation_target relation_target
+                 INNER JOIN om_ai_target target ON target.id = relation_target.target_candidate_id
+        WHERE relation_target.relation_candidate_id = #{relationCandidateId}
+          AND target.del_flag = 0
+        ORDER BY target.id
+    </select>
+
+    <!-- 查询关系候选关联的建模目标编号。 -->
+    <select id="selectTargetIds" resultType="java.lang.Long">
+        SELECT target_candidate_id
+        FROM om_ai_relation_target
+        WHERE relation_candidate_id = #{relationCandidateId}
+    </select>
+
+    <!-- 批量新增关系候选与建模目标关联。 -->
+    <insert id="insertBatch">
+        INSERT INTO om_ai_relation_target (task_id, relation_candidate_id, target_candidate_id)
+        VALUES
+        <foreach collection="targetIds" item="targetId" separator=",">
+            (#{taskId}, #{relationCandidateId}, #{targetId})
+        </foreach>
+    </insert>
+
+    <!-- 新增关系候选与建模目标关联，重复关联直接忽略。 -->
+    <insert id="insertOrIgnore">
+        INSERT IGNORE INTO om_ai_relation_target (task_id, relation_candidate_id, target_candidate_id)
+        VALUES (#{taskId}, #{relationCandidateId}, #{targetCandidateId})
+    </insert>
+
+</mapper>

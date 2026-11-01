@@ -26,6 +26,8 @@ import tech.qiantong.qontology.mybatis.core.query.LambdaQueryWrapperX;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,6 +37,12 @@ import java.util.Set;
  * @date 2026-10-16
  */
 public interface BasicDataTypeMapper extends BaseMapperX<BasicDataTypeDO> {
+    /** 查询可供 AI 建模使用的全局业务数据类型。 */
+    List<Map<String, Object>> selectAiOptions();
+
+    /** 查询全局业务数据类型对应的基础类型编码。 */
+    Integer selectBasicTypeCode(Long businessTypeId);
+
 
     default PageResult<BasicDataTypeDO> selectPage(BasicDataTypePageReqVO reqVO) {
         // 定义排序的字段（防止 SQL 注入，与数据库字段名称一致）

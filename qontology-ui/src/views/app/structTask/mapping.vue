@@ -112,13 +112,13 @@
                 <el-table-column
                   prop="field"
                   label="数据表字段"
-                  show-overflow-tooltip
+                  :show-overflow-tooltip="{ effect: 'light' }"
                 >
                 </el-table-column>
                 <el-table-column
                   prop="fieldDescription"
                   label="字段描述"
-                  show-overflow-tooltip
+                  :show-overflow-tooltip="{ effect: 'light' }"
                 >
                 </el-table-column>
                 <el-table-column prop="conceptId" label="对象类型属性">
