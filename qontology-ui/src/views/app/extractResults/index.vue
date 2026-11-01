@@ -42,7 +42,7 @@
         </el-button>
       </div>
     </div>
-    <Graph
+    <graph
       embedded
       :task-info-source="taskInfo"
       :graph-data-source="graphData"
@@ -55,6 +55,8 @@
 </template>
 
 <script setup name="AppExtractResults">
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
+import { useRoute } from "vue-router";
 import Graph from "@/views/app/graph/graph/index.vue";
 import { getGraph } from "@/api/app/graph";
 import {
@@ -187,7 +189,7 @@ onMounted(getExtractionResult);
       &::before {
         content: "";
         display: inline-block;
-        background: var(--el-color-primary);
+        background: var(--qt-primary, #2666fb);
         width: 6px;
         height: 16px;
         border-radius: 2px;

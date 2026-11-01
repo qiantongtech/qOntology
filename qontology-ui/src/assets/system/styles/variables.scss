@@ -1,0 +1,111 @@
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+
+/*
+ * qOntology 系统变量契约。
+ *
+ * 这些是稳定的应用级变量，统一维护在 SCSS（而不是 JSON）中，并使用 --qt 前缀。
+ * 主题包只替换运行时需要变化的视觉令牌。
+ */
+:root {
+  /* 所有主题和业务模块共用的基础变量。 */
+  --qt-font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+  --qt-font-size-base: 14px;
+  --qt-font-weight-regular: 400;
+  --qt-font-weight-medium: 500;
+  --qt-font-weight-bold: 600;
+  --qt-space-1: 4px;
+  --qt-space-2: 8px;
+  --qt-space-3: 12px;
+  --qt-space-4: 16px;
+  --qt-space-5: 20px;
+  --qt-layout-max-width: 1280px;
+
+  /* 页面分区标题左侧标记：统一采用首页标题栏的 6 × 16px 圆角竖杠。 */
+  --qt-title-marker-width: 6px;
+  --qt-title-marker-height: 16px;
+  --qt-title-marker-radius: 3px;
+  --qt-title-marker-gap: 8px;
+  --qt-title-marker-color: var(--qt-primary, #2666FB);
+
+  /* 应用共用的表面颜色，主题包不维护这些值。 */
+  --qt-page-background: #f0f2f5;
+  --qt-surface-background: #FFFFFF;
+
+  /* 应用共用的语义颜色。 */
+  --qt-status-success: #67C23A;
+  --qt-status-warning: #E6A23C;
+  --qt-status-danger: #F56C6C;
+  --qt-status-info: #909399;
+  /* 登录页沿用原有蓝色契约，不随业务主题切换。 */
+  --qt-login-primary: #126ADA;
+  --qt-login-primary-rgb: 18, 106, 218;
+  --qt-text-primary: #303133;
+  --qt-text-regular: #606266;
+  --qt-text-secondary: #909399;
+  /* 深色或主色导航表面上的文字颜色。 */
+  --qt-text-inverse: #FFFFFF;
+  --qt-text-inverse-muted: rgba(255, 255, 255, 0.72);
+
+  /*
+   * 固定的 Element Plus 契约。
+   *
+   * 这些值属于系统层，而不是主题包。
+   * system-components.scss 只在表格、弹框表面和标签上将它们映射到 --el-*；
+   * 其他 Element Plus 组件从文档根节点继承当前主题的 --el-* 值。
+   */
+  --qt-element-fixed-primary: #2666FB;
+  --qt-element-fixed-primary-rgb: 38, 102, 251;
+  --qt-element-fixed-primary-light-3: #5D8EFE;
+  --qt-element-fixed-primary-light-5: #8FB0FF;
+  --qt-element-fixed-primary-light-7: #C3D5FF;
+  --qt-element-fixed-primary-light-8: #D9E9FF;
+  --qt-element-fixed-primary-light-9: #EEF6FD;
+  --qt-element-fixed-primary-dark-2: #085DCF;
+
+  --qt-element-fixed-tag-background: #F0F7FF;
+  --qt-element-fixed-tag-border: #E8F0FF;
+  --qt-element-fixed-tag-text: #409EFF;
+
+  --qt-element-fixed-table-header-background: #F8F8F9;
+  --qt-element-fixed-table-header-text: #515A6E;
+  --qt-element-fixed-table-row-hover-background: #F5F7FA;
+  --qt-element-fixed-table-border: #E5E6EB;
+  --qt-element-fixed-table-text: #606266;
+  --qt-element-fixed-table-background: #FFFFFF;
+  --qt-element-fixed-qt-table-header-background: #F1F1F5;
+  --qt-element-fixed-qt-table-header-text: #666666;
+  --qt-element-fixed-dialog-background: #FFFFFF;
+  --qt-element-fixed-dialog-border: #E5E6EB;
+
+  /*
+   * 侧栏菜单基础变量。产品布局使用浅色菜单表面（深色 Logo/顶部区域属于独立的
+   * 导航表面）。这些是系统变量，因此不放入主题包令牌。
+   */
+  --qt-sidebar-menu-background: #FFFFFF;
+  --qt-sidebar-menu-text: #1F1F1F;
+  --qt-sidebar-background-image: none;
+
+  --qt-border-color: #E4E7ED;
+  --qt-divider-color: #F2F3F5;
+  --qt-control-height: 32px;
+  --qt-table-row-height: 44px;
+  --qt-radius-small: 2px;
+  --qt-radius-medium: 4px;
+  --qt-motion-duration: 180ms;
+}

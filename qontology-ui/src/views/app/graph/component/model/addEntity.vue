@@ -35,7 +35,7 @@
                 <el-col :span="24">
                     <el-form-item label="实体" prop="tableData">
                         <template #label> 实体 </template>
-                        <el-button type="primary" style="margin-bottom: 15px" @click="addItem" plain
+                        <el-button type="primary" class="mb15" @click="addItem" plain
                             >新增实体</el-button
                         >
                         <el-table :data="form.tableData" style="width: 100%">
@@ -85,6 +85,8 @@
 </template>
 
 <script setup name="addEntity">
+    import { ref, reactive, computed, toRefs, getCurrentInstance } from 'vue';
+    import { useRoute } from 'vue-router';
     import { addNode, deleteNodeByIds } from '@/api/app/graph';
 
     const { proxy } = getCurrentInstance();

@@ -26,53 +26,79 @@
 .pt5 {
 	padding-top: 5px;
 }
+
 .pr5 {
 	padding-right: 5px;
 }
+
 .pb5 {
 	padding-bottom: 5px;
 }
+
 .mt5 {
 	margin-top: 5px;
 }
+
 .mr5 {
 	margin-right: 5px;
 }
+
 .mb5 {
 	margin-bottom: 5px;
 }
+
 .mb8 {
 	margin-bottom: 8px;
 }
+
 .ml5 {
 	margin-left: 5px;
 }
+
 .mt10 {
 	margin-top: 10px;
 }
+
 .mr10 {
 	margin-right: 10px;
 }
+
 .mb10 {
 	margin-bottom: 10px;
 }
+
 .ml10 {
 	margin-left: 10px;
 }
+
 .mt20 {
 	margin-top: 20px;
 }
+
 .mr20 {
 	margin-right: 20px;
 }
+
 .mb20 {
 	margin-bottom: 20px;
 }
+
 .ml20 {
 	margin-left: 20px;
 }
 
-.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
 	font-family: inherit;
 	font-weight: 500;
 	line-height: 1.1;
@@ -82,6 +108,7 @@
 .el-form .el-form-item__label {
 	font-weight: 700;
 }
+
 .el-dialog:not(.is-fullscreen) {
 	margin-top: 6vh !important;
 }
@@ -90,12 +117,14 @@
 	overflow: auto;
 	overflow-x: hidden;
 	height: auto !important;
-    max-height: 80vh;
-	padding: 10px 20px 0;
+	max-height: 80vh;
+	padding: 15px 20px 0;
 }
 
 .el-table {
-	.el-table__header-wrapper, .el-table__fixed-header-wrapper {
+
+	.el-table__header-wrapper,
+	.el-table__fixed-header-wrapper {
 		th {
 			word-break: break-word;
 			background-color: #f8f8f9 !important;
@@ -104,8 +133,9 @@
 			font-size: 13px;
 		}
 	}
+
 	.el-table__body-wrapper {
-		.el-button [class*="el-icon-"] + span {
+		.el-button [class*="el-icon-"]+span {
 			margin-left: 1px;
 		}
 	}
@@ -113,20 +143,20 @@
 
 /** 表单布局 **/
 .form-header {
-    font-size:15px;
-	color:#6379bb;
-	border-bottom:1px solid #ddd;
-	margin:0px 0px 25px 0px;
-	padding-bottom:5px
+	font-size: 15px;
+	color: #6379bb;
+	border-bottom: 1px solid #ddd;
+	margin: 0px 0px 25px 0px;
+	padding-bottom: 5px
 }
 
 /** 表格布局 **/
 .pagination-container {
-    position: relative;
-    height: 25px;
-    margin-bottom: 10px;
-    margin-top: 15px;
-    padding: 0px 20px !important;
+	position: relative;
+	height: 25px;
+	margin-bottom: 10px;
+	margin-top: 15px;
+	padding: 0px 20px !important;
 }
 
 // .el-dialog .pagination-container {
@@ -135,11 +165,11 @@
 
 /* tree border */
 .tree-border {
-    margin-top: 5px;
-    border: 1px solid #e5e6e7;
-    background: #FFFFFF none;
-    border-radius:4px;
-    width: 100%;
+	margin-top: 5px;
+	border: 1px solid #e5e6e7;
+	background: #FFFFFF none;
+	border-radius: 4px;
+	width: 100%;
 }
 
 .pagination-container .el-pagination {
@@ -147,13 +177,14 @@
 	position: absolute;
 }
 
-@media ( max-width : 768px) {
-  .pagination-container .el-pagination > .el-pagination__jump {
-    display: none !important;
-  }
-  .pagination-container .el-pagination > .el-pagination__sizes {
-    display: none !important;
-  }
+@media (max-width : 768px) {
+	.pagination-container .el-pagination>.el-pagination__jump {
+		display: none !important;
+	}
+
+	.pagination-container .el-pagination>.el-pagination__sizes {
+		display: none !important;
+	}
 }
 
 .el-table .fixed-width .el-button--small {
@@ -169,15 +200,16 @@
 	margin-left: 10px;
 }
 
-.el-table .el-dropdown, .el-icon-arrow-down {
+.el-table .el-dropdown,
+.el-icon-arrow-down {
 	font-size: 12px;
 }
 
-.el-tree-node__content > .el-checkbox {
+.el-tree-node__content>.el-checkbox {
 	margin-right: 8px;
 }
 
-.list-group-striped > .list-group-item {
+.list-group-striped>.list-group-item {
 	border-left: 0;
 	border-right: 0;
 	border-radius: 0;
@@ -220,22 +252,22 @@
 /* button color */
 .el-button--cyan.is-active,
 .el-button--cyan:active {
-  background: #20B2AA;
-  border-color: #20B2AA;
-  color: #FFFFFF;
+	background: #20B2AA;
+	border-color: #20B2AA;
+	color: #FFFFFF;
 }
 
 .el-button--cyan:focus,
 .el-button--cyan:hover {
-  background: #48D1CC;
-  border-color: #48D1CC;
-  color: #FFFFFF;
+	background: #48D1CC;
+	border-color: #48D1CC;
+	color: #FFFFFF;
 }
 
 .el-button--cyan {
-  background-color: #20B2AA;
-  border-color: #20B2AA;
-  color: #FFFFFF;
+	background-color: #20B2AA;
+	border-color: #20B2AA;
+	color: #FFFFFF;
 }
 
 /* text color */
@@ -289,10 +321,10 @@
 }
 
 /* 拖拽列样式 */
-.sortable-ghost{
+.sortable-ghost {
 	opacity: .8;
-	color: #fff!important;
-	background: #42b983!important;
+	color: #fff !important;
+	background: #42b983 !important;
 }
 
 /* 表格右侧工具栏样式 */
@@ -308,6 +340,7 @@
 	font-weight: 500;
 	margin: 8px 0;
 }
+
 .h2-titles::before {
 	display: inline-block;
 	content: "";

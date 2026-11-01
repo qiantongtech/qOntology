@@ -18,6 +18,7 @@
 
 <template>
   <div class="app-container model-file-page" ref="app-container">
+    <GuideTip tip-id="basic/file/manager.list" />
     <el-container>
       <DeptTree
         ref="deptTreeRef"
@@ -27,7 +28,6 @@
         @node-click="handleNodeClick"
       />
       <el-main>
-        <GuideTip tip-id="basic/file/manager.list"/>
         <div class="pagecont-top" v-show="showSearch">
           <el-form
             :model="queryParams"
@@ -77,7 +77,6 @@
               >
                 <i class="iconfont-mini icon-xinzeng mr5"></i>新增
               </el-button>
-
             </div>
             <right-toolbar
               v-model:showSearch="showSearch"
@@ -113,7 +112,11 @@
               >
                 <template #default="scope">
                   <div class="file-name-cell">
-                    <span class="file-name-text clickable" @click="handlePreview(scope.row)">{{ scope.row.fileName || "-" }}</span>
+                    <span
+                      class="file-name-text clickable"
+                      @click="handlePreview(scope.row)"
+                      >{{ scope.row.fileName || "-" }}</span
+                    >
                   </div>
                 </template>
               </el-table-column>
@@ -125,11 +128,32 @@
                 min-width="220"
                 :show-overflow-tooltip="{ effect: 'light' }"
               />
-              <el-table-column v-if="getColumnVisibility(4)" label="分类" align="center" prop="categoryName" width="120" :show-overflow-tooltip="{ effect: 'light' }" />
-              <el-table-column v-if="getColumnVisibility(5)" label="文件大小" align="center" prop="fileSize" width="120">
-                <template #default="scope">{{ formatSize(scope.row.fileSize) }}</template>
+              <el-table-column
+                v-if="getColumnVisibility(4)"
+                label="分类"
+                align="center"
+                prop="categoryName"
+                width="120"
+                :show-overflow-tooltip="{ effect: 'light' }"
+              />
+              <el-table-column
+                v-if="getColumnVisibility(5)"
+                label="文件大小"
+                align="center"
+                prop="fileSize"
+                width="120"
+              >
+                <template #default="scope">{{
+                  formatSize(scope.row.fileSize)
+                }}</template>
               </el-table-column>
-              <el-table-column v-if="getColumnVisibility(7)" label="创建人" align="center" prop="createBy" width="100" />
+              <el-table-column
+                v-if="getColumnVisibility(7)"
+                label="创建人"
+                align="center"
+                prop="createBy"
+                width="100"
+              />
               <el-table-column
                 v-if="getColumnVisibility(8)"
                 label="创建时间"
@@ -140,20 +164,61 @@
                 :sort-orders="['descending', 'ascending']"
               >
                 <template #default="scope">
-                  <span>{{ parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") }}</span>
+                  <span>{{
+                    parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}")
+                  }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" align="center" class-name="small-padding fixed-width" fixed="right" width="240">
+              <el-table-column
+                label="操作"
+                align="center"
+                class-name="small-padding fixed-width"
+                fixed="right"
+                width="240"
+              >
                 <template #default="scope">
-                  <el-button link type="primary" icon="View" @click="handlePreview(scope.row)">预览</el-button>
-                  <el-button link type="primary" icon="Download" @click="handleDownload(scope.row)">下载</el-button>
-                  <el-popover placement="bottom" :width="120" trigger="click" popper-class="more-popover">
+                  <el-button
+                    link
+                    type="primary"
+                    icon="View"
+                    @click="handlePreview(scope.row)"
+                    >预览</el-button
+                  >
+                  <el-button
+                    link
+                    type="primary"
+                    icon="Download"
+                    @click="handleDownload(scope.row)"
+                    >下载</el-button
+                  >
+                  <el-popover
+                    placement="bottom"
+                    :width="120"
+                    trigger="click"
+                    popper-class="more-popover"
+                  >
                     <template #reference>
-                      <el-button link type="primary" icon="ArrowDown">更多</el-button>
+                      <el-button link type="primary" icon="ArrowDown"
+                        >更多</el-button
+                      >
                     </template>
                     <div class="more-btn-group">
-                      <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['basic:file:manager:edit']">修改</el-button>
-                      <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['basic:file:manager:remove']">删除</el-button>
+                      <el-button
+                        link
+                        type="primary"
+                        icon="Edit"
+                        @click="handleUpdate(scope.row)"
+                        v-hasPermi="['basic:file:manager:edit']"
+                        >修改</el-button
+                      >
+                      <el-button
+                        link
+                        type="danger"
+                        icon="Delete"
+                        @click="handleDelete(scope.row)"
+                        v-hasPermi="['basic:file:manager:remove']"
+                        >删除</el-button
+                      >
                     </div>
                   </el-popover>
                 </template>
@@ -215,8 +280,20 @@
               <FileUpload2
                 v-model="form.filePath"
                 :fileName="form.fileName"
-                limit=1
-                :fileType="['txt', 'pdf', 'html', 'xlsx', 'xls', 'docx', 'csv', 'md', 'mdx', 'htm', 'markdown']"
+                limit="1"
+                :fileType="[
+                  'txt',
+                  'pdf',
+                  'html',
+                  'xlsx',
+                  'xls',
+                  'docx',
+                  'csv',
+                  'md',
+                  'mdx',
+                  'htm',
+                  'markdown',
+                ]"
                 @update:fileSize="(val) => (form.fileSize = val)"
                 @update:fileExt="(val) => (form.fileSuffix = val)"
                 @update:fileName="updateFormFileName"
@@ -370,7 +447,11 @@ function getList() {
 /** 查询分类树结构 */
 function getCategoryTree() {
   getFileTypes().then((response) => {
-    categoryOptions.value = proxy.handleTree(response.data || [], "id", "parentId");
+    categoryOptions.value = proxy.handleTree(
+      response.data || [],
+      "id",
+      "parentId"
+    );
   });
 }
 
@@ -527,7 +608,8 @@ function handlePreview(row) {
   } else {
     // 使用公开预览接口，拼接文件名以帮助 kkFileView 识别类型
     const fileName = row.filePath.substring(row.filePath.lastIndexOf("/") + 1);
-    const previewUrl = "/model/modelDataFile/public/preview/" + row.id + "/" + fileName;
+    const previewUrl =
+      "/model/modelDataFile/public/preview/" + row.id + "/" + fileName;
     filePreview(previewUrl);
   }
 }
