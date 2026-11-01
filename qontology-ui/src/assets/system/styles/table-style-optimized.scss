@@ -188,6 +188,29 @@
         }
     }
 
+    /* 最近执行信息 (状态标签 + 相对时间 + 耗时) */
+    .last-execute-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+        color: #1e293b;
+    }
+
+    .last-execute-info__row {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .last-execute-info__value {
+        min-width: 0;
+        overflow: hidden;
+        color: #64748b;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     /* 信息列 (图标 + 标题 + 标签 / 描述) */
     .qt-table-info {
         display: flex;
