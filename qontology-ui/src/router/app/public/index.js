@@ -20,6 +20,17 @@ import Layout from '@/layout/index.vue';
 
 export default [
     {
+        path: '/app/businessAgent/config/:id?',
+        component: Layout,
+        hidden: true,
+        children: [{
+            path: '',
+            component: () => import('@/views/app/businessAgent/config.vue'),
+            name: 'AppBusinessAgentConfig',
+            meta: { title: '智能体配置', activeMenu: '/app/businessAgent' }
+        }]
+    },
+    {
         path: '/app/structTask/add',
         component: Layout,
         hidden: true,

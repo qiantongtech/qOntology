@@ -682,6 +682,16 @@ INSERT INTO `system_dict_data` VALUES (117, 2, '解析中', '1', 'om_ai_file_par
 INSERT INTO `system_dict_data` VALUES (118, 3, '解析成功', '2', 'om_ai_file_parse_status', '', 'success', 'N', '0', '吴同', '2026-10-30 11:48:21', '', NULL, '');
 INSERT INTO `system_dict_data` VALUES (119, 4, '解析失败', '3', 'om_ai_file_parse_status', '', 'danger', 'N', '0', '吴同', '2026-10-30 11:48:21', '', NULL, '');
 
+INSERT INTO `system_dict_type` VALUES (37, '知识健康度', 'qa_health_status', '0', '吴同', '2026-11-01 10:00:00', '', NULL, '智能问答知识健康度状态');
+INSERT INTO `system_dict_type` VALUES (38, '同步状态', 'qa_sync_status', '0', '吴同', '2026-11-01 10:00:00', '', NULL, '智能问答本体同步状态');
+
+INSERT INTO `system_dict_data` VALUES (120, 1, '待改进', '0', 'qa_health_status', '', 'warning', 'N', '0', '吴同', '2026-11-01 10:00:00', '', NULL, '');
+INSERT INTO `system_dict_data` VALUES (121, 2, '良好', '1', 'qa_health_status', '', 'success', 'N', '0', '吴同', '2026-11-01 10:00:00', '', NULL, '');
+INSERT INTO `system_dict_data` VALUES (122, 3, '优秀', '2', 'qa_health_status', '', 'primary', 'N', '0', '吴同', '2026-11-01 10:00:00', '', NULL, '');
+INSERT INTO `system_dict_data` VALUES (123, 1, '离线', '0', 'qa_sync_status', '', 'info', 'N', '0', '吴同', '2026-11-01 10:00:00', '', NULL, '');
+INSERT INTO `system_dict_data` VALUES (124, 2, '实时', '1', 'qa_sync_status', '', 'success', 'N', '0', '吴同', '2026-11-01 10:00:00', '', NULL, '');
+INSERT INTO `system_dict_data` VALUES (125, 3, '延迟', '2', 'qa_sync_status', '', 'warning', 'N', '0', '吴同', '2026-11-01 10:00:00', '', NULL, '');
+
 INSERT INTO `system_menu` VALUES (1202, '质量中心', 1078, 6, 'quality', NULL, NULL, '', 1, 0, 'M', '0', '0', NULL, '质量中心', '吴同', '2026-10-28 09:44:37', '', NULL, '');
 INSERT INTO `system_menu` VALUES (1203, '质量验证', 1202, 6, ':versionId/qualityValidation', 'om/qualityValidation/index', NULL, '', 1, 0, 'C', '0', '0', '', '#', '吴同', '2026-10-26 15:27:19', '吴同', '2026-10-28 09:44:50', '');
 INSERT INTO `system_menu` VALUES (1204, 'AI建模查询', 1079, 1, '', '', '', '', 1, 0, 'F', '0', '0', 'om:aiModeling:list', '#', '吴同', '2026-10-30 11:53:43', '', NULL, '');
@@ -916,3 +926,9 @@ INSERT INTO `om_ai_term` VALUES (4, 1, '采购明细', '', '', '', '物料是我
 INSERT INTO `om_ai_term` VALUES (5, 1, '组织', '', '', '', '公司层面的组织是一个大的概念，集团、各分厂、各事业部都算组织，供应商从本质上也属于组织这一类，只是它是外部组织，给我们供货。每个供应商我们给编一个固定的编码，规则是大写S开头后面跟6位数字，比如S123456，这个编码在系统里要唯一，不能重复。', '企业架构与外部合作方的广义分类，包含内部机构与外部供应商', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
 
 
+INSERT INTO `system_menu` VALUES (1211, '智能问答', 1155, 5, 'ontologyQa', 'app/ontologyQa/index', NULL, '', 1, 0, 'C', '0', '0', '', '#', '吴同', '2026-11-01 10:14:15', '吴同', '2026-11-01 10:14:21', '');
+INSERT INTO `system_menu` VALUES (1212, '分析看板', 1155, 6, 'analysisDashboard', 'app/analysisDashboard/index', NULL, '', 1, 0, 'C', '0', '0', '', '#', '吴同', '2026-11-01 11:33:53', '吴同', '2026-11-01 11:34:40', '');
+INSERT INTO `system_menu` VALUES (1213, '业务智能体', 1155, 7, 'businessAgent', 'app/businessAgent/index', NULL, '', 1, 0, 'C', '0', '0', NULL, '#', '吴同', '2026-11-01 14:50:55', '', NULL, '');
+INSERT INTO `system_menu` VALUES (1214, '应用中心', 1155, 1, 'applicationCenter', 'app/applicationCenter/index', NULL, '', 1, 0, 'C', '0', '0', NULL, '#', '吴同', '2026-11-01 16:36:54', '', NULL, '');
+
+UPDATE `app_unstruct_task_doc_rel` SET `doc_id` = 13, `doc_name` = '供应链采购与仓储协同文档.docx'  WHERE `id` = 13;
