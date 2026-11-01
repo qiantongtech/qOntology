@@ -18,7 +18,7 @@
 <template>
     <div v-loading="loading">
         <div class="target-toolbar mb15">
-            <GuideTipPanel type="plain" title="展示当前对象类型关联的建模目标，便于核对该类型的设计是否符合目标要求。" />
+            <guide-tip-panel type="plain" title="展示当前对象类型关联的建模目标，便于核对该类型的设计是否符合目标要求。" />
             <right-toolbar :search="false" :columns="columns" @queryTable="getList" />
         </div>
         <TargetTable :targets="targets" :columns="columns" @sort-change="handleSortChange" />
