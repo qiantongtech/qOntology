@@ -52,6 +52,11 @@ public class BasicProjectSaveReqVO extends BaseEntity {
     @Size(max = 128, message = "项目名称长度不能超过128个字符")
     private String name;
 
+    /** 图标由上传组件返回路径，随项目新增或修改一起保存。 */
+    @Schema(description = "项目图标路径")
+    @Size(max = 512, message = "项目图标路径长度不能超过512个字符")
+    private String icon;
+
     @Schema(description = "项目领域", example = "")
     @NotBlank(message = "项目领域不能为空")
     @Size(max = 128, message = "项目领域长度不能超过128个字符")

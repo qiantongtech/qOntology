@@ -55,12 +55,14 @@ import {useRoute} from 'vue-router';
 import {getType} from '@/api/basic/enumeration/type';
 import {listData} from '@/api/basic/enumeration/data';
 import auth from '@/plugins/auth';
+import {useCreatorPhones} from '@/utils/useCreatorPhones';
 import EnumData from '../data/index.vue';
 import BusinessDataTypes from '@/views/basic/dataType/index.vue';
 
 const {proxy} = getCurrentInstance();
 const {sys_normal_disable} = proxy.useDict('sys_normal_disable');
 const route = useRoute();
+const {creatorPhones} = useCreatorPhones();
 const detail = ref({});
 const loading = ref(false);
 const activeName = ref('data');
@@ -71,10 +73,16 @@ const detailItems = [
   {label: '枚举类型', key: 'enumType'},
   {label: '枚举数据数', key: 'enumDataCount'},
   {label: '备注', key: 'remark', span: 24, className: 'mt2 mb2'},
-  {label: '创建人', key: 'createBy'},
+  {label: '创建人', key: 'createBy', formatter: formatCreator},
   {label: '创建时间', key: 'createTime', type: 'time'},
   {label: '更新时间', key: 'updateTime', type: 'time'}
 ];
+/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
+function formatCreator(name, record) {
+  const phone = creatorPhones.value[record.creatorId];
+  return phone ? `${name || '—'} / ${phone}` : name || '—';
+}
+
 // 详情与数量分别记录请求版本；数量请求还需校验详情版本，防止切换枚举后旧响应回写。
 let requestVersion = 0;
 let countRequest = 0;

@@ -52,6 +52,9 @@ public class BasicProjectDO extends BaseEntity {
      */
     private String name;
 
+    /** 项目展示图标路径，空字符串表示使用默认图标。 */
+    private String icon;
+
     /**
      * 项目领域
      */

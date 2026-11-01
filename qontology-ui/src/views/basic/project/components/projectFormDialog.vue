@@ -50,6 +50,20 @@
       <qt-form-item label="项目名称" prop="name" class="row-full">
         <el-input v-model="localForm.name" placeholder="请输入项目名称"/>
       </qt-form-item>
+      <!-- 图标上传沿用数据板块表单：未上传时展示默认图标，上传后可预览或删除。 -->
+      <qt-form-item label="图标" prop="icon" class="row-full" tip="请上传大小不超过 5MB、格式为 png/jpg/jpeg 的图片，用于在项目列表中快速识别项目。">
+        <ImageUpload
+          v-model="localForm.icon"
+          class="project-icon-upload"
+          :class="{'project-icon-upload--default': !localForm.icon}"
+          :style='{"--project-default-icon": `url("${defaultProjectIcon}")`}'
+          :title="!localForm.icon ? '点击上传图标' : undefined"
+          :limit="1"
+          :file-size="5"
+          :file-type="['png', 'jpg', 'jpeg']"
+          :is-show-tip="false"
+        />
+      </qt-form-item>
       <qt-form-item label="项目领域" prop="domain" class="row-full">
         <el-input v-model="localForm.domain" placeholder="请输入项目领域"/>
       </qt-form-item>
@@ -82,13 +96,13 @@
         <el-input :model-value="responsiblePhone" disabled/>
       </qt-form-item>
       <qt-form-item label="包含范围" prop="includeRange" class="row-full">
-        <el-input v-model="localForm.includeRange" type="textarea" :maxlength="256" show-word-limit placeholder="请输入包含范围"/>
+        <el-input v-model="localForm.includeRange" type="textarea" maxlength="256 个字符" show-word-limit placeholder="请输入包含范围"/>
       </qt-form-item>
       <qt-form-item label="排除范围" prop="excludeRange" class="row-full">
-        <el-input v-model="localForm.excludeRange" type="textarea" :maxlength="256" show-word-limit placeholder="请输入排除范围"/>
+        <el-input v-model="localForm.excludeRange" type="textarea" maxlength="256 个字符" show-word-limit placeholder="请输入排除范围"/>
       </qt-form-item>
       <qt-form-item label="描述" prop="description" class="row-full">
-        <el-input v-model="localForm.description" type="textarea" :maxlength="256" show-word-limit placeholder="请输入描述"/>
+        <el-input v-model="localForm.description" type="textarea" maxlength="256 个字符" show-word-limit placeholder="请输入描述"/>
       </qt-form-item>
     </el-form>
     <template #footer>
@@ -103,6 +117,8 @@
 <script setup name="ProjectFormDialog">
 import {computed, nextTick, onBeforeUnmount, ref, watch} from 'vue';
 import {listUserAll} from '@/api/system/system/user';
+import ImageUpload from '@/components/ImageUpload/index.vue';
+import defaultProjectIcon from '@/assets/images/project-default.svg';
 import GuideTipPanel from "@/components/GuideTip/GuideTipPanel.vue";
 
 /**
@@ -137,6 +153,7 @@ function createEmptyForm() {
   return {
     id: null,
     name: null,
+    icon: '',
     domain: null,
     namespace: null,
     currentVersion: null,
@@ -240,9 +257,53 @@ async function submitForm() {
     const valid = await formRef.value.validate().catch(() => false);
     if (!valid || !props.open || props.saving || draft !== localForm.value) return;
     // 清空选择时显式提交 null，使后端能够清除原有责任人关联。
-    emit('submit', {...localForm.value, responsibleUserId: localForm.value.responsibleUserId || null});
+    emit('submit', {...localForm.value, icon: localForm.value.icon || '', responsibleUserId: localForm.value.responsibleUserId || null});
   } finally {
     validating.value = false;
   }
 }
 </script>
+
+<style scoped lang="scss">
+// 图标上传入口与数据板块保持一致，默认图标上悬浮展示上传提示。
+.project-icon-upload {
+  line-height: 1;
+  :deep(.el-upload--picture-card),
+  :deep(.el-upload-list--picture-card .el-upload-list__item) {
+    width: 48px !important;
+    height: 48px !important;
+    line-height: 48px !important;
+  }
+  :deep(.avatar-uploader-icon) {
+    font-size: 18px;
+  }
+  &.project-icon-upload--default {
+    :deep(.el-upload--picture-card) {
+      position: relative;
+      border: 0;
+      background: transparent var(--project-default-icon) center / 32px 32px no-repeat !important;
+      &::after {
+        content: '+';
+        position: absolute;
+        inset: 8px;
+        display: grid;
+        place-items: center;
+        border-radius: 4px;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.5);
+        font-size: 22px;
+        line-height: 1;
+        opacity: 0;
+        pointer-events: none;
+      }
+      &:hover::after,
+      &:focus-within::after {
+        opacity: 1;
+      }
+    }
+    :deep(.avatar-uploader-icon) {
+      visibility: hidden;
+    }
+  }
+}
+</style>

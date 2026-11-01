@@ -48,6 +48,13 @@
           <dict-tag v-if="row.validFlag !== '—'" :options="categoryStatusOptions" :value="row.validFlag"/>
           <span v-else>—</span>
         </template>
+        <!-- 沿用责任人双行样式，创建人电话通过用户接口关联，未维护时只显示姓名。 -->
+        <template #creator="{row}">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+          </div>
+        </template>
         <template #createTime="{row}">
           {{ row.createTime === '—' ? '—' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '—') }}
         </template>
@@ -99,6 +106,8 @@ import {
 
 import CategoryFormDialog from "./components/categoryFormDialog.vue";
 
+import {useCreatorPhones} from '@/utils/useCreatorPhones';
+
 const {proxy} = getCurrentInstance();
 
 // 状态选项使用字符串字典值，DictTag 会将后端布尔值转换为字符串后匹配。
@@ -112,6 +121,8 @@ const categoryDialogRef = ref();
 const isExpandAll = ref(true);
 const defaultSort = {prop: 'orderNum', order: 'ascending'};
 const tableRef = ref();
+const {creatorPhones} = useCreatorPhones();
+
 let appliedName = '';
 let appliedParentId;
 
@@ -142,7 +153,7 @@ const tableStore = reactive({
     {label: '描述', prop: 'remark', slot: 'text', minWidth: 220, align: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '状态', prop: 'validFlag', slot: 'status', width: 100},
     {label: '排序', prop: 'orderNum', slot: 'text', width: 150, sortable: true},
-    {label: '创建人', prop: 'createBy', slot: 'text', width: 100},
+    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
     {label: '操作', slot: 'handle', width: 240, fixed: 'right'}
   ],

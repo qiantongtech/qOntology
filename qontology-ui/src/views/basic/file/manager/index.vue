@@ -57,6 +57,13 @@
               <span v-else>—</span>
             </template>
             <template #fileSize="{row}">{{ row.fileSize === '—' ? '—' : formatSize(row.fileSize) }}</template>
+            <!-- 沿用责任人双行样式，创建人电话通过用户接口关联，未维护时只显示姓名。 -->
+            <template #creator="{row}">
+              <div class="flex-column overflow-hidden">
+                <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
+                <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+              </div>
+            </template>
             <template #createTime="{row}">
               {{ row.createTime === '—' ? '—' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '—') }}
             </template>
@@ -139,9 +146,13 @@ function getFileIcon(file) {
   return fileIcons[suffix] || txtIcon;
 }
 
+import {useCreatorPhones} from '@/utils/useCreatorPhones';
+
 const {proxy} = getCurrentInstance();
 const router = useRouter();
 const tableRef = ref();
+const {creatorPhones} = useCreatorPhones();
+
 const deptTreeRef = ref();
 const fileDialogRef = ref();
 const categoryOptions = ref([]);
@@ -172,7 +183,7 @@ const tableStore = reactive({
       showOverflowTooltip: {effect: 'light'}
     },
     {label: '文件大小', prop: 'fileSize', slot: 'fileSize', width: 110},
-    {label: '创建人', prop: 'createBy', slot: 'text', width: 100},
+    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
     {label: '操作', slot: 'handle', width: 210, fixed: 'right'}
   ],

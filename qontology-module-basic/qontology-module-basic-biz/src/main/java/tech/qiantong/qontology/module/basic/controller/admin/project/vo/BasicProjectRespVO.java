@@ -47,6 +47,9 @@ public class BasicProjectRespVO implements Serializable {
     @Schema(description = "项目名称", example = "")
     private String name;
 
+    @Schema(description = "项目图标路径")
+    private String icon;
+
     @Excel(name = "项目领域")
     @Schema(description = "项目领域", example = "")
     private String domain;

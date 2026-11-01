@@ -163,6 +163,25 @@ public class BasicDatasourceServiceImpl extends ServiceImpl<BasicDatasourceMappe
 
     }
 
+    /** 使用未保存配置建立临时连接，并在成功、失败或异常时释放连接资源。 */
+    @Override
+    public AjaxResult clientsTestStatus(BasicDatasourceSaveReqVO request) {
+        DbQuery dbQuery = null;
+        try {
+            DbQueryProperty property = new DbQueryProperty(request.getDatasourceType(), request.getIp(),
+                    request.getPort(), request.getDatasourceConfig());
+            dbQuery = dataSourceFactory.createDbQuery(property);
+            return dbQuery.valid() ? AjaxResult.success("数据库连接成功") : AjaxResult.error("数据库连接失败");
+        } catch (Exception exception) {
+            // 不回传含连接配置或认证信息的驱动异常，由用户核对连接参数后重试。
+            return AjaxResult.error("数据库连接失败，请检查连接信息及网络是否可达");
+        } finally {
+            if (dbQuery != null) {
+                dbQuery.close();
+            }
+        }
+    }
+
     public DbQuery buildDbQuery(Long id) {
         BasicDatasourceDO daDatasourceBy = this.getDaDatasourceById(id);
         if (daDatasourceBy == null) {
