@@ -70,7 +70,7 @@ public class OmObjectTypeRelationApiServiceImpl implements IProjectRepeatable {
             relation.setStartTypeId(newStartTypeId);
             relation.setEndTypeId(newEndTypeId);
             relation.setCreatorId(currentUser.getUserId());
-            relation.setCreateBy(currentUser.getUsername());
+            relation.setCreateBy(currentUser.getUser().getNickName());
             relation.setCreateTime(now);
             targetList.add(relation);
             oldIds.add(item.getId());

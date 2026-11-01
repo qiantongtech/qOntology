@@ -25,8 +25,7 @@ public class OmTermApiServiceImpl implements IProjectRepeatable {
     /**
      * 复制
      *
-     * @param sourceVersionId 源版本ID
-     * @param targetVersionId 目标版本ID
+     * @param context 项目版本复制上下文
      * @return 是否复制成功
      */
     @Override

@@ -57,9 +57,6 @@ import java.util.stream.Collectors;
 public class BasicEnumTypeServiceImpl extends ServiceImpl<BasicEnumTypeMapper, BasicEnumTypeDO> implements IBasicEnumTypeService {
     @Resource
     private ConstraintReferenceGuard constraintReferenceGuard;
-
-    @Resource
-    private jakarta.validation.Validator validator;
     @Resource
     private BasicEnumDataMapper basicEnumDataMapper;
 

@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-import { changeModelEnable, getModelPage } from "@/api/ai/myModel/myModel";
+import { changeModelEnable, getModelPage } from "@/api/basic/llm/myModel/myModel.js";
 
 const loading = ref(true);
 const data = reactive({

@@ -100,7 +100,7 @@
 </template>
 
 <script setup name="ModelMarketDetail">
-import { listByPlatform, getByPlatform } from "@/api/ai/modelMarket/key.js";
+import { listByPlatform, getByPlatform } from "@/api/basic/llm/modelMarket/key.js";
 import { useRoute } from "vue-router";
 import ModelTable from "./modelTable.vue";
 

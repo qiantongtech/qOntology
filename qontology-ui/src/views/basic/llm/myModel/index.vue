@@ -164,13 +164,12 @@
 
 <script setup name="Key">
 import {
-  getKey,
   listByPlatform,
-  listKey,
   removeKey,
   submitBatch,
-} from "@/api/ai/modelMarket/key";
-import Card from "@/views/ai/modelMarket/card.vue";
+  myModelPage,
+} from "@/api/basic/llm/modelMarket/key.js";
+import Card from "@/views/basic/llm/modelMarket/card.vue";
 
 const { proxy } = getCurrentInstance();
 const { ai_apikey_status, ai_model_platform } = proxy.useDict(
@@ -249,7 +248,7 @@ const { queryParams, form, rules } = toRefs(data);
 /** 查询API密钥列表 */
 function getList() {
   loading.value = true;
-  listKey(queryParams.value).then((response) => {
+  myModelPage(queryParams.value).then((response) => {
     keyList.value = response.data.rows;
     total.value = response.data.total;
     loading.value = false;
@@ -404,7 +403,7 @@ function handleRemove() {
 }
 
 function routeTo(link, row) {
-  link = "/basic/llm/modelMarket/detail";
+  link = "/basic/llm/myModel/detail";
   if (link !== "" && link.indexOf("http") !== -1) {
     window.location.href = link;
     return;

@@ -19,8 +19,11 @@
 package tech.qiantong.qontology.module.basic.service.project.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import java.util.Objects;
+
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.transaction.annotation.Isolation;
 import tech.qiantong.qontology.common.exception.ServiceException;
 import tech.qiantong.qontology.core.domain.model.LoginUser;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -65,6 +69,14 @@ public class BasicProjectServiceImpl
     extends ServiceImpl<BasicProjectMapper, BasicProjectDO>
     implements IBasicProjectService {
 
+    /**
+     * 命名空间的 W3C URI 格式（RFC 3986 绝对 URI）：
+     * 必须以 http/https 开头，主机部分非空，且不含空白及 URI 非法字符
+     */
+    private static final Pattern NAMESPACE_URI_PATTERN = Pattern.compile(
+        "^https?://[^\\s<>\"{}|^\\\\/?#]+(?:/[^\\s<>\"{}|^\\\\]*)?(?:\\?[^\\s<>\"{}|^\\\\#]*)?(?:#[^\\s<>\"{}|^\\\\]*)?$",
+        Pattern.CASE_INSENSITIVE);
+
     @Resource
     private IBasicProjectVersionService projectVersionService;
 
@@ -90,6 +102,12 @@ public class BasicProjectServiceImpl
      */
     @Override
     public Long createBasicProject(BasicProjectSaveReqVO createReqVO, LoginUser currentUser) {
+        validateNamespace(createReqVO.getNamespace());
+        LambdaQueryWrapper<BasicProjectDO> queryWrapper = Wrappers.lambdaQuery(BasicProjectDO.class)
+                .eq(BasicProjectDO::getNamespace, createReqVO.getNamespace());
+        if (super.count(queryWrapper) > 0){
+            throw new ServiceException("命名空间不能重复");
+        }
         BasicProjectDO dictType = BeanUtils.toBean(createReqVO, BasicProjectDO.class);
         baseMapper.insert(dictType);
         // 创建完成后需要同时创建版本信息
@@ -109,7 +127,13 @@ public class BasicProjectServiceImpl
     @Override
     public int updateBasicProject(BasicProjectSaveReqVO updateReqVO) {
         // 相关校验
-
+        validateNamespace(updateReqVO.getNamespace());
+        LambdaQueryWrapper<BasicProjectDO> queryWrapper = Wrappers.lambdaQuery(BasicProjectDO.class)
+                .eq(BasicProjectDO::getNamespace, updateReqVO.getNamespace())
+                .ne(BasicProjectDO::getId, updateReqVO.getId());
+        if (super.count(queryWrapper) > 0){
+            throw new ServiceException("命名空间不能重复");
+        }
         // 更新项目管理
         BasicProjectDO updateObj = BeanUtils.toBean(updateReqVO, BasicProjectDO.class);
         return baseMapper.updateById(updateObj);
@@ -217,6 +241,20 @@ public class BasicProjectServiceImpl
         return turtle
             ? ontologyExportApi.exportTurtle(versionId, project.getNamespace(), project.getName(), version.getVersion())
             : ontologyExportApi.exportOwl(versionId, project.getNamespace(), project.getName(), version.getVersion());
+    }
+
+    /**
+     * 校验命名空间是否符合 W3C 的 URI 格式
+     *
+     * @param namespace 命名空间
+     */
+    private void validateNamespace(String namespace) {
+        if (namespace == null || namespace.trim().isEmpty()) {
+            throw new ServiceException("命名空间不能为空");
+        }
+        if (!NAMESPACE_URI_PATTERN.matcher(namespace).matches()) {
+            throw new ServiceException("命名空间需符合 W3C 的 URI 格式，例如：https://example.com/ontology#");
+        }
     }
 
     private BasicProjectDO requireExportProject(Long projectId) {
