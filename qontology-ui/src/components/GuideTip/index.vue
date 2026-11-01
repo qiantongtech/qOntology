@@ -202,6 +202,8 @@
 
                 .tip-icon {
                     font-size: 16px;
+                    width: 1em;
+                    height: 1em;
                     margin-right: 7px;
                 }
             }
@@ -262,6 +264,48 @@
 <style>
     .tip-content a {
         color: var(--el-color-primary);
+    }
+    .guide-tip .guide-tip-announcement-brand {
+        display: inline-block;
+        background: linear-gradient(90deg, #1677ff 0%, #7c3aed 45%, #1677ff 100%);
+        background-size: 200% auto;
+        color: transparent;
+        font-weight: 700;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: guide-tip-announcement-shine 3s linear infinite;
+    }
+    .guide-tip .guide-tip-announcement-dict-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 22px;
+        margin: 0 2px;
+        padding: 0 8px;
+        box-sizing: border-box;
+        border: 0;
+        border-radius: 2px;
+        background: rgba(19, 90, 251, 0.06);
+        color: #0f62ff;
+        font-size: 12px;
+        line-height: 22px;
+        vertical-align: 1px;
+        white-space: nowrap;
+    }
+    .guide-tip .guide-tip-announcement-keyword {
+        background: linear-gradient(transparent 68%, rgba(255, 193, 7, 0.38) 0);
+        color: #3f3f46;
+        font-weight: 600;
+    }
+    @keyframes guide-tip-announcement-shine {
+        to {
+            background-position: -200% center;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .guide-tip .guide-tip-announcement-brand {
+            animation: none;
+        }
     }
     .clickable {
         color: var(--el-color-primary);
