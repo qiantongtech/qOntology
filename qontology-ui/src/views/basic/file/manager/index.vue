@@ -17,419 +17,275 @@
 -->
 
 <template>
-  <div class="app-container" ref="app-container">
-    <GuideTip tip-id="basic/file/manager.list" />
+  <div class="app-container model-file-page" ref="app-container">
+    <!-- 提示独占整行，分类树与列表统一从提示下方开始布局。 -->
+    <div class="file-guide-row">
+      <GuideTip tip-id="basic/file/manager.list"/>
+    </div>
     <el-container>
       <DeptTree
-        ref="deptTreeRef"
-        :deptOptions="categoryOptions"
-        v-model:leftWidth="leftWidth"
-        :placeholder="'请输入分类名称'"
-        @node-click="handleNodeClick"
+          ref="deptTreeRef"
+          :dept-options="categoryOptions"
+          :default-expand-level="2"
+          v-model:leftWidth="leftWidth"
+          placeholder="请输入分类名称"
+          @node-click="handleNodeClick"
       />
       <el-main>
+        <!-- 公共布局统一管理搜索、刷新、列显隐及分页，左侧分类树继续负责分类筛选。 -->
         <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
           <template #search>
-            <qt-search-bar
-              :items="searchItems"
-              :params="tableStore.params"
-              :table-ref="tableRef"
-              @reset="handleReset"
+            <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef"
+                           @query="applyFilters" @reset="resetFilters"
             />
           </template>
-
           <template #actions-data>
-            <el-button
-              type="primary"
-              plain
-              @click="handleAdd"
-              v-hasPermi="['basic:file:manager:add']"
-              @mousedown="(e) => e.preventDefault()"
+            <el-button v-hasPermi="['basic:file:manager:add']" type="primary" plain @click="handleAdd"
+                       @mousedown="e => e.preventDefault()"
             >
               <i class="iconfont-mini icon-xinzeng mr5"></i>新增
             </el-button>
           </template>
-
           <qt-table v-bind="tableStore" ref="tableRef">
-            <template #fileName="{ row }">
-              <el-link
-                type="primary"
-                :underline="false"
-                class="text-ellipsis"
-                @click="handlePreview(row)"
-                >{{ row.fileName || "-" }}</el-link
-              >
+            <template #text="{row, column_data}">{{ row[column_data.prop] }}</template>
+            <!-- 所属类目样式：分类左对齐显示为标签，空值保持占位，长名称省略。 -->
+            <template #categoryName="{row}">
+              <el-tag v-if="row.categoryName !== '—'" class="file-category-tag" type="primary"
+                      :title="row.categoryName"
+              >{{ row.categoryName }}
+              </el-tag>
+              <span v-else>—</span>
             </template>
-            <template #fileSize="{ row }">{{ formatSize(row.fileSize) }}</template>
-            <template #action="{ row }">
-              <el-button
-                link
-                type="primary"
-                icon="View"
-                @click="handlePreview(row)"
-                >预览</el-button
-              >
-              <el-button
-                link
-                type="primary"
-                icon="Download"
-                @click="handleDownload(row)"
-                >下载</el-button
-              >
-              <el-popover
-                placement="bottom"
-                :width="120"
-                trigger="click"
-                popper-class="handle-popover"
+            <template #fileSize="{row}">{{ row.fileSize === '—' ? '—' : formatSize(row.fileSize) }}</template>
+            <template #createTime="{row}">
+              {{ row.createTime === '—' ? '—' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '—') }}
+            </template>
+            <template #handle="{row}">
+              <el-button v-hasPermi="['basic:file:manager:query']" link type="primary" icon="view"
+                         @click="handleDetail(row)"
+              >详情
+              </el-button>
+              <el-button v-hasPermi="['basic:file:manager:edit']" link type="primary" icon="Edit"
+                         @click="handleUpdate(row)"
+              >修改
+              </el-button>
+              <el-popover placement="bottom" :width="120" trigger="click"
+                          popper-class="table-action-popover handle-popover"
               >
                 <template #reference>
-                  <el-button link type="primary" icon="ArrowDown"
-                    >更多</el-button
-                  >
+                  <el-button link type="primary" icon="ArrowDown">更多</el-button>
                 </template>
-                <el-button
-                  link
-                  type="primary"
-                  icon="Edit"
-                  @click="handleUpdate(row)"
-                  v-hasPermi="['basic:file:manager:edit']"
-                  >修改</el-button
-                >
-                <el-button
-                  link
-                  type="danger"
-                  icon="Delete"
-                  @click="handleDelete(row)"
-                  v-hasPermi="['basic:file:manager:remove']"
-                  >删除</el-button
-                >
+                <div class="file-action-list">
+                  <el-button link type="primary" icon="View" @click="handlePreview(row)">预览</el-button>
+                  <el-button link type="primary" icon="Download" @click="handleDownload(row)">下载</el-button>
+                  <el-button v-hasPermi="['basic:file:manager:remove']" link type="danger" icon="Delete"
+                             @click="handleDelete(row)"
+                  >删除
+                  </el-button>
+                </div>
               </el-popover>
             </template>
           </qt-table>
         </qt-wrap>
       </el-main>
     </el-container>
-
-    <!-- 添加或修改模型数据文件对话框 -->
-    <el-dialog
-      :title="title"
-      v-model="open"
-      width="800px"
-      append-to="body"
-      draggable
-    >
-      <template #header>
-        <span role="heading" aria-level="2" class="el-dialog__title">
-          {{ title }}
-        </span>
-      </template>
-      <el-form
-        ref="fileRef"
-        :model="form"
-        :rules="rules"
-        label-width="80px"
-        class="column-form"
-      >
-        <el-form-item label="数据分类" prop="categoryId" class="row-full">
-          <el-tree-select
-            v-model="form.categoryId"
-            :data="categoryOptions"
-            :props="{ value: 'id', label: 'name', children: 'children' }"
-            value-key="id"
-            placeholder="请选择数据分类"
-            check-strictly
-            clearable
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="上传文件" prop="filePath" class="row-full">
-          <FileUpload2
-            v-model="form.filePath"
-            :fileName="form.fileName"
-            limit="1"
-            :fileType="[
-              'txt',
-              'pdf',
-              'html',
-              'xlsx',
-              'xls',
-              'docx',
-              'csv',
-              'md',
-              'mdx',
-              'htm',
-              'markdown',
-            ]"
-            @update:fileSize="(val) => (form.fileSize = val)"
-            @update:fileExt="(val) => (form.fileSuffix = val)"
-            @update:fileName="updateFormFileName"
-          />
-        </el-form-item>
-        <el-form-item label="文件名称" prop="fileName" class="row-full">
-          <el-input v-model="form.fileName" placeholder="请输入文件名称" />
-        </el-form-item>
-        <el-form-item label="文件描述" prop="description" class="row-full">
-          <el-input
-            class="char-count"
-            v-model="form.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入文件描述"
-            maxlength="1000"
-            show-word-limit
-          />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark" class="row-full">
-          <el-input
-            class="char-count"
-            v-model="form.remark"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入备注"
-            maxlength="500"
-            show-word-limit
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="cancel">取 消</el-button>
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <!-- 图片预览 -->
-    <el-image-viewer
-      v-if="imageViewerVisible"
-      :url-list="imageViewerList"
-      @close="closeImageViewer"
-    />
+    <FileFormDialog ref="fileDialogRef" :category-options="categoryOptions" @success="refreshData"/>
+    <el-image-viewer v-if="imageViewerVisible" :url-list="imageViewerList" @close="closeImageViewer"/>
   </div>
 </template>
 
 <script setup name="BasicFile">
-import { getCurrentInstance, reactive, ref, toRefs, onMounted } from "vue";
-import {
-  addModelDataFile,
-  delModelDataFile,
-  getModelDataFile,
-  listModelDataFile,
-  updateModelDataFile,
-  getFileTypes,
-} from "@/api/basic/file/basicFile.js";
-import DeptTree from "@/components/DeptTree";
-import FileUpload2 from "@/components/FileUpload2";
-import { formatSize } from "@/utils/index";
-import { filePreview } from "@/utils/kkFileView";
+import {getCurrentInstance, reactive, ref, onMounted} from 'vue';
+import {useRouter} from 'vue-router';
+import csvIcon from '@/assets/images/file-types/CSV.svg';
+import docxIcon from '@/assets/images/file-types/DOCX.svg';
+import htmlIcon from '@/assets/images/file-types/HTML.svg';
+import mdIcon from '@/assets/images/file-types/MD.svg';
+import pdfIcon from '@/assets/images/file-types/PDF.svg';
+import ttlIcon from '@/assets/images/file-types/TTL.svg';
+import txtIcon from '@/assets/images/file-types/TXT.svg';
+import xlsxIcon from '@/assets/images/file-types/XLSX.svg';
+import {delModelDataFile, listModelDataFile, getFileTypes} from '@/api/basic/file/basicFile.js';
+import DeptTree from '@/components/DeptTree';
+import FileFormDialog from './components/fileFormDialog.vue';
+import {formatSize} from '@/utils/index';
+import {filePreview} from '@/utils/kkFileView';
 
-const { proxy } = getCurrentInstance();
-const deptTreeRef = ref(null);
-const tableRef = ref(null);
-const open = ref(false);
-const title = ref("");
-const categoryOptions = ref([]);
-const leftWidth = ref(280);
+// 文件图标统一使用补充的 SVG；文件后缀作为筛选值，与接口 fileSuffix 参数一致。
 
-// 图片预览相关
-const imageViewerVisible = ref(false);
-const imageViewerList = ref([]);
+const fileTypeOptions = ['TXT', 'PDF', 'CSV', 'DOCX', 'XLSX', 'HTML', 'MD', 'TTL', 'XLS', 'HTM', 'MDX', 'MARKDOWN'].map(type => ({
+  label: type,
+  value: type.toLowerCase()
+}));
+const fileIcons = {
+  csv: csvIcon,
+  docx: docxIcon,
+  doc: docxIcon,
+  html: htmlIcon,
+  htm: htmlIcon,
+  md: mdIcon,
+  mdx: mdIcon,
+  markdown: mdIcon,
+  pdf: pdfIcon,
+  ttl: ttlIcon,
+  txt: txtIcon,
+  xlsx: xlsxIcon,
+  xls: xlsxIcon
+};
 
-const searchItems = [
-  { label: "文件名称", prop: "fileName", component: { is: "input" } },
-];
-
-// el-table 透出的排序方向是 ascending/descending，接口约定为 asc/desc
-function formatParams(params) {
-  const order = { ascending: "asc", descending: "desc" }[params.isAsc];
-  return order ? { ...params, isAsc: order } : params;
+/** 优先使用文件后缀；缺少后缀时从名称推导，未知格式使用通用文本图标。 */
+function getFileIcon(file) {
+  const suffix = (file.fileSuffix || file.fileName?.split('.').pop() || '').replace(/^\./, '').toLowerCase();
+  return fileIcons[suffix] || txtIcon;
 }
 
+const {proxy} = getCurrentInstance();
+const router = useRouter();
+const tableRef = ref();
+const deptTreeRef = ref();
+const fileDialogRef = ref();
+const categoryOptions = ref([]);
+const leftWidth = ref(280);
+const selectedCategoryIds = ref([]);
+const imageViewerVisible = ref(false);
+const imageViewerList = ref([]);
+let appliedFileName = '';
+let appliedFileSuffix = '';
+const defaultSort = {prop: 'createTime', order: 'descending'};
+
+// 保留既有业务列及文件操作，由公共表格统一提供分页和服务端排序。
 const tableStore = reactive({
-  config: {
-    sort: true,
-    table: {
-      stripe: true,
-      rowKey: "id",
-      defaultSort: { prop: "createTime", order: "descending" },
-    },
-  },
-  params: {
-    fileName: undefined,
-    categoryId: undefined,
-    fileType: undefined,
-    ids: undefined,
-  },
-  func: listModelDataFile,
-  events: { formatParams },
+  config: {sort: true, table: {rowKey: 'id', stripe: true, height: '60vh', defaultSort}},
   columns: [
+    {label: '编号', prop: 'id', slot: 'text', width: 80, sortable: true},
+    // 与任务信息列使用同一 info 配置：图标及名称在首行，描述在下方，名称进入详情。
     {
-      label: "编号",
-      prop: "id",
-      width: 80,
-      sortable: "custom",
-      sortOrders: ["descending", "ascending"],
+      label: '文件名称', prop: 'fileName', minWidth: 390, align: 'left',
+      info: {icon: getFileIcon, title: 'fileName', desc: 'description', click: handleDetail}
     },
     {
-      label: "文件名称",
-      slot: "fileName",
-      minWidth: 200,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "文件描述",
-      prop: "description",
-      minWidth: 220,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "分类",
-      prop: "categoryName",
+      label: '文件分类',
+      prop: 'categoryName',
+      slot: 'categoryName',
       width: 120,
-      showOverflowTooltip: { effect: "light" },
+      align: 'left',
+      showOverflowTooltip: {effect: 'light'}
     },
-    { label: "文件大小", slot: "fileSize", width: 120 },
-    { label: "创建人", prop: "createBy", width: 100 },
-    {
-      label: "创建时间",
-      prop: "createTime",
-      date: true,
-      width: 160,
-      sortable: "custom",
-      sortOrders: ["descending", "ascending"],
-    },
-    { label: "操作", slot: "action", width: 240, fixed: "right" },
+    {label: '文件大小', prop: 'fileSize', slot: 'fileSize', width: 110},
+    {label: '创建人', prop: 'createBy', slot: 'text', width: 100},
+    {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
+    {label: '操作', slot: 'handle', width: 210, fixed: 'right'}
   ],
+  params: {fileName: '', fileSuffix: ''},
+  func: listModelDataFile,
+  events: {formatParams: formatListParams, formatData: formatListData}
+});
+const searchStore = reactive({
+  items: [
+    {label: '文件名称', prop: 'fileName', component: {is: 'input'}},
+    // 按实际后缀筛选，避免 fileType 的 OFFICE/OTHER 大类无法区分 PDF、CSV 等格式。
+    {label: '文件类型', prop: 'fileSuffix', component: {is: 'select', options: fileTypeOptions}}
+  ]
 });
 
-const data = reactive({
-  form: {},
-  rules: {
-    categoryId: [
-      { required: true, message: "数据分类不能为空", trigger: "change" },
-    ],
-    fileName: [
-      { required: true, message: "文件名称不能为空", trigger: "change" },
-    ],
-    filePath: [
-      { required: true, message: "文件路径不能为空", trigger: "blur" },
-    ],
-  },
-});
+/** 提交名称筛选，排序、翻页和刷新沿用已经查询的名称。 */
+function applyFilters() {
+  appliedFileName = (tableStore.params.fileName || '').trim();
+  appliedFileSuffix = tableStore.params.fileSuffix || '';
+}
 
-const { form, rules } = toRefs(data);
+/** 同时清空分类筛选和名称条件，查询刷新由公共搜索栏统一触发。 */
+function resetFilters() {
+  appliedFileName = '';
+  appliedFileSuffix = '';
+  selectedCategoryIds.value = [];
+  deptTreeRef.value?.resetTree();
+}
 
-/** 查询分类树结构 */
-function getCategoryTree() {
-  getFileTypes().then((response) => {
-    categoryOptions.value = proxy.handleTree(
-      response.data || [],
-      "id",
-      "parentId"
-    );
+/** 合并分类及名称条件，并将公共表格排序转换为原接口使用的 asc/desc。 */
+function formatListParams(params) {
+  return {
+    ...params,
+    fileName: appliedFileName,
+    fileSuffix: appliedFileSuffix || undefined,
+    categoryIds: selectedCategoryIds.value.length ? selectedCategoryIds.value : undefined,
+    orderByColumn: params.isAsc ? params.orderByColumn : defaultSort.prop,
+    isAsc: params.isAsc === 'ascending' || params.isAsc === 'asc' ? 'asc' : 'desc'
+  };
+}
+
+/** 规范展示字段的空值，保留零字节文件的真实大小及下载所需的原始路径。 */
+function formatListData(rows) {
+  return rows.map(row => {
+    const record = {...row};
+    ['id', 'fileName', 'description', 'categoryName', 'fileSize', 'createBy', 'createTime'].forEach(field => {
+      if (record[field] == null || record[field] === '') record[field] = '—';
+    });
+    return record;
   });
 }
 
-/** 节点单击事件 */
-function handleNodeClick(data) {
-  let categoryIds = [];
-  const collectIds = (node) => {
-    categoryIds.push(node.id);
-    if (node.children) node.children.forEach((child) => collectIds(child));
+/** 刷新文件列表，保留当前筛选条件和分页状态。 */
+function getList() {
+  tableRef.value?.getList();
+}
+
+/** 加载完整分类树，用于左侧筛选及独立表单中的分类选择。 */
+async function getCategoryTree() {
+  const response = await getFileTypes();
+  categoryOptions.value = proxy.handleTree(response.data || [], 'id', 'parentId');
+}
+
+/** 文件增删改后同时刷新列表和分类统计，避免树上的文件数滞后。 */
+function refreshData() {
+  getList();
+  getCategoryTree();
+}
+
+/** 选中分类时递归收集自身和子分类编号，切换分类后从第一页查询。 */
+function handleNodeClick(node) {
+  const categoryIds = [];
+  const collectIds = item => {
+    if (item.id != null) categoryIds.push(item.id);
+    item.children?.forEach(collectIds);
   };
-  collectIds(data);
-  tableStore.params.ids = categoryIds;
+  collectIds(node);
+  selectedCategoryIds.value = categoryIds;
   tableRef.value?.resetQuery();
 }
 
-/** 重置按钮操作 */
-function handleReset() {
-  deptTreeRef.value?.resetTree();
-  tableStore.params.ids = undefined;
-}
-
-/** 重置表单 */
-function reset() {
-  form.value = {
-    id: undefined,
-    categoryId: undefined,
-    fileName: "",
-    fileSuffix: "",
-    fileType: "OTHER",
-    fileSize: 0,
-    filePath: "",
-    storageType: "LOCAL",
-    description: "",
-    remark: "",
-  };
-  proxy.resetForm("fileRef");
-}
-
-/** 取消按钮 */
-function cancel() {
-  open.value = false;
-  reset();
-}
-
-/** 新增按钮操作 */
+/** 打开独立的新增文件弹窗。 */
 function handleAdd() {
-  reset();
-  title.value = "新增文件";
-  open.value = true;
+  fileDialogRef.value.openDialog();
 }
 
-/** 修改按钮操作 */
-async function handleUpdate(row) {
-  reset();
-  const response = await getModelDataFile(row.id);
-  form.value = response.data;
-  // 文件名称统一为字符串，供 el-input 正常回显
-  form.value.fileName = form.value.fileName || "";
-  title.value = "修改文件";
-  open.value = true;
+/** 打开独立的修改弹窗，由组件请求最新文件信息。 */
+function handleUpdate(row) {
+  fileDialogRef.value.openDialog({id: row.id});
 }
 
-/** 更新表单文件名 */
-function updateFormFileName(name) {
-  form.value.fileName = name;
+/** 详情使用独立页面承载元数据，路由参数支持从其他引用入口直接访问。 */
+function handleDetail(row) {
+  router.push({name: 'BasicFileDetail', params: {fileId: row.id}});
 }
 
-/** 提交表单 */
-function submitForm() {
-  proxy.$refs["fileRef"].validate((valid) => {
-    if (!valid) return;
-    const data = { ...form.value };
-    if (Array.isArray(data.fileName)) {
-      data.fileName = data.fileName.join(",");
-    }
-    const action = data.id ? updateModelDataFile : addModelDataFile;
-    action(data).then(() => {
-      proxy.$modal.msgSuccess(data.id ? "修改成功" : "新增成功");
-      open.value = false;
-      tableRef.value?.getList();
-    });
-  });
-}
-
-/** 删除按钮操作 */
+/** 删除确认后刷新文件列表及分类统计。 */
 function handleDelete(row) {
-  proxy.$modal
-    .confirm(`是否确认删除文件？`)
-    .then(() => delModelDataFile(row.id))
-    .then(() => {
-      proxy.$modal.msgSuccess("删除成功");
-      tableRef.value?.getList();
-    })
-    .catch(() => {});
+  proxy.$modal.confirm('是否确认删除文件？')
+      .then(() => delModelDataFile(row.id))
+      .then(() => {
+        proxy.$modal.msgSuccess('删除成功');
+        refreshData();
+      })
+      .catch(() => {
+      });
 }
 
 /** 判断是否为图片 */
 function isImage(suffix) {
   if (!suffix) return false;
   return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(
-    suffix.toLowerCase()
+      suffix.toLowerCase()
   );
 }
 
@@ -442,15 +298,15 @@ function handlePreview(row) {
 
   if (isImage(row.fileSuffix)) {
     const url = row.filePath.startsWith("http")
-      ? row.filePath
-      : import.meta.env.VITE_APP_BASE_API + row.filePath;
+        ? row.filePath
+        : import.meta.env.VITE_APP_BASE_API + row.filePath;
     imageViewerList.value = [url];
     imageViewerVisible.value = true;
   } else {
     // 使用公开预览接口，拼接文件名以帮助 kkFileView 识别类型
     const fileName = row.filePath.substring(row.filePath.lastIndexOf("/") + 1);
     const previewUrl =
-      "/model/modelDataFile/public/preview/" + row.id + "/" + fileName;
+        "/model/modelDataFile/public/preview/" + row.id + "/" + fileName;
     filePreview(previewUrl);
   }
 }
@@ -471,33 +327,112 @@ function handleDownload(row) {
   const url = import.meta.env.VITE_APP_BASE_API + row.filePath;
 
   fetch(url)
-    .then((res) => res.blob())
-    .then((blob) => {
-      const link = document.createElement("a");
-      link.href = window.URL.createObjectURL(blob);
-      link.download = name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(link.href);
-    })
-    .catch(() => {
-      proxy.$modal.msgError("下载失败");
-    });
+      .then((res) => res.blob())
+      .then((blob) => {
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(link.href);
+      })
+      .catch(() => {
+        proxy.$modal.msgError("下载失败");
+      });
 }
 
-onMounted(() => {
-  getCategoryTree();
-});
+// 文件列表由公共表格首次挂载时自动加载，此处只初始化分类树。
+onMounted(getCategoryTree);
 </script>
 
 <style scoped lang="scss">
-.el-main {
-  overflow: hidden;
-  padding: 0;
+.model-file-page {
+  display: flex;
+  flex-direction: column;
+
+  > .file-guide-row {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  > .el-container {
+    width: 100%;
+    min-width: 0;
+  }
+
+  // 图标与分类节点间距仅作用于文件管理页。
+  :deep(.dept-tree .el-tree-node__content) {
+    height: 26px !important;
+  }
+
+  :deep(.dept-tree .custom-tree-node) {
+    padding-left: 0;
+  }
+
+  :deep(.dept-tree .treelabel) {
+    margin-left: 0;
+  }
+
+  :deep(.dept-tree .iconimg),
+  :deep(.dept-tree .zjiconimg) {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    flex-shrink: 0;
+    margin: 0 6px 0 0;
+  }
 }
 
-.char-count :deep(.el-input__count)::after {
-  content: "个字符";
+// 复用任务信息列的布局尺寸；样式限定于本页，避免影响其他公共表格。
+:deep(.qt-table-info) {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+
+  .qt-table-info__main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    min-width: 0;
+  }
+
+  .info-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  .info-title {
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 500;
+    flex: 0 1 auto;
+    min-width: 0;
+    justify-content: flex-start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .info-desc {
+    color: #999;
+    font-size: 12px;
+    line-height: 18px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal !important;
+  }
 }
+
+.el-main {
+  min-width: 0;
+  padding: 2px 0;
+}
+
 </style>

@@ -213,6 +213,11 @@
             type: Boolean,
             default: false
         },
+        // 按页面配置默认展开层数，默认仍沿用原有的一层展开行为。
+        defaultExpandLevel: {
+            type: Number,
+            default: 1
+        },
         editable: {
             type: Boolean,
             default: false
@@ -432,11 +437,12 @@
                     val.length === 1 &&
                     val[0] &&
                     String(val[0].id) === '0' &&
+                    props.defaultExpandLevel === 1 &&
                     Array.isArray(val[0].children)
                 ) {
                     expandedKeys.value = [val[0].id];
                 } else {
-                    expandedKeys.value = getIdsByLevel(val, 1);
+                    expandedKeys.value = getIdsByLevel(val, props.defaultExpandLevel);
                 }
             }
         },

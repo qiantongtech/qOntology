@@ -52,6 +52,8 @@ public interface BasicDataTypeMapper extends BaseMapperX<BasicDataTypeDO> {
         return selectPage(reqVO, new LambdaQueryWrapperX<BasicDataTypeDO>()
                 .likeIfPresent(BasicDataTypeDO::getName, reqVO.getName())
                 .eqIfPresent(BasicDataTypeDO::getDataType, reqVO.getDataType())
+                // 枚举详情按关联键精确查询引用方；未传入时保持原业务数据类型列表的查询范围。
+                .eqIfPresent(BasicDataTypeDO::getEnumType, reqVO.getEnumType())
                 .eqIfPresent(BasicDataTypeDO::getDescription, reqVO.getDescription())
                 .eqIfPresent(BasicDataTypeDO::getUnit, reqVO.getUnit())
                 .eqIfPresent(BasicDataTypeDO::getDecimalPlaces, reqVO.getDecimalPlaces())

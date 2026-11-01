@@ -68,6 +68,24 @@ public class BasicProjectDO extends BaseEntity {
     private ProjectStatusEnum status;
 
     /**
+     * 责任人用户编号；允许显式更新为空，以支持清除责任人。
+     */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Long responsibleUserId;
+
+    /**
+     * 保存项目时从用户资料读取的责任人姓名快照。
+     */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String responsiblePersonName;
+
+    /**
+     * 保存项目时从用户资料读取的联系电话快照。
+     */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String responsiblePersonPhone;
+
+    /**
      * 当前版本
      */
     private String currentVersion;

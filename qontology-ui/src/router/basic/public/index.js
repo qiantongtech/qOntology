@@ -26,6 +26,22 @@ export default [
         component: Layout,
         hidden: true,
         children: [
+            // 枚举详情沿用列表菜单高亮；禁用缓存，重新进入时加载最新概要与关联数据。
+            {
+                path: 'basicEnum/detail/:enumId(\\d+)',
+                component: () => import('@/views/basic/enumeration/detail/index.vue'),
+                permissions: ['basic:enumeration:type:query'],
+                name: 'BasicEnumDetail',
+                meta: { title: '枚举详情', activeMenu: '/basic/basicEnum', noCache: true }
+            },
+            // 一级文件管理下的隐藏详情路由，与数据库菜单保持相同父路径。
+            {
+                path: '/basic/fileManager/detail/:fileId(\\d+)',
+                component: () => import('@/views/basic/file/manager/detail/index.vue'),
+                permissions: ['basic:file:manager:query'],
+                name: 'BasicFileDetail',
+                meta: {title: '文件详情', activeMenu: '/basic/file/fileManager', noCache: true}
+            },
             {
                 path: 'basicEnum/enum/data/:enumId(\\d+)',
                 component: () => import('@/views/basic/enumeration/data/index.vue'),
