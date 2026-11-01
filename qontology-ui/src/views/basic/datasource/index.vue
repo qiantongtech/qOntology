@@ -92,36 +92,26 @@
               v-hasPermi="['basic:datasource:datasource:edit']"
               link
               type="primary"
+              icon="View"
+              @click="handleDetail(row)"
+          >详情
+          </el-button>
+          <el-button
+              v-hasPermi="['basic:datasource:datasource:edit']"
+              link
+              type="primary"
               icon="Edit"
               @click="handleUpdate(row)"
           >修改
           </el-button>
-          <el-popover
-              placement="bottom"
-              :width="120"
-              trigger="click"
-              popper-class="handle-popover"
-          >
-            <template #reference>
-              <el-button link type="primary" icon="ArrowDown">更多</el-button>
-            </template>
-            <el-button
-                link
-                type="primary"
-                icon="View"
-                @click="handleDetail(row)"
-                v-hasPermi="['basic:datasource:datasource:edit']"
-            >详情
-            </el-button>
-            <el-button
-                link
-                type="danger"
-                icon="Delete"
-                @click="handleDelete(row)"
-                v-hasPermi="['basic:datasource:datasource:remove']"
-            >删除
-            </el-button>
-          </el-popover>
+          <el-button
+              v-hasPermi="['basic:datasource:datasource:remove']"
+              link
+              type="danger"
+              icon="Delete"
+              @click="handleDelete(row)"
+          >删除
+          </el-button>
         </template>
       </qt-table>
     </qt-wrap>
@@ -497,7 +487,7 @@ const tableStore = reactive({
       sortable: 'custom',
       sortOrders: ['descending', 'ascending']
     },
-    {label: '操作', slot: 'handle', width: 240, fixed: 'right'}
+    {label: '操作', slot: 'handle', width: 280, fixed: 'right'}
   ]
 });
 

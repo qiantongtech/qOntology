@@ -27,7 +27,7 @@
                     "
                     :key="item.value"
                     :index="index"
-                    :class="item.elTagClass"
+                    :class="['dict-tag-span', item.elTagClass]"
                     >
                     <img
                         v-if="item.icon"
@@ -125,12 +125,23 @@
         margin-left: 10px;
     }
 
+    .dict-tag-span {
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+    }
+
+    .el-tag :deep(.el-tag__content) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .dict-tag-icon {
         width: 1.1em;
         height: 1.1em;
         margin-right: 4px;
         object-fit: contain;
         flex-shrink: 0;
-        vertical-align: middle;
     }
 </style>
