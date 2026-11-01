@@ -122,15 +122,6 @@
           </el-radio>
         </el-radio-group>
       </qt-form-item>
-      <qt-form-item label="责任人" prop="responsibleUserId" class="row-full">
-        <el-select v-model="localForm.responsibleUserId" placeholder="请选择责任人" clearable filterable :loading="usersLoading">
-          <el-option v-for="user in userOptions" :key="user.value" :label="user.label" :value="user.value"/>
-        </el-select>
-      </qt-form-item>
-      <qt-form-item label="联系电话" class="row-full">
-        <!-- 电话随所选系统用户变化，只读展示，不允许在项目表单中修改用户资料。 -->
-        <el-input :model-value="responsiblePhone" disabled/>
-      </qt-form-item>
       <qt-form-item label="包含范围" prop="includeRange" class="row-full">
         <el-input v-model="localForm.includeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入包含范围"/>
       </qt-form-item>
