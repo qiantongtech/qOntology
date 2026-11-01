@@ -69,32 +69,47 @@
           <span v-else>{{ row.enumName }}</span>
         </template>
         <!-- 枚举类型进入详情的枚举数据页签，名称与操作列继续沿用默认详情入口。 -->
-        <template #enumType="{row}">
+        <template #enumType="{ row }">
           <router-link
-              v-if="auth.hasPermi('basic:enumeration:type:query') && auth.hasPermi('basic:enumeration:data:list')"
-              :to="{name: 'BasicEnumDetail', params: {enumId: row.enumId}, query: {tab: 'data'}}"
-              class="link-type"
-          >{{ row.enumType }}
+            v-if="
+              auth.hasPermi('basic:enumeration:type:query') &&
+              auth.hasPermi('basic:enumeration:data:list')
+            "
+            :to="{
+              name: 'BasicEnumDetail',
+              params: { enumId: row.enumId },
+              query: { tab: 'data' },
+            }"
+            class="link-type"
+            >{{ row.enumType }}
           </router-link>
           <span v-else>{{ row.enumType }}</span>
         </template>
         <template #status="{ row }">
           <dict-tag
-            v-if="row.status !== '—'"
+            v-if="row.status !== '-'"
             :options="sys_normal_disable"
             :value="row.status"
           />
           <span v-else>—</span>
         </template>
         <!-- 沿用项目责任人的双行样式，联系电话未维护时只显示创建人姓名。 -->
-        <template #creator="{row}">
+        <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
-            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
           </div>
         </template>
-        <template #createTime="{row}">
-          {{ row.createTime === '—' ? '—' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '—') }}
+        <template #createTime="{ row }">
+          {{
+            row.createTime === "-"
+              ? "-"
+              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+          }}
         </template>
         <template #handle="{ row }">
           <el-button
@@ -171,13 +186,13 @@
         </el-form-item>
         <el-form-item label="备注" prop="remark" class="row-full">
           <el-input
-              v-model="form.remark"
-              class="character-count"
-              type="textarea"
-              :rows="3"
-              maxlength="256个字符"
-              show-word-limit
-              placeholder="请输入备注"
+            v-model="form.remark"
+            class="character-count"
+            type="textarea"
+            :rows="3"
+            maxlength="256个字符"
+            show-word-limit
+            placeholder="请输入备注"
           />
         </el-form-item>
       </el-form>
@@ -194,11 +209,24 @@
 </template>
 
 <script setup name="OmEnumType">
-import {onBeforeUnmount, ref, reactive, toRefs, nextTick, getCurrentInstance} from 'vue';
-import {listType, getType, addType, updateType, delType} from '@/api/basic/enumeration/type.js';
-import auth from '@/plugins/auth.js';
-import {useCreatorPhones} from '@/utils/useCreatorPhones';
-import {useRouter} from 'vue-router';
+import {
+  onBeforeUnmount,
+  ref,
+  reactive,
+  toRefs,
+  nextTick,
+  getCurrentInstance,
+} from "vue";
+import {
+  listType,
+  getType,
+  addType,
+  updateType,
+  delType,
+} from "@/api/basic/enumeration/type.js";
+import auth from "@/plugins/auth.js";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+import { useRouter } from "vue-router";
 
 const { proxy } = getCurrentInstance();
 const router = useRouter();
@@ -206,7 +234,7 @@ const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 const pageRef = ref();
 const tableRef = ref();
 const typeRef = ref();
-const {creatorPhones} = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 
 const open = ref(false);
 const saving = ref(false);
@@ -264,10 +292,24 @@ const tableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     // 引用数由后端按业务数据类型关联键聚合返回，不随当前页的枚举行数变化。
-    {label: '引用数', prop: 'referenceCount', slot: 'text', width: 100},
-    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
-    {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
-    {label: '操作', slot: 'handle', width: 200, fixed: 'right'}
+    { label: "引用数", prop: "referenceCount", slot: "text", width: 100 },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 130,
+      align: "left",
+      headerAlign: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      slot: "createTime",
+      width: 160,
+      sortable: true,
+    },
+    { label: "操作", slot: "handle", width: 200, fixed: "right" },
   ],
   func: listType,
   params: { enumName: "", enumType: "", status: "" },

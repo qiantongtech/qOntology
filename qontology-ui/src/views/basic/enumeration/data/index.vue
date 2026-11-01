@@ -77,7 +77,7 @@
         }}</template>
         <template #status="{ row }">
           <dict-tag
-            v-if="row.status !== '—'"
+            v-if="row.status !== '-'"
             :options="sys_normal_disable"
             :value="row.status"
           />

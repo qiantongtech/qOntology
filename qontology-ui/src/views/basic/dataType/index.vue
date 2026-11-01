@@ -17,30 +17,43 @@
 -->
 
 <template>
-  <div :class="props.embedded ? 'data-type-embedded' : 'app-container'" ref="app-container">
-    <GuideTip v-if="!props.embedded" tip-id="basic/dataType.list"/>
+  <div
+    :class="props.embedded ? 'data-type-embedded' : 'app-container'"
+    ref="app-container"
+  >
+    <GuideTip v-if="!props.embedded" tip-id="basic/dataType.list" />
     <!-- 独立页面使用完整布局，内嵌模式由详情页提供外层卡片。 -->
-    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef"
-             :config="{fullContent: !props.embedded, searchShadow: !props.embedded}"
+    <qt-wrap
+      :columns="tableStore.columns"
+      :table-ref="tableRef"
+      :config="{ fullContent: !props.embedded, searchShadow: !props.embedded }"
     >
       <template #search>
         <qt-search-bar
-            :items="searchStore.items"
-            :params="tableStore.params"
-            :table-ref="tableRef"
-            :config="{collapsedCount: 4}"
-            @query="applyFilters"
-            @reset="applyFilters"
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
+          @query="applyFilters"
+          @reset="applyFilters"
         />
       </template>
       <template v-if="!props.readOnly" #actions-data>
-        <el-button v-hasPermi="['basic:dataType:datatype:add']" type="primary" plain
-                   :disabled="props.enumType !== undefined && !props.enumType" @click="handleAdd"
+        <el-button
+          v-hasPermi="['basic:dataType:datatype:add']"
+          type="primary"
+          plain
+          :disabled="props.enumType !== undefined && !props.enumType"
+          @click="handleAdd"
         >
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
-        <el-button v-hasPermi="['basic:dataType:datatype:remove']" type="danger" plain :disabled="multiple"
-                   @click="handleDelete()"
+        <el-button
+          v-hasPermi="['basic:dataType:datatype:remove']"
+          type="danger"
+          plain
+          :disabled="multiple"
+          @click="handleDelete()"
         >
           <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
         </el-button>
@@ -48,35 +61,59 @@
       <!-- 切换枚举时重建表格，重置分页并隔离前一个枚举尚未完成的列表请求。 -->
       <qt-table :key="props.enumType" v-bind="tableStore" ref="tableRef">
         <!-- 文本列配置使用 text 插槽，必须提供对应渲染，才能显示首次加载及修改刷新后的字段值。 -->
-        <template #text="{row, column_data}">
+        <template #text="{ row, column_data }">
           {{ row[column_data.prop] }}
         </template>
-        <template #dataType="{row}">
-          <dict-tag v-if="row.dataType !== '—'" :options="basic_data_type" :value="row.dataType"/>
+        <template #dataType="{ row }">
+          <dict-tag
+            v-if="row.dataType !== '-'"
+            :options="basic_data_type"
+            :value="row.dataType"
+          />
           <span v-else>—</span>
         </template>
         <!-- 与枚举创建人和项目责任人保持一致：姓名在上，联系电话以灰色小字在下。 -->
-        <template #creator="{row}">
+        <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
-            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
           </div>
         </template>
-        <template #createTime="{row}">
-          {{ row.createTime === '—' ? '—' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '—') }}
+        <template #createTime="{ row }">
+          {{
+            row.createTime === "-"
+              ? "-"
+              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+          }}
         </template>
-        <template #handle="{row}">
-          <el-button v-hasPermi="['basic:dataType:datatype:query']" link type="primary" icon="View"
-                     @click="handleDetail(row)"
-          >详情
+        <template #handle="{ row }">
+          <el-button
+            v-hasPermi="['basic:dataType:datatype:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情
           </el-button>
-          <el-button v-hasPermi="['basic:dataType:datatype:edit']" link type="primary" icon="Edit"
-                     @click="handleUpdate(row)"
-          >修改
+          <el-button
+            v-hasPermi="['basic:dataType:datatype:edit']"
+            link
+            type="primary"
+            icon="Edit"
+            @click="handleUpdate(row)"
+            >修改
           </el-button>
-          <el-button v-hasPermi="['basic:dataType:datatype:remove']" link type="danger" icon="Delete"
-                     @click="handleDelete(row)"
-          >删除
+          <el-button
+            v-hasPermi="['basic:dataType:datatype:remove']"
+            link
+            type="danger"
+            icon="Delete"
+            @click="handleDelete(row)"
+            >删除
           </el-button>
         </template>
       </qt-table>
@@ -98,7 +135,13 @@
     />
 
     <!-- 数据类型详情对话框 -->
-    <el-dialog :title="title" v-model="openDetail" width="800px" :append-to="$refs['app-container']" draggable>
+    <el-dialog
+      :title="title"
+      v-model="openDetail"
+      width="800px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
       <template #header>
         <span role="heading" aria-level="2" class="el-dialog__title">
           {{ title }}
@@ -116,9 +159,9 @@
           <el-col :span="24">
             <el-form-item label="数据类型" prop="dataType">
               <dict-tag
-                  :options="basic_data_type"
-                  :value="form.dataType"
-                  class="con-value access-tag"
+                :options="basic_data_type"
+                :value="form.dataType"
+                class="con-value access-tag"
               />
             </el-form-item>
           </el-col>
@@ -126,13 +169,50 @@
         <el-row :gutter="20">
           <!-- 只读详情展示已保存的文本约束，与编辑组件使用相同的格式编码。 -->
           <template v-if="form.dataType === dataTypeConstant.TEXT">
-            <el-col :span="24"><el-form-item label="最小长度"><div class="form-readonly">{{ form.minLength ?? '不限制' }}</div></el-form-item></el-col>
-            <el-col :span="24"><el-form-item label="最大长度"><div class="form-readonly">{{ form.maxLength ?? '不限制' }}</div></el-form-item></el-col>
-            <el-col :span="24"><el-form-item label="格式校验"><div class="form-readonly">{{ textValidationLabels[form.validationType || 'NONE'] }}</div></el-form-item></el-col>
-            <el-col v-if="form.validationType === 'CUSTOM'" :span="24"><el-form-item label="正则表达式"><div class="form-readonly">{{ form.validationPattern }}</div></el-form-item></el-col>
-            <el-col :span="24"><el-form-item label="示例值"><div class="form-readonly">{{ form.exampleValue || '—' }}</div></el-form-item></el-col>
+            <el-col :span="24"
+              ><el-form-item label="最小长度"
+                ><div class="form-readonly">
+                  {{ form.minLength ?? "不限制" }}
+                </div></el-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><el-form-item label="最大长度"
+                ><div class="form-readonly">
+                  {{ form.maxLength ?? "不限制" }}
+                </div></el-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><el-form-item label="格式校验"
+                ><div class="form-readonly">
+                  {{ textValidationLabels[form.validationType || "NONE"] }}
+                </div></el-form-item
+              ></el-col
+            >
+            <el-col v-if="form.validationType === 'CUSTOM'" :span="24"
+              ><el-form-item label="正则表达式"
+                ><div class="form-readonly">
+                  {{ form.validationPattern }}
+                </div></el-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><el-form-item label="示例值"
+                ><div class="form-readonly">
+                  {{ form.exampleValue || "-" }}
+                </div></el-form-item
+              ></el-col
+            >
           </template>
-          <el-col :span="24" v-if="[dataTypeConstant.DECIMAL, dataTypeConstant.INTEGER].includes(form.dataType)">
+          <el-col
+            :span="24"
+            v-if="
+              [dataTypeConstant.DECIMAL, dataTypeConstant.INTEGER].includes(
+                form.dataType
+              )
+            "
+          >
             <el-form-item label="单位" prop="unit">
               <div class="form-readonly">
                 {{ form.unit }}
@@ -140,35 +220,89 @@
             </el-form-item>
           </el-col>
           <!-- 数值范围在整数和小数类型共用，布尔文案及日期范围仅在对应类型展示。 -->
-          <template v-if="[dataTypeConstant.DECIMAL, dataTypeConstant.INTEGER].includes(form.dataType)">
-            <el-col :span="24"><el-form-item label="最小值"><div class="form-readonly">{{ form.minValue ?? '不限制' }}</div></el-form-item></el-col>
-            <el-col :span="24"><el-form-item label="最大值"><div class="form-readonly">{{ form.maxValue ?? '不限制' }}</div></el-form-item></el-col>
+          <template
+            v-if="
+              [dataTypeConstant.DECIMAL, dataTypeConstant.INTEGER].includes(
+                form.dataType
+              )
+            "
+          >
+            <el-col :span="24"
+              ><el-form-item label="最小值"
+                ><div class="form-readonly">
+                  {{ form.minValue ?? "不限制" }}
+                </div></el-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><el-form-item label="最大值"
+                ><div class="form-readonly">
+                  {{ form.maxValue ?? "不限制" }}
+                </div></el-form-item
+              ></el-col
+            >
           </template>
-          <el-col v-if="form.dataType === dataTypeConstant.DECIMAL" :span="24"><el-form-item label="总精度"><div class="form-readonly">{{ form.totalPrecision ?? '—' }}</div></el-form-item></el-col>
+          <el-col v-if="form.dataType === dataTypeConstant.DECIMAL" :span="24"
+            ><el-form-item label="总精度"
+              ><div class="form-readonly">
+                {{ form.totalPrecision ?? "-" }}
+              </div></el-form-item
+            ></el-col
+          >
           <template v-if="form.dataType === dataTypeConstant.BOOLEAN">
-            <el-col :span="24"><el-form-item label="true 对应文案"><el-input :model-value="form.trueLabel ?? '是'" disabled/></el-form-item></el-col>
-            <el-col :span="24"><el-form-item label="false 对应文案"><el-input :model-value="form.falseLabel ?? '否'" disabled/></el-form-item></el-col>
+            <el-col :span="24"
+              ><el-form-item label="true 对应文案"
+                ><el-input
+                  :model-value="form.trueLabel ?? '是'"
+                  disabled /></el-form-item
+            ></el-col>
+            <el-col :span="24"
+              ><el-form-item label="false 对应文案"
+                ><el-input
+                  :model-value="form.falseLabel ?? '否'"
+                  disabled /></el-form-item
+            ></el-col>
           </template>
           <template v-if="form.dataType === dataTypeConstant.DATE">
-            <el-col :span="24"><el-form-item label="最早日期"><div class="form-readonly">{{ form.minDate || '不限制' }}</div></el-form-item></el-col>
-            <el-col :span="24"><el-form-item label="最晚日期"><div class="form-readonly">{{ form.maxDate || '不限制' }}</div></el-form-item></el-col>
+            <el-col :span="24"
+              ><el-form-item label="最早日期"
+                ><div class="form-readonly">
+                  {{ form.minDate || "不限制" }}
+                </div></el-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><el-form-item label="最晚日期"
+                ><div class="form-readonly">
+                  {{ form.maxDate || "不限制" }}
+                </div></el-form-item
+              ></el-col
+            >
           </template>
-          <el-col :span="24" v-if="[dataTypeConstant.DECIMAL].includes(form.dataType)">
+          <el-col
+            :span="24"
+            v-if="[dataTypeConstant.DECIMAL].includes(form.dataType)"
+          >
             <el-form-item label="小数位数" prop="decimalPlaces">
               <div class="form-readonly">
                 {{ form.decimalPlaces }}
               </div>
             </el-form-item>
           </el-col>
-          <el-col :span="24" v-if="[dataTypeConstant.DATE].includes(form.dataType)">
+          <el-col
+            :span="24"
+            v-if="[dataTypeConstant.DATE].includes(form.dataType)"
+          >
             <el-form-item label="展示格式" prop="format">
               <div class="form-readonly">
                 {{ form.format }}
               </div>
-
             </el-form-item>
           </el-col>
-          <el-col :span="24" v-if="[dataTypeConstant.ENUM].includes(form.dataType)">
+          <el-col
+            :span="24"
+            v-if="[dataTypeConstant.ENUM].includes(form.dataType)"
+          >
             <el-form-item label="枚举类型" prop="enumType">
               <div class="form-readonly">
                 {{ form.enumType }}
@@ -180,7 +314,7 @@
           <el-col :span="24">
             <el-form-item label="描述" prop="description">
               <div class="form-readonly textarea">
-                {{ form.description || '-' }}
+                {{ form.description || "-" }}
               </div>
             </el-form-item>
           </el-col>
@@ -206,26 +340,39 @@
         </div>
       </template>
     </el-dialog>
-
   </div>
 </template>
 
 <script setup name="DataType">
-import {addDataType, delDataType, getDataType, listDataType, updateDataType} from "@/api/basic/dataType/dataType";
-import {computed, getCurrentInstance, onMounted, reactive, ref, toRefs, watch} from 'vue';
-import {getEnumTypeDict} from "@/api/basic/enumeration/type.js";
+import {
+  addDataType,
+  delDataType,
+  getDataType,
+  listDataType,
+  updateDataType,
+} from "@/api/basic/dataType/dataType";
+import {
+  computed,
+  getCurrentInstance,
+  onMounted,
+  reactive,
+  ref,
+  toRefs,
+  watch,
+} from "vue";
+import { getEnumTypeDict } from "@/api/basic/enumeration/type.js";
 import DataTypeFormDialog from "./components/dataTypeFormDialog.vue";
-import {useCreatorPhones} from '@/utils/useCreatorPhones';
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 // 提供内嵌展示、只读展示和固定枚举筛选，默认不传参数时保持独立页面的管理能力。
 const props = defineProps({
-  embedded: {type: Boolean, default: false},
-  readOnly: {type: Boolean, default: false},
-  enumType: {type: String, default: undefined}
+  embedded: { type: Boolean, default: false },
+  readOnly: { type: Boolean, default: false },
+  enumType: { type: String, default: undefined },
 });
 
-const {proxy} = getCurrentInstance();
-const {basic_data_type} = proxy.useDict('basic_data_type');
+const { proxy } = getCurrentInstance();
+const { basic_data_type } = proxy.useDict("basic_data_type");
 
 const open = ref(false);
 // 保存状态由父页面管理，并传给弹窗阻止重复提交及保存中关闭。
@@ -234,7 +381,7 @@ const openDetail = ref(false);
 const ids = ref([]);
 const multiple = ref(true);
 const title = ref("");
-const defaultSort = {prop: "createTime", order: "descending"};
+const defaultSort = { prop: "createTime", order: "descending" };
 const enumTypeDict = ref([]);
 
 // 数据类型 0-文本、1-整数、2-小数、3-布尔、4-日期、5-枚举
@@ -245,64 +392,122 @@ const dataTypeConstant = {
   BOOLEAN: "3",
   DATE: "4",
   ENUM: "5",
-}
+};
 
 // 详情中的格式名称与编辑组件及后端的格式编码一致。
-const textValidationLabels = {NONE: '无校验', PHONE: '手机号码', ID_CARD: '身份证号', EMAIL: '电子邮箱', URL: 'URL地址', CUSTOM: '自定义正则表达式'};
+const textValidationLabels = {
+  NONE: "无校验",
+  PHONE: "手机号码",
+  ID_CARD: "身份证号",
+  EMAIL: "电子邮箱",
+  URL: "URL地址",
+  CUSTOM: "自定义正则表达式",
+};
 
 const tableRef = ref();
-const {creatorPhones} = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 
 // 将已提交名称与输入草稿分开，保证翻页、排序和刷新沿用最近一次查询的条件。
-const appliedFilters = reactive({name: '', dataType: ''});
+const appliedFilters = reactive({ name: "", dataType: "" });
 
 // 与枚举列表使用相同的配置式表格，由公共组件统一管理分页、排序和列显隐。
 const tableStore = reactive({
   config: {
     sort: true,
-    table: {stripe: true, rowKey: 'id', defaultSort, onSelectionChange: handleSelectionChange}
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort,
+      onSelectionChange: handleSelectionChange,
+    },
   },
   columns: computed(() => [
-    ...(!props.readOnly ? [{type: 'selection', width: 55}] : []),
-    {label: '编号', prop: 'id', slot: 'text', width: 80, sortable: true},
-    {label: '业务数据名称', prop: 'name', slot: 'text', minWidth: 180, align: 'left', showOverflowTooltip: {effect: 'light'}},
+    ...(!props.readOnly ? [{ type: "selection", width: 55 }] : []),
+    { label: "编号", prop: "id", slot: "text", width: 80, sortable: true },
     {
-      label: '描述',
-      prop: 'description',
-      slot: 'text',
+      label: "业务数据名称",
+      prop: "name",
+      slot: "text",
+      minWidth: 180,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "描述",
+      prop: "description",
+      slot: "text",
       minWidth: 200,
-      align: 'left',
-      showOverflowTooltip: {effect: 'light'}
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
     },
     // 枚举详情传入固定关联键时，所有记录均为枚举类型，无需重复显示数据类型列。
-    ...(props.enumType === undefined ? [{label: '业务数据类型', prop: 'dataType', slot: 'dataType', width: 120}] : []),
+    ...(props.enumType === undefined
+      ? [
+          {
+            label: "业务数据类型",
+            prop: "dataType",
+            slot: "dataType",
+            width: 120,
+          },
+        ]
+      : []),
     // 单位沿用接口 unit 字段，未配置时由统一文本格式化逻辑显示占位符。
-    {label: '单位', prop: 'unit', slot: 'text', width: 120, showOverflowTooltip: {effect: 'light'}},
-    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
-    {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
-    ...(!props.readOnly ? [{label: '操作', slot: 'handle', width: 240, fixed: 'right'}] : [])
+    {
+      label: "单位",
+      prop: "unit",
+      slot: "text",
+      width: 120,
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 130,
+      align: "left",
+      headerAlign: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      slot: "createTime",
+      width: 160,
+      sortable: true,
+    },
+    ...(!props.readOnly
+      ? [{ label: "操作", slot: "handle", width: 240, fixed: "right" }]
+      : []),
   ]),
   func: loadDataTypes,
-  params: {name: '', dataType: ''},
-  events: {formatParams: formatListParams, formatData: formatListData, onDataLoaded: clearSelection}
+  params: { name: "", dataType: "" },
+  events: {
+    formatParams: formatListParams,
+    formatData: formatListData,
+    onDataLoaded: clearSelection,
+  },
 });
 
 // 有固定枚举关联键时只开放名称筛选；独立页面保留基础数据类型筛选。
 const searchStore = computed(() => ({
   items: [
-    {label: '名称', prop: 'name', component: {is: 'input'}},
-    ...(props.enumType === undefined ? [{
-      label: '数据类型',
-      prop: 'dataType',
-      component: {is: 'select', options: basic_data_type.value}
-    }] : [])
-  ]
+    { label: "名称", prop: "name", component: { is: "input" } },
+    ...(props.enumType === undefined
+      ? [
+          {
+            label: "数据类型",
+            prop: "dataType",
+            component: { is: "select", options: basic_data_type.value },
+          },
+        ]
+      : []),
+  ],
 }));
 
 /** 提交名称筛选；搜索栏随后统一重置页码并刷新公共表格。 */
 function applyFilters() {
-  appliedFilters.name = (tableStore.params.name || '').trim();
-  appliedFilters.dataType = tableStore.params.dataType ?? '';
+  appliedFilters.name = (tableStore.params.name || "").trim();
+  appliedFilters.dataType = tableStore.params.dataType ?? "";
 }
 
 /** 固定枚举关联范围，并在取消排序时恢复默认的创建时间倒序。 */
@@ -311,40 +516,49 @@ function formatListParams(params) {
     ...params,
     ...appliedFilters,
     // 5 为枚举基础类型，同时精确匹配当前枚举编码，排除其他枚举及遗留关联值。
-    dataType: props.enumType !== undefined ? dataTypeConstant.ENUM : appliedFilters.dataType,
+    dataType:
+      props.enumType !== undefined
+        ? dataTypeConstant.ENUM
+        : appliedFilters.dataType,
     enumType: props.enumType,
     orderByColumn: params.isAsc ? params.orderByColumn : defaultSort.prop,
-    isAsc: params.isAsc || defaultSort.order
+    isAsc: params.isAsc || defaultSort.order,
   };
 }
 
 /** 关联键缺失时直接返回空页，避免接口忽略空筛选后展示全部枚举业务数据类型。 */
 function loadDataTypes(params) {
-  if (props.enumType !== undefined && !params.enumType) return Promise.resolve({data: {rows: [], total: 0}});
+  if (props.enumType !== undefined && !params.enumType)
+    return Promise.resolve({ data: { rows: [], total: 0 } });
   return listDataType(params);
 }
 
 /** 统一文本空值展示，使公共表格与自定义插槽使用相同占位符，同时保留数值零。 */
 function formatListData(rows) {
-  const fields = tableStore.columns.map(column => column.prop).filter(Boolean);
-  return rows.map(row => {
-    const record = {...row};
-    fields.forEach(field => {
-      if (record[field] == null || record[field] === '') record[field] = '—';
+  const fields = tableStore.columns
+    .map((column) => column.prop)
+    .filter(Boolean);
+  return rows.map((row) => {
+    const record = { ...row };
+    fields.forEach((field) => {
+      if (record[field] == null || record[field] === "") record[field] = "-";
     });
     return record;
   });
 }
 
 /** 切换枚举时清空名称草稿及已提交条件，新表格实例会自动加载该枚举的第一页。 */
-watch(() => props.enumType, () => {
-  tableStore.params.name = '';
-  tableStore.params.dataType = '';
-  appliedFilters.name = '';
-  appliedFilters.dataType = '';
-  open.value = false;
-  openDetail.value = false;
-});
+watch(
+  () => props.enumType,
+  () => {
+    tableStore.params.name = "";
+    tableStore.params.dataType = "";
+    appliedFilters.name = "";
+    appliedFilters.dataType = "";
+    open.value = false;
+    openDetail.value = false;
+  }
+);
 
 /** 表格重新加载后清除旧的勾选项，避免批量删除上一次查询的记录。 */
 function clearSelection() {
@@ -355,17 +569,26 @@ function clearSelection() {
 const data = reactive({
   form: {},
   rules: {
-    name: [{required: true, message: "名称不能为空", trigger: "blur"}, {max: 128, message: "名称不能超过128个字符", trigger: "blur"}],
-    description: [{max: 200, message: "描述不能超过200个字符", trigger: "blur"}],
+    name: [
+      { required: true, message: "名称不能为空", trigger: "blur" },
+      { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
+    ],
+    description: [
+      { max: 200, message: "描述不能超过200个字符", trigger: "blur" },
+    ],
     // 下拉框选择时触发 change，及时重新校验并清除先前的必填提示。
-    dataType: [{required: true, message: "数据类型不能为空", trigger: "change"}],
-    unit: [{required: true, message: "单位不能为空", trigger: "blur"}],
-    format: [{required: true, message: "格式不能为空", trigger: "blur"}],
-    enumType: [{required: true, message: "枚举类型不能为空", trigger: "change"}],
-  }
+    dataType: [
+      { required: true, message: "数据类型不能为空", trigger: "change" },
+    ],
+    unit: [{ required: true, message: "单位不能为空", trigger: "blur" }],
+    format: [{ required: true, message: "格式不能为空", trigger: "blur" }],
+    enumType: [
+      { required: true, message: "枚举类型不能为空", trigger: "change" },
+    ],
+  },
 });
 
-const {form, rules} = toRefs(data);
+const { form, rules } = toRefs(data);
 
 // 只读关联列表不需要加载编辑用的枚举选项；列表首屏由 QtTable 自行请求。
 onMounted(() => {
@@ -379,7 +602,7 @@ function getList() {
 
 /** 加载新增和修改表单使用的枚举类型选项。 */
 function queryEnumTypeDict() {
-  getEnumTypeDict().then(response => {
+  getEnumTypeDict().then((response) => {
     enumTypeDict.value = response.data;
   });
 }
@@ -400,7 +623,10 @@ function reset() {
     id: null,
     name: null,
     type: null,
-    dataType: props.enumType !== undefined ? dataTypeConstant.ENUM : dataTypeConstant.TEXT,
+    dataType:
+      props.enumType !== undefined
+        ? dataTypeConstant.ENUM
+        : dataTypeConstant.TEXT,
     enumType: props.enumType ?? null,
     description: null,
     unit: null,
@@ -408,16 +634,16 @@ function reset() {
     totalPrecision: 10,
     minValue: null,
     maxValue: null,
-    trueLabel: '是',
-    falseLabel: '否',
+    trueLabel: "是",
+    falseLabel: "否",
     minDate: null,
     maxDate: null,
     minLength: null,
     maxLength: null,
-    validationType: 'NONE',
+    validationType: "NONE",
     validationPattern: null,
     exampleValue: null,
-    format: 'YYYY-MM-DD',
+    format: "YYYY-MM-DD",
     validFlag: null,
     delFlag: null,
     createBy: null,
@@ -426,13 +652,13 @@ function reset() {
     updateBy: null,
     updaterId: null,
     updateTime: null,
-    remark: null
+    remark: null,
   };
 }
 
 // 多选框选中数据
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.id);
+  ids.value = selection.map((item) => item.id);
   multiple.value = !selection.length;
 }
 
@@ -452,8 +678,8 @@ function handleUpdate(row) {
   // 只读模式即使通过脚本调用方法，也不允许执行写操作。
   if (props.readOnly) return;
   reset();
-  const _id = row.id || ids.value
-  getDataType(_id).then(response => {
+  const _id = row.id || ids.value;
+  getDataType(_id).then((response) => {
     form.value = response.data;
     open.value = true;
     title.value = "修改业务数据类型";
@@ -463,8 +689,8 @@ function handleUpdate(row) {
 /** 详情按钮操作 */
 function handleDetail(row) {
   reset();
-  const _id = row.id || ids.value
-  getDataType(_id).then(response => {
+  const _id = row.id || ids.value;
+  getDataType(_id).then((response) => {
     form.value = response.data;
     openDetail.value = true;
     title.value = "业务数据类型详情";
@@ -477,9 +703,10 @@ async function submitForm(draft) {
   if (props.enumType !== undefined && !props.enumType) return;
   const enumContext = props.enumType;
   // 使用独立快照，避免保存中的表单变化影响本次请求。
-  const payload = props.enumType !== undefined
-    ? {...draft, dataType: dataTypeConstant.ENUM, enumType: props.enumType}
-    : {...draft};
+  const payload =
+    props.enumType !== undefined
+      ? { ...draft, dataType: dataTypeConstant.ENUM, enumType: props.enumType }
+      : { ...draft };
   saving.value = true;
   try {
     if (payload.id != null) await updateDataType(payload);
@@ -503,14 +730,16 @@ function handleDelete(row) {
   const _ids = row?.id || [...ids.value];
   // 批量删除仅提交确认前已选中的编号，未选中记录时不发起删除请求。
   if (Array.isArray(_ids) && !_ids.length) return;
-  proxy.$modal.confirm('是否确认删除数据类型编号为"' + _ids + '"的数据项？').then(function () {
-    return delDataType(_ids);
-  }).then(() => {
-    // 删除后回到第一页，避免移除末页全部关联记录后停留在空页。
-    tableRef.value?.resetQuery();
-    proxy.$modal.msgSuccess("删除成功");
-  }).catch(() => {
-  });
+  proxy.$modal
+    .confirm('是否确认删除数据类型编号为"' + _ids + '"的数据项？')
+    .then(function () {
+      return delDataType(_ids);
+    })
+    .then(() => {
+      // 删除后回到第一页，避免移除末页全部关联记录后停留在空页。
+      tableRef.value?.resetQuery();
+      proxy.$modal.msgSuccess("删除成功");
+    })
+    .catch(() => {});
 }
-
 </script>

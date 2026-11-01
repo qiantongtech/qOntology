@@ -27,22 +27,49 @@
         nameKey: 'enumName',
         statusKey: 'status',
         statusOptions: sys_normal_disable,
-        routerBack: false
+        routerBack: false,
       }"
       :items="detailItems"
       mode="free"
       @back="handleReturn"
     />
-    <el-empty v-if="!loading && detail.enumId == null" :description="emptyMessage"/>
+    <el-empty
+      v-if="!loading && detail.enumId == null"
+      :description="emptyMessage"
+    />
     <!-- 两个标签页分别校验列表权限，仅有业务数据类型权限时也允许查看关联列表。 -->
-    <div v-if="detail.enumId != null && (auth.hasPermi('basic:enumeration:data:list') || auth.hasPermi('basic:dataType:datatype:list'))" class="pagecont-bottom">
+    <div
+      v-if="
+        detail.enumId != null &&
+        (auth.hasPermi('basic:enumeration:data:list') ||
+          auth.hasPermi('basic:dataType:datatype:list'))
+      "
+      class="pagecont-bottom"
+    >
       <el-tabs v-model="activeName">
-        <el-tab-pane v-if="auth.hasPermi('basic:enumeration:data:list')" label="枚举数据" name="data">
-          <EnumData :key="detail.enumId" :enum-type="detail.enumType" @data-change="loadDataCount"/>
+        <el-tab-pane
+          v-if="auth.hasPermi('basic:enumeration:data:list')"
+          label="枚举数据"
+          name="data"
+        >
+          <EnumData
+            :key="detail.enumId"
+            :enum-type="detail.enumType"
+            @data-change="loadDataCount"
+          />
         </el-tab-pane>
         <!-- 直接复用业务数据类型页面；首次切换时加载，并以内嵌模式管理当前枚举的关联业务数据类型。 -->
-        <el-tab-pane v-if="auth.hasPermi('basic:dataType:datatype:list')" label="业务数据类型" name="related" lazy>
-          <BusinessDataTypes :key="detail.enumId" :enum-type="detail.enumType" embedded/>
+        <el-tab-pane
+          v-if="auth.hasPermi('basic:dataType:datatype:list')"
+          label="业务数据类型"
+          name="related"
+          lazy
+        >
+          <BusinessDataTypes
+            :key="detail.enumId"
+            :enum-type="detail.enumType"
+            embedded
+          />
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -50,37 +77,37 @@
 </template>
 
 <script setup name="BasicEnumDetail">
-import {getCurrentInstance, onBeforeUnmount, ref, watch} from 'vue';
-import {useRoute} from 'vue-router';
-import {getType} from '@/api/basic/enumeration/type';
-import {listData} from '@/api/basic/enumeration/data';
-import auth from '@/plugins/auth';
-import {useCreatorPhones} from '@/utils/useCreatorPhones';
-import EnumData from '../data/index.vue';
-import BusinessDataTypes from '@/views/basic/dataType/index.vue';
+import { getCurrentInstance, onBeforeUnmount, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { getType } from "@/api/basic/enumeration/type";
+import { listData } from "@/api/basic/enumeration/data";
+import auth from "@/plugins/auth";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+import EnumData from "../data/index.vue";
+import BusinessDataTypes from "@/views/basic/dataType/index.vue";
 
-const {proxy} = getCurrentInstance();
-const {sys_normal_disable} = proxy.useDict('sys_normal_disable');
+const { proxy } = getCurrentInstance();
+const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 const route = useRoute();
-const {creatorPhones} = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const detail = ref({});
 const loading = ref(false);
-const activeName = ref('data');
-const emptyMessage = ref('枚举类型已不存在');
+const activeName = ref("data");
+const emptyMessage = ref("枚举类型已不存在");
 // 自由布局完整声明概要字段，避免通用组件默认追加与枚举无关的描述字段。
 const detailItems = [
-  {label: '枚举名称', key: 'enumName'},
-  {label: '枚举类型', key: 'enumType'},
-  {label: '枚举数据数', key: 'enumDataCount'},
-  {label: '备注', key: 'remark', span: 24, className: 'mt2 mb2'},
-  {label: '创建人', key: 'createBy', formatter: formatCreator},
-  {label: '创建时间', key: 'createTime', type: 'time'},
-  {label: '更新时间', key: 'updateTime', type: 'time'}
+  { label: "枚举名称", key: "enumName" },
+  { label: "枚举类型", key: "enumType" },
+  { label: "枚举数据数", key: "enumDataCount" },
+  { label: "备注", key: "remark", span: 24, className: "mt2 mb2" },
+  { label: "创建人", key: "createBy", formatter: formatCreator },
+  { label: "创建时间", key: "createTime", type: "time" },
+  { label: "更新时间", key: "updateTime", type: "time" },
 ];
 /** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
 function formatCreator(name, record) {
   const phone = creatorPhones.value[record.creatorId];
-  return phone ? `${name || '—'} / ${phone}` : name || '—';
+  return phone ? `${name || "-"} / ${phone}` : name || "-";
 }
 
 // 详情与数量分别记录请求版本；数量请求还需校验详情版本，防止切换枚举后旧响应回写。
@@ -88,56 +115,77 @@ let requestVersion = 0;
 let countRequest = 0;
 
 /** 跟随路由重新加载枚举详情，清空旧数据并选择当前用户可访问的标签页。 */
-watch(() => route.params.enumId, async (enumId) => {
-  const request = ++requestVersion;
-  detail.value = {};
-  activeName.value = auth.hasPermi('basic:enumeration:data:list') ? 'data' : 'related';
-  emptyMessage.value = '枚举类型已不存在';
-  loading.value = false;
-  if (!enumId) return;
-  loading.value = true;
-  try {
-    const response = await getType(enumId);
-    // 仅采纳当前枚举的最新详情响应，忽略切换前仍未完成的请求。
-    if (request !== requestVersion) return;
-    detail.value = response.data || {};
-    loadDataCount();
-  } catch {
-    if (request === requestVersion) emptyMessage.value = '详情加载失败，请刷新重试';
-  } finally {
-    if (request === requestVersion) loading.value = false;
-  }
-}, {immediate: true});
+watch(
+  () => route.params.enumId,
+  async (enumId) => {
+    const request = ++requestVersion;
+    detail.value = {};
+    activeName.value = auth.hasPermi("basic:enumeration:data:list")
+      ? "data"
+      : "related";
+    emptyMessage.value = "枚举类型已不存在";
+    loading.value = false;
+    if (!enumId) return;
+    loading.value = true;
+    try {
+      const response = await getType(enumId);
+      // 仅采纳当前枚举的最新详情响应，忽略切换前仍未完成的请求。
+      if (request !== requestVersion) return;
+      detail.value = response.data || {};
+      loadDataCount();
+    } catch {
+      if (request === requestVersion)
+        emptyMessage.value = "详情加载失败，请刷新重试";
+    } finally {
+      if (request === requestVersion) loading.value = false;
+    }
+  },
+  { immediate: true }
+);
 
 // 同一枚举只变更路由页签参数时也切回首个页签，无需重新请求枚举详情。
-watch(() => route.query.tab, tab => {
-  if (tab === 'data' && auth.hasPermi('basic:enumeration:data:list')) activeName.value = 'data';
-}, {immediate: true});
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (tab === "data" && auth.hasPermi("basic:enumeration:data:list"))
+      activeName.value = "data";
+  },
+  { immediate: true }
+);
 
 /** 查询当前枚举的全部数据条数；首次加载和数据增删改成功后调用，不使用表格筛选总数。 */
 async function loadDataCount() {
   const request = ++countRequest;
   const version = requestVersion;
   // 缺少关联键或列表权限时不请求数据接口，避免无效查询及权限错误。
-  if (!detail.value.enumType || !auth.hasPermi('basic:enumeration:data:list')) return;
+  if (!detail.value.enumType || !auth.hasPermi("basic:enumeration:data:list"))
+    return;
   try {
     // 单独查询未筛选的总数，避免标签或状态筛选影响详情概要。
-    const response = await listData({enumType: detail.value.enumType, pageNum: 1, pageSize: 1});
+    const response = await listData({
+      enumType: detail.value.enumType,
+      pageNum: 1,
+      pageSize: 1,
+    });
     // 同时校验数量请求与详情请求，防止旧计数覆盖新枚举或更新后的计数。
     if (request !== countRequest || version !== requestVersion) return;
     detail.value.enumDataCount = response.data.total;
   } catch {
     // 查询失败时显示占位符，避免将未知数量误显示为零或保留失效的旧计数。
-    if (request === countRequest && version === requestVersion) detail.value.enumDataCount = undefined;
+    if (request === countRequest && version === requestVersion)
+      detail.value.enumDataCount = undefined;
   }
 }
 
 // 离开详情后使所有在途请求失效，避免销毁后继续回写页面状态。
-onBeforeUnmount(() => { ++requestVersion; ++countRequest; });
+onBeforeUnmount(() => {
+  ++requestVersion;
+  ++countRequest;
+});
 
 /** 关闭当前详情页签，并返回固定的枚举列表入口。 */
 function handleReturn() {
-  proxy.$tab.closeOpenPage({path: '/basic/basicEnum'});
+  proxy.$tab.closeOpenPage({ path: "/basic/basicEnum" });
 }
 </script>
 
