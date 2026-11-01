@@ -55,6 +55,13 @@
           <dict-tag v-if="row.dataType !== '—'" :options="basic_data_type" :value="row.dataType"/>
           <span v-else>—</span>
         </template>
+        <!-- 与枚举创建人和项目责任人保持一致：姓名在上，联系电话以灰色小字在下。 -->
+        <template #creator="{row}">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+          </div>
+        </template>
         <template #createTime="{row}">
           {{ row.createTime === '—' ? '—' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '—') }}
         </template>
@@ -208,6 +215,7 @@ import {addDataType, delDataType, getDataType, listDataType, updateDataType} fro
 import {computed, getCurrentInstance, onMounted, reactive, ref, toRefs, watch} from 'vue';
 import {getEnumTypeDict} from "@/api/basic/enumeration/type.js";
 import DataTypeFormDialog from "./components/dataTypeFormDialog.vue";
+import {useCreatorPhones} from '@/utils/useCreatorPhones';
 
 // 提供内嵌展示、只读展示和固定枚举筛选，默认不传参数时保持独立页面的管理能力。
 const props = defineProps({
@@ -243,6 +251,8 @@ const dataTypeConstant = {
 const textValidationLabels = {NONE: '无校验', PHONE: '手机号码', ID_CARD: '身份证号', EMAIL: '电子邮箱', URL: 'URL地址', CUSTOM: '自定义正则表达式'};
 
 const tableRef = ref();
+const {creatorPhones} = useCreatorPhones();
+
 // 将已提交名称与输入草稿分开，保证翻页、排序和刷新沿用最近一次查询的条件。
 const appliedFilters = reactive({name: '', dataType: ''});
 
@@ -268,7 +278,7 @@ const tableStore = reactive({
       align: 'left',
       showOverflowTooltip: {effect: 'light'}
     },
-    {label: '创建人', prop: 'createBy', slot: 'text', width: 120, showOverflowTooltip: {effect: 'light'}},
+    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
     ...(!props.readOnly ? [{label: '操作', slot: 'handle', width: 240, fixed: 'right'}] : [])
   ]),

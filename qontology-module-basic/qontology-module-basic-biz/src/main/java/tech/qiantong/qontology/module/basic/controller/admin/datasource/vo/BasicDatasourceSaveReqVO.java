@@ -74,6 +74,10 @@ public class BasicDatasourceSaveReqVO extends BaseEntity {
     @Size(max = 256, message = "描述长度不能超过256个字符")
     private String description;
 
+    /** 对应数据源已有启用标志，由新增、修改表单直接提交。 */
+    @Schema(description = "是否启用")
+    private Boolean validFlag;
+
     @Schema(description = "备注", example = "")
     @Size(max = 256, message = "备注长度不能超过256个字符")
     private String remark;

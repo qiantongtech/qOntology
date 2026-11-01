@@ -85,12 +85,15 @@
           />
           <span v-else>—</span>
         </template>
-        <template #createTime="{ row }">
-          {{
-            row.createTime === "—"
-              ? "—"
-              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "—"
-          }}
+        <!-- 沿用项目责任人的双行样式，联系电话未维护时只显示创建人姓名。 -->
+        <template #creator="{row}">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+          </div>
+        </template>
+        <template #createTime="{row}">
+          {{ row.createTime === '—' ? '—' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '—') }}
         </template>
         <template #handle="{ row }">
           <el-button
@@ -190,23 +193,11 @@
 </template>
 
 <script setup name="OmEnumType">
-import {
-  onBeforeUnmount,
-  ref,
-  reactive,
-  toRefs,
-  nextTick,
-  getCurrentInstance,
-} from "vue";
-import {
-  listType,
-  getType,
-  addType,
-  updateType,
-  delType,
-} from "@/api/basic/enumeration/type.js";
-import auth from "@/plugins/auth.js";
-import { useRouter } from "vue-router";
+import {onBeforeUnmount, ref, reactive, toRefs, nextTick, getCurrentInstance} from 'vue';
+import {listType, getType, addType, updateType, delType} from '@/api/basic/enumeration/type.js';
+import auth from '@/plugins/auth.js';
+import {useCreatorPhones} from '@/utils/useCreatorPhones';
+import {useRouter} from 'vue-router';
 
 const { proxy } = getCurrentInstance();
 const router = useRouter();
@@ -214,6 +205,8 @@ const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 const pageRef = ref();
 const tableRef = ref();
 const typeRef = ref();
+const {creatorPhones} = useCreatorPhones();
+
 const open = ref(false);
 const saving = ref(false);
 const deleting = ref(false);
@@ -270,22 +263,10 @@ const tableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     // 引用数由后端按业务数据类型关联键聚合返回，不随当前页的枚举行数变化。
-    { label: "引用数", slot: "text", width: 100 },
-    {
-      label: "创建人",
-      prop: "createBy",
-      slot: "text",
-      width: 120,
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "创建时间",
-      prop: "createTime",
-      slot: "createTime",
-      width: 160,
-      sortable: true,
-    },
-    { label: "操作", slot: "handle", width: 200, fixed: "right" },
+    {label: '引用数', prop: 'referenceCount', slot: 'text', width: 100},
+    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
+    {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
+    {label: '操作', slot: 'handle', width: 200, fixed: 'right'}
   ],
   func: listType,
   params: { enumName: "", enumType: "", status: "" },

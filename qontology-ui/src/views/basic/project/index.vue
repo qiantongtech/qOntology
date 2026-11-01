@@ -52,6 +52,25 @@
         </el-button>
       </template>
       <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 复用数据板块信息列的图标、名称链接及下方描述布局。 -->
+        <template #projectInfo="{row}">
+          <div class="qt-table-info">
+            <div class="qt-table-info__main">
+              <img :src="getProjectIcon(row.icon)" alt="" class="info-icon"/>
+              <el-link type="primary" :underline="false" class="info-title text-ellipsis project-info-title" :title="row.name" @click="handleDetail(row)">
+                {{ row.name || '—' }}
+              </el-link>
+            </div>
+            <div v-if="row.description" class="info-desc text-ellipsis" :title="row.description">{{ row.description }}</div>
+          </div>
+        </template>
+        <!-- 项目领域沿用板块规划列的主题色标签与间距布局。 -->
+        <template #projectDomain="{row}">
+          <div v-if="row.domain" class="project-domain-list">
+            <el-tag type="primary" class="project-domain-tag" :title="row.domain">{{ row.domain }}</el-tag>
+          </div>
+          <span v-else>—</span>
+        </template>
         <template #status="{ row }">
           <el-switch
             v-model="row.status"
@@ -72,6 +91,13 @@
             <span v-if="row.responsiblePersonPhone" class="desc-text">
               {{ row.responsiblePersonPhone }}
             </span>
+          </div>
+        </template>
+        <!-- 创建人与责任人使用相同的双行样式，联系电话复用公共用户关联逻辑。 -->
+        <template #creator="{row}">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
           </div>
         </template>
         <template #handle="{ row }">
@@ -222,7 +248,7 @@
       :append-to="$refs['app-container']"
       draggable
     >
-      <template #header="{ close, titleId, titleClass }">
+      <template #header>
         <span role="heading" aria-level="2" class="el-dialog__title">
           {{ title }}
         </span>
@@ -329,9 +355,12 @@ import {
 import { saveAs } from "file-saver";
 import { onBeforeUnmount } from "vue";
 import auth from "@/plugins/auth";
+import {useCreatorPhones} from '@/utils/useCreatorPhones';
+import defaultProjectIcon from '@/assets/images/project-default.svg';
 import ProjectFormDialog from "./components/projectFormDialog.vue";
 
 const { proxy } = getCurrentInstance();
+const {creatorPhones} = useCreatorPhones();
 const { project_status } = proxy.useDict("project_status");
 
 const tableRef = ref();
@@ -458,20 +487,14 @@ const tableStore = reactive({
     {
       label: "项目名称",
       prop: "name",
-      width: 220,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "描述",
-      prop: "description",
-      width: 240,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
+      slot: "projectInfo",
+      minWidth: 300,
+      align: "left"
     },
     {
       label: "项目领域",
       prop: "domain",
+      slot: "projectDomain",
       width: 120,
       align: "left",
       showOverflowTooltip: { effect: "light" },
@@ -500,7 +523,7 @@ const tableStore = reactive({
       width: 100,
       align: "center",
     },
-    { label: "创建人", prop: "createBy", width: 100, align: "left" },
+    { label: "创建人", prop: "createBy", slot: "creator", width: 130, align: "left", headerAlign: "left", showOverflowTooltip: {effect: "light"} },
     {
       label: "创建时间",
       prop: "createTime",
@@ -519,6 +542,7 @@ const tableStore = reactive({
   func: listProject,
   params: {
     name: null,
+    icon: '',
     domain: null,
     namespace: null,
     status: null,
@@ -591,6 +615,12 @@ function cancel() {
   open.value = false;
   openDetail.value = false;
   reset();
+}
+
+/** 上传路径由服务端返回，列表展示时补齐接口前缀；未配置图标使用用户提供的默认 SVG。 */
+function getProjectIcon(icon) {
+  if (!icon) return defaultProjectIcon;
+  return /^https?:\/\//i.test(icon) ? icon : import.meta.env.VITE_APP_BASE_API + icon;
 }
 
 /** 初始化项目表单，避免上一次编辑的范围或描述残留到新增操作。 */
@@ -709,3 +739,33 @@ function handleDelete(row) {
     .catch(() => {});
 }
 </script>
+
+<style scoped lang="scss">
+// 与板块规划列一致，标签左对齐并支持换行，长领域名称在标签内省略。
+.project-domain-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+}
+.project-domain-tag {
+  max-width: 100%;
+  :deep(.el-tag__content) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// 名称链接在图标右侧占据剩余宽度，长项目名称省略，悬浮可查看完整内容。
+.project-info-title {
+  max-width: calc(100% - 22px);
+  :deep(.el-link__inner) {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+</style>
