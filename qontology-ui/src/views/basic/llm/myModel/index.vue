@@ -1,59 +1,38 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
  You may use qOntology for commercial purposes, but you may not remove, hide,
  modify, or replace the qOntology logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
 <template>
   <div class="app-container" ref="app-container">
-    <div class="pagecont-top" v-show="showSearch">
-      <el-form
-        class="btn-style"
-        :model="queryParams"
-        ref="queryRef"
-        :inline="true"
-        label-width="90px"
-        v-show="showSearch"
-        @submit.prevent
-      >
-        <el-form-item label="模型名称" prop="name">
-          <el-input
-            class="el-form-input-width"
-            v-model="queryParams.name"
-            placeholder="请输入模型名称"
-            clearable
-            @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-
-        <el-form-item>
-          <el-button
-            plain
-            type="primary"
-            @click="handleQuery"
-            @mousedown="(e) => e.preventDefault()"
-          >
-            <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-          </el-button>
-          <el-button @click="resetQuery" @mousedown="(e) => e.preventDefault()">
-            <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
-          </el-button>
-        </el-form-item>
-      </el-form>
+    <!-- 新用户引导独占整行，说明模型接入用途及配置顺序。 -->
+    <GuideTip tip-id="basic/llm/myModel.list"/>
+    <div class="pagecont-top">
+      <!-- 卡片列表提供统一查询接口；字段重置由公共搜索栏负责，查询与重置均从第一页加载。 -->
+      <QtSearchBar
+        :items="searchItems"
+        :params="queryParams"
+        :config="{collapsedCount: 3}"
+        :table-ref="searchActions"
+      />
     </div>
 
-    <Card :data="keyList" @handleUpdate="handleUpdate" @routeTo="routeTo" />
+    <div v-loading="loading">
+      <Card :data="keyList" @handleUpdate="handleUpdate" @routeTo="routeTo"/>
+      <el-empty v-if="!loading && keyList.length === 0" description="暂无匹配的已配置模型平台"/>
+    </div>
 
     <div class="pagecont-bottom">
       <pagination
@@ -73,7 +52,7 @@
       width="800px"
       :append-to="$refs['app-container']"
     >
-      <template #header="{ close, titleId, titleClass }">
+      <template #header>
         <span role="heading" aria-level="2" class="el-dialog__title">
           {{ keyTableTitle }}
         </span>
@@ -93,8 +72,7 @@
               style="margin-bottom: 15px"
               @click="addItem"
               plain
-              >新增密钥</el-button
-            >
+              >新增密钥</el-button>
             <el-table :data="form.platformKeyList" style="width: 100%">
               <el-table-column label="名称" align="center" prop="name">
                 <template #default="scope">
@@ -152,9 +130,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" size="mini" @click="submitForm"
-            >提交</el-button
-          >
+          <el-button type="primary" size="mini" @click="submitForm">提交</el-button>
           <el-button size="mini" @click="handleClose">取 消</el-button>
         </div>
       </template>
@@ -162,38 +138,18 @@
   </div>
 </template>
 
-<script setup name="Key">
+<script setup name="MyModel">
 import {
   listByPlatform,
-  removeKey,
-  submitBatch,
   myModelPage,
+  submitBatch,
 } from "@/api/basic/llm/modelMarket/key.js";
 import Card from "@/views/basic/llm/modelMarket/card.vue";
+import QtSearchBar from "@/components/QtSearchBar/index.vue";
 
 const { proxy } = getCurrentInstance();
-const { ai_apikey_status, ai_model_platform } = proxy.useDict(
-  "ai_apikey_status",
-  "ai_model_platform"
-);
+const {ai_model_platform, ai_model_tag} = proxy.useDict('ai_model_platform', 'ai_model_tag');
 
-const urlList = ref([
-  {
-    key: "TongYi",
-    keyUrl: "https://help.aliyun.com/zh/model-studio/get-api-key",
-    desc: "从阿里云百炼获取 API KEY",
-  },
-  {
-    key: "DeepSeek",
-    keyUrl: "https://platform.deepseek.com/api_keys",
-    desc: "从DeepSeek获取 API KEY",
-  },
-  {
-    key: "Ollama",
-    keyUrl: "",
-    desc: "123",
-  },
-]);
 // 列显隐信息
 const columns = ref([
   { key: 1, label: "API 地址", visible: true },
@@ -207,18 +163,13 @@ const getColumnVisibility = (key) => {
   return column.visible;
 };
 
-const open = ref(false);
 const showKeyOpen = ref(false);
-const openDetail = ref(false);
 const loading = ref(true);
-const showSearch = ref(true);
 const ids = ref([]);
 const total = ref(0);
-const title = ref("");
 const keyTableTitle = ref("");
 const currentPlatform = ref("");
 const keyList = ref([]);
-const defaultSort = ref({ prop: "createTime", order: "desc" });
 const router = useRouter();
 const data = reactive({
   form: {
@@ -231,6 +182,7 @@ const data = reactive({
     name: null,
     apiKey: null,
     platform: null,
+    platformTag: null,
     url: null,
     status: null,
     createTime: null,
@@ -245,21 +197,36 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data);
 
-/** 查询API密钥列表 */
-function getList() {
-  loading.value = true;
-  myModelPage(queryParams.value).then((response) => {
-    keyList.value = response.data.rows;
-    total.value = response.data.total;
-    loading.value = false;
-  });
-}
+// 适配公共搜索栏的表格接口，卡片页复用其查询流程，避免事件与自动查询重复请求。
+const searchActions = {getList, resetQuery: handleQuery};
 
-// 取消按钮
-function cancel() {
-  open.value = false;
-  openDetail.value = false;
-  reset();
+// 字典异步加载后同步更新选项，平台及能力继续沿用卡片使用的字典。
+const searchItems = computed(() => [
+  {label: '模型名称', prop: 'name', component: {is: 'input'}},
+  {label: '模型平台', prop: 'platform', component: {is: 'select', options: ai_model_platform.value}},
+  {label: '模型能力', prop: 'platformTag', component: {is: 'select', options: ai_model_tag.value}}
+]);
+
+// 仅采纳最新查询结果，避免快速切换条件时旧响应覆盖当前卡片。
+let listRequest = 0;
+
+/** 按当前名称、平台及模型能力查询已配置卡片，失败时结束加载并清空旧结果。 */
+async function getList() {
+  const request = ++listRequest;
+  loading.value = true;
+  try {
+    const response = await myModelPage({...queryParams.value, name: queryParams.value.name?.trim() || undefined});
+    if (request !== listRequest) return;
+    keyList.value = response.data.rows || [];
+    total.value = response.data.total || 0;
+  } catch {
+    if (request === listRequest) {
+      keyList.value = [];
+      total.value = 0;
+    }
+  } finally {
+    if (request === listRequest) loading.value = false;
+  }
 }
 
 // 表单重置
@@ -290,19 +257,6 @@ function reset() {
 /** 搜索按钮操作 */
 function handleQuery() {
   queryParams.value.pageNum = 1;
-  getList();
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  proxy.resetForm("queryRef");
-  handleQuery();
-}
-
-/** 排序触发事件 */
-function handleSortChange(column, prop, order) {
-  queryParams.value.orderByColumn = column.prop;
-  queryParams.value.isAsc = column.order;
   getList();
 }
 
@@ -383,7 +337,7 @@ function submitForm() {
         platform: currentPlatform.value,
         keyList: form.value.platformKeyList,
       };
-      submitBatch(data).then((response) => {
+      submitBatch(data).then(() => {
         proxy.$modal.msgSuccess("设置成功");
         showKeyOpen.value = false;
         getList();
@@ -392,18 +346,9 @@ function submitForm() {
   });
 }
 
-/**
- * 移除 apiKey
- */
-function handleRemove() {
-  removeKey(form.value.id).then(() => {
-    getList();
-  });
-  open.value = false;
-}
-
-function routeTo(link, row) {
-  link = "/basic/llm/myModel/detail";
+/** 从提供方卡片进入模型详情，按平台加载可用模型。 */
+function routeTo(_link, row) {
+  const link = "/basic/llm/myModel/detail";
   if (link !== "" && link.indexOf("http") !== -1) {
     window.location.href = link;
     return;
@@ -422,6 +367,8 @@ function routeTo(link, row) {
   }
 }
 
+// 离开页面后使在途查询失效，避免销毁后继续更新卡片。
+onBeforeUnmount(() => { ++listRequest; });
 getList();
 </script>
 
@@ -469,7 +416,4 @@ getList();
   padding: 20px 40px 5px 40px !important;
 }
 
-:deep(.card-container) {
-  padding: 15px 0px;
-}
 </style>

@@ -82,7 +82,7 @@
             </div>
             <div @click="handleHelp" class="help-btn">
               <el-icon><House /></el-icon>
-              <span>qOntology社区</span>
+              <span>qOntology 社区</span>
             </div>
             <div class="help-second">
               <span @click="handleFAQ">文档站</span>
@@ -103,7 +103,7 @@
         </div>
         <div @click="handleHelp" class="help-btn">
           <el-icon><House /></el-icon>
-          <span>qOntology社区</span>
+          <span>qOntology 社区</span>
         </div>
         <div class="help-second">
           <span @click="handleFAQ">文档站</span>
@@ -219,7 +219,7 @@ const handleHelp = () => {
     background: #112337;
     border-radius: 4px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 12px;
+    padding: 15px;
     box-shadow: inset 0 0 0 1px rgba(92, 144, 255, 0.08),
       0 10px 28px rgba(33, 103, 255, 0.08);
   }
@@ -227,7 +227,6 @@ const handleHelp = () => {
   .help-head {
     position: relative;
     z-index: 1;
-    margin-bottom: 20px;
     color: #fff;
     .svg-icon {
       width: 17px;
@@ -253,7 +252,7 @@ const handleHelp = () => {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 10px 0;
+    margin: 15px 0;
     box-shadow: 0 8px 18px rgba(44, 111, 255, 0.2);
 
     .el-icon {

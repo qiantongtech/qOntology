@@ -18,7 +18,7 @@
 
 <template>
   <div class="app-container" ref="app-container">
-  
+
     <GuideTip tip-id="basic/project.list" />
 
     <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
@@ -62,6 +62,14 @@
             :inactive-value="0"
             @change="(e) => handleStatusChange(row.id, row, e)"
           />
+        </template>
+        <template #responsiblePerson="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.responsiblePersonName || ''">{{ row.responsiblePersonName || '-' }}</span>
+            <span v-if="row.responsiblePersonPhone" class="desc-text">
+              {{ row.responsiblePersonPhone }}
+            </span>
+          </div>
         </template>
         <template #handle="{ row }">
           <el-button
@@ -190,100 +198,19 @@
       </template>
     </el-dialog>
 
-    <!-- 添加或修改项目对话框 -->
-    <el-dialog
+    <!-- 表单组件负责本地编辑及校验，父页面统一处理接口保存和列表刷新。 -->
+    <ProjectFormDialog
+      v-model:open="open"
       :title="title"
-      v-model="open"
-      width="900px"
+      :form="form"
+      :rules="rules"
+      :mode="dialogMode"
+      :status-options="project_status"
+      :saving="projectSaving"
       :append-to="$refs['app-container']"
-      draggable
-    >
-      <template #header="{ close, titleId, titleClass }">
-        <span role="heading" aria-level="2" class="el-dialog__title">
-          {{ title }}
-        </span>
-      </template>
-        <GuideTipPanel
-      title="创建本体项目，明确所属业务领域、命名空间及建模范围，为后续业务对象、属性和关系的定义与管理提供基础。"
-      type="hint"
-      class="mb15"
+      @cancel="cancel"
+      @submit="submitForm"
     />
-      <el-form
-        ref="projectRef"
-        :model="form"
-        :rules="rules"
-        label-width="80px"
-        class="column-form"
-        @submit.prevent
-      >
-        <el-form-item label="项目名称" prop="name" class="row-full">
-          <el-input v-model="form.name" placeholder="请输入项目名称" />
-        </el-form-item>
-        <el-form-item label="项目领域" prop="domain" class="row-full">
-          <el-input v-model="form.domain" placeholder="请输入项目领域" />
-        </el-form-item>
-        <qt-form-item
-          label="命名空间"
-          prop="namespace"
-          class="row-full"
-          tip="命名空间用于唯一标识本体的术语来源，遵循 W3C 标准。例如：https://example.com"
-        >
-          <el-input v-model="form.namespace" placeholder="请输入命名空间" />
-        </qt-form-item>
-          <el-form-item label="初始版本" prop="currentVersion" class="row-full">
-          <el-input
-            :disabled="dialogMode === 'edit'"
-            v-model="form.currentVersion"
-            placeholder="请输入初始版本"
-          />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio
-              v-for="dict in project_status"
-              :key="Number(dict.value)"
-              :value="Number(dict.value)"
-              >{{ dict.label }}
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="包含范围" prop="includeRange" class="row-full">
-          <el-input
-            v-model="form.includeRange"
-            type="textarea"
-            placeholder="请输入包含范围"
-            maxlength="256 个字符"
-            show-word-limit
-          />
-        </el-form-item>
-        <el-form-item label="排除范围" prop="excludeRange" class="row-full">
-          <el-input
-            v-model="form.excludeRange"
-            type="textarea"
-            placeholder="请输入排除范围"
-            maxlength="256 个字符"
-            show-word-limit
-          />
-        </el-form-item>
-        <el-form-item label="描述" prop="description" class="row-full">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            placeholder="请输入描述"
-            maxlength="256 个字符"
-            show-word-limit
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm"
-            >确 定</el-button
-          >
-        </div>
-      </template>
-    </el-dialog>
     <!-- 项目详情对话框 -->
     <el-dialog
       :title="title"
@@ -329,6 +256,12 @@
             :value="form.status"
             class="con-value access-tag"
           />
+        </el-form-item>
+        <el-form-item label="责任人" class="row-full">
+          <div class="form-readonly">{{ form.responsiblePersonName || '—' }}</div>
+        </el-form-item>
+        <el-form-item label="联系电话" class="row-full">
+          <div class="form-readonly">{{ form.responsiblePersonPhone || '—' }}</div>
         </el-form-item>
         <el-form-item label="包含范围" prop="includeRange" class="row-full">
           <div class="form-readonly textarea">
@@ -388,6 +321,7 @@ import {
 import { saveAs } from "file-saver";
 import { onBeforeUnmount } from "vue";
 import auth from "@/plugins/auth";
+import ProjectFormDialog from "./components/projectFormDialog.vue";
 
 const { proxy } = getCurrentInstance();
 const { project_status } = proxy.useDict("project_status");
@@ -542,6 +476,16 @@ const tableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     {
+      label: "责任人",
+      prop: "responsibleUserId",
+      align: "left",
+      headerAlign: "left",
+      width: 130,
+      minWidth: 130,
+      slot: "responsiblePerson",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
       label: "状态",
       prop: "status",
       slot: "status",
@@ -560,8 +504,7 @@ const tableStore = reactive({
     {
       label: "操作",
       slot: "handle",
-      width: 200,
-      align: "left",
+      width: 240,
       fixed: "right",
     },
   ],
@@ -594,6 +537,8 @@ const ids = ref([]);
 const multiple = ref(true);
 const title = ref("");
 const dialogMode = ref("add"); // add, edit, detail
+// 父页面持有保存状态，供表单组件统一禁用提交和关闭操作。
+const projectSaving = ref(false);
 
 // 命名空间需符合 W3C 的 URI 格式：以 http/https 开头的绝对 URI，且不含空白字符
 const namespaceUriPattern = /^https?:\/\/[^\s/?#]+(?:[/?#]\S*)?$/i;
@@ -632,15 +577,17 @@ const data = reactive({
 
 const { form, rules } = toRefs(data);
 
-// 取消按钮
+/** 取消当前弹窗操作；保存期间由组件与父页面共同阻止关闭。 */
 function cancel() {
+  if (projectSaving.value) return;
   open.value = false;
   openDetail.value = false;
   reset();
 }
 
-// 表单重置
+/** 初始化项目表单，避免上一次编辑的范围或描述残留到新增操作。 */
 function reset() {
+  proxy.resetForm("projectRef");
   form.value = {
     id: null,
     name: null,
@@ -648,6 +595,12 @@ function reset() {
     namespace: null,
     status: 1,
     currentVersion: null,
+    responsibleUserId: null,
+    responsiblePersonName: null,
+    responsiblePersonPhone: null,
+    includeRange: null,
+    excludeRange: null,
+    description: null,
     createBy: null,
     creatorId: null,
     createTime: null,
@@ -656,7 +609,6 @@ function reset() {
     updateTime: null,
     remark: null,
   };
-  proxy.resetForm("projectRef");
 }
 
 // 多选框选中数据
@@ -713,29 +665,25 @@ function handleDetail(row) {
   });
 }
 
-/** 提交按钮 */
-function submitForm() {
-  proxy.$refs["projectRef"].validate((valid) => {
-    if (valid) {
-      if (form.value.id != null) {
-        updateProject(form.value)
-          .then((response) => {
-            proxy.$modal.msgSuccess("修改成功");
-            open.value = false;
-            tableRef.value.getList();
-          })
-          .catch((error) => {});
-      } else {
-        addProject(form.value)
-          .then((response) => {
-            proxy.$modal.msgSuccess("新增成功");
-            open.value = false;
-            tableRef.value.getList();
-          })
-          .catch((error) => {});
-      }
+/** 接收组件校验后的表单快照，保存成功后关闭弹窗并刷新当前项目列表。 */
+async function submitForm(payload) {
+  // 组件负责字段校验，父页面额外防止重复保存及关闭后的迟到提交。
+  if (projectSaving.value || !open.value) return;
+  projectSaving.value = true;
+  try {
+    if (payload.id != null) {
+      await updateProject(payload);
+    } else {
+      await addProject(payload);
     }
-  });
+    proxy.$modal.msgSuccess(payload.id != null ? "修改成功" : "新增成功");
+    open.value = false;
+    tableRef.value?.getList();
+  } catch {
+    // 接口错误由全局请求层提示；保留弹窗草稿，允许用户修改后重新提交。
+  } finally {
+    projectSaving.value = false;
+  }
 }
 
 /** 删除按钮操作 */

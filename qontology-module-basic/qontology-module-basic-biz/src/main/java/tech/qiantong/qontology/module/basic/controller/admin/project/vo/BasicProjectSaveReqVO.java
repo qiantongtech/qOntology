@@ -20,10 +20,12 @@ package tech.qiantong.qontology.module.basic.controller.admin.project.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import jakarta.validation.constraints.Positive;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
 import java.util.Date;
 
 import tech.qiantong.qontology.core.annotation.Excel;
@@ -63,6 +65,13 @@ public class BasicProjectSaveReqVO extends BaseEntity {
     @Schema(description = "状态", example = "")
     @NotNull(message = "状态不能为空")
     private ProjectStatusEnum status;
+
+    /**
+     * 客户端只提交用户编号，姓名和电话由后端读取系统用户资料。
+     */
+    @Schema(description = "责任人用户编号")
+    @Positive(message = "责任人用户编号必须为正整数")
+    private Long responsibleUserId;
 
     @Schema(description = "当前版本", example = "")
     @NotBlank(message = "当前版本不能为空")

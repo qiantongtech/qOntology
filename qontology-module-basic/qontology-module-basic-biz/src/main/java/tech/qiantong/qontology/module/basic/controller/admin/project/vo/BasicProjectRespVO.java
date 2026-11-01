@@ -59,6 +59,17 @@ public class BasicProjectRespVO implements Serializable {
     @Schema(description = "状态", example = "")
     private ProjectStatusEnum status;
 
+    @Schema(description = "责任人用户编号")
+    private Long responsibleUserId;
+
+    @Excel(name = "责任人")
+    @Schema(description = "责任人姓名")
+    private String responsiblePersonName;
+
+    @Excel(name = "联系电话")
+    @Schema(description = "责任人联系电话")
+    private String responsiblePersonPhone;
+
     @Excel(name = "当前版本")
     @Schema(description = "当前版本", example = "")
     private String currentVersion;

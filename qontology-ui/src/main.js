@@ -94,6 +94,7 @@ import ImagePreview from '@/components/ImagePreview';
 import TreeSelect from '@/components/TreeSelect';
 // 字典标签组件
 import DictTag from '@/components/DictTag';
+import DetailInfo from '@/components/DetailInfo';
 // 表单提示组件
 import QtFormItem from '@/components/QtFormItem';
 //标签组件
@@ -117,6 +118,7 @@ app.config.globalProperties.$bus = bus;
 
 // 全局组件挂载
 app.component('DictTag', DictTag);
+app.component('DetailInfo', DetailInfo);
 app.component('Tag', Tag);
 app.component('Pagination', Pagination);
 app.component('TreeSelect', TreeSelect);
