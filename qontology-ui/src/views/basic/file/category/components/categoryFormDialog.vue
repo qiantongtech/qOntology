@@ -236,7 +236,4 @@ defineExpose({ openDialog });
 .description {
   white-space: pre-wrap;
 }
-.char-count :deep(.el-input__count)::after {
-  content: "个字符";
-}
 </style>

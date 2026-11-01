@@ -75,10 +75,9 @@
         />
       </qt-form-item>
       <qt-form-item
-        class="row-full"
+        class="row-full file-name-item"
         label="文件名称"
         prop="fileName"
-        style="margin-top: -20px"
       >
         <el-input v-model="form.fileName" placeholder="请输入文件名称" />
       </qt-form-item>
@@ -207,6 +206,10 @@ defineExpose({ openDialog });
 </script>
 
 <style scoped lang="scss">
+.file-name-item {
+  margin-top: -20px;
+}
+
 .char-count :deep(.el-input__count)::after {
   content: "个字符";
 }
