@@ -21,7 +21,7 @@
   <el-dialog
     v-model="dialogVisible"
     :title="title"
-    width="800px"
+    width="900px"
     :append-to="appendTo"
     :close-on-click-modal="false"
     :close-on-press-escape="!saving"
@@ -30,7 +30,9 @@
     draggable
   >
     <template #header>
-      <span role="heading" aria-level="2" class="el-dialog__title">{{ title }}</span>
+      <span role="heading" aria-level="2" class="el-dialog__title">{{
+        title
+      }}</span>
     </template>
     <guide-tip-panel
       title="创建本体项目，明确所属业务领域、命名空间及建模范围，为后续业务对象、属性和关系的定义与管理提供基础。"
@@ -43,15 +45,15 @@
       :model="localForm"
       :rules="rules"
       :disabled="saving"
-      label-width="110px"
+      label-width="90px"
       class="column-form"
       @submit.prevent="submitForm"
     >
       <qt-form-item label="项目名称" prop="name" class="row-full">
-        <el-input v-model="localForm.name" placeholder="请输入项目名称"/>
+        <el-input v-model="localForm.name" placeholder="请输入项目名称" />
       </qt-form-item>
       <qt-form-item label="项目领域" prop="domain" class="row-full">
-        <el-input v-model="localForm.domain" placeholder="请输入项目领域"/>
+        <el-input v-model="localForm.domain" placeholder="请输入项目领域" />
       </qt-form-item>
       <qt-form-item
         label="命名空间"
@@ -59,50 +61,100 @@
         class="row-full"
         tip="命名空间用于唯一标识本体的术语来源，遵循 W3C 标准。例如：https://example.com"
       >
-        <el-input v-model="localForm.namespace" placeholder="请输入命名空间"/>
+        <el-input v-model="localForm.namespace" placeholder="请输入命名空间" />
       </qt-form-item>
       <qt-form-item label="初始版本" prop="currentVersion" class="row-full">
         <!-- 初始版本仅在新增时录入，编辑项目时沿用已有版本。 -->
-        <el-input v-model="localForm.currentVersion" :disabled="mode === 'edit'" placeholder="请输入初始版本"/>
+        <el-input
+          v-model="localForm.currentVersion"
+          :disabled="mode === 'edit'"
+          placeholder="请输入初始版本"
+        />
+      </qt-form-item>
+      <qt-form-item label="责任人" prop="responsibleUserId" class="row-full">
+        <el-select
+          v-model="localForm.responsibleUserId"
+          placeholder="请选择责任人"
+          clearable
+          filterable
+          :loading="usersLoading"
+        >
+          <el-option
+            v-for="user in userOptions"
+            :key="user.value"
+            :label="user.label"
+            :value="user.value"
+          />
+        </el-select>
+      </qt-form-item>
+      <qt-form-item label="联系电话" class="row-full">
+        <el-input
+          :model-value="responsiblePhone"
+          disabled
+          placeholder="请输入联系电话"
+        />
       </qt-form-item>
       <qt-form-item label="状态" prop="status" class="row-full">
         <el-radio-group v-model="localForm.status">
-          <el-radio v-for="dict in statusOptions" :key="Number(dict.value)" :value="Number(dict.value)">
+          <el-radio
+            v-for="dict in statusOptions"
+            :key="Number(dict.value)"
+            :value="Number(dict.value)"
+          >
             {{ dict.label }}
           </el-radio>
         </el-radio-group>
       </qt-form-item>
-      <qt-form-item label="责任人" prop="responsibleUserId" class="row-full">
-        <el-select v-model="localForm.responsibleUserId" placeholder="请选择责任人" clearable filterable :loading="usersLoading">
-          <el-option v-for="user in userOptions" :key="user.value" :label="user.label" :value="user.value"/>
-        </el-select>
-      </qt-form-item>
-      <qt-form-item label="联系电话" class="row-full">
-        <!-- 电话随所选系统用户变化，只读展示，不允许在项目表单中修改用户资料。 -->
-        <el-input :model-value="responsiblePhone" disabled/>
-      </qt-form-item>
+
       <qt-form-item label="包含范围" prop="includeRange" class="row-full">
-        <el-input v-model="localForm.includeRange" type="textarea" :maxlength="256" show-word-limit placeholder="请输入包含范围"/>
+        <el-input
+          v-model="localForm.includeRange"
+          type="textarea"
+          maxlength="256个字符"
+          show-word-limit
+          placeholder="请输入包含范围"
+        />
       </qt-form-item>
       <qt-form-item label="排除范围" prop="excludeRange" class="row-full">
-        <el-input v-model="localForm.excludeRange" type="textarea" :maxlength="256" show-word-limit placeholder="请输入排除范围"/>
+        <el-input
+          v-model="localForm.excludeRange"
+          type="textarea"
+          maxlength="256个字符"
+          show-word-limit
+          placeholder="请输入排除范围"
+        />
       </qt-form-item>
       <qt-form-item label="描述" prop="description" class="row-full">
-        <el-input v-model="localForm.description" type="textarea" :maxlength="256" show-word-limit placeholder="请输入描述"/>
+        <el-input
+          v-model="localForm.description"
+          type="textarea"
+          maxlength="256个字符"
+          show-word-limit
+          placeholder="请输入描述"
+        />
       </qt-form-item>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" :disabled="saving" @click="handleCancel">取 消</el-button>
-        <el-button type="primary" size="mini" :loading="saving" :disabled="validating" @click="submitForm">确 定</el-button>
+        <el-button size="mini" :disabled="saving" @click="handleCancel"
+          >取 消</el-button
+        >
+        <el-button
+          type="primary"
+          size="mini"
+          :loading="saving"
+          :disabled="validating"
+          @click="submitForm"
+          >确 定</el-button
+        >
       </div>
     </template>
   </el-dialog>
 </template>
 
 <script setup name="ProjectFormDialog">
-import {computed, nextTick, onBeforeUnmount, ref, watch} from 'vue';
-import {listUserAll} from '@/api/system/system/user';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { listUserAll } from "@/api/system/system/user";
 import GuideTipPanel from "@/components/GuideTip/GuideTipPanel.vue";
 
 /**
@@ -110,16 +162,16 @@ import GuideTipPanel from "@/components/GuideTip/GuideTipPanel.vue";
  * 父页面负责接口保存，通过 saving 控制保存期间的交互；cancel 用于通知父页面重置状态。
  */
 const props = defineProps({
-  open: {type: Boolean, required: true},
-  title: {type: String, required: true},
-  form: {type: Object, required: true},
-  rules: {type: Object, required: true},
-  mode: {type: String, default: 'add'},
-  statusOptions: {type: Array, default: () => []},
-  saving: {type: Boolean, default: false},
-  appendTo: {type: [String, Object], default: undefined}
+  open: { type: Boolean, required: true },
+  title: { type: String, required: true },
+  form: { type: Object, required: true },
+  rules: { type: Object, required: true },
+  mode: { type: String, default: "add" },
+  statusOptions: { type: Array, default: () => [] },
+  saving: { type: Boolean, default: false },
+  appendTo: { type: [String, Object], default: undefined },
 });
-const emit = defineEmits(['update:open', 'cancel', 'submit']);
+const emit = defineEmits(["update:open", "cancel", "submit"]);
 const formRef = ref();
 const validating = ref(false);
 const userOptions = ref([]);
@@ -128,8 +180,10 @@ let userRequest = 0;
 
 // 使用字符串比较用户编号，兼容详情接口和下拉选项中数值与字符串类型的差异。
 const responsiblePhone = computed(() => {
-  const user = userOptions.value.find(item => item.value === String(localForm.value.responsibleUserId));
-  return user?.phone || '';
+  const user = userOptions.value.find(
+    (item) => item.value === String(localForm.value.responsibleUserId)
+  );
+  return user?.phone || "";
 });
 
 /** 创建完整初值，确保重新打开新增弹窗时不保留上一次的范围、描述及审计信息。 */
@@ -153,7 +207,7 @@ function createEmptyForm() {
     updateBy: null,
     updaterId: null,
     updateTime: null,
-    remark: null
+    remark: null,
   };
 }
 
@@ -161,28 +215,33 @@ const localForm = ref(createEmptyForm());
 // 代理 v-model:open；保存期间不允许标题栏或键盘操作意外关闭弹窗。
 const dialogVisible = computed({
   get: () => props.open,
-  set: value => {
-    if (!props.saving) emit('update:open', value);
-  }
+  set: (value) => {
+    if (!props.saving) emit("update:open", value);
+  },
 });
 
 /** 同步父页面传入的初始数据，使用独立对象编辑，避免取消时污染父级表单。 */
-watch(() => props.form, value => {
-  localForm.value = {...createEmptyForm(), ...(value || {})};
-  localForm.value.responsibleUserId = value?.responsibleUserId == null ? null : String(value.responsibleUserId);
-  mergeSelectedUser(value || {});
-  nextTick(() => formRef.value?.clearValidate());
-}, {immediate: true, deep: true});
+watch(
+  () => props.form,
+  (value) => {
+    localForm.value = { ...createEmptyForm(), ...(value || {}) };
+    localForm.value.responsibleUserId =
+      value?.responsibleUserId == null ? null : String(value.responsibleUserId);
+    mergeSelectedUser(value || {});
+    nextTick(() => formRef.value?.clearValidate());
+  },
+  { immediate: true, deep: true }
+);
 
 /** 补齐当前用户，确保用户不在选项结果中或选项加载失败时仍能回显已有责任人和电话。 */
 function mergeSelectedUser(selected) {
   if (selected.responsibleUserId == null) return;
   const value = String(selected.responsibleUserId);
-  if (userOptions.value.some(user => user.value === value)) return;
+  if (userOptions.value.some((user) => user.value === value)) return;
   userOptions.value.unshift({
     value,
     label: selected.responsiblePersonName || value,
-    phone: selected.responsiblePersonPhone || ''
+    phone: selected.responsiblePersonPhone || "",
   });
 }
 
@@ -196,11 +255,13 @@ async function loadUserOptions() {
     const response = await listUserAll();
     if (request !== userRequest || !props.open) return;
     const rows = response.rows || response.data?.rows || [];
-    userOptions.value = rows.filter(user => user.userId != null).map(user => ({
-      value: String(user.userId),
-      label: user.nickName || user.userName || String(user.userId),
-      phone: user.phonenumber || ''
-    }));
+    userOptions.value = rows
+      .filter((user) => user.userId != null)
+      .map((user) => ({
+        value: String(user.userId),
+        label: user.nickName || user.userName || String(user.userId),
+        phone: user.phonenumber || "",
+      }));
     mergeSelectedUser(props.form);
   } catch {
     // 请求层统一提示错误，保留已选责任人的回显，避免用户误认为关联已被清空。
@@ -210,15 +271,21 @@ async function loadUserOptions() {
 }
 
 /** 每次打开时更新用户资料，关闭后使在途请求失效，避免旧弹窗响应覆盖新选择。 */
-watch(() => props.open, open => {
-  if (open) loadUserOptions();
-  else {
-    ++userRequest;
-    usersLoading.value = false;
-  }
-}, {immediate: true});
+watch(
+  () => props.open,
+  (open) => {
+    if (open) loadUserOptions();
+    else {
+      ++userRequest;
+      usersLoading.value = false;
+    }
+  },
+  { immediate: true }
+);
 
-onBeforeUnmount(() => { ++userRequest; });
+onBeforeUnmount(() => {
+  ++userRequest;
+});
 
 /** 保存期间阻止弹窗关闭，其余情况交由弹窗组件同步 v-model。 */
 function handleBeforeClose(done) {
@@ -227,7 +294,7 @@ function handleBeforeClose(done) {
 
 /** 取消只通知父页面，由父页面关闭弹窗并统一重置表单。 */
 function handleCancel() {
-  if (!props.saving) emit('cancel');
+  if (!props.saving) emit("cancel");
 }
 
 /** 校验本地草稿并提交快照；等待期间禁止重复校验，关闭或保存中的弹窗不再提交。 */
@@ -238,9 +305,13 @@ async function submitForm() {
   const draft = localForm.value;
   try {
     const valid = await formRef.value.validate().catch(() => false);
-    if (!valid || !props.open || props.saving || draft !== localForm.value) return;
+    if (!valid || !props.open || props.saving || draft !== localForm.value)
+      return;
     // 清空选择时显式提交 null，使后端能够清除原有责任人关联。
-    emit('submit', {...localForm.value, responsibleUserId: localForm.value.responsibleUserId || null});
+    emit("submit", {
+      ...localForm.value,
+      responsibleUserId: localForm.value.responsibleUserId || null,
+    });
   } finally {
     validating.value = false;
   }

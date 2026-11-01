@@ -18,7 +18,6 @@
 
 <template>
   <div class="app-container" ref="app-container">
-
     <GuideTip tip-id="basic/project.list" />
 
     <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
@@ -65,7 +64,11 @@
         </template>
         <template #responsiblePerson="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.responsiblePersonName || ''">{{ row.responsiblePersonName || '-' }}</span>
+            <span
+              class="text-ellipsis"
+              :title="row.responsiblePersonName || ''"
+              >{{ row.responsiblePersonName || "-" }}</span
+            >
             <span v-if="row.responsiblePersonPhone" class="desc-text">
               {{ row.responsiblePersonPhone }}
             </span>
@@ -250,6 +253,16 @@
             {{ form.currentVersion }}
           </div>
         </el-form-item>
+        <el-form-item label="责任人" class="row-full">
+          <div class="form-readonly">
+            {{ form.responsiblePersonName || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="联系电话" class="row-full">
+          <div class="form-readonly">
+            {{ form.responsiblePersonPhone || "—" }}
+          </div>
+        </el-form-item>
         <el-form-item label="状态" prop="status">
           <dict-tag
             :options="project_status"
@@ -257,12 +270,7 @@
             class="con-value access-tag"
           />
         </el-form-item>
-        <el-form-item label="责任人" class="row-full">
-          <div class="form-readonly">{{ form.responsiblePersonName || '—' }}</div>
-        </el-form-item>
-        <el-form-item label="联系电话" class="row-full">
-          <div class="form-readonly">{{ form.responsiblePersonPhone || '—' }}</div>
-        </el-form-item>
+
         <el-form-item label="包含范围" prop="includeRange" class="row-full">
           <div class="form-readonly textarea">
             {{ form.includeRange }}
@@ -571,7 +579,7 @@ const data = reactive({
     ],
     excludeRange: [
       { required: true, message: "排除范围不能为空", trigger: "blur" },
-    ]
+    ],
   },
 });
 

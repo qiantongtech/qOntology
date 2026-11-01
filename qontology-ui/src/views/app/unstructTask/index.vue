@@ -84,11 +84,7 @@
               >
             </template>
             <div class="task-action-list">
-              <el-button
-                icon="List"
-                link
-                type="primary"
-                @click="showLogs(row)"
+              <el-button icon="List" link type="primary" @click="showLogs(row)"
                 >执行日志</el-button
               ><el-button
                 class="btn-icon-offset"
@@ -152,10 +148,7 @@
               ></el-form-item
             >
             <div style="margin: 0 0 10px 80px">
-              <el-table
-                :data="form.sourceFiles"
-                height="300px"
-                stripe
+              <el-table :data="form.sourceFiles" height="300px" stripe
                 ><el-table-column
                   label="文件名称"
                   prop="fileName"
@@ -315,16 +308,16 @@ const tableStore = reactive({
         { prop: (row) => formatDuration(row.executeDuration) },
       ],
     },
-    {
-      label: "抽取成果",
-      minWidth: 150,
-      align: "left",
-      list: [
-        { label: "实体数", prop: (row) => formatCount(row.entityCount) },
-        { label: "关系数", prop: (row) => formatCount(row.relationCount) },
-        { label: "处理文件数", prop: (row) => formatCount(row.docCount) },
-      ],
-    },
+    // {
+    //   label: "抽取成果",
+    //   minWidth: 150,
+    //   align: "left",
+    //   list: [
+    //     { label: "实体数", prop: (row) => formatCount(row.entityCount) },
+    //     { label: "关系数", prop: (row) => formatCount(row.relationCount) },
+    //     { label: "处理文件数", prop: (row) => formatCount(row.docCount) },
+    //   ],
+    // },
     { label: "任务状态", slot: "taskStatus", width: 100 },
     {
       label: "发布人",
@@ -410,7 +403,9 @@ function formatDuration(value) {
 
 /** 计数为 0 时 QtTable 会把假值渲染成 "-"，这里统一转成字符串。 */
 function formatCount(value) {
-  return value === null || value === undefined || value === "" ? "-" : `${value}`;
+  return value === null || value === undefined || value === ""
+    ? "-"
+    : `${value}`;
 }
 
 /** 任务状态开关：接口未返回 validFlag 时按启用展示。 */

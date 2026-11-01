@@ -29,12 +29,20 @@
     :show-close="!saving"
     :before-close="handleBeforeClose"
   >
-    <el-form ref="formRef" :model="form" :rules="rules" :disabled="saving" label-width="110px" class="column-form" @submit.prevent="submitForm">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      :disabled="saving"
+      label-width="110px"
+      class="column-form"
+      @submit.prevent="submitForm"
+    >
       <qt-form-item class="row-full" label="文件分类" prop="categoryId">
         <el-tree-select
           v-model="form.categoryId"
           :data="categoryOptions"
-          :props="{value: 'id', label: 'name', children: 'children'}"
+          :props="{ value: 'id', label: 'name', children: 'children' }"
           value-key="id"
           placeholder="请选择文件分类"
           check-strictly
@@ -47,70 +55,116 @@
           v-model="form.filePath"
           :file-name="form.fileName"
           :limit="1"
-          :file-type="['txt', 'pdf', 'html', 'xlsx', 'xls', 'docx', 'csv', 'md', 'mdx', 'htm', 'markdown', 'ttl']"
-          @update:fileSize="value => form.fileSize = value"
-          @update:fileExt="value => form.fileSuffix = value"
+          :file-type="[
+            'txt',
+            'pdf',
+            'html',
+            'xlsx',
+            'xls',
+            'docx',
+            'csv',
+            'md',
+            'mdx',
+            'htm',
+            'markdown',
+            'ttl',
+          ]"
+          @update:fileSize="(value) => (form.fileSize = value)"
+          @update:fileExt="(value) => (form.fileSuffix = value)"
           @update:fileName="updateFormFileName"
         />
       </qt-form-item>
-      <qt-form-item class="row-full" label="文件名称" prop="fileName">
-        <el-input v-model="form.fileName" placeholder="请输入文件名称"/>
+      <qt-form-item
+        class="row-full"
+        label="文件名称"
+        prop="fileName"
+        style="margin-top: -20px"
+      >
+        <el-input v-model="form.fileName" placeholder="请输入文件名称" />
       </qt-form-item>
       <qt-form-item class="row-full" label="描述" prop="description">
         <el-input
-            v-model="form.description"
-            class="character-count"
-            type="textarea"
-            :rows="3"
-            :maxlength="256"
-            show-word-limit
-            placeholder="请输入描述"
+          v-model="form.description"
+          class="character-count"
+          type="textarea"
+          :rows="3"
+          maxlength="256个字符"
+          show-word-limit
+          placeholder="请输入描述"
         />
       </qt-form-item>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
         <el-button :disabled="saving" @click="visible = false">取 消</el-button>
-        <el-button type="primary" :loading="saving" :disabled="validating" @click="submitForm">确 定</el-button>
+        <el-button
+          type="primary"
+          :loading="saving"
+          :disabled="validating"
+          @click="submitForm"
+          >确 定</el-button
+        >
       </div>
     </template>
   </el-dialog>
 </template>
 
 <script setup name="FileFormDialog">
-import {getCurrentInstance, nextTick, ref} from 'vue';
-import {addModelDataFile, getModelDataFile, updateModelDataFile} from '@/api/basic/file/basicFile.js';
-import FileUpload2 from '@/components/FileUpload2';
+import { getCurrentInstance, nextTick, ref } from "vue";
+import {
+  addModelDataFile,
+  getModelDataFile,
+  updateModelDataFile,
+} from "@/api/basic/file/basicFile.js";
+import FileUpload2 from "@/components/FileUpload2";
 
-defineProps({categoryOptions: {type: Array, default: () => []}});
-const emit = defineEmits(['success']);
-const {proxy} = getCurrentInstance();
+defineProps({ categoryOptions: { type: Array, default: () => [] } });
+const emit = defineEmits(["success"]);
+const { proxy } = getCurrentInstance();
 const visible = ref(false);
-const title = ref('');
+const title = ref("");
 const saving = ref(false);
 const validating = ref(false);
 const formRef = ref();
 const form = ref({});
 let openRequest = 0;
 const rules = {
-  categoryId: [{required: true, message: '文件分类不能为空', trigger: 'change'}],
-  fileName: [{required: true, message: '文件名称不能为空', trigger: 'change'}],
-  filePath: [{required: true, message: '文件路径不能为空', trigger: 'change'}]
+  categoryId: [
+    { required: true, message: "文件分类不能为空", trigger: "change" },
+  ],
+  fileName: [
+    { required: true, message: "文件名称不能为空", trigger: "change" },
+  ],
+  filePath: [
+    { required: true, message: "文件路径不能为空", trigger: "change" },
+  ],
 };
 
 /** 打开时加载最新详情或创建空白草稿，忽略快速切换记录后返回的旧请求。 */
 async function openDialog(options = {}) {
   if (saving.value) return;
   const request = ++openRequest;
-  const response = options.id != null ? await getModelDataFile(options.id) : null;
+  const response =
+    options.id != null ? await getModelDataFile(options.id) : null;
   if (request !== openRequest) return;
-  form.value = response ? {...response.data} : {
-    id: undefined, categoryId: undefined, fileName: '', fileSuffix: '', fileType: 'OTHER',
-    fileSize: 0, filePath: '', storageType: 'LOCAL', description: ''
-  };
+  form.value = response
+    ? { ...response.data }
+    : {
+        id: undefined,
+        categoryId: undefined,
+        fileName: "",
+        fileSuffix: "",
+        fileType: "OTHER",
+        fileSize: 0,
+        filePath: "",
+        storageType: "LOCAL",
+        description: "",
+      };
   // 上传组件及名称输入框使用字符串，避免数组形式的文件名称影响回显。
-  form.value.fileName = Array.isArray(form.value.fileName) ? form.value.fileName.join(',') : form.value.fileName || '';
-  title.value = options.id != null ? '修改文件' : '新增文件';
+  form.value.fileName = Array.isArray(form.value.fileName)
+    ? form.value.fileName.join(",")
+    : form.value.fileName || "";
+  title.value = options.id != null ? "修改文件" : "新增文件";
   visible.value = true;
   await nextTick();
   formRef.value?.clearValidate();
@@ -118,8 +172,8 @@ async function openDialog(options = {}) {
 
 /** 上传成功同步名称，并清除上传字段遗留的必填提示。 */
 function updateFormFileName(name) {
-  form.value.fileName = Array.isArray(name) ? name.join(',') : name || '';
-  nextTick(() => formRef.value?.clearValidate(['filePath', 'fileName']));
+  form.value.fileName = Array.isArray(name) ? name.join(",") : name || "";
+  nextTick(() => formRef.value?.clearValidate(["filePath", "fileName"]));
 }
 
 /** 保存期间阻止关闭弹窗，避免重复提交或丢失保存状态。 */
@@ -137,21 +191,23 @@ async function submitForm() {
     if (!valid || !visible.value || draft !== form.value) return;
     saving.value = true;
     const editing = draft.id != null;
-    await (editing ? updateModelDataFile({...draft}) : addModelDataFile({...draft}));
-    proxy.$modal.msgSuccess(editing ? '修改成功' : '新增成功');
+    await (editing
+      ? updateModelDataFile({ ...draft })
+      : addModelDataFile({ ...draft }));
+    proxy.$modal.msgSuccess(editing ? "修改成功" : "新增成功");
     visible.value = false;
-    emit('success');
+    emit("success");
   } finally {
     validating.value = false;
     saving.value = false;
   }
 }
 
-defineExpose({openDialog});
+defineExpose({ openDialog });
 </script>
 
 <style scoped lang="scss">
 .char-count :deep(.el-input__count)::after {
-  content: '个字符';
+  content: "个字符";
 }
 </style>
