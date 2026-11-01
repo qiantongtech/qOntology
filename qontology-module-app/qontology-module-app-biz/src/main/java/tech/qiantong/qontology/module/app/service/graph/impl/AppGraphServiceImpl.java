@@ -149,19 +149,42 @@ public class AppGraphServiceImpl implements AppGraphService {
     }
 
     /**
-     * 根据实体，获取对应的关系链数据
+     * 根据实体id集合，获取这些实体及实体之间的关系
+     * 不做关系链扩散，否则会把无关节点带进来，导致前端筛选失效
      *
      * @param appGraphVO
      * @return
      */
     @Override
     public AjaxResult getDynamicEntityList(AppGraphVO appGraphVO) {
-        // 获取关系链
+        List<String> entityIds = appGraphVO.getEntityIds() == null ? Collections.emptyList()
+                : appGraphVO.getEntityIds().stream()
+                .filter(StringUtils::isNotEmpty)
+                .distinct()
+                .collect(Collectors.toList());
+        if (entityIds.isEmpty()) {
+            return AjaxResult.success(emptyEntityGraph());
+        }
         GraphQueryWrapper<GraphEntity> queryWrapper = new GraphQueryWrapper<>(GraphEntity.class);
-        queryWrapper.in(GraphEntity::getId, appGraphVO.getEntityIds());
-        List<GraphEntity> dynamicEntityList = graphisRepository.relationChain(queryWrapper, 5);
+        queryWrapper.in(GraphEntity::getId, entityIds);
+        List<GraphEntity> dynamicEntityList = graphisRepository.find(queryWrapper);
         JSONObject jsonObject = Convert.toEntityJSONObject(dynamicEntityList);
+        // 关系只保留两端都在实体id集合内的，即“参与实体之间”的关系
+        Set<String> entityIdSet = new HashSet<>(entityIds);
+        JSONArray relationships = jsonObject.getJSONArray("relationships").stream()
+                .map(obj -> (JSONObject) obj)
+                .filter(rel -> entityIdSet.contains(rel.getString("startId"))
+                        && entityIdSet.contains(rel.getString("endId")))
+                .collect(Collectors.toCollection(JSONArray::new));
+        jsonObject.put("relationships", relationships);
         return AjaxResult.success(jsonObject);
+    }
+
+    private JSONObject emptyEntityGraph() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("entities", new JSONArray());
+        jsonObject.put("relationships", new JSONArray());
+        return jsonObject;
     }
 
     @Override

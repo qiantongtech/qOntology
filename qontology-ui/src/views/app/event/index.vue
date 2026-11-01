@@ -739,7 +739,7 @@ async function openGraphData() {
   entityTitle.value = '选择实体';
   entityLoading.value = true;
   queryParamsEntity.value.pageNum = 1;
-  entity.value = form.value.entityList;
+  entity.value = form.value.entityList || [];
 
   getGraphData();
 }
@@ -768,8 +768,9 @@ function getGraphData() {
  * @param {Boolean} ignoreSelectable 是否忽略可选
  */
 function setSelectionRow(rows, ignoreSelectable) {
+  console.log('rows', rows);
   // 选中数据
-  if (rows.length > 0) {
+  if (rows && rows.length > 0) {
     rows.forEach((row) => {
       let data = entityList.value.filter((item) => item.id == row.entityId);
       if (data.length > 0) {
@@ -781,7 +782,8 @@ function setSelectionRow(rows, ignoreSelectable) {
 
 // 多选框选中数据
 function handleEntitySelectionChange(selection) {
-  const selectionList = selection.map((item) => {
+  entity.value = entity.value || [];
+  const selectionList = (selection || []).map((item) => {
     const data = {
       id: item.id,
       name: item.name,
@@ -833,6 +835,7 @@ function handleEntitySelectionChange(selection) {
 
 /** 行点击事件 */
 function handleRowClick(row) {
+  entity.value = entity.value || [];
   // 检查当前行是否已经在 multiple 中
   const index = entity.value.findIndex((item) => item.entityId === row.id);
 
@@ -856,6 +859,7 @@ function handleRowClick(row) {
 
 function submitEntityForm() {
   entityOpen.value = false;
+  console.log('entity',entity.value)
   form.value.entityList = entity.value;
   form.value.entityNameList = entity.value.map((item) => item.entityName);
 }

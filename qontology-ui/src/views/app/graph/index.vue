@@ -51,15 +51,15 @@
     <div class="pagecont-one">
       <div class="page-tabs">
         <el-tabs v-model="pageAct" @tab-click="tabsClick">
-          <el-tab-pane label="常规视图" name="Graph"> </el-tab-pane>
+          <el-tab-pane label="常规视图" name="General"> </el-tab-pane>
           <el-tab-pane label="关系视图" name="Relation"> </el-tab-pane>
           <el-tab-pane label="时序视图" name="TimeLine"> </el-tab-pane>
           <el-tab-pane label="表格视图" name="Table"> </el-tab-pane>
         </el-tabs>
       </div>
-      <Graph ref="graph" v-if="pageAct === 'Graph'" />
+      <Graph ref="graph" v-if="pageAct === 'General'" />
       <RelationView ref="relationView" v-if="pageAct === 'Relation'" />
-<!--      <TimeLineView ref="timeLineView" v-if="pageAct === 'TimeLine'" />-->
+      <TimeLineView ref="timeLineView" v-if="pageAct === 'TimeLine'" />
       <TableView ref="tableView" v-if="pageAct === 'Table'" />
     </div>
   </div>
@@ -68,7 +68,8 @@
 import Graph from './graph/index.vue';
 import RelationView from './relation/index.vue';
 import TableView from './table/index.vue';
-// import TimeLineView from './timeLine/index.vue';
+import TimeLineView from './timeLine/index.vue';
+import {useRoute, useRouter} from "vue-router";
 const router = useRouter();
 const route = useRoute();
 const pageAct = ref('');

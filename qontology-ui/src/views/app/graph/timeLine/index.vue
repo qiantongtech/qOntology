@@ -1,65 +1,19 @@
 <!--
-  Copyright (c) 2026 Jiangsu Qiantong Technology Co., Ltd.
-   *
-  Software Name: qKnow Knowledge Platform (Business Edition)
-  Software Copyright Registration No. 15980140
-   *
-  [RIGHTS AND LICENSE STATEMENT]
-  This file contains non-public commercial source code of which Jiangsu Qiantong
-  Technology Co., Ltd. lawfully possesses complete intellectual property rights.
-   *
-  Access and use are limited to entities or individuals who have signed a valid
-  commercial license agreement, within the scope stipulated in the agreement.
-  The "accessibility" of this source code is premised on lawful authorization
-  and does not constitute any form of transfer of intellectual property rights
-  or implied licensing.
-   *
-  [PROHIBITIONS]
-  Unless explicitly agreed in the license agreement, the following acts in any
-  form are strictly prohibited:
-  1. Copying, disseminating, disclosing, selling, renting, or redistributing
-  this source code;
-  2. Providing the software's functionality to third parties via SaaS, PaaS,
-  cloud hosting, or other means;
-  3. Using this software or its derivative versions to develop products that
-  compete with the Right Holder;
-  4. Providing or displaying this source code or related technical information
-  to unauthorized third parties;
-  5. Tampering with, circumventing, or destroying copyright notices, license
-  verifications, or other technical protection measures.
-   *
-  [LEGAL LIABILITY]
-  Any unauthorized use constitutes an infringement of trade secrets and
-  intellectual property rights.
-   *
-  The Right Holder will strictly pursue liability for breach of contract and
-  infringement in accordance with the commercial agreement and laws such as
-  the "Copyright Law of the People's Republic of China" and the "Anti-Unfair
-  Competition Law".
-   *
-  ============================================================================
-   *
-  Copyright (c) 2026 江苏千桐科技有限公司
-   *
-  软件名称：qKnow 智能体构建平台（商业版） | 软著登字第15980140号
-   *
-  【权利与授权声明】
-  本文件属于江苏千桐科技有限公司依法享有完全知识产权的非公开商业源代码。
-  仅限已签署有效商业授权合同的单位或个人在约定范围内查阅和使用。
-  源代码的“可访问性”均以合法授权为前提，不构成任何形式的知识产权转让或默示授权。
-   *
-  【禁止事项】
-  除授权合同明确约定外，严禁任何形式的：
-  1. 复制、传播、披露、出售、出租或再分发本源代码；
-  2. 通过 SaaS、PaaS、云托管等方式向第三方提供本软件功能；
-  3. 将本软件或其衍生版本用于开发与权利人构成竞争的产品；
-  4. 向未授权第三方提供或展示本源代码或相关技术信息；
-  5. 篡改、规避或破坏版权标识、授权校验及其他技术保护措施。
-   *
-  【法律责任】
-  任何未经授权的利用行为，均构成对商业秘密及知识产权的侵害。
-  权利人将依据商业合同及《中华人民共和国著作权法》《反不正当竞争法》
-  等法律法规，严厉追究违约与侵权责任。
+Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+
+This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
+
+qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+You may use qOntology for commercial purposes, but you may not remove, hide,
+modify, or replace the qOntology logo, copyright notices, license notices,
+or attribution information without a separate commercial license.
+
+White-label use, OEM distribution, rebranding, or presenting qOntology as
+another product requires separate commercial authorization from
+Jiangsu Qiantong Technology Co., Ltd.
+
+Business License: https://community.qknow.ai/business/policy.html
+See the LICENSE file in the project root for full license information.
 -->
 
 <template>
@@ -156,11 +110,13 @@
     import NodeDialog from '../component/nodeDialog.vue';
     // 综合接口
     import { getGraph, getDynamicEntityList } from '@/api/app/graph';
-    import { listSchema } from '@/api/ext/extSchema/schema';
-    import { listEvent } from '@/api/kg/event/event';
+    import { getUnstructTaskTextList } from '@/api/app/unstructTask';
+    import { listType } from '@/api/om/object/type';
+    import { listEvent } from '@/api/app/event/event';
     // 引入gragh方法
     import { VisNetwork } from '@/utils/graph/visNetwork';
     import { G6Network } from '@/utils/graph/g6Network';
+    import { pickColorByEntityId } from '@/utils/graph/entityColor';
 
     const route = useRoute();
     const { proxy } = getCurrentInstance();
@@ -249,9 +205,58 @@
         searchData,
         graphData
     } = toRefs(relationData);
+
+    // 关联分段和关联文件
+    const textList = ref([]);
+    const docList = ref([]);
+
+    /** 按实体所属任务查询关联分段和关联文件 */
+    function getTextListAndDocList(node) {
+        textList.value = [];
+        docList.value = [];
+        nodeDialogRef.value?.setAssociations([], []);
+        if (!node || node.entityType != 2 || !node.taskId) {
+            return;
+        }
+        const requestTaskId = node.taskId;
+        getUnstructTaskTextList({ taskId: requestTaskId }).then((response) => {
+            // 请求返回时若已切换到其它实体则丢弃结果
+            if (
+                currentNodeData.value?.taskId &&
+                String(currentNodeData.value.taskId) !== String(requestTaskId)
+            ) {
+                return;
+            }
+            if (response && response.code === 200) {
+                textList.value = response.data?.textListByTaskId || [];
+                docList.value = (response.data?.docListByTaskId || []).map(
+                    (document) => ({
+                        id: document.id,
+                        name: document.fileName,
+                        path: document.filePath,
+                        createTime: document.createTime
+                    })
+                );
+                nodeDialogRef.value?.setAssociations(textList.value, docList.value);
+            }
+        });
+    }
+
+    /** 打开实体详情弹框，并传入关联分段和关联文件 */
+    function openNodeDialog(node) {
+        getTextListAndDocList(node);
+        nodeDialogRef.value.dialogOpen({
+            currNodeData: node,
+            edgesData: edges.value,
+            taskInfo: { id: '', name: '时序视图', pageType: '0' },
+            textList: textList.value,
+            docList: docList.value
+        });
+    }
+
     // 初始化加载数据
     const loadData = async () => {
-        await getSchemaList();
+        // await getSchemaList();
         await getGraphData();
     };
 
@@ -357,19 +362,22 @@
                 graphData.value = data;
                 // step：普通：0，特殊颜色：1，选中：2，相邻节点：-1
                 nodes.value = data.entities.map((item) => {
-                    let row = schemaList.value.data.rows.find((i) => item.schemaId == i.id);
+                    const row = schemaList.value.data.rows.find((i) => item.schemaId == i.id);
+                    // 优先用概念配色，无概念颜色时按实体 id 哈希取色，避免默认深蓝与背景同色
+                    const fill = row?.color || pickColorByEntityId(item.id);
                     return {
                         ...item,
                         id: item.id + '',
                         label: item.name.length > 6 ? item.name.substring(0, 6) + '...' : item.name,
-                        rowBackground: row ? row.color : '#315790',
-                        rowBorder: row ? `${row.color}4d` : '#7dbffa4d',
+                        rowBackground: fill,
+                        rowBorder: `${fill}4d`,
                         color: {
-                            background: row ? row.color : '#315790',
-                            border: row ? `${row.color}4d` : '#7dbffa4d'
+                            background: fill,
+                            border: `${fill}4d`
                         },
                         borderWidth: row ? 15 : 0,
-                        step: row ? 1 : 0
+                        step: row ? 1 : 0,
+                        cluster: item.id + ''
                     };
                 });
                 edges.value = [];
@@ -494,12 +502,7 @@
                                 '---------currentNodeData.value-------',
                                 currentNodeData.value
                             );
-                            let param = {
-                                currNodeData: currentNodeData.value,
-                                edgesData: edges.value,
-                                taskInfo: { id: '', name: '图谱探索', pageType: '0' }
-                            };
-                            nodeDialogRef.value.dialogOpen(param);
+                            openNodeDialog(currentNodeData.value);
                         }
                     }
                 }
@@ -604,19 +607,14 @@
                     }
                 ]);
                 console.log('---------currentNodeData.value-------', currentNodeData.value);
-                let param = {
-                    currNodeData: currentNodeData.value,
-                    edgesData: edges.value,
-                    taskInfo: { id: '', name: '图谱探索', pageType: '0' }
-                };
-                nodeDialogRef.value.dialogOpen(param);
+                openNodeDialog(currentNodeData.value);
             }
         });
     };
 
     async function getSchemaList() {
         // 获取schema&tool图例
-        schemaList.value = await listSchema({ pageNum: 1, pageSize: 10000 });
+        schemaList.value = await listType({ pageNum: 1, pageSize: 10000 });
         schemaList.value.data.rows.map((item) => {
             toolData.value.push({
                 label: item.name,
@@ -632,31 +630,30 @@
             proxy.$modal.msgWarning('该节点不存在！');
             return;
         }
-        const filterEmit = (data) => {
+        const filterEmit = (node) => {
             if (oldId.value) {
                 relationGraph.resetColor();
             }
-            oldId.value = data.id;
-            // 修改颜色及定位
-            relationGraph.nodes('update', [
-                {
-                    id: data.id,
-                    color: {
-                        background: '#0006ff',
-                        border: 'rgba(0, 6, 255, 0.3)'
+            oldId.value = node.id;
+            // 高亮及定位：vis 直接改样式，G6 走元素状态
+            if (typeof relationGraph.nodes === 'function') {
+                relationGraph.nodes('update', [
+                    {
+                        id: node.id,
+                        color: {
+                            background: '#0006ff',
+                            border: 'rgba(0, 6, 255, 0.3)'
+                        }
                     }
-                }
-            ]);
-            relationGraph.zoomBy(data);
+                ]);
+            } else {
+                relationGraph.setHighlight(node.id);
+            }
+            relationGraph.zoomBy(node);
             // 弹框已展示，调整内容
             if (nodeDialogRef.value.show) {
-                currentNodeData.value = nodes.value.find((e) => e.id == data.id);
-                let param = {
-                    currNodeData: currentNodeData.value,
-                    edgesData: edges.value,
-                    taskInfo: { id: '', name: '图谱探索', pageType: '0' }
-                };
-                nodeDialogRef.value.dialogOpen(param);
+                currentNodeData.value = nodes.value.find((e) => e.id == node.id);
+                openNodeDialog(currentNodeData.value);
             }
         };
         filterEmit(node);
@@ -664,41 +661,71 @@
 
     function handleEventClick(data) {
         console.log('🚀 ~ handleEventClick ~ data:', data);
-        console.log('🚀 ~ nodes:', nodes.value);
+        // 未勾选任何事件：恢复全量图谱
         if (data == null) {
             getGraphData();
             return;
         }
-        // 使用 map 方法提取 id 值
-        const idsArray = data.map((item) => item.entityId);
+        // 事件参与实体id（去重）
+        const idsArray = [
+            ...new Set(
+                data
+                    .map((item) => String(item.entityId ?? item.id))
+                    .filter((id) => id && id !== 'undefined' && id !== 'null')
+            )
+        ];
+        if (idsArray.length === 0) {
+            proxy.$modal.msgWarning('该事件没有参与实体！');
+            return;
+        }
+        graghLoading.value = true;
         getDynamicEntityList({ entityIds: idsArray })
             .then((response) => {
-                let data = response.data;
-                graphData.value = data;
+                const res = response && response.data;
+                if (!res) {
+                    return;
+                }
+                const idSet = new Set(idsArray);
+                // 只保留当前事件参与的实体，避免无关实体混入
+                const entityMap = new Map();
+                (res.entities || []).forEach((item) => {
+                    if (idSet.has(String(item.id))) {
+                        entityMap.set(String(item.id), item);
+                    }
+                });
+                const entityList = [...entityMap.values()];
+                graphData.value = { ...res, entities: entityList };
                 // step：普通：0，特殊颜色：1，选中：2，相邻节点：-1
-                nodes.value = data.entities.map((item) => {
-                    let row = schemaList.value.data.rows.find((i) => item.schemaId == i.id);
+                nodes.value = entityList.map((item) => {
+                    const row = schemaList.value.data.rows.find((i) => item.schemaId == i.id);
+                    // 优先用概念配色，无概念颜色时按实体 id 哈希取色，避免默认深蓝与背景同色
+                    const fill = row?.color || pickColorByEntityId(item.id);
+                    const name = item.name || '';
                     return {
                         ...item,
                         id: item.id + '',
-                        label: item.name.length > 6 ? item.name.substring(0, 6) + '...' : item.name,
-                        rowBackground: row ? row.color : '#315790',
-                        rowBorder: row ? `${row.color}4d` : '#7dbffa4d',
+                        label: name.length > 6 ? name.substring(0, 6) + '...' : name,
+                        rowBackground: fill,
+                        rowBorder: `${fill}4d`,
                         color: {
-                            background: row ? row.color : '#315790',
-                            border: row ? `${row.color}4d` : '#7dbffa4d'
+                            background: fill,
+                            border: `${fill}4d`
                         },
                         borderWidth: row ? 15 : 0,
-                        step: row ? 1 : 0
+                        step: row ? 1 : 0,
+                        cluster: item.id + ''
                     };
                 });
-                edges.value = [];
-                data.relationships.map((item) => {
+                // 只保留两端都在参与实体范围内的关系
+                const nodeIdSet = new Set(entityList.map((item) => String(item.id)));
+                const edgeMap = new Map();
+                (res.relationships || []).forEach((item) => {
                     if (
-                        data.entities.some((node) => node.id == item.startId) &&
-                        data.entities.some((node) => node.id == item.endId)
+                        nodeIdSet.has(String(item.startId)) &&
+                        nodeIdSet.has(String(item.endId)) &&
+                        !edgeMap.has(String(item.id))
                     ) {
-                        edges.value.push({
+                        edgeMap.set(String(item.id), {
                             ...item,
                             id: item.id + '',
                             name: item.relationType,
@@ -708,14 +735,17 @@
                         });
                     }
                 });
+                edges.value = [...edgeMap.values()];
                 // 搜索值
                 searchData.value = nodes.value.map((item) => {
                     return { ...item, value: item.name, name: item.name };
                 });
+                initG6Gragh({ nodes: nodes.value, edges: edges.value });
+            })
+            .catch(() => {
+                proxy.$modal.msgWarning('筛选事件参与实体失败！');
             })
             .finally(() => {
-                // initGragh();
-                initG6Gragh({ nodes: nodes.value, edges: edges.value });
                 graghLoading.value = false;
             });
     }
@@ -723,10 +753,18 @@
     // 右侧弹框-关闭
     function nodeDialogClose() {
         currentNodeData.value = null;
+        oldId.value = null;
+        textList.value = [];
+        docList.value = [];
+        nodeDialogRef.value?.setAssociations([], []);
         relationGraph.resetColor();
-        // 恢复视角
+        // 恢复视角：vis 用 moveTo，G6 用 fitView
         setTimeout(() => {
-            relationGraph.moveTo({ scale: 1.1 });
+            if (typeof relationGraph.moveTo === 'function') {
+                relationGraph.moveTo({ scale: 1.1 });
+            } else {
+                relationGraph.fitView();
+            }
         }, 300);
     }
     onMounted(() => {

@@ -155,7 +155,7 @@
             }
         });
         const uniqueEntities = Array.from(
-            new Map(allEntities.map((item) => [item.entityName || item.id, item])).values()
+            new Map(allEntities.map((item) => [item.entityId || item.id, item])).values()
         );
         return uniqueEntities;
     });

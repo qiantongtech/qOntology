@@ -287,6 +287,16 @@ export class G6Network {
     zoomBy(data) {
         this.instance.focusElement(data.id);
     }
+
+    /**
+     * 高亮指定节点：G6 走元素状态样式（对应 node.state.click），
+     * 用于替代 vis 的 nodes('update', ...) 直接改色。
+     */
+    setHighlight(id, state = 'click') {
+        if (!this.instance) return;
+        this.instance.setElementState(id, [state]);
+        this.instance.draw();
+    }
     // 在 G6Network 类中添加
     showElement(id) {
         if (!this.instance) return;

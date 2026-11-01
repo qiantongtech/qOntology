@@ -17,10 +17,10 @@
 -->
 
 <template>
-  <div class="graphView" v-loading="appLoading">
-    <div class="head-title" v-if="!componentProps.embedded">
-      <div class="name">{{ taskInfo.name }}</div>
-    </div>
+  <div
+    :class="['graphView', { 'is-embedded': componentProps.embedded }]"
+    v-loading="appLoading"
+  >
     <el-container class="wrap-container">
       <div :class="['gragh-wrap', { isfull: isfull }]">
         <div class="control-tree">
@@ -542,6 +542,7 @@ import { filePreview } from "@/utils/kkFileView.js";
 
 import NodeDialog from "../component/nodeDialog.vue";
 import { G6Network } from "@/utils/graph/g6Network";
+import { pickColorByEntityId } from "@/utils/graph/entityColor";
 
 const getAssetsFile = (url) => {
   return new URL(`/src/assets/ke/images/${url}`, import.meta.url).href;
@@ -714,41 +715,6 @@ let graphData = ref({
 const nodes = ref([]);
 const edges = ref([]);
 const schemaList = ref({ data: { rows: [] } });
-
-/**
- * 节点配色：按 entity.id 哈希分配颜色，每个实体独立取色，
- * 同一实体跨渲染保持同一颜色。15 色循环，深蓝/深绿/红橙等与深蓝背景高对比。
- */
-const ENTITY_COLOR_PALETTE = [
-  "#3b68c2", // 深蓝
-  "#289470", // 深青绿
-  "#b58200", // 暗金
-  "#b93c32", // 暗红（你图里故障红，优先这个）
-  "#2a8cb8", // 暗湖蓝
-  "#6b4296", // 暗紫
-  "#c46518", // 暗橙
-  "#0e706e", // 墨青
-  "#a83f70", // 暗玫粉
-  "#4068a8", // 灰调蓝
-  "#358252", // 灰调绿
-  "#b16c27", // 土橙
-  "#7257a0", // 灰紫
-  "#2d78b5", // 钢蓝
-  "#378a46", // 墨绿
-];
-
-/** 用 entity 的 id（数字或字符串）哈希到调色板下标。 */
-function pickColorByEntityId(entityId) {
-  const palette = ENTITY_COLOR_PALETTE;
-  // id 可能是字符串数字、纯数字或带前缀，统一取字符码累加
-  let hash = 0;
-  const s = String(entityId || "");
-  for (let i = 0; i < s.length; i++) {
-    hash = (hash * 31 + s.charCodeAt(i)) | 0;
-  }
-  const idx = Math.abs(hash) % palette.length;
-  return palette[idx];
-}
 
 /** 查询图谱数据；作为抽取结果子组件时通知父页面统一查询。 */
 function getGraphData(params) {
@@ -1955,9 +1921,20 @@ function openTagMultiple() {
 </style>
 <style scoped lang="scss">
 .graphView {
-  height: 100%;
+  // 与关系视图、时序视图保持同一尺寸区间，切换页签时不再出现高度跳动和滚动条
+  display: flex;
+  flex-direction: column;
+  margin-top: 15px;
+  height: 70vh;
   min-height: 0;
   overflow: hidden;
+
+  // 嵌入抽取结果页时仍占满剩余高度
+  &.is-embedded {
+    margin-top: 0;
+    flex: 1;
+    height: auto;
+  }
 }
 
 .el-zoom-in-right-enter-active,
@@ -1979,51 +1956,15 @@ function openTagMultiple() {
   display: flex;
   flex-direction: column;
 
-  .head-title {
-    flex-shrink: 0;
-    height: 46px;
-    background: #fff;
-    padding: 0px 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .name {
-      font-family: PingFang SC;
-      font-size: 16px;
-      color: rgba(0, 0, 0, 0.85);
-      display: flex;
-      align-items: center;
-      font-weight: 500;
-
-      &::before {
-        content: "";
-        display: inline-block;
-        background-color: #2666fb;
-        width: 5px;
-        height: 20px;
-        margin-right: 10px;
-        border-radius: 2px;
-      }
-    }
-
-    .btns {
-      float: right;
-
-      .el-button {
-        height: 28px;
-      }
-    }
-  }
-
   .wrap-container {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
   }
 
   .gragh-wrap {
     position: relative;
     width: 100%;
-    height: 94%;
+    height: 100%;
 
     &.isfull {
       position: fixed;
