@@ -47,6 +47,27 @@
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
+        <template #lastExecute="{ row }">
+          <div class="flex-column">
+            <dict-tag
+              class="execute-tag"
+              :options="app_task_status"
+              :value="row.status"
+              @click="showLogs(row)"
+            />
+            <div class="last-execute-info">
+              <div class="last-execute-info__row">
+                <span class="last-execute-info__value">{{
+                  row.lastExecuteTime ? timeAgo(row.lastExecuteTime) : "-"
+                }}</span>
+                <span class="ml10 last-execute-info__value">{{
+                  formatDuration(row.executeDuration)
+                }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
         <template #taskStatus="{ row }">
           <div class="flex-center task-status">
             <el-switch
@@ -84,7 +105,11 @@
               >
             </template>
             <div class="task-action-list">
-              <el-button icon="List" link type="primary" @click="showLogs(row)"
+              <el-button
+                icon="List"
+                link
+                type="primary"
+                @click="showLogs(row)"
                 >执行日志</el-button
               ><el-button
                 class="btn-icon-offset"
@@ -102,6 +127,13 @@
                 type="danger"
                 @click="handleDelete(row)"
                 >删除</el-button
+              ><el-button
+                class="btn-icon-offset"
+                icon="Document"
+                link
+                type="primary"
+                @click="handleDetail"
+                >详情</el-button
               >
             </div>
           </el-popover>
@@ -241,6 +273,7 @@ import {
 } from "@/api/app/unstructTask";
 import FileMultiple from "./fileMultiple.vue";
 import TaskLogDialog from "@/views/app/taskLog/taskLogDialog.vue";
+import { timeAgo } from "@/utils/time";
 
 const { proxy } = getCurrentInstance();
 const router = useRouter();
@@ -300,13 +333,9 @@ const tableStore = reactive({
     },
     {
       label: "执行情况",
-      minWidth: 180,
+      width: 180,
+      slot: "lastExecute",
       align: "left",
-      list: [
-        { dict: "app_task_status", prop: "status" },
-        { prop: (row) => formatExecuteTime(row.lastExecuteTime) },
-        { prop: (row) => formatDuration(row.executeDuration) },
-      ],
     },
     // {
     //   label: "抽取成果",
@@ -390,10 +419,6 @@ const searchStore = reactive({
 });
 
 /** 最近执行时间、执行耗时、抽取成果、发布人/负责人电话后端暂未返回，先按约定字段名占位。 */
-function formatExecuteTime(value) {
-  return value ? proxy.parseTime(value, "{y}-{m}-{d} {h}:{i}") : "-";
-}
-
 function formatDuration(value) {
   if (value === null || value === undefined || value === "") return "-";
   const seconds = Math.max(Math.round(Number(value)), 0);
@@ -548,6 +573,11 @@ function showLogs(row) {
   taskLogDialogRef.value.show(row.id, 1);
 }
 
+/** 任务详情页面待开发。 */
+function handleDetail() {
+  proxy.$modal.msg("功能开发中");
+}
+
 /** 查看非结构化抽取结果。 */
 function handleResult(row) {
   router.push({
@@ -607,5 +637,10 @@ function handleDelete(row) {
 <style scoped lang="scss">
 .task-status {
   justify-content: center;
+}
+
+.execute-tag {
+  align-self: flex-start;
+  cursor: pointer;
 }
 </style>

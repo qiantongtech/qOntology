@@ -17,7 +17,7 @@
 -->
 
 <template>
-  <div class="app-container" ref="app-container">
+  <div ref="appContainer" class="app-container">
     <GuideTip tip-id="kg/ext/structTask.list" />
 
     <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
@@ -54,8 +54,9 @@
 
       <qt-table v-bind="tableStore" ref="tableRef">
         <template #runControl="{ row }">
-          <div class="flex-column flex-column-gap run-control">
-            <div class="flex-center">
+          <div class="flex-column fz12 run-control">
+            <div class="flex-center mb2">
+              <span class="black-label mr5">任务状态:</span>
               <el-switch
                 v-model="row.enableStatus"
                 :active-value="1"
@@ -64,12 +65,50 @@
               />
             </div>
             <div class="flex-center">
+              <span class="black-label mr5">调度状态:</span>
               <el-switch
                 v-model="row.updateStatus"
                 :active-value="0"
                 :inactive-value="1"
                 @change="handleStatusChange(row)"
               />
+            </div>
+          </div>
+        </template>
+
+        <template #lastExecute="{ row }">
+          <div class="flex-column">
+            <dict-tag
+              class="execute-tag"
+              :options="app_task_status"
+              :value="row.status"
+              @click="showLogs(row)"
+            />
+            <div class="last-execute-info">
+              <div class="last-execute-info__row">
+                <span class="last-execute-info__value">{{
+                  row.lastExecuteTime ? timeAgo(row.lastExecuteTime) : "-"
+                }}</span>
+                <span class="ml10 last-execute-info__value">{{
+                  formatDuration(row.executeDuration)
+                }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <template #updateStrategy="{ row }">
+          <div class="flex-column fz14">
+            <div class="flex-center">
+              <dict-tag :options="app_update_type" :value="row.updateType" />
+            </div>
+            <div class="flex-center mt7">
+              <el-icon class="mr5" style="color: #3b82f6"><Clock /></el-icon>
+              <span
+                class="text-ellipsis cron-text"
+                :title="cronToZh(row.updateFrequency)"
+                >{{ cronToZh(row.updateFrequency) || "-" }}</span
+              >
             </div>
           </div>
         </template>
@@ -134,11 +173,21 @@
                 v-hasPermi="['app:appStructTask:struct:remove']"
                 >删除</el-button
               >
+              <el-button
+                class="btn-icon-offset"
+                link
+                type="primary"
+                icon="Document"
+                @click="handleDetail"
+                >详情</el-button
+              >
             </div>
           </el-popover>
         </template>
       </qt-table>
     </qt-wrap>
+
+    <TaskLogDialog ref="taskLogDialogRef" :append-to="appContainer" />
   </div>
 </template>
 
@@ -150,14 +199,20 @@ import {
   runStructTask,
 } from "@/api/app/structTask";
 import { cronToZh } from "@/utils/cronUtils";
+import { timeAgo } from "@/utils/time";
+import { Clock } from "@element-plus/icons-vue";
+import TaskLogDialog from "@/views/app/taskLog/taskLogDialog.vue";
 
 const { proxy } = getCurrentInstance();
-const { app_task_status, publish_status } = proxy.useDict(
+const { app_task_status, publish_status, app_update_type } = proxy.useDict(
   "app_task_status",
-  "publish_status"
+  "publish_status",
+  "app_update_type"
 );
 
 const tableRef = ref();
+const appContainer = ref();
+const taskLogDialogRef = ref();
 const selectedRows = ref([]);
 const multiple = ref(true);
 const router = useRouter();
@@ -210,24 +265,17 @@ const tableStore = reactive({
     },
     {
       label: "最近执行信息",
-      minWidth: 170,
+      width: 180,
+      slot: "lastExecute",
       align: "left",
-      list: [
-        { dict: "app_task_status", prop: "status" },
-        { prop: (row) => formatExecuteTime(row.lastExecuteTime) },
-        { prop: (row) => formatDuration(row.executeDuration) },
-      ],
     },
     {
       label: "更新策略",
-      width: 180,
+      width: 250,
+      slot: "updateStrategy",
       align: "left",
-      list: [
-        { dict: "app_update_type", prop: "updateType" },
-        { prop: (row) => cronToZh(row.updateFrequency) },
-      ],
     },
-    { label: "运行控制", slot: "runControl", width: 120 },
+    { label: "运行控制", slot: "runControl", width: 150 },
     {
       label: "发布人",
       width: 120,
@@ -319,10 +367,6 @@ const searchStore = reactive({
 });
 
 /** 最近执行时间、执行耗时、发布人/负责人电话、任务启用状态后端暂未返回，先按约定字段名占位 */
-function formatExecuteTime(value) {
-  return value ? proxy.parseTime(value, "{y}-{m}-{d} {h}:{i}") : "-";
-}
-
 function formatDuration(value) {
   if (value === null || value === undefined || value === "") return "-";
   const seconds = Math.max(Math.round(Number(value)), 0);
@@ -355,6 +399,16 @@ function handleStatusChange(row) {
 function handleEnableChange(row, value) {
   proxy.$modal.msgWarning("当前可用资源不足，暂不支持操作");
   row.enableStatus = value === 1 ? 0 : 1;
+}
+
+/** 点击执行状态标签查看任务日志，结构化任务 taskType 为 0 */
+function showLogs(row) {
+  taskLogDialogRef.value.show(row.id, 0);
+}
+
+/** 任务详情页面待开发。 */
+function handleDetail() {
+  proxy.$modal.msg("功能开发中");
 }
 
 /** 判断任务是否执行中或队列中（不可执行/修改/删除） */
@@ -493,5 +547,10 @@ function routeTo(link, row) {
 <style scoped lang="scss">
 .run-control {
   align-items: center;
+}
+
+.execute-tag {
+  align-self: flex-start;
+  cursor: pointer;
 }
 </style>

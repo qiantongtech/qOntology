@@ -346,6 +346,12 @@ const datasourceTypeMap = computed(() =>
     }, {})
 );
 
+// 状态选项使用字符串字典值，DictTag 会将后端布尔值转换为字符串后匹配。
+const validFlagStatusOptions = [
+  {label: '启用', value: 'true', elTagType: 'success'},
+  {label: '禁用', value: 'false', elTagType: 'danger'}
+];
+
 // 搜索项配置
 const searchStore = reactive({
   items: [

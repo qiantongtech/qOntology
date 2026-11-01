@@ -68,8 +68,14 @@
     注意：不要私自修改本组件中的代码 有问题先联系wy
 -->
 <template>
- <div class = "qt-table" v-loading = "store.loading" >
-    <div :class="['qt-table--main', config.table?.class, { 'is-empty': tableData.length === 0 }]">
+  <div class="qt-table" v-loading="store.loading">
+    <div
+      :class="[
+        'qt-table--main',
+        config.table?.class,
+        { 'is-empty': tableData.length === 0 },
+      ]"
+    >
       <el-table
         ref="elTableRef"
         :data="tableData"
@@ -84,7 +90,12 @@
             v-if="!column.hide"
             :align="column.align || 'center'"
           >
-            <template #header v-if="column.tip || (column.headerTooltip && column.showHeaderTooltip)">
+            <template
+              #header
+              v-if="
+                column.tip || (column.headerTooltip && column.showHeaderTooltip)
+              "
+            >
               <div class="tip-wrap" v-if="column.tip">
                 <div class="tip-label">
                   {{ column.label }}
@@ -102,14 +113,14 @@
                   </slot>
                 </el-tooltip>
               </div>
-              <div class="tip-wrap" v-else-if="column.headerTooltip && column.showHeaderTooltip">
+              <div
+                class="tip-wrap"
+                v-else-if="column.headerTooltip && column.showHeaderTooltip"
+              >
                 <div class="tip-label">
                   {{ column.label }}
                 </div>
-                <el-tooltip
-                  effect="light"
-                  placement="top"
-                >
+                <el-tooltip effect="light" placement="top">
                   <template #content>
                     <div v-html="column.headerTooltip"></div>
                   </template>
@@ -155,7 +166,9 @@
                 :underline="column.link?.underline || 'never'"
                 :type="column.link?.type || 'primary'"
                 v-if="column.link"
-                :class="{'qt-table-link-ellipsis': column.showOverflowTooltip}"
+                :class="{
+                  'qt-table-link-ellipsis': column.showOverflowTooltip,
+                }"
                 @click="handleLinkClick(column, scope.row)"
               >
                 {{ getPropValue(column.prop, scope.row) }}
@@ -482,7 +495,9 @@ function getList() {
 // 按表格 rowKey 更新当前数据行，避免列表刷新后轮询仍只修改旧行对象。
 function updateRow(rowKey, patch) {
   const key = props.config?.table?.rowKey || "id";
-  const target = store.data.find((item) => String(item?.[key]) === String(rowKey));
+  const target = store.data.find(
+    (item) => String(item?.[key]) === String(rowKey)
+  );
   if (target) Object.assign(target, patch);
   return target;
 }
@@ -532,7 +547,8 @@ function handleSortChange({ column, order, prop }) {
 
 // 过滤Column数据
 function getElColumnData(column) {
-  const { hide, dict, link, headerTooltip, showHeaderTooltip, ...otherData } = column;
+  const { hide, dict, link, headerTooltip, showHeaderTooltip, ...otherData } =
+    column;
   if (otherData.width && !otherData.minWidth) {
     otherData.minWidth = otherData.width;
     delete otherData.width;
