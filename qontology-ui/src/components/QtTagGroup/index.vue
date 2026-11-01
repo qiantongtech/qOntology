@@ -89,6 +89,7 @@ import {
   watch,
   nextTick,
 } from "vue";
+import { getDatasourceIcon, getDatasourceTagType } from "@/utils/datasource";
 
 const props = defineProps({
   /** 标签数据数组 (可以是字符串数组 or 对象数组) */
@@ -331,21 +332,28 @@ const getItemProps = (item) => {
   const label =
     item.label || item.DATASOURCE_NAME || item.name || datasourceType || "";
 
+  // 有数据源类型时优先取类型配置里的颜色
+  const tagTypeFromConfig = datasourceType
+    ? getDatasourceTagType(datasourceType)
+    : "";
+
   return {
     ...item,
     label,
     value: item.value || label,
-    // 如果是数据源模式且没有指定类型，默认使用 primary
+    // 数据源模式下未指定颜色时，取类型配置，兜底 primary
     elTagType:
       item.elTagType ||
       item.tagType ||
       item.tag_type ||
+      tagTypeFromConfig ||
       item.type ||
       (props.isDatasource || !!(item.DATASOURCE_TYPE || item.datasourceType)
         ? "primary"
         : ""),
     elTagClass: item.elTagClass || item.tagClass || item.class || "",
     datasourceType,
+    icon: item.icon || (datasourceType ? getDatasourceIcon(datasourceType) : ""),
   };
 };
 </script>

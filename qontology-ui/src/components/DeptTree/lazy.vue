@@ -57,16 +57,12 @@
                             :src="getDatasourceIcon(data.datasourceType)"
                             class="node-icon"
                         />
-                        <img
-                            v-if="node.level === 2"
-                            src="@/assets/system/images/dpp/sr.png"
-                            class="node-icon"
-                        />
-                        <img
-                            v-if="node.level === 3"
-                            src="@/assets/system/images/dpp/zt.png"
-                            class="node-icon"
-                        />
+                        <el-icon v-if="node.level === 2" class="node-icon" title="模式">
+                            <Coin />
+                        </el-icon>
+                        <el-icon v-if="node.level === 3" class="node-icon" title="表">
+                            <Tickets />
+                        </el-icon>
                         <!-- label -->
                         <span class="treelable">{{ node.label }}</span>
 
@@ -122,11 +118,14 @@
 <script setup>
     import { ref, watch, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue';
     import { debounce } from 'lodash-es';
+    import { getDatasourceIcon } from '@/utils/datasource.js';
     import {
         ArrowLeft,
         ArrowRight,
         CircleCheckFilled,
-        WarnTriangleFilled
+        WarnTriangleFilled,
+        Coin,
+        Tickets
     } from '@element-plus/icons-vue';
 
     const { proxy } = getCurrentInstance();
@@ -155,38 +154,6 @@
     const contextMenuX = ref(0);
     const contextMenuY = ref(0);
     const contextMenuNode = ref(null);
-
-    // 图标
-    const getDatasourceIcon = (type) => {
-        switch (type) {
-            case 'DM8':
-                return new URL('@/assets/system/images/dpp/DM.png', import.meta.url).href;
-            case 'Oracle11':
-                return new URL('@/assets/system/images/dpp/oracle.png', import.meta.url).href;
-            case 'MySql':
-                return new URL('@/assets/system/images/dpp/mysql.png', import.meta.url).href;
-            case 'Hive':
-                return new URL('@/assets/system/images/dpp/Hive.png', import.meta.url).href;
-            case 'Sqlerver':
-                return new URL('@/assets/system/images/dpp/sqlServer.png', import.meta.url).href;
-            case 'Kafka':
-                return new URL('@/assets/system/images/dpp/kafka.png', import.meta.url).href;
-            case 'HDFS':
-                return new URL('@/assets/system/images/dpp/hdfs.png', import.meta.url).href;
-            case 'SHELL':
-                return new URL('@/assets/system/images/dpp/SHELL.png', import.meta.url).href;
-            case 'Kingbase8':
-                return new URL('@/assets/system/images/dpp/kingBase.png', import.meta.url).href;
-            case 'SQL_Server':
-                return new URL('@/assets/system/images/dpp/SQL_Server.svg', import.meta.url).href;
-            case 'SQL_Server2008':
-                return new URL('@/assets/system/images/dpp/SQL_Server.svg', import.meta.url).href;
-            case 'Doris':
-                return new URL('@/assets/system/images/dpp/doris.svg', import.meta.url).href;
-            default:
-                return null;
-        }
-    };
 
     // 右键菜单
     const onNodeContextMenu = (event, data, node) => {
@@ -384,6 +351,7 @@
         .node-icon {
             width: 18px;
             height: 18px;
+            font-size: 18px;
         }
 
         .treelable {

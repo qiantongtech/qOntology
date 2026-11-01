@@ -28,10 +28,14 @@
                 placement="top"
                 v-if="search"
             >
-                <el-button circle icon="Search" @click="toggleSearch()" />
+                <el-button circle @click="toggleSearch()">
+                    <i class="iconfont icon-a-chaxunxianxing"></i>
+                </el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="刷新" placement="top">
-                <el-button circle icon="Refresh" @click="refresh()" />
+                <el-button circle @click="refresh()">
+                    <i class="iconfont icon-a-shuaxinxianxing"></i>
+                </el-button>
             </el-tooltip>
             <el-tooltip class="item" effect="dark" content="显隐列" placement="top" v-if="columns">
                 <el-button

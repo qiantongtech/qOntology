@@ -50,13 +50,20 @@
           clearable
           filterable
           :placeholder="`请选择${item.label}`"
-          v-bind="item.component"
+          v-bind="getSelectProps(item)"
         >
+          <template #prefix v-if="item.component.prefixSlot">
+            <slot :name="item.component.prefixSlot" v-bind="{ value: props.params[item.prop] }" />
+          </template>
           <el-option
             v-for="(option, index) in item.component.options"
             :key="index"
             v-bind="option"
-          />
+          >
+            <template #default v-if="item.component.optionSlot">
+              <slot :name="item.component.optionSlot" v-bind="{ option }" />
+            </template>
+          </el-option>
         </el-select>
 
         <!-- 时间选择器 -->
@@ -165,6 +172,12 @@ function handleNodeClick(prop, component) {
 // 过滤form参数
 function getFormItemProps(item) {
   const { component, ...data } = item;
+  return data;
+}
+
+// 过滤下拉框的插槽配置项，避免透传为 dom 属性
+function getSelectProps(item) {
+  const { prefixSlot, optionSlot, ...data } = item.component;
   return data;
 }
 
