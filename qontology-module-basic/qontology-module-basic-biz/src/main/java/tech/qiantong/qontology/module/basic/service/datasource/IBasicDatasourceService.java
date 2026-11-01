@@ -112,6 +112,9 @@ public interface IBasicDatasourceService extends IService<BasicDatasourceDO> {
 
     AjaxResult clientsTest(Long id);
 
+    /** 使用当前配置测试连接，不写入数据源记录。 */
+    AjaxResult clientsTestStatus(BasicDatasourceSaveReqVO request);
+
     /**
      * 获取数据库表信息
      *

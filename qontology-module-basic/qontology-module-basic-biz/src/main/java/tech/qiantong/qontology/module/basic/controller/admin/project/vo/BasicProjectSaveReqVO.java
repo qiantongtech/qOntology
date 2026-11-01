@@ -20,10 +20,12 @@ package tech.qiantong.qontology.module.basic.controller.admin.project.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import jakarta.validation.constraints.Positive;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
 import java.util.Date;
 
 import tech.qiantong.qontology.core.annotation.Excel;
@@ -50,6 +52,11 @@ public class BasicProjectSaveReqVO extends BaseEntity {
     @Size(max = 128, message = "项目名称长度不能超过128个字符")
     private String name;
 
+    /** 图标由上传组件返回路径，随项目新增或修改一起保存。 */
+    @Schema(description = "项目图标路径")
+    @Size(max = 512, message = "项目图标路径长度不能超过512个字符")
+    private String icon;
+
     @Schema(description = "项目领域", example = "")
     @NotBlank(message = "项目领域不能为空")
     @Size(max = 128, message = "项目领域长度不能超过128个字符")
@@ -63,6 +70,13 @@ public class BasicProjectSaveReqVO extends BaseEntity {
     @Schema(description = "状态", example = "")
     @NotNull(message = "状态不能为空")
     private ProjectStatusEnum status;
+
+    /**
+     * 客户端只提交用户编号，姓名和电话由后端读取系统用户资料。
+     */
+    @Schema(description = "责任人用户编号")
+    @Positive(message = "责任人用户编号必须为正整数")
+    private Long responsibleUserId;
 
     @Schema(description = "当前版本", example = "")
     @NotBlank(message = "当前版本不能为空")

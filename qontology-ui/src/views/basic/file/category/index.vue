@@ -19,393 +19,289 @@
 <template>
   <div class="app-container" ref="app-container">
     <GuideTip tip-id="basic/file/category.list"/>
-    <div class="pagecont-top" v-show="showSearch">
-      <el-form
-        class="btn-style"
-        :model="queryParams"
-        ref="queryRef"
-        :inline="true"
-        @submit.prevent
-      >
-        <el-form-item label="分类名称" prop="name">
-          <el-input
-            class="el-form-input-width"
-            v-model="queryParams.name"
-            clearable
-            placeholder="请输入分类名称"
-            @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button
-            plain
-            type="primary"
-            @click="handleQuery"
-            @mousedown="(e) => e.preventDefault()"
+    <!-- 分类树沿用统一搜索及表格组件；不分页，避免父子节点被拆到不同页。 -->
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar
+            :items="searchStore.items"
+            :params="tableStore.params"
+            :table-ref="tableRef"
+            :config="{collapsedCount: 4}"
+            @query="applyFilters"
+            @reset="applyFilters"
+        />
+      </template>
+      <template #actions-data>
+        <el-button v-hasPermi="['basic:file:category:add']" type="primary" plain @click="handleAdd()"
+                   @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button class="toggle-expand-all" type="primary" plain @click="toggleExpandAll">
+          <svg-icon :icon-class="isExpandAll ? 'toggle' : 'expand'"/>
+          <span>{{ isExpandAll ? ' 折叠' : ' 展开' }}</span>
+        </el-button>
+      </template>
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <template #text="{row, column_data}">{{ row[column_data.prop] }}</template>
+        <template #status="{row}">
+          <dict-tag v-if="row.validFlag !== '-'" :options="categoryStatusOptions" :value="row.validFlag"/>
+          <span v-else>—</span>
+        </template>
+        <template #validFlag="{ row }">
+          <el-switch
+              v-model="row.validFlag"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
           >
-            <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
+          </el-switch>
+        </template>
+        <!-- 沿用责任人双行样式，创建人电话通过用户接口关联，未维护时只显示姓名。 -->
+        <template #creator="{row}">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+          </div>
+        </template>
+        <template #createTime="{row}">
+          {{ row.createTime === '-' ? '-' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-') }}
+        </template>
+        <template #handle="{row}">
+          <el-button link type="primary" icon="View" @click="handleDetail(row)">详情</el-button>
+          <el-button v-hasPermi="['basic:file:category:edit']" link type="primary" icon="Edit"
+                     @click="handleUpdate(row)"
+          >修改
           </el-button>
-          <el-button @click="resetQuery" @mousedown="(e) => e.preventDefault()">
-            <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <div class="pagecont-bottom">
-      <div class="justify-between mb15">
-        <el-row :gutter="10" class="btn-style">
-          <el-col :span="1.5">
-            <el-button
-              type="primary"
-              plain
-              @click="handleAdd"
-              v-hasPermi="['basic:file:category:add']"
-              @mousedown="(e) => e.preventDefault()"
-            >
-              <i class="iconfont-mini icon-xinzeng mr5"></i>新增
-            </el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              class="toggle-expand-all"
-              type="primary"
-              plain
-              @click="toggleExpandAll"
-            >
-              <svg-icon v-if="isExpandAll" icon-class="toggle" />
-              <svg-icon v-else icon-class="expand" />
-              <span>{{ isExpandAll ? " 折叠" : " 展开" }}</span>
-            </el-button>
-          </el-col>
-        </el-row>
-        <div class="justify-end top-right-btn">
-          <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" />
-        </div>
-      </div>
-
-      <el-table
-        v-if="refreshTable"
-        v-loading="loading"
-        :data="categoryList"
-        row-key="id"
-        height="60vh"
-        stripe
-        :default-expand-all="isExpandAll"
-        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-        :default-sort="defaultSort"
-        @sort-change="handleSortChange"
-      >
-        <el-table-column
-          label="分类名称"
-          prop="name"
-          align="left"
-          min-width="250"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        />
-        <el-table-column
-          label="显示顺序"
-          prop="orderNum"
-          width="150"
-          align="center"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-        />
-        <el-table-column
-          label="备注"
-          prop="remark"
-          align="left"
-          min-width="220"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        />
-        <el-table-column
-          label="创建人"
-          prop="createBy"
-          align="center"
-          width="100"
-        />
-        <el-table-column
-          label="创建时间"
-          prop="createTime"
-          width="160"
-          align="center"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-        >
-          <template #default="scope">
-            {{ parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="操作"
-          align="center"
-          class-name="small-padding fixed-width"
-          fixed="right"
-          width="240"
-        >
-          <template #default="scope">
-            <el-button
-              link
-              type="primary"
-              icon="Plus"
-              @click="handleAdd(scope.row)"
-              v-hasPermi="['basic:file:category:add']"
-              >新增</el-button
-            >
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              @click="handleUpdate(scope.row)"
-              v-hasPermi="['basic:file:category:edit']"
-              >修改</el-button
-            >
-            <el-button
-              link
-              type="danger"
-              icon="Delete"
-              @click="handleDelete(scope.row)"
-              v-hasPermi="['basic:file:category:remove']"
-              >删除</el-button
-            >
-          </template>
-        </el-table-column>
+          <!-- 低频操作收起到更多菜单，启用中的分类与参考页一致禁止删除。 -->
+          <el-popover placement="bottom" :width="100" trigger="click"
+                      popper-class="table-action-popover handle-popover"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
+            <div class="category-action-list">
+              <el-button v-hasPermi="['basic:file:category:add']" link type="primary" icon="Plus"
+                         @click="handleAdd(row)"
+              >新增子级
+              </el-button>
+              <el-button v-hasPermi="['basic:file:category:remove']" link type="danger" icon="Delete"
+                         :disabled="row.validFlag === true" @click="handleDelete(row)"
+              >删除
+              </el-button>
+            </div>
+          </el-popover>
+        </template>
         <template #empty>
           <div class="emptyBg">
-            <img src="@/assets/system/images/no_data/noData.png" alt="" />
+            <img src="@/assets/system/images/no_data/noData.png" alt="暂无记录"/>
             <p>暂无记录</p>
           </div>
         </template>
-      </el-table>
-    </div>
+      </qt-table>
+    </qt-wrap>
 
-    <!-- 添加或修改模型数据分类对话框 -->
-    <el-dialog
-      v-model="open"
-      :title="title"
-      width="800px"
-      append-to="body"
-      draggable
-    >
-      <template #header>
-        <span role="heading" aria-level="2" class="el-dialog__title">
-          {{ title }}
-        </span>
-      </template>
-      <el-form
-        ref="categoryRef"
-        :model="form"
-        :rules="rules"
-        label-width="80px"
-        @submit.prevent
-      >
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="父级分类" prop="parentId">
-              <el-tree-select
-                v-model="form.parentId"
-                :data="categoryOptions"
-                :props="{ value: 'id', label: 'name', children: 'children' }"
-                value-key="id"
-                check-strictly
-                clearable
-                placeholder="请选择父级分类"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="分类名称" prop="name">
-              <el-input
-                class="char-count"
-                v-model="form.name"
-                placeholder="请输入分类名称"
-                maxlength="100"
-                show-word-limit
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="显示顺序" prop="orderNum">
-              <el-input-number
-                v-model="form.orderNum"
-                :min="0"
-                :max="9999"
-                controls-position="right"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                class="char-count"
-                v-model="form.remark"
-                type="textarea"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-                placeholder="请输入备注"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="cancel">取 消</el-button>
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <!-- 新增、修改及详情共用独立组件，保存成功后刷新当前分类树。 -->
+    <CategoryFormDialog ref="categoryDialogRef" @success="getList"/>
   </div>
 </template>
 
 <script setup name="BasicFileCategory">
-import { getCurrentInstance, nextTick, reactive, ref, toRefs } from "vue";
+import {computed, getCurrentInstance, onMounted, reactive, ref} from "vue";
 import {
-  addModelDataCategory,
   delModelDataCategory,
-  getModelDataCategory,
   listModelDataCategory,
-  updateModelDataCategory,
 } from "@/api/basic/file/basicFileCategory.js";
 
-const { proxy } = getCurrentInstance();
+import CategoryFormDialog from "./components/categoryFormDialog.vue";
 
+import {useCreatorPhones} from '@/utils/useCreatorPhones';
+
+const {proxy} = getCurrentInstance();
+
+// 状态选项使用字符串字典值，DictTag 会将后端布尔值转换为字符串后匹配。
+const categoryStatusOptions = [
+  {label: '启用', value: 'true', elTagType: 'success'},
+  {label: '禁用', value: 'false', elTagType: 'danger'}
+];
 const categoryList = ref([]);
 const categoryOptions = ref([]);
-const loading = ref(true);
-const showSearch = ref(true);
-const open = ref(false);
-const title = ref("");
+const categoryDialogRef = ref();
 const isExpandAll = ref(true);
-const refreshTable = ref(true);
-const defaultSort = ref({ prop: "orderNum", order: "ascending" });
+const defaultSort = {prop: 'orderNum', order: 'ascending'};
+const tableRef = ref();
+const {creatorPhones} = useCreatorPhones();
 
-const data = reactive({
-  form: {},
-  queryParams: {
-    name: undefined,
-    orderByColumn: undefined,
-    isAsc: undefined,
+let appliedName = '';
+let appliedParentId;
+
+// 公共表格负责加载及列显隐，分类树全量请求后在页面内转换为父子层级。
+const tableStore = reactive({
+  config: {
+    notPagination: true,
+    sort: true,
+    table: {
+      rowKey: 'id',
+      height: '60vh',
+      stripe: true,
+      defaultExpandAll: true,
+      treeProps: {children: 'children', hasChildren: 'hasChildren'},
+      defaultSort
+    }
   },
-  rules: {
-    name: [{ required: true, message: "分类名称不能为空", trigger: "blur" }],
-  },
+  // 业务字段依次为文件分类名称、描述、状态、排序、创建人、创建时间，操作固定在末尾。
+  columns: [
+    {
+      label: '文件分类名称',
+      prop: 'name',
+      slot: 'text',
+      minWidth: 250,
+      align: 'left',
+      showOverflowTooltip: {effect: 'light'}
+    },
+    {label: '描述', prop: 'remark', slot: 'text', minWidth: 220, align: 'left', showOverflowTooltip: {effect: 'light'}},
+    {
+      label: "状态", prop: "validFlag", slot: "validFlag",
+      width: 100, minWidth: 100,
+    },
+    {label: '排序', prop: 'orderNum', slot: 'text', width: 150, sortable: true},
+    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
+    {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
+    {label: '操作', slot: 'handle', width: 240, fixed: 'right'}
+  ],
+  func: listModelDataCategory,
+  params: {name: '', parentId: undefined},
+  events: {formatParams: formatListParams, formatData: formatListData}
 });
 
-const { queryParams, form, rules } = toRefs(data);
+// 默认展开顶级分类及下一层节点，深层分类由用户按需展开；选项异步加载后同步更新。
+const parentExpandedKeys = computed(() => categoryOptions.value.flatMap(node => [
+  node.id, ...(node.children || []).map(child => child.id)
+]));
 
-/** 查询分类列表 */
+// 查询草稿与已提交条件分离，刷新和排序不自动应用尚未提交的输入。
+const searchStore = computed(() => ({
+  items: [
+    {label: '文件分类名称', prop: 'name', component: {is: 'input'}},
+    // 选项始终取完整分类树；严格选择允许选择任意层级，顶级分类对应 parentId=0。
+    {
+      label: '父级分类', prop: 'parentId', component: {
+        is: 'tree-select', data: categoryOptions.value,
+        props: {value: 'id', label: 'name', children: 'children'},
+        valueKey: 'id', checkStrictly: true, defaultExpandedKeys: parentExpandedKeys.value
+      }
+    }
+  ]
+}));
+
+/** 提交名称及父级分类筛选，后续刷新和排序均沿用已提交条件。 */
+function applyFilters() {
+  appliedName = (tableStore.params.name || '').trim();
+  // 保留顶级分类的编号 0，清空选择时才取消父级筛选。
+  const parentId = tableStore.params.parentId;
+  appliedParentId = parentId == null || parentId === '' ? undefined : parentId;
+}
+
+/** 分类树必须全量加载，取消排序时恢复显示顺序升序。 */
+function formatListParams(params) {
+  return {
+    ...params,
+    name: appliedName,
+    parentId: appliedParentId,
+    pageNum: 1,
+    pageSize: -1,
+    orderByColumn: params.isAsc ? params.orderByColumn : defaultSort.prop,
+    isAsc: params.isAsc || defaultSort.order
+  };
+}
+
+/** 转换树结构并规范文本空值，显示顺序为零时仍正常展示。 */
+function formatListData(rows) {
+  const fields = ['name', 'orderNum', 'remark', 'validFlag', 'createBy', 'createTime'];
+  const records = rows.map(row => {
+    const record = {...row};
+    fields.forEach(field => {
+      if (record[field] == null || record[field] === '') record[field] = '-';
+    });
+    return record;
+  });
+  categoryList.value = proxy.handleTree(records, 'id', 'parentId');
+  return categoryList.value;
+}
+
+/** 新增、修改和删除后刷新当前分类树，保留已提交筛选和展开状态。 */
 function getList() {
-  loading.value = true;
-  listModelDataCategory(queryParams.value).then((response) => {
-    const rows = response.data?.rows || response.data || [];
-    categoryList.value = proxy.handleTree(rows, "id", "parentId");
-    categoryOptions.value = [
-      { id: 0, name: "顶级分类", children: categoryList.value },
-    ];
-    loading.value = false;
+  tableRef.value?.getList();
+  // 分类增删改后同步刷新筛选选项，避免选项名称或层级停留在旧状态。
+  loadCategoryOptions();
+}
+
+/** 父级筛选和编辑选项始终加载完整分类树，避免当前筛选导致可选父级缺失。 */
+async function loadCategoryOptions() {
+  const response = await listModelDataCategory({
+    pageNum: 1,
+    pageSize: -1,
+    orderByColumn: defaultSort.prop,
+    isAsc: defaultSort.order
+  });
+  const rows = response.data?.rows || response.data || [];
+  categoryOptions.value = [{id: 0, name: '顶级分类', children: proxy.handleTree(rows, 'id', 'parentId')}];
+}
+
+/** 新增分类；从行内进入时预选该行作为父级。 */
+async function handleAdd(row) {
+  await loadCategoryOptions();
+  categoryDialogRef.value.openDialog({
+    title: '新增分类',
+    parentId: row?.id ?? 0,
+    categoryOptions: categoryOptions.value
   });
 }
 
-/** 搜索按钮操作 */
-function handleQuery() {
-  getList();
-}
-
-/** 排序触发事件 */
-function handleSortChange(column) {
-  queryParams.value.orderByColumn = column.prop;
-  queryParams.value.isAsc = column.order;
-  getList();
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  proxy.resetForm("queryRef");
-  handleQuery();
-}
-
-/** 重置表单 */
-function reset() {
-  form.value = {
-    id: undefined,
-    name: "",
-    parentId: 0,
-    orderNum: 0,
-    remark: "",
-  };
-  proxy.resetForm("categoryRef");
-}
-
-/** 取消按钮 */
-function cancel() {
-  open.value = false;
-  reset();
-}
-
-/** 新增按钮操作 */
-function handleAdd(row) {
-  reset();
-  form.value.parentId = row?.id || 0;
-  title.value = "新增分类";
-  open.value = true;
-}
-
-/** 修改按钮操作 */
+/** 修改时由独立弹窗请求最新详情，确保表单回显服务端数据。 */
 async function handleUpdate(row) {
-  reset();
-  const response = await getModelDataCategory(row.id);
-  form.value = response.data;
-  open.value = true;
-  title.value = "修改分类";
+  await loadCategoryOptions();
+  categoryDialogRef.value.openDialog({title: '修改分类', id: row.id, categoryOptions: categoryOptions.value});
 }
 
-/** 提交表单 */
-function submitForm() {
-  proxy.$refs["categoryRef"].validate((valid) => {
-    if (!valid) return;
-    const action = form.value.id
-      ? updateModelDataCategory
-      : addModelDataCategory;
-    action(form.value).then(() => {
-      proxy.$modal.msgSuccess(form.value.id ? "修改成功" : "新增成功");
-      open.value = false;
-      getList();
-    });
+/** 详情沿用同一字段布局，以只读模式展示分类信息。 */
+async function handleDetail(row) {
+  await loadCategoryOptions();
+  categoryDialogRef.value.openDialog({
+    title: '分类详情',
+    id: row.id,
+    readonly: true,
+    categoryOptions: categoryOptions.value
   });
 }
 
 /** 删除按钮操作 */
 function handleDelete(row) {
   proxy.$modal
-    .confirm(`是否确认删除分类“${row.name}”？`)
-    .then(() => delModelDataCategory(row.id))
-    .then(() => {
-      proxy.$modal.msgSuccess("删除成功");
-      getList();
-    })
-    .catch(() => {});
+      .confirm(`是否确认删除分类“${row.name}”？`)
+      .then(() => delModelDataCategory(row.id))
+      .then(() => {
+        proxy.$modal.msgSuccess("删除成功");
+        getList();
+      })
+      .catch(() => {
+      });
 }
 
-/** 展开/折叠操作 */
+/** 遍历当前分类树切换展开状态，不重新请求接口，后续刷新沿用同一默认展开值。 */
 function toggleExpandAll() {
-  refreshTable.value = false;
   isExpandAll.value = !isExpandAll.value;
-  nextTick(() => {
-    refreshTable.value = true;
-  });
+  tableStore.config.table.defaultExpandAll = isExpandAll.value;
+  const toggleRows = rows => {
+    rows.forEach(row => {
+      tableRef.value?.elTableRef?.toggleRowExpansion(row, isExpandAll.value);
+      if (row.children?.length) toggleRows(row.children);
+    });
+  };
+  toggleRows(categoryList.value);
 }
 
-getList();
+// 首次进入加载完整父级选项，列表查询仍由公共表格负责。
+onMounted(loadCategoryOptions);
 </script>
 
 <style scoped lang="scss">
@@ -415,12 +311,23 @@ getList();
     margin-right: 6px;
   }
 }
-.char-count :deep(.el-input__count)::after {
-  content: "个字符";
+
+// 菜单通过 Teleport 挂载，使用当前组件的作用域类保持按钮纵向排列。
+.category-action-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+
+  .el-button + .el-button {
+    margin-left: 0;
+  }
 }
+
 .mr5 {
   margin-right: 5px;
 }
+
 .mb15 {
   margin-bottom: 15px;
 }

@@ -365,7 +365,7 @@ const license = {
   title: "开源协议",
   text: {
     intro: [
-      " qOntology 依据 Apache License 2.0 提供，并受以下针对  qOntology 的特定附加条件约束：",
+      "qOntology 依据 Apache License 2.0 提供，并受以下针对  qOntology 的特定附加条件约束：",
       "在本协议中，“ qOntology” 是指整个软件项目，包括但不限于其前端、后端、API 及相关文档的全部或部分内容。",
       "在本协议中，“制作方” 是指江苏千桐科技有限公司。",
     ],
@@ -457,8 +457,8 @@ const entranceList = [
   {name: '项目管理', path: '/basic/project', perm: ['basic:project:project:list']},
   {name: '枚举管理', path: '/basic/basicEnum', perm: ['basic:enumeration:type:list']},
   {name: '数据源', path: '/basic/datasource', perm: ['basic:datasource:datasource:list']},
-  {name: '文件分类', path: '/basic/fileCategory', perm: ['basic:file:category:list']},
-  {name: '文件管理', path: '/basic/fileManager', perm: ['basic:file:manager:list']},
+  {name: '文件分类', path: '/basic/file/fileCategory', perm: ['basic:file:category:list']},
+  {name: '文件管理', path: '/basic/file/fileManager', perm: ['basic:file:manager:list']},
   {name: '建模目标', path: '/om/:versionId/target', perm: ['om:target:target:list']},
   {name: '语义资产', path: '/om/:versionId/semantic/term', perm: ['om:term:term:list']},
   {name: '本体建模', path: '/om/:versionId/ontology/objectType', perm: ['om:object:type:list']},
@@ -1114,19 +1114,29 @@ onDeactivated(() => {
 .stagingIndex {
   min-width: 1290px;
   max-width: 100%;
+  // width: 100%;
+  height: 100%;
+  // padding: 24px;
   background: #f0f2f5;
 
   ::v-deep .el-carousel {
     height: 100%;
+
     .el-carousel__container {
       height: 100%;
     }
+
     .el-carousel__arrow--left {
       display: none;
     }
+
     .el-carousel__arrow--right {
       display: none;
     }
+  }
+
+  :deep(.el-dialog__body) {
+    padding: 20px !important;
   }
 }
 
@@ -1699,11 +1709,11 @@ onDeactivated(() => {
   }
 
   .license-paragraph {
-    margin-bottom: 18px;
+    margin-bottom: 15px;
+    line-height: normal;
   }
 
   .license-paragraph:first-child {
-    margin-bottom: 20px;
     color: rgba(0, 0, 0, 0.9);
     font-size: 16px;
     font-weight: 600;
@@ -1711,14 +1721,14 @@ onDeactivated(() => {
   }
 
   .license-term {
-    padding: 18px 18px 17px 16px;
+    padding: 18px 18px 15px 16px;
     background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
     border: 1px solid #d8e0ed;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
   }
 
   .license-term + .license-term {
-    margin-top: 8px;
+    margin-top: 15px;
   }
 
   .license-term-title {
@@ -1756,7 +1766,7 @@ onDeactivated(() => {
 
   .license-notice {
     position: relative;
-    margin-top: 8px;
+    margin-top: 15px;
     padding: 12px 16px 12px 44px;
     color: rgba(0, 0, 0, 0.78);
     background: #fbfdff;
@@ -1787,13 +1797,10 @@ onDeactivated(() => {
   }
 
   .license-footer-text {
-    margin-top: 18px;
+    margin-top: 15px;
     color: rgba(0, 0, 0, 0.82);
     font-weight: 600;
-  }
-
-  .license-footer-text:last-child {
-    margin-bottom: 12px;
+    line-height: normal;
   }
 }
 

@@ -59,7 +59,8 @@ import {
     addDateRange,
     handleTree,
     selectDictLabel,
-    selectDictLabels
+    selectDictLabels,
+    getFormatValue
 } from '@/utils/anivia.js';
 
 // 分页组件
@@ -68,12 +69,22 @@ import Pagination from '@/components/Pagination';
 import RightToolbar from '@/components/RightToolbar';
 // 自定义表格工具组件 样式二
 import RightToolbar2 from '@/components/RightToolbar/index2.vue';
+// 通用表格组件
+import QtTable from '@/components/QtTable';
+// 列表页搜索栏组件
+import QtSearchBar from '@/components/QtSearchBar';
+// 标签组组件
+import QtTagGroup from '@/components/QtTagGroup';
+// 自适应布局组件
+import QtWrap from '@/components/QtWrap';
 // 富文本组件
 import Editor from '@/components/Editor';
 // 文件上传组件
 import FileUpload from '@/components/FileUpload2';
 // 提示组件
 import GuideTip from '@/components/GuideTip';
+// 页面提示面板组件
+import GuideTipPanel from '@/components/GuideTip/GuideTipPanel.vue';
 // 文件上传组件
 // 图片上传组件
 import ImageUpload from '@/components/ImageUpload';
@@ -83,6 +94,7 @@ import ImagePreview from '@/components/ImagePreview';
 import TreeSelect from '@/components/TreeSelect';
 // 字典标签组件
 import DictTag from '@/components/DictTag';
+import DetailInfo from '@/components/DetailInfo';
 // 表单提示组件
 import QtFormItem from '@/components/QtFormItem';
 //标签组件
@@ -100,11 +112,13 @@ app.config.globalProperties.handleTree = handleTree;
 app.config.globalProperties.addDateRange = addDateRange;
 app.config.globalProperties.selectDictLabel = selectDictLabel;
 app.config.globalProperties.selectDictLabels = selectDictLabels;
+app.config.globalProperties.getFormatValue = getFormatValue;
 // 将事件总线挂载到全局属性
 app.config.globalProperties.$bus = bus;
 
 // 全局组件挂载
 app.component('DictTag', DictTag);
+app.component('DetailInfo', DetailInfo);
 app.component('Tag', Tag);
 app.component('Pagination', Pagination);
 app.component('TreeSelect', TreeSelect);
@@ -113,8 +127,13 @@ app.component('ImageUpload', ImageUpload);
 app.component('ImagePreview', ImagePreview);
 app.component('RightToolbar', RightToolbar);
 app.component('RightToolbar2', RightToolbar2);
+app.component('QtTable', QtTable);
+app.component('QtSearchBar', QtSearchBar);
+app.component('QtTagGroup', QtTagGroup);
+app.component('QtWrap', QtWrap);
 app.component('Editor', Editor);
 app.component('GuideTip', GuideTip);
+app.component('GuideTipPanel', GuideTipPanel);
 app.component('QtFormItem', QtFormItem);
 app.use(router);
 app.use(store);

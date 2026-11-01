@@ -55,6 +55,12 @@ public class BasicEnumTypeRespVO implements Serializable {
     @Schema(description = "枚举类型", example = "")
     private String enumType;
 
+    /**
+     * 与详情页关联列表口径一致，仅统计未删除且基础数据类型为枚举的业务数据类型。
+     */
+    @Schema(description = "关联枚举业务数据类型总数", example = "0")
+    private Long referenceCount;
+
     @Excel(name = "状态")
     @Schema(description = "状态", example = "")
     private String status;

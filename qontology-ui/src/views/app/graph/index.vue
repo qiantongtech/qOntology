@@ -19,7 +19,7 @@
 <template>
     <div class="app-container">
         <div class="pagecont-one">
-            <Graph />
+            <graph />
         </div>
     </div>
 </template>

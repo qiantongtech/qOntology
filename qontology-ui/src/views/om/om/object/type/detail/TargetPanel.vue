@@ -18,10 +18,7 @@
 <template>
     <div v-loading="loading">
         <div class="target-toolbar mb15">
-            <div class="target-note">
-                <el-icon class="target-note-icon"><InfoFilled /></el-icon>
-                <span>展示当前对象类型关联的建模目标，便于核对该类型的设计是否符合目标要求。</span>
-            </div>
+            <guide-tip-panel type="plain" title="展示当前对象类型关联的建模目标，便于核对该类型的设计是否符合目标要求。" />
             <right-toolbar :search="false" :columns="columns" @queryTable="getList" />
         </div>
         <TargetTable :targets="targets" :columns="columns" @sort-change="handleSortChange" />
@@ -37,7 +34,6 @@
 </template>
 <script setup>
     import { onBeforeUnmount, reactive, ref, watch } from 'vue';
-    import { InfoFilled } from '@element-plus/icons-vue';
     import { pageTypeTargets } from '@/api/om/object/type';
     import TargetTable from '../TargetTable.vue';
     const props = defineProps({ objectTypeId: { type: [String, Number], required: true } });
@@ -109,17 +105,5 @@
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 12px;
-    }
-    .target-note {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        color: #909399;
-        font-size: 12px;
-        line-height: 18px;
-    }
-    .target-note-icon {
-        flex-shrink: 0;
-        font-size: 14px;
     }
 </style>

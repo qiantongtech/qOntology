@@ -19,6 +19,8 @@
 package tech.qiantong.qontology.module.basic.service.project.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import tech.qiantong.qontology.core.domain.entity.SysUser;
+import tech.qiantong.qontology.module.system.service.ISysUserService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import java.util.Objects;
@@ -83,6 +85,9 @@ public class BasicProjectServiceImpl
     @Resource
     private OntologyExportApi ontologyExportApi;
 
+    @Resource
+    private ISysUserService sysUserService;
+
     /**
      * 获项目管理分页列表
      *
@@ -109,6 +114,7 @@ public class BasicProjectServiceImpl
             throw new ServiceException("命名空间不能重复");
         }
         BasicProjectDO dictType = BeanUtils.toBean(createReqVO, BasicProjectDO.class);
+        applyResponsibleUser(dictType, createReqVO.getResponsibleUserId());
         baseMapper.insert(dictType);
         // 创建完成后需要同时创建版本信息
         BasicProjectVersionSaveReqVO versionReqVO = new BasicProjectVersionSaveReqVO();
@@ -136,7 +142,24 @@ public class BasicProjectServiceImpl
         }
         // 更新项目管理
         BasicProjectDO updateObj = BeanUtils.toBean(updateReqVO, BasicProjectDO.class);
+        // 直接按本次表单设置责任人，未选择时统一清空用户编号、姓名和电话。
+        applyResponsibleUser(updateObj, updateReqVO.getResponsibleUserId());
         return baseMapper.updateById(updateObj);
+    }
+
+    /** 根据系统用户编号写入责任人和电话快照，拒绝不存在或已删除的用户，避免信任客户端联系信息。 */
+    private void applyResponsibleUser(BasicProjectDO project, Long userId) {
+        project.setResponsibleUserId(userId);
+        project.setResponsiblePersonName(null);
+        project.setResponsiblePersonPhone(null);
+        if (userId == null) return;
+        SysUser user = sysUserService.selectUserById(userId);
+        if (user == null || "2".equals(user.getDelFlag())) {
+            throw new ServiceException("责任人不存在或已删除，请重新选择");
+        }
+        project.setResponsiblePersonName(
+                user.getNickName() == null || user.getNickName().isBlank() ? user.getUserName() : user.getNickName());
+        project.setResponsiblePersonPhone(user.getPhonenumber());
     }
 
     /**

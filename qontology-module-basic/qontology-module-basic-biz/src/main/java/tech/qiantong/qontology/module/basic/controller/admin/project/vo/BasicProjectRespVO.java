@@ -47,6 +47,9 @@ public class BasicProjectRespVO implements Serializable {
     @Schema(description = "项目名称", example = "")
     private String name;
 
+    @Schema(description = "项目图标路径")
+    private String icon;
+
     @Excel(name = "项目领域")
     @Schema(description = "项目领域", example = "")
     private String domain;
@@ -58,6 +61,17 @@ public class BasicProjectRespVO implements Serializable {
     @Excel(name = "状态")
     @Schema(description = "状态", example = "")
     private ProjectStatusEnum status;
+
+    @Schema(description = "责任人用户编号")
+    private Long responsibleUserId;
+
+    @Excel(name = "责任人")
+    @Schema(description = "责任人姓名")
+    private String responsiblePersonName;
+
+    @Excel(name = "联系电话")
+    @Schema(description = "责任人联系电话")
+    private String responsiblePersonPhone;
 
     @Excel(name = "当前版本")
     @Schema(description = "当前版本", example = "")

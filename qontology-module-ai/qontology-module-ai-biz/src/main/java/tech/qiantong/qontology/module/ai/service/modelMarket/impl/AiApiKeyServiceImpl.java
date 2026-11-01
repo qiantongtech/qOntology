@@ -61,62 +61,64 @@ public class AiApiKeyServiceImpl extends ServiceImpl<AiApiKeyMapper, AiApiKeyDO>
     @Resource
     private AiApiKeyMapper aiApiKeyMapper;
 
+    /** 按提供方生成市场卡片，先应用全部筛选，再分页，确保总数与卡片状态一致。 */
     @Override
     public PageResult<AiApiKeyPageReqVO> getAiApiKeyPage(AiApiKeyPageReqVO pageReqVO) {
-        // MyBatis Plus 查询
         List<SysDictData> platformDictList = DictUtils.getDictCache("ai_model_platform");
-        assert platformDictList != null;
-        if (StrUtil.isNotBlank(pageReqVO.getName())) {
-            platformDictList = platformDictList.stream()
-                    .filter(item -> item.getDictValue().contains(pageReqVO.getName()))
-                    .toList();
+        if (CollUtil.isEmpty(platformDictList)) {
+            return new PageResult<>(Collections.emptyList(), 0L);
         }
 
-        Integer pageNum = pageReqVO.getPageNum();
-        Integer pageSize = pageReqVO.getPageSize();
-        if (pageNum < 1) {
-            pageNum = 1;
-        }
-        int startIndex = (pageNum - 1) * pageSize;
-        int endIndex = pageNum * pageSize;
-
-
-        if (startIndex >= platformDictList.size()) {
-            startIndex = platformDictList.size() / pageSize;
-            if (platformDictList.size() % pageSize > 0) {
-                startIndex = startIndex + pageSize;
-            }
-        }
-        if (endIndex > platformDictList.size()) {
-            endIndex = platformDictList.size();
-        }
-        List<SysDictData> subList = platformDictList.subList(startIndex, endIndex);
-
-
-        List<String> platformList = subList.stream().map(SysDictData::getDictValue).toList();
-        LambdaQueryWrapper<AiApiKeyDO> queryWrapper = Wrappers.<AiApiKeyDO>lambdaQuery()
-                .in(AiApiKeyDO::getPlatform, platformList);
-        List<AiApiKeyDO> doList = super.list(queryWrapper);
-        Map<String, List<AiApiKeyDO>> collect = doList.stream().collect(Collectors.groupingBy(AiApiKeyDO::getPlatform));
-
+        // 一次查询所有可用提供方的密钥，只用于判断是否已配置，未配置提供方也需要展示。
+        List<String> platforms = platformDictList.stream().map(SysDictData::getDictValue).toList();
+        Set<String> configuredPlatforms = super.list(Wrappers.<AiApiKeyDO>lambdaQuery()
+                        .in(AiApiKeyDO::getPlatform, platforms)).stream()
+                .map(AiApiKeyDO::getPlatform).collect(Collectors.toSet());
         List<AiApiKeyPageReqVO> resultList = new ArrayList<>();
-        subList.forEach(item -> {
-            AiPlatformEnum aiPlatformEnum = AiPlatformEnum.validatePlatform(item.getDictValue());
-            AiApiKeyPageReqVO vo = new AiApiKeyPageReqVO();
-            List<AiApiKeyDO> aiApiKeyDOS = collect.get(item.getDictValue());
-            Integer status = ApiKeyStatus.CONFIG.getCode();
-            if (CollUtil.isEmpty(aiApiKeyDOS)) {
-                status = ApiKeyStatus.NOT_CONFIG.getCode();
+        String keyword = StrUtil.trimToEmpty(pageReqVO.getName());
+        for (SysDictData item : platformDictList) {
+            AiPlatformEnum platform = AiPlatformEnum.validatePlatform(item.getDictValue());
+            // 名称同时匹配中文展示名与平台编码，支持“通义”和 DeepSeek 等输入。
+            if (StrUtil.isNotBlank(keyword)
+                    && !StrUtil.containsIgnoreCase(platform.getName(), keyword)
+                    && !StrUtil.containsIgnoreCase(platform.getPlatform(), keyword)) {
+                continue;
             }
-            vo.setName(aiPlatformEnum.getName());
-            vo.setPlatform(aiPlatformEnum.getPlatform());
-            vo.setPlatformTag(aiPlatformEnum.getPlatformTag());
-            vo.setDescription(aiPlatformEnum.getDescription());
+            if (StrUtil.isNotBlank(pageReqVO.getPlatform())
+                    && !platform.getPlatform().equalsIgnoreCase(pageReqVO.getPlatform())) {
+                continue;
+            }
+            // 能力按完整标签值匹配，并在分页前过滤，保证总数与组合筛选结果一致。
+            if (StrUtil.isNotBlank(pageReqVO.getPlatformTag())
+                    && !Arrays.asList(platform.getPlatformTag().split(",")).contains(pageReqVO.getPlatformTag())) {
+                continue;
+            }
+            Integer status = configuredPlatforms.contains(platform.getPlatform())
+                    ? ApiKeyStatus.CONFIG.getCode() : ApiKeyStatus.NOT_CONFIG.getCode();
+            // 0 是有效的“未配置”条件，不能以真值判断忽略该筛选。
+            if (pageReqVO.getStatus() != null && !pageReqVO.getStatus().equals(status)) {
+                continue;
+            }
+            AiApiKeyPageReqVO vo = new AiApiKeyPageReqVO();
+            vo.setName(platform.getName());
+            vo.setPlatform(platform.getPlatform());
+            vo.setPlatformTag(platform.getPlatformTag());
+            vo.setDescription(platform.getDescription());
             vo.setStatus(status);
             resultList.add(vo);
-        });
+        }
 
-        return new PageResult<>(resultList, (long) platformDictList.size());
+        // 空结果或超出末页时返回空列表，避免原先 subList 起止位置错误导致查询异常。
+        long total = resultList.size();
+        int pageNum = Math.max(1, pageReqVO.getPageNum());
+        int pageSize = pageReqVO.getPageSize();
+        if (pageSize == -1) {
+            return new PageResult<>(resultList, total);
+        }
+        pageSize = Math.max(1, pageSize);
+        int fromIndex = (int) Math.min((long) (pageNum - 1) * pageSize, total);
+        int toIndex = (int) Math.min((long) fromIndex + pageSize, total);
+        return new PageResult<>(resultList.subList(fromIndex, toIndex), total);
     }
 
     /**
@@ -224,11 +226,23 @@ public class AiApiKeyServiceImpl extends ServiceImpl<AiApiKeyMapper, AiApiKeyDO>
      */
     @Override
     public PageResult<AiApiKeyPageReqVO> queryMyModelPage(AiApiKeyPageReqVO aiApiKey) {
-        Page<AiApiKeyPageReqVO> page = MyBatisUtils.buildPage(aiApiKey);
-        Page<AiApiKeyPageReqVO> resultPage = baseMapper.selectPage(page, aiApiKey);
-        if (CollUtil.isEmpty(resultPage.getRecords())) {
-            new PageResult<>(new ArrayList<>(0), 0L);
+        // 卡片展示的是提供方，名称和能力按平台枚举匹配，避免误查用户自定义的密钥名称。
+        String keyword = StrUtil.trimToEmpty(aiApiKey.getName());
+        List<String> platforms = Arrays.stream(AiPlatformEnum.values())
+                .filter(platform -> StrUtil.isBlank(keyword)
+                        || StrUtil.containsIgnoreCase(platform.getName(), keyword)
+                        || StrUtil.containsIgnoreCase(platform.getPlatform(), keyword))
+                .filter(platform -> StrUtil.isBlank(aiApiKey.getPlatform())
+                        || platform.getPlatform().equalsIgnoreCase(aiApiKey.getPlatform()))
+                .filter(platform -> StrUtil.isBlank(aiApiKey.getPlatformTag())
+                        || Arrays.asList(platform.getPlatformTag().split(",")).contains(aiApiKey.getPlatformTag()))
+                .map(AiPlatformEnum::getPlatform).toList();
+        // 没有匹配平台时直接返回，不生成空 IN 条件，也不回退到未筛选结果。
+        if (platforms.isEmpty()) {
+            return new PageResult<>(Collections.emptyList(), 0L);
         }
+        Page<AiApiKeyPageReqVO> page = MyBatisUtils.buildPage(aiApiKey);
+        Page<AiApiKeyPageReqVO> resultPage = baseMapper.selectPage(page, aiApiKey, platforms);
         resultPage.getRecords().forEach(item -> {
             AiPlatformEnum aiPlatformEnum = AiPlatformEnum.validatePlatform(item.getPlatform());
             item.setStatus(ApiKeyStatus.CONFIG.getCode());

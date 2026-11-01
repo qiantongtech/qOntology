@@ -27,8 +27,14 @@
                     "
                     :key="item.value"
                     :index="index"
-                    :class="item.elTagClass"
-                    >{{ item.label + ' ' }}</span
+                    :class="['dict-tag-span', item.elTagClass]"
+                    >
+                    <img
+                        v-if="item.icon"
+                        :src="item.icon"
+                        class="dict-tag-icon"
+                        alt=""
+                    />{{ item.label + ' ' }}</span
                 >
                 <el-tag
                     v-else
@@ -37,7 +43,13 @@
                     :index="index"
                     :type="item.elTagType"
                     :class="item.elTagClass"
-                    >{{ item.label + ' ' }}</el-tag
+                    >
+                    <img
+                        v-if="item.icon"
+                        :src="item.icon"
+                        class="dict-tag-icon"
+                        alt=""
+                    />{{ item.label + ' ' }}</el-tag
                 >
                 <!-- item.elTagType === 'primary' ? '' : item.elTagType 不知道为什么改？ -->
             </template>
@@ -111,5 +123,25 @@
 <style scoped>
     .el-tag + .el-tag {
         margin-left: 10px;
+    }
+
+    .dict-tag-span {
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+    }
+
+    .el-tag :deep(.el-tag__content) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dict-tag-icon {
+        width: 1.1em;
+        height: 1.1em;
+        margin-right: 4px;
+        object-fit: contain;
+        flex-shrink: 0;
     }
 </style>

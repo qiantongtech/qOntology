@@ -52,6 +52,9 @@ public class BasicProjectDO extends BaseEntity {
      */
     private String name;
 
+    /** 项目展示图标路径，空字符串表示使用默认图标。 */
+    private String icon;
+
     /**
      * 项目领域
      */
@@ -66,6 +69,24 @@ public class BasicProjectDO extends BaseEntity {
      * 状态
      */
     private ProjectStatusEnum status;
+
+    /**
+     * 责任人用户编号；允许显式更新为空，以支持清除责任人。
+     */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Long responsibleUserId;
+
+    /**
+     * 保存项目时从用户资料读取的责任人姓名快照。
+     */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String responsiblePersonName;
+
+    /**
+     * 保存项目时从用户资料读取的联系电话快照。
+     */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String responsiblePersonPhone;
 
     /**
      * 当前版本

@@ -52,6 +52,15 @@ export function clientsTest(id) {
     });
 }
 
+// 使用当前表单配置测试连接，不创建或修改数据源记录。
+export function clientsTestStatus(data) {
+    return request({
+        url: '/basic/datasource/clientsTestStatus',
+        method: 'post',
+        data
+    });
+}
+
 // 新增数据源
 export function addDaDatasource(data) {
     return request({

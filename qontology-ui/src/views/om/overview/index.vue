@@ -685,7 +685,7 @@ const license = {
   title: "开源协议",
   text: {
     intro: [
-      " qOntology 依据 Apache License 2.0 提供，并受以下针对  qOntology 的特定附加条件约束：",
+      "qOntology 依据 Apache License 2.0 提供，并受以下针对  qOntology 的特定附加条件约束：",
       "在本协议中，“ qOntology” 是指整个软件项目，包括但不限于其前端、后端、API 及相关文档的全部或部分内容。",
       "在本协议中，“制作方” 是指江苏千桐科技有限公司。"
     ],

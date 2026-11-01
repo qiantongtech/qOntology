@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.basic.dal.mapper.enumeration;
 
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.basic.controller.admin.enumeration.vo.BasicEnumTypePageReqVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.enumeration.BasicEnumTypeDO;
@@ -40,6 +41,12 @@ public interface BasicEnumTypeMapper extends BaseMapperX<BasicEnumTypeDO> {
     /** 查询可供 AI 建模使用的全局枚举类型。 */
     List<Map<String, Object>> selectAiOptions();
 
+
+    /**
+     * 批量统计指定枚举的业务数据类型引用数；结果仅包含枚举编码和引用数。
+     * 调用方应传入非空编码集合，避免生成空的 IN 条件。
+     */
+    List<BasicEnumTypeDO> selectReferenceCounts(@Param("enumTypes") List<String> enumTypes);
 
     default PageResult<BasicEnumTypeDO> selectPage(BasicEnumTypePageReqVO reqVO) {
         // 定义排序的字段（防止 SQL 注入，与数据库字段名称一致）
