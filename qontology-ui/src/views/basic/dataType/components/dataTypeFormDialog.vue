@@ -170,7 +170,6 @@
 
 <script setup name="DataTypeFormDialog">
 import {computed, nextTick, ref, watch} from 'vue';
-import GuideTipPanel from "@/components/GuideTip/GuideTipPanel.vue";
 
 /** 业务数据类型编辑组件：管理本地草稿与类型配置，校验后由父页面保存并刷新列表。 */
 const props = defineProps({

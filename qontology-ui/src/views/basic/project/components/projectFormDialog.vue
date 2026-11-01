@@ -164,7 +164,6 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { listUserAll } from "@/api/system/system/user";
 import ImageUpload from "@/components/ImageUpload/index.vue";
 import defaultProjectIcon from "@/assets/images/project-default.svg";
-import GuideTipPanel from "@/components/GuideTip/GuideTipPanel.vue";
 
 /**
  * 项目新增和修改表单：接收初始数据与校验规则，维护本地草稿，校验后通过 submit 提交快照。
