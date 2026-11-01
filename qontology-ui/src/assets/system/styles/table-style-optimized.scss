@@ -126,3 +126,12 @@
 .app-container .task-title .el-tag--default .el-tag__content {
     font-size: 12px !important;
 }
+
+// QtTable 分页 - 右下角对齐
+.qt-table {
+    .qt-table--pagination {
+        padding: 20px 10px;
+        display: flex;
+        justify-content: flex-end;
+    }
+}
