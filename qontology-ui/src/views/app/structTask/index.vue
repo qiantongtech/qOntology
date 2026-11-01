@@ -210,7 +210,7 @@ const tableStore = reactive({
     },
     {
       label: "最近执行信息",
-      minWidth: 180,
+      minWidth: 170,
       align: "left",
       list: [
         { dict: "app_task_status", prop: "status" },
@@ -239,12 +239,6 @@ const tableStore = reactive({
       width: 120,
       align: "left",
       list: [{ prop: "createBy" }, { prop: "createPhone" }],
-    },
-    {
-      label: "发布状态",
-      prop: "publishStatus",
-      dict: "publish_status",
-      width: 100,
     },
     {
       label: "发布时间",
