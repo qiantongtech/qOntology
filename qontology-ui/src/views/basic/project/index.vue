@@ -53,21 +53,38 @@
       </template>
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 复用数据板块信息列的图标、名称链接及下方描述布局。 -->
-        <template #projectInfo="{row}">
+        <template #projectInfo="{ row }">
           <div class="qt-table-info">
             <div class="qt-table-info__main">
-              <img :src="getProjectIcon(row.icon)" alt="" class="info-icon"/>
-              <el-link type="primary" :underline="false" class="info-title text-ellipsis project-info-title" :title="row.name" @click="handleDetail(row)">
-                {{ row.name || '—' }}
+              <img :src="getProjectIcon(row.icon)" alt="" class="info-icon" />
+              <el-link
+                type="primary"
+                :underline="false"
+                class="info-title text-ellipsis project-info-title"
+                :title="row.name"
+                @click="handleDetail(row)"
+              >
+                {{ row.name || "-" }}
               </el-link>
             </div>
-            <div v-if="row.description" class="info-desc text-ellipsis" :title="row.description">{{ row.description }}</div>
+            <div
+              v-if="row.description"
+              class="info-desc text-ellipsis"
+              :title="row.description"
+            >
+              {{ row.description }}
+            </div>
           </div>
         </template>
         <!-- 项目领域沿用板块规划列的主题色标签与间距布局。 -->
-        <template #projectDomain="{row}">
+        <template #projectDomain="{ row }">
           <div v-if="row.domain" class="project-domain-list">
-            <el-tag type="primary" class="project-domain-tag" :title="row.domain">{{ row.domain }}</el-tag>
+            <el-tag
+              type="primary"
+              class="project-domain-tag"
+              :title="row.domain"
+              >{{ row.domain }}</el-tag
+            >
           </div>
           <span v-else>—</span>
         </template>
@@ -94,10 +111,14 @@
           </div>
         </template>
         <!-- 创建人与责任人使用相同的双行样式，联系电话复用公共用户关联逻辑。 -->
-        <template #creator="{row}">
+        <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
-            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
           </div>
         </template>
         <template #handle="{ row }">
@@ -355,12 +376,12 @@ import {
 import { saveAs } from "file-saver";
 import { onBeforeUnmount } from "vue";
 import auth from "@/plugins/auth";
-import {useCreatorPhones} from '@/utils/useCreatorPhones';
-import defaultProjectIcon from '@/assets/images/project-default.svg';
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+import defaultProjectIcon from "@/assets/images/project-default.svg";
 import ProjectFormDialog from "./components/projectFormDialog.vue";
 
 const { proxy } = getCurrentInstance();
-const {creatorPhones} = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const { project_status } = proxy.useDict("project_status");
 
 const tableRef = ref();
@@ -489,7 +510,7 @@ const tableStore = reactive({
       prop: "name",
       slot: "projectInfo",
       minWidth: 300,
-      align: "left"
+      align: "left",
     },
     {
       label: "项目领域",
@@ -523,7 +544,15 @@ const tableStore = reactive({
       width: 100,
       align: "center",
     },
-    { label: "创建人", prop: "createBy", slot: "creator", width: 130, align: "left", headerAlign: "left", showOverflowTooltip: {effect: "light"} },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 130,
+      align: "left",
+      headerAlign: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
     {
       label: "创建时间",
       prop: "createTime",
@@ -542,7 +571,7 @@ const tableStore = reactive({
   func: listProject,
   params: {
     name: null,
-    icon: '',
+    icon: "",
     domain: null,
     namespace: null,
     status: null,
@@ -620,7 +649,9 @@ function cancel() {
 /** 上传路径由服务端返回，列表展示时补齐接口前缀；未配置图标使用用户提供的默认 SVG。 */
 function getProjectIcon(icon) {
   if (!icon) return defaultProjectIcon;
-  return /^https?:\/\//i.test(icon) ? icon : import.meta.env.VITE_APP_BASE_API + icon;
+  return /^https?:\/\//i.test(icon)
+    ? icon
+    : import.meta.env.VITE_APP_BASE_API + icon;
 }
 
 /** 初始化项目表单，避免上一次编辑的范围或描述残留到新增操作。 */

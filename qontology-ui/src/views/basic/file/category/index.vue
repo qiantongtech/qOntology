@@ -45,7 +45,7 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <template #text="{row, column_data}">{{ row[column_data.prop] }}</template>
         <template #status="{row}">
-          <dict-tag v-if="row.validFlag !== '—'" :options="categoryStatusOptions" :value="row.validFlag"/>
+          <dict-tag v-if="row.validFlag !== '-'" :options="categoryStatusOptions" :value="row.validFlag"/>
           <span v-else>—</span>
         </template>
         <template #validFlag="{ row }">
@@ -59,12 +59,12 @@
         <!-- 沿用责任人双行样式，创建人电话通过用户接口关联，未维护时只显示姓名。 -->
         <template #creator="{row}">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
             <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
           </div>
         </template>
         <template #createTime="{row}">
-          {{ row.createTime === '—' ? '—' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '—') }}
+          {{ row.createTime === '-' ? '-' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-') }}
         </template>
         <template #handle="{row}">
           <el-button link type="primary" icon="View" @click="handleDetail(row)">详情</el-button>
@@ -220,7 +220,7 @@ function formatListData(rows) {
   const records = rows.map(row => {
     const record = {...row};
     fields.forEach(field => {
-      if (record[field] == null || record[field] === '') record[field] = '—';
+      if (record[field] == null || record[field] === '') record[field] = '-';
     });
     return record;
   });
