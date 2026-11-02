@@ -88,7 +88,7 @@ See the LICENSE file in the project root for full license information.
     import NodeDialog from '../component/nodeDialog.vue';
     // 综合接口
     import { getGraph } from '@/api/app/graph';
-    import { listEvent } from '@/api/kg/event/event';
+    import { listEvent } from '@/api/app/event/event';
     import { TimeLine } from '@/utils/graph/visTimeLine';
 
     const route = useRoute();

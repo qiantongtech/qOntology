@@ -187,7 +187,7 @@
 </template>
 
 <script setup name="TagMultiple">
-    import { listTag } from '@/api/kg/manage/tag';
+    import { listTag } from '@/api/app/manage/tag.js';
     import { ref } from 'vue';
     const { proxy } = getCurrentInstance();
 

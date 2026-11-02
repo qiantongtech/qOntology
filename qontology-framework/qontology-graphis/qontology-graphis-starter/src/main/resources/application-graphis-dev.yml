@@ -31,7 +31,7 @@ arangodb:
 neo4j:
   uri: bolt://127.0.0.1:7687
   user: neo4j
-  password: password
+  password: InC3tmU4bijT4vkl
 
 # 日志
 logging:

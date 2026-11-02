@@ -163,7 +163,7 @@
 
 <script setup name="TagModal">
     import { ref, reactive, toRefs, watch, getCurrentInstance, nextTick } from 'vue';
-    import { listTag, getTag, delTag, addTag, updateTag } from '@/api/kg/manage/tag.js';
+    import { listTag, getTag, delTag, addTag, updateTag } from '@/api/app/manage/tag.js';
     import { getToken } from '@/utils/auth.js';
     import { useRouter } from 'vue-router';
     import { defineProps, defineEmits, defineExpose } from 'vue';

@@ -520,7 +520,7 @@
         delTagEntity,
         addTagEntity,
         updateTagEntity
-    } from '@/api/kg/manage/tagEntity';
+    } from '@/api/app/manage/tagEntity';
     import { getToken } from '@/utils/auth.js';
 
     const { proxy } = getCurrentInstance();

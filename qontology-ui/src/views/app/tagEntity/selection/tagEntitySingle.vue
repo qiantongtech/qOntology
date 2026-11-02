@@ -167,7 +167,7 @@
 </template>
 
 <script setup name="TagEntitySingle">
-    import { listTagEntity } from '@/api/kg/manage/tagEntity';
+    import { listTagEntity } from '@/api/app/manage/tagEntity';
     import { ref } from 'vue';
     const { proxy } = getCurrentInstance();
 

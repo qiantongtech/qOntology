@@ -186,7 +186,7 @@
 </template>
 
 <script setup name="TagSingle">
-    import { listTag } from '@/api/kg/manage/tag';
+    import { listTag } from '@/api/app/manage/tag';
     import { ref } from 'vue';
     const { proxy } = getCurrentInstance();
     const daterangeCreateTime = ref([]);

@@ -1070,13 +1070,13 @@ UPDATE `system_menu` SET `menu_name` = '结构化抽取', `parent_id` = 1156, `o
 UPDATE `system_menu` SET `menu_name` = '抽取日志', `parent_id` = 1156, `order_num` = 4, `path` = 'taskLog', `component` = 'app/taskLog/index', `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'C', `visible` = '0', `status` = '0', `perms` = 'app:appTaskLog:tasklog:list', `icon` = '抽取日志', `create_by` = '吴同', `create_time` = '2026-10-20 18:04:48', `update_by` = '吴同', `update_time` = '2026-10-23 14:01:55', `remark` = '结构化与非结构化通用抽取日志' WHERE `menu_id` = 1183;
 
 -- 字典
-INSERT INTO system_dict_type VALUES(32, '事件类型', 'app_event_type', '0', '吴同', '2026-05-12 09:37:25', '', NULL, '知识管理事件分类');
-INSERT INTO system_dict_type VALUES(33, '实体类型', 'app_enetity_type', '0', '吴同', '2026-05-12 09:37:26', '', NULL, '实体类型');
-INSERT INTO system_dict_type VALUES(34, '标签类型', 'app_tag_category', '0', '吴同', '2026-05-12 09:37:26', '', NULL, '知识管理标签分类');
-INSERT INTO system_dict_data VALUES(103, 0, '关系事件', '0', 'app_event_type', NULL, NULL, 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '事件类型');
-INSERT INTO system_dict_data VALUES(104, 1, '实体事件', '1', 'app_event_type', NULL, NULL, 'N', '0', '吴同', '2026-05-12 09:38:37', '', NULL, '事件类型');
-INSERT INTO system_dict_data VALUES(105, 0, '结构化抽取', '1', 'app_enetity_type', NULL, 'primary', 'N', '0', '吴同', '2026-05-12 09:38:41', '', NULL, NULL);
-INSERT INTO system_dict_data VALUES(106, 1, '非结构化抽取', '2', 'app_enetity_type', NULL, 'primary', 'N', '0', '吴同', '2026-05-12 09:38:41', '', NULL, NULL);
-INSERT INTO system_dict_data VALUES(107, 0, '功能标签', '0', 'app_tag_category', NULL, '', 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '标签类型');
-INSERT INTO system_dict_data VALUES(108, 1, '业务标签', '1', 'app_tag_category', NULL, '', 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '标签类型');
+INSERT INTO system_dict_type VALUES(39, '事件类型', 'app_event_type', '0', '吴同', '2026-05-12 09:37:25', '', NULL, '知识管理事件分类');
+INSERT INTO system_dict_type VALUES(40, '实体类型', 'app_enetity_type', '0', '吴同', '2026-05-12 09:37:26', '', NULL, '实体类型');
+INSERT INTO system_dict_type VALUES(41, '标签类型', 'app_tag_category', '0', '吴同', '2026-05-12 09:37:26', '', NULL, '知识管理标签分类');
+INSERT INTO system_dict_data VALUES(125, 0, '关系事件', '0', 'app_event_type', NULL, NULL, 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '事件类型');
+INSERT INTO system_dict_data VALUES(126, 1, '实体事件', '1', 'app_event_type', NULL, NULL, 'N', '0', '吴同', '2026-05-12 09:38:37', '', NULL, '事件类型');
+INSERT INTO system_dict_data VALUES(127, 0, '结构化抽取', '1', 'app_enetity_type', NULL, 'primary', 'N', '0', '吴同', '2026-05-12 09:38:41', '', NULL, NULL);
+INSERT INTO system_dict_data VALUES(128, 1, '非结构化抽取', '2', 'app_enetity_type', NULL, 'primary', 'N', '0', '吴同', '2026-05-12 09:38:41', '', NULL, NULL);
+INSERT INTO system_dict_data VALUES(129, 0, '功能标签', '0', 'app_tag_category', NULL, '', 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '标签类型');
+INSERT INTO system_dict_data VALUES(130, 1, '业务标签', '1', 'app_tag_category', NULL, '', 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '标签类型');
 
