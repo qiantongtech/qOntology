@@ -1,17 +1,17 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : qontology开源版100
+ Source Server         : 外网服务器-qontology开源版
  Source Server Type    : MySQL
  Source Server Version : 50744
- Source Host           : 192.168.0.100:33067
+ Source Host           : 110.42.51.148:33067
  Source Schema         : qontology
 
  Target Server Type    : MySQL
  Target Server Version : 50744
  File Encoding         : 65001
 
- Date: 02/11/2026 17:44:50
+ Date: 02/11/2026 18:38:09
 */
 
 SET NAMES utf8mb4;
@@ -1156,7 +1156,7 @@ CREATE TABLE `om_ai_adopt_log`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_adopt_log_task`(`task_id`, `data_type`, `data_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选采纳日志' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选采纳日志' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_adopt_log
@@ -1196,7 +1196,7 @@ CREATE TABLE `om_ai_attribute`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_attribute_object`(`object_candidate_id`, `adopt_status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选对象属性' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选对象属性' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_attribute
@@ -1249,7 +1249,7 @@ CREATE TABLE `om_ai_axiom`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_axiom_task`(`task_id`, `adopt_status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选模型公理' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选模型公理' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_axiom
@@ -1278,7 +1278,7 @@ CREATE TABLE `om_ai_data_evidence`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_om_ai_data_evidence`(`data_type`, `data_id`, `evidence_id`) USING BTREE,
   INDEX `idx_om_ai_data_evidence_data`(`task_id`, `data_type`, `data_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 90 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选数据证据关系' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 90 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选数据证据关系' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_data_evidence
@@ -1401,7 +1401,7 @@ CREATE TABLE `om_ai_data_rule`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_data_rule_task`(`task_id`, `adopt_status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选数据规则' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选数据规则' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_data_rule
@@ -1437,7 +1437,7 @@ CREATE TABLE `om_ai_enum_data`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_enum_data_type`(`enum_type_id`, `adopt_status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选枚举值' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选枚举值' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_enum_data
@@ -1473,7 +1473,7 @@ CREATE TABLE `om_ai_enum_type`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_enum_type_task`(`task_id`, `adopt_status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选枚举类型' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选枚举类型' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_enum_type
@@ -1513,7 +1513,7 @@ CREATE TABLE `om_ai_evidence`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_evidence_task_file`(`task_id`, `file_id`, `block_no`) USING BTREE,
   INDEX `idx_om_ai_evidence_hash`(`content_hash`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 28 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI解析原子证据' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 28 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI解析原子证据' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_evidence
@@ -1571,7 +1571,7 @@ CREATE TABLE `om_ai_file`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_file_task`(`task_id`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI辅助建模文件' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI辅助建模文件' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_file
@@ -1603,7 +1603,7 @@ CREATE TABLE `om_ai_object`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_object_task`(`task_id`, `adopt_status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选对象类型' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选对象类型' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_object
@@ -1631,7 +1631,7 @@ CREATE TABLE `om_ai_object_target`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_om_ai_object_target`(`object_candidate_id`, `target_candidate_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选对象目标关系' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选对象目标关系' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_object_target
@@ -1672,7 +1672,7 @@ CREATE TABLE `om_ai_relation`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_relation_task`(`task_id`, `adopt_status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选对象关系' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选对象关系' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_relation
@@ -1700,7 +1700,7 @@ CREATE TABLE `om_ai_relation_target`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_om_ai_relation_target`(`relation_candidate_id`, `target_candidate_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选关系目标关系' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选关系目标关系' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_relation_target
@@ -1743,7 +1743,7 @@ CREATE TABLE `om_ai_stage`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_stage_task`(`task_id`, `sequence_no`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI解析阶段记录' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI解析阶段记录' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_stage
@@ -1786,7 +1786,7 @@ CREATE TABLE `om_ai_target`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_target_task`(`task_id`, `adopt_status`, `del_flag`) USING BTREE,
   INDEX `idx_om_ai_target_candidate_key`(`task_id`, `candidate_key`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选建模目标' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选建模目标' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_target
@@ -1821,7 +1821,7 @@ CREATE TABLE `om_ai_task`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_task_version`(`version_id`, `status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI辅助建模任务' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI辅助建模任务' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_task
@@ -1865,7 +1865,7 @@ CREATE TABLE `om_ai_term`  (
   `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_om_ai_term_task`(`task_id`, `adopt_status`, `del_flag`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选术语' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI候选术语' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_term
@@ -1875,6 +1875,39 @@ INSERT INTO `om_ai_term` VALUES (2, 1, '采购订单', '', '采购单、订购�
 INSERT INTO `om_ai_term` VALUES (3, 1, '物料', '', '', '', '物料是我们采购的物资，每个物料也有个编码。一张采购订单会包含多个采购明细，明细就是\"这张单子里某一种物料买了多少、单价多少\"这样的记录。；供应商和物料之间是\"提供\"的关系，反过来就是说物料\"由供应商提供\"。采购订单和采购明细之间是\"包含\"关系，反过来明细\"归属\"于那张订单。物料归属到物料分类。', '具有唯一编码的采购对象，可被归类并记录于采购明细中', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
 INSERT INTO `om_ai_term` VALUES (4, 1, '采购明细', '', '', '', '物料是我们采购的物资，每个物料也有个编码。一张采购订单会包含多个采购明细，明细就是\"这张单子里某一种物料买了多少、单价多少\"这样的记录。；采购明细里的订购数量必须是正整数，不能是小数。', '采购订单的组成部分，用于记录单一物料的具体采购数量与单价', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
 INSERT INTO `om_ai_term` VALUES (5, 1, '组织', '', '', '', '公司层面的组织是一个大的概念，集团、各分厂、各事业部都算组织，供应商从本质上也属于组织这一类，只是它是外部组织，给我们供货。每个供应商我们给编一个固定的编码，规则是大写S开头后面跟6位数字，比如S123456，这个编码在系统里要唯一，不能重复。', '企业架构与外部合作方的广义分类，包含内部机构与外部供应商', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+
+-- ----------------------------
+-- Table structure for om_constraint_rule
+-- ----------------------------
+DROP TABLE IF EXISTS `om_constraint_rule`;
+CREATE TABLE `om_constraint_rule`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `workspace_id` bigint(20) NULL DEFAULT NULL COMMENT '工作区id',
+  `version_id` bigint(20) NULL DEFAULT NULL COMMENT '版本id',
+  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '规则名称',
+  `description` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '规则描述',
+  `applicable_type` tinyint(3) UNSIGNED NULL DEFAULT NULL COMMENT '适用类型;0：对象类型，1：属性，2：对象类型关系',
+  `data_type` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '数据类型',
+  `required_flag` tinyint(1) NULL DEFAULT 0 COMMENT '是否必填;0: 否，1: 是',
+  `min_value` decimal(38, 10) NULL DEFAULT NULL COMMENT '数值下限',
+  `max_value` decimal(38, 10) NULL DEFAULT NULL COMMENT '数值上限',
+  `text_length` int(11) NULL DEFAULT NULL COMMENT '文本最大允许字符数',
+  `allowed_values` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '允许值',
+  `valid_flag` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否有效;0：无效，1：有效',
+  `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标志;1：已删除，0：未删除',
+  `create_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '创建人',
+  `creator_id` bigint(20) NULL DEFAULT NULL COMMENT '创建人id',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '更新人',
+  `updater_id` bigint(20) NULL DEFAULT NULL COMMENT '更新人id',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+  `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '约束规则表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of om_constraint_rule
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for om_data_rule
@@ -3487,7 +3520,7 @@ CREATE TABLE `system_logininfor`  (
   PRIMARY KEY (`info_id`) USING BTREE,
   INDEX `idx_system_logininfor_s`(`status`) USING BTREE,
   INDEX `idx_system_logininfor_lt`(`login_time`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统访问记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统访问记录' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of system_logininfor
@@ -3495,6 +3528,8 @@ CREATE TABLE `system_logininfor`  (
 INSERT INTO `system_logininfor` VALUES (1, 'admin', '117.89.24.233', 'XX XX', 'Chrome 15', 'Mac OS X', '0', '登录成功', '2026-10-22 20:22:20');
 INSERT INTO `system_logininfor` VALUES (2, 'qOntology', '192.168.0.97', '内网IP', 'Mobile Safari', 'Mac OS X (iPhone)', '0', '登录成功', '2026-11-02 17:01:42');
 INSERT INTO `system_logininfor` VALUES (3, 'qOntology', '192.168.0.187', '内网IP', 'Chrome 15', 'Windows 10', '0', '登录成功', '2026-11-02 17:28:01');
+INSERT INTO `system_logininfor` VALUES (4, 'admin', '117.89.24.233', 'XX XX', 'Chrome 15', 'Windows 10', '0', '退出成功', '2026-11-02 18:37:16');
+INSERT INTO `system_logininfor` VALUES (5, 'qOntology', '49.74.228.64', 'XX XX', 'Chrome 15', 'Windows 10', '0', '登录成功', '2026-11-02 18:37:19');
 
 -- ----------------------------
 -- Table structure for system_menu
@@ -3815,7 +3850,7 @@ CREATE TABLE `system_oper_log`  (
   INDEX `idx_system_oper_log_bt`(`business_type`) USING BTREE,
   INDEX `idx_system_oper_log_s`(`status`) USING BTREE,
   INDEX `idx_system_oper_log_ot`(`oper_time`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志记录' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of system_oper_log
@@ -3827,6 +3862,7 @@ INSERT INTO `system_oper_log` VALUES (4, '角色管理', 2, 'tech.qiantong.qonto
 INSERT INTO `system_oper_log` VALUES (5, '角色管理', 2, 'tech.qiantong.qontology.module.system.controller.admin.system.SysRoleController.edit()', 'PUT', 1, 'admin', '江苏千桐科技有限公司', '/system/role', '192.168.0.72', '内网IP', '{\"admin\":false,\"createBy\":\"吴同\",\"createTime\":\"2026-10-22 20:19:09\",\"dataScope\":\"1\",\"delFlag\":\"0\",\"deptCheckStrictly\":true,\"flag\":false,\"menuCheckStrictly\":true,\"menuIds\":[1080,1081,1112,1113,1114,1115,1193,1128,1129,1130,1131,1132,1194,1123,1124,1125,1126,1127,1133,1134,1135,1136,1137,1195,1138,1139,1140,1141,1142,1143,1144,1145,1146,1147,1061,1062,1064,1065,1063,1066,1077,1078,1162,1116,1117,1118,1119,1120,1121,1122,1082,1090,1091,1092,1093,1094,1095,1096,1157,1158,1159,1160,1161,1083,1084,1085,1086,1087,1088,1089,1148,1149,1150,1151,1152,1153,1154,1097,1098,1099,1100,1101,1102,1103,1104,1105,1106,1107,1108,1109,1110,1111,1163,1164,1165,1166,1167,1168,1169,1170,1171,1172,1173,1079,1204,1205,1206,1207,1208,1209,1210,1196,1197,1198,1199,1200,1201,1202,1203,1155,1214,1156,1215,1174,1175,1176,1177,1178,1179,1180,1181,1182,1185,1186,1187,1188,1189,1190,1191,1192,1183,1184,1216,1217,1218,1219,1220,1221,1222,1211,1212,1213,1,100,1000,1001,1002,1003,1004,1005,1006,101,1007,1008,1009,1010,1011,102,1012,1013,1014,1015,103,1016,1017,1018,1019,104,1020,1021,1022,1023,1024,105,1025,1026,1027,1028,1029,106,1030,1031,1032,1033,1034,107,1035,1036,1037,1038,108,500,1039,1040,1041,501,1042,1043,1044,1045,2,109,1046,1047,1048,110,1049,1050,1051,1052,1053,1054,111,112,113,3,114,1055,1056,1057,1058,1059,1060,115],\"params\":{},\"remark\":\"\",\"roleId\":2,\"roleKey\":\"system\",\"roleName\":\"系统管理员\",\"roleSort\":2,\"status\":\"0\",\"updateBy\":\"千桐科技\"}', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-11-02 16:58:18', 304);
 INSERT INTO `system_oper_log` VALUES (6, '角色管理', 2, 'tech.qiantong.qontology.module.system.controller.admin.system.SysRoleController.edit()', 'PUT', 1, 'admin', '江苏千桐科技有限公司', '/system/role', '192.168.0.72', '内网IP', '{\"admin\":false,\"createBy\":\"吴同\",\"createTime\":\"2026-10-22 20:19:09\",\"dataScope\":\"1\",\"delFlag\":\"0\",\"deptCheckStrictly\":true,\"flag\":false,\"menuCheckStrictly\":true,\"menuIds\":[1080,1081,1112,1113,1114,1115,1193,1128,1129,1130,1131,1132,1194,1123,1124,1125,1126,1127,1133,1134,1135,1136,1137,1195,1138,1139,1140,1141,1142,1143,1144,1145,1146,1147,1061,1062,1064,1065,1063,1066,1077,1078,1162,1116,1117,1118,1119,1120,1121,1122,1082,1090,1091,1092,1093,1094,1095,1096,1157,1158,1159,1160,1161,1083,1084,1085,1086,1087,1088,1089,1148,1149,1150,1151,1152,1153,1154,1097,1098,1099,1100,1101,1102,1103,1104,1105,1106,1107,1108,1109,1110,1111,1163,1164,1165,1166,1167,1168,1169,1170,1171,1172,1173,1079,1204,1205,1206,1207,1208,1209,1210,1196,1197,1198,1199,1200,1201,1202,1203,1155,1214,1156,1215,1174,1175,1176,1177,1178,1179,1180,1181,1182,1185,1186,1187,1188,1189,1190,1191,1192,1183,1184,1216,1217,1218,1219,1220,1221,1222,1211,1212,1213,1,100,1000,1001,1002,1003,1004,1005,1006,101,1007,1008,1009,1010,1011,102,1012,1013,1014,1015,103,1016,1017,1018,1019,104,1020,1021,1022,1023,1024,105,1025,1026,1027,1028,1029,106,1030,1031,1032,1033,1034,107,1035,1036,1037,1038,108,500,1039,1040,1041,501,1042,1043,1044,1045,2,109,1046,1047,1048,110,1049,1050,1051,1052,1053,1054,111,112,113,3,114,1055,1056,1057,1058,1059,1060,115],\"params\":{},\"remark\":\"\",\"roleId\":3,\"roleKey\":\"sales\",\"roleName\":\"客户经理\",\"roleSort\":3,\"status\":\"0\",\"updateBy\":\"千桐科技\"}', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-11-02 16:58:23', 158);
 INSERT INTO `system_oper_log` VALUES (7, '角色管理', 2, 'tech.qiantong.qontology.module.system.controller.admin.system.SysRoleController.edit()', 'PUT', 1, 'admin', '江苏千桐科技有限公司', '/system/role', '192.168.0.72', '内网IP', '{\"admin\":false,\"createBy\":\"吴同\",\"createTime\":\"2026-10-22 20:19:09\",\"dataScope\":\"1\",\"delFlag\":\"0\",\"deptCheckStrictly\":true,\"flag\":false,\"menuCheckStrictly\":true,\"menuIds\":[1,100,101,102,103,104,105,106,1080,1081,1112,1113,1114,1115,1193,1128,1129,1130,1131,1132,1194,1123,1124,1125,1126,1127,1133,1134,1135,1136,1137,1195,1138,1139,1140,1141,1142,1143,1144,1145,1146,1147,1061,1062,1064,1065,1063,1066,1077,1078,1162,1116,1117,1118,1119,1120,1121,1122,1082,1090,1091,1092,1093,1094,1095,1096,1157,1158,1159,1160,1161,1083,1084,1085,1086,1087,1088,1089,1148,1149,1150,1151,1152,1153,1154,1097,1098,1099,1100,1101,1102,1103,1104,1105,1106,1107,1108,1109,1110,1111,1163,1164,1165,1166,1167,1168,1169,1170,1171,1172,1173,1079,1196,1197,1198,1199,1200,1201,1202,1203,1155,1214,1156,1215,1174,1175,1176,1177,1178,1179,1180,1181,1182,1185,1186,1187,1188,1189,1190,1191,1192,1183,1184,1216,1217,1218,1219,1220,1221,1222,1211,1212,1213,1000,1007,1012,1016,1020,1025,1030,107,1035,1036,1037,1038,108,500,1039,1040,1041,501,1042,1043,1044,1045],\"params\":{},\"remark\":\"\",\"roleId\":4,\"roleKey\":\"guest\",\"roleName\":\"体验用户\",\"roleSort\":4,\"status\":\"0\",\"updateBy\":\"千桐科技\"}', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-11-02 16:58:42', 149);
+INSERT INTO `system_oper_log` VALUES (8, '角色管理', 2, 'tech.qiantong.qontology.module.system.controller.admin.system.SysRoleController.edit()', 'PUT', 1, 'admin', '江苏千桐科技有限公司', '/system/role', '117.89.24.233', 'XX XX', '{\"admin\":false,\"createBy\":\"吴同\",\"createTime\":\"2026-10-22 20:19:09\",\"dataScope\":\"1\",\"delFlag\":\"0\",\"deptCheckStrictly\":true,\"flag\":false,\"menuCheckStrictly\":true,\"menuIds\":[1080,1061,1062,1063,1081,1112,1113,1114,1115,1193,1128,1129,1130,1131,1132,1194,1123,1124,1125,1126,1127,1133,1134,1135,1136,1137,1195,1138,1139,1140,1141,1142,1143,1144,1145,1146,1147,1064,1066,1078,1162,1116,1117,1118,1119,1120,1121,1122,1082,1090,1091,1092,1093,1094,1095,1096,1157,1158,1159,1160,1161,1083,1084,1085,1086,1087,1088,1089,1148,1149,1150,1151,1152,1153,1154,1097,1098,1099,1100,1101,1102,1103,1104,1105,1106,1107,1108,1109,1110,1111,1163,1164,1165,1166,1167,1168,1169,1170,1171,1172,1173,1079,1204,1205,1206,1207,1208,1209,1210,1196,1197,1198,1199,1200,1201,1202,1203,1155,1214,1156,1215,1174,1175,1176,1177,1178,1179,1180,1181,1182,1185,1186,1187,1188,1189,1190,1191,1192,1183,1184,1216,1217,1218,1219,1220,1221,1222,1211,1212,1213,1,100,1000,1001,1002,1003,1004,1005,1006,101,1007,1008,1009,1010,1011,102,1012,1013,1014,1015,103,1016,1017,1018,1019,104,1020,1021,1022,1023,1024,105,1025,1026,1027,1028,1029,106,1030,1031,1032,1033,1034,107,1035,1036,1037,1038,108,500,1039,1040,1041,501,1042,1043,1044,1045,2,109,1046,1047,1048,110,1049,1050,1051,1052,1053,1054,111,112,113,3,114,1055,1056,1057,1058,1059,1060,115],\"params\":{},\"remark\":\"\",\"roleId\":2,\"roleKey\":\"system\",\"roleName\":\"系统管理员\",\"roleSort\":2,\"status\":\"0\",\"updateBy\":\"超级管理员\"}', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-11-02 18:36:58', 91);
 
 -- ----------------------------
 -- Table structure for system_post
@@ -3884,7 +3920,7 @@ CREATE TABLE `system_role`  (
 -- Records of system_role
 -- ----------------------------
 INSERT INTO `system_role` VALUES (1, '超级管理员', 'admin', 1, '1', 1, 1, '0', '0', '吴同', '2026-10-22 20:19:09', '', NULL, '');
-INSERT INTO `system_role` VALUES (2, '系统管理员', 'system', 2, '1', 1, 1, '0', '0', '吴同', '2026-10-22 20:19:09', '千桐科技', '2026-11-02 16:58:17', '');
+INSERT INTO `system_role` VALUES (2, '系统管理员', 'system', 2, '1', 1, 1, '0', '0', '吴同', '2026-10-22 20:19:09', '超级管理员', '2026-11-02 18:36:58', '');
 INSERT INTO `system_role` VALUES (3, '客户经理', 'sales', 3, '1', 1, 1, '0', '0', '吴同', '2026-10-22 20:19:09', '千桐科技', '2026-11-02 16:58:23', '');
 INSERT INTO `system_role` VALUES (4, '体验用户', 'guest', 4, '1', 1, 1, '0', '0', '吴同', '2026-10-22 20:19:09', '千桐科技', '2026-11-02 16:58:41', '');
 
@@ -4001,9 +4037,7 @@ INSERT INTO `system_role_menu` VALUES (2, 1061);
 INSERT INTO `system_role_menu` VALUES (2, 1062);
 INSERT INTO `system_role_menu` VALUES (2, 1063);
 INSERT INTO `system_role_menu` VALUES (2, 1064);
-INSERT INTO `system_role_menu` VALUES (2, 1065);
 INSERT INTO `system_role_menu` VALUES (2, 1066);
-INSERT INTO `system_role_menu` VALUES (2, 1077);
 INSERT INTO `system_role_menu` VALUES (2, 1078);
 INSERT INTO `system_role_menu` VALUES (2, 1079);
 INSERT INTO `system_role_menu` VALUES (2, 1080);
@@ -4590,7 +4624,7 @@ CREATE TABLE `system_user`  (
 -- Records of system_user
 -- ----------------------------
 INSERT INTO `system_user` VALUES (1, 100, 'admin', '超级管理员', '00', 'support@qiantong.tech', '15888888888', '0', NULL, '$2a$10$DY8QLFujLI.kuAk9R75mn.0TR8glHXCRUss5/B758pEzf1uG7.wD.', '0', '0', '117.89.24.233', '2026-10-22 20:22:21', '吴同', '2026-04-20 09:32:53', '超级管理员', '2026-10-22 20:22:20', '管理员');
-INSERT INTO `system_user` VALUES (2, 100, 'qOntology', '吴同', '00', 'support@qiantong.tech', '18888888888', '0', NULL, '$2a$10$6snwwaFipC2kqvFC763IIuV4BNOt8jJNH83x8CI4/2ShbiX96J3WO', '0', '0', '192.168.0.187', '2026-11-02 17:28:01', '吴同', '2026-06-03 14:48:53', '超级管理员', '2026-11-02 17:28:01', NULL);
+INSERT INTO `system_user` VALUES (2, 100, 'qOntology', '吴同', '00', 'support@qiantong.tech', '18888888888', '0', NULL, '$2a$10$6snwwaFipC2kqvFC763IIuV4BNOt8jJNH83x8CI4/2ShbiX96J3WO', '0', '0', '49.74.228.64', '2026-11-02 18:37:19', '吴同', '2026-06-03 14:48:53', '超级管理员', '2026-11-02 18:37:19', NULL);
 
 -- ----------------------------
 -- Table structure for system_user_post
