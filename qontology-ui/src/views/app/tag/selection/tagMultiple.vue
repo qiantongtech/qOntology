@@ -55,7 +55,7 @@
                             style="width: 150px"
                         >
                             <el-option
-                                v-for="item in kg_tag_category"
+                                v-for="item in app_tag_category"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -212,7 +212,7 @@
         }
     });
     const { queryParams, form } = toRefs(data);
-    const { kmc_know_valid, kg_tag_category } = proxy.useDict('kmc_know_valid', 'kg_tag_category');
+    const { kmc_know_valid, app_tag_category } = proxy.useDict('kmc_know_valid', 'app_tag_category');
     // -------------------------------------------
     const visible = ref(false);
     // 定义多选数据
@@ -371,10 +371,10 @@
     // 映射分类名称
     const getCategoryLabel = (value) => {
         // 如果数组不存在或 value 为空，直接返回默认值
-        if (!kg_tag_category || !value) return '-';
+        if (!app_tag_category || !value) return '-';
 
         // 遍历数组，找到 value 匹配的对象
-        const item = kg_tag_category.value.find((item) => item.value === value);
+        const item = app_tag_category.value.find((item) => item.value === value);
 
         // 找到则返回 label，否则返回默认值
         return item ? item.label : '-';

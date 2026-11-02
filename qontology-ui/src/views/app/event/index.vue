@@ -45,7 +45,7 @@
               clearable
           >
             <el-option
-                v-for="dict in kg_event_type"
+                v-for="dict in app_event_type"
                 :key="dict.value"
                 :label="dict.label"
                 :value="dict.value"
@@ -172,7 +172,7 @@
         >
           <template #default="scope">
             <div>
-              <dict-tag :options="kg_event_type" :value="scope.row.type"/>
+              <dict-tag :options="app_event_type" :value="scope.row.type"/>
             </div>
           </template>
         </el-table-column>
@@ -312,7 +312,7 @@
             <el-form-item label="事件类型" prop="type">
               <el-select v-model="form.type" placeholder="请选择事件类型" clearable>
                 <el-option
-                    v-for="dict in kg_event_type"
+                    v-for="dict in app_event_type"
                     :key="dict.value"
                     :label="dict.label"
                     :value="parseInt(dict.value)"
@@ -421,7 +421,7 @@
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="事件类型" prop="type">
-              <dict-tag :options="kg_event_type" :value="form.type"/>
+              <dict-tag :options="app_event_type" :value="form.type"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -526,7 +526,7 @@
     clearable
   >
     <el-option
-      v-for="dict in kg_enetity_type"
+      v-for="dict in app_enetity_type"
       :key="dict.value"
       :label="dict.label"
       :value="dict.value"
@@ -577,7 +577,7 @@
             :show-overflow-tooltip="{ effect: 'light' }"
         >
           <template #default="scope">
-            <dict-tag :options="kg_enetity_type" :value="scope.row.entityType"/>
+            <dict-tag :options="app_enetity_type" :value="scope.row.entityType"/>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" align="center" prop="createTime">
@@ -617,7 +617,7 @@ import {addEvent, delEvent, getEvent, listEvent, updateEvent} from '@/api/app/ev
 import {getGraphPage} from '@/api/app/graph';
 
 const {proxy} = getCurrentInstance();
-const {kg_event_type, kg_enetity_type} = proxy.useDict('kg_event_type', 'kg_enetity_type');
+const {app_event_type, app_enetity_type} = proxy.useDict('app_event_type', 'app_enetity_type');
 
 const eventList = ref([]);
 

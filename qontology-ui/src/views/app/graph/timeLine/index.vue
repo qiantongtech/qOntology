@@ -33,7 +33,7 @@ See the LICENSE file in the project root for full license information.
                     clearable
                 >
                     <el-option
-                        v-for="dict in kg_event_type"
+                        v-for="dict in app_event_type"
                         :key="dict.value"
                         :label="dict.label"
                         :value="dict.value"
@@ -120,7 +120,7 @@ See the LICENSE file in the project root for full license information.
 
     const route = useRoute();
     const { proxy } = getCurrentInstance();
-    const { kg_event_type } = proxy.useDict('kg_event_type');
+    const { app_event_type } = proxy.useDict('app_event_type');
     const loading = ref(false);
     const data = reactive({
         form: {},

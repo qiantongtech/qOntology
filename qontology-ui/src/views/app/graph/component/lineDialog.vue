@@ -31,7 +31,7 @@
                 <div :class="['line-card']">
                     <div class="line-title">
                         <span class="title-text" :title="item.name">{{ item.name }}</span>
-                        <dict-tag :options="kg_event_type" :value="item.type" />
+                        <dict-tag :options="app_event_type" :value="item.type" />
                         <el-tag class="title-toggle" @click="item.toggle = !item.toggle">
                             <span class="toggle-text">{{ item.toggle ? '收起' : '展开' }}</span>
                             <el-icon :class="{ toggle: item.toggle }"><ArrowRight /></el-icon>
@@ -89,7 +89,7 @@
     import moment from 'moment';
 
     const { proxy } = getCurrentInstance();
-    const { kg_event_type } = proxy.useDict('kg_event_type');
+    const { app_event_type } = proxy.useDict('app_event_type');
     const props = defineProps({
         data: {
             type: Array,

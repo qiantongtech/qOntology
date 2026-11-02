@@ -45,7 +45,7 @@
                             clearable
                         >
                             <el-option
-                                v-for="item in kg_tag_category"
+                                v-for="item in app_tag_category"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -207,7 +207,7 @@
                     prop="category"
                 >
                     <template #default="scope">
-                        <dict-tag :options="kg_tag_category" :value="scope.row.category" />
+                        <dict-tag :options="app_tag_category" :value="scope.row.category" />
                     </template>
                 </el-table-column>
                 <!-- <el-table-column
@@ -352,7 +352,7 @@
                         <el-form-item label="类型" prop="category">
                             <el-select v-model="form.category" placeholder="请选择类型" clearable>
                                 <el-option
-                                    v-for="item in kg_tag_category"
+                                    v-for="item in app_tag_category"
                                     :key="item.value"
                                     :label="item.label"
                                     :value="item.value"
@@ -525,7 +525,7 @@
     import { getToken } from '@/utils/auth.js';
     const route = useRoute();
     const { proxy } = getCurrentInstance();
-    const { kmc_know_valid, kg_tag_category } = proxy.useDict('kmc_know_valid', 'kg_tag_category');
+    const { kmc_know_valid, app_tag_category } = proxy.useDict('kmc_know_valid', 'app_tag_category');
     const tagList = ref([]);
     const modelList = ref([]);
     // 获取路由参数中的图谱id
@@ -626,10 +626,10 @@
     // 映射分类名称
     const getCategoryLabel = (value) => {
         // 如果数组不存在或 value 为空，直接返回默认值
-        if (!kg_tag_category || !value) return '-';
+        if (!app_tag_category || !value) return '-';
 
         // 遍历数组，找到 value 匹配的对象
-        const item = kg_tag_category.value.find((item) => item.value === value);
+        const item = app_tag_category.value.find((item) => item.value === value);
 
         // 找到则返回 label，否则返回默认值
         return item ? item.label : '-';
