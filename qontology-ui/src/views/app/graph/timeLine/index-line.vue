@@ -207,12 +207,10 @@ See the LICENSE file in the project root for full license information.
                 currentNodeData.value = null;
                 nodeDialogRef.value.dialogClose();
             }
-            console.log('🚀 ~ timelineEvent ~ e:', e, currentNodeData.value);
         });
     }
     // 左侧时间轴-点击实体
     function handleEntityClick(data) {
-        console.log('🚀 ~ handleEntityClick ~ data:', data);
         timelineGraph.value.instance.setSelection(`node-${45}`);
         timelineGraph.value.instance.focus(`node-${45}`, {
             zoom: true
