@@ -20,6 +20,8 @@
 
 qOntology 是面向企业级知识工程的开源本体工程平台，以本体论为基础，遵循 OWL、RDF、SHACL 等语义网标准，聚焦企业本体治理与语义治理，通过统一建模与语义资产管理，连接知识图谱、企业运行本体与本体驱动 AI，构建统一、开放、可演进的企业语义基础设施。
 
+✨✨✨**在线文档**✨✨✨ <a href="https://docs.qontology.cn/" target="_blank">https://docs.qontology.cn/</a>
+
 ✨✨✨**开源版演示地址**✨✨✨ <a href="https://demo.qontology.cn" target="_blank"> https://demo.qontology.cn </a> ，账号：qOntology 密码：qOntology123
 
 > 如果 qOntology 对您有帮助，请点个 **Star ⭐️**，这是我们持续更新的最大动力！ 🚀
@@ -220,21 +222,16 @@ qOntology 规划 **开源版** 与 **专业版**。开源版聚焦领域建模�
     <td><b>开源版品牌定制授权</b>咨询：👉 微信扫码联系</td>
   </tr>
   <tr><td><b>专业版 / 教育版合作</b>咨询：👉 微信扫码联系</td></tr>
-  <tr><td><b>企鹅交流：</b><a href="https://qm.qq.com/q/KPe3zhgdqk">👉 点此加入 QQ 交流群</a></td></tr>
+  <tr><td><b>企鹅交流：</b><a href="https://docs.qontology.cn/discuss.html">👉 点此加入 QQ 交流群</a></td></tr>
   <tr><td><b>公司名称：</b><a href="https://qiantong.tech/">江苏千桐科技有限公司</a></td></tr>
   <tr><td><b>联系邮箱：</b>sales@qiantong.tech</td></tr>
   <tr><td><b>联系地址：</b>南京市栖霞区金港科创园 / 郑州市高新区大科园西区</td></tr>
 </table>
 
 ## 👥 QQ交流群
+欢迎加入 qOntology 官方 QQ 交流群，获取最新动态、技术支持与使用交流。
 
-> 欢迎加入 **qOntology 官方 QQ 交流群**，与开发者一起交流、学习与进步。入群方法如下:
-
-请先添加**吴大同 QQ** ([<u>点此一键添加</u>](https://qm.qq.com/q/KPe3zhgdqk) 或 **扫下方二维码**)，并发送您在 **[<u>Gitee</u>](https://gitee.com/qiantongtech/qOntology) 或 [<u>GitHub</u>](https://github.com/qiantongtech/qOntology) 点亮 Star 的截图**，即可入群。
-
-<a href="https://qm.qq.com/q/KPe3zhgdqk" target="_blank">
-  <img src=".gitee/contact.png" alt="添加吴大同QQ" tabindex="0" loading="lazy" style="max-width: 600px; border: 1px solid #f1f1f1;">
-</a>
+> 👉 <a href="https://docs.qontology.cn/discuss.html">点击加入 QQ 交流群</a>
 
 ## 🖼️ 系统配图
 

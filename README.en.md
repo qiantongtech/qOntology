@@ -8,6 +8,9 @@
  <img src="https://img.shields.io/badge/qOntology-Ontology%20Engineering-blue.svg" alt="qOntology">
  <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt="Gitee Stars"/>
  <img src="https://img.shields.io/github/stars/qiantongtech/qOntology?label=Github%20Stars" alt="GitHub Stars"/>
+<a href="https://atomgit.com/qiantongtech/qOntology">
+  <img src="https://atomgit.com/qiantongtech/qOntology/star/badge.svg" alt="AtomGit Star"/>
+</a>
 </p>
 
 <p align="center">
@@ -18,7 +21,9 @@
 
 qOntology is an open-source ontology engineering platform for enterprise knowledge engineering. Grounded in ontology and aligned with Semantic Web standards such as OWL, RDF, and SHACL, it focuses on enterprise ontology governance and semantic governance. Through unified modeling and semantic asset management, qOntology connects knowledge graphs, enterprise operational ontologies, and ontology-driven AI to build a unified, open, and evolvable enterprise semantic infrastructure.
 
-✨✨✨ **Open-Source Edition Demo** ✨✨✨ <a href="https://qontology.qiantong.tech" target="_blank">https://qontology.qiantong.tech</a>
+✨✨✨ **Online Documentation** ✨✨✨ <a href="https://docs.qontology.cn/" target="_blank">https://docs.qontology.cn/</a>
+
+✨✨✨ **Open-Source Edition Demo** ✨✨✨ <a href="https://demo.qontology.cn" target="_blank">https://demo.qontology.cn</a>
 
 Username: `qOntology`  
 Password: `qOntology123`
@@ -208,17 +213,27 @@ Before deploying qOntology, prepare the following environments according to the 
 
 qOntology is planned to offer an **Open-Source Edition** and a **Professional Edition**. The Open-Source Edition focuses on domain modeling, basic quality validation, lightweight data mapping, sample previews, and standard format exports. The Professional Edition expands these capabilities with visual modeling, runtime objects, actions, functions, and ontology-driven business capabilities.
 
-👉 For **custom branding licenses** or **Professional Edition inquiries**, [<u>click here</u>](https://qm.qq.com/q/KPe3zhgdqk) to add Wu Datong on QQ, or **scan the QR code below**.
+👉 For **custom branding licenses** or **Professional Edition inquiries**, scan the WeChat QR code below to contact us.
+
+<table>
+  <tr>
+    <td width="220" rowspan="6" valign="middle">
+      <img src=".gitee/wechat-qr.jpg" width="200" alt="WeChat QR Code">
+    </td>
+    <td><b>Open-Source Edition Custom Branding Licenses:</b> 👉 Scan the WeChat QR code to inquire</td>
+  </tr>
+  <tr><td><b>Professional / Education Edition Partnerships:</b> 👉 Scan the WeChat QR code to inquire</td></tr>
+  <tr><td><b>QQ Community:</b> <a href="https://docs.qontology.cn/discuss.html">👉 Click here to join the QQ community</a></td></tr>
+  <tr><td><b>Company:</b> <a href="https://qiantong.tech/">Jiangsu Qiantong Technology Co., Ltd.</a></td></tr>
+  <tr><td><b>Email:</b> sales@qiantong.tech</td></tr>
+  <tr><td><b>Address:</b> Jingang Science and Technology Innovation Park, Qixia District, Nanjing / West Zone, University Science and Technology Park, High-Tech District, Zhengzhou</td></tr>
+</table>
 
 ## 👥 QQ Community
 
-> Join the **official qOntology QQ community** to exchange ideas, learn, and grow with fellow developers. Follow the steps below to join:
+Join the official qOntology QQ community for the latest updates, technical support, and discussions about using the platform.
 
-First, add **Wu Datong on QQ** ([<u>click here to add</u>](https://qm.qq.com/q/KPe3zhgdqk) or **scan the QR code below**). Then send a **screenshot showing that you have starred the project on [<u>Gitee</u>](https://gitee.com/qiantongtech/qOntology) or [<u>GitHub</u>](https://github.com/qiantongtech/qOntology)** to join the group.
-
-<a href="https://qm.qq.com/q/KPe3zhgdqk" target="_blank">
-  <img src=".gitee/contact.png" alt="Add Wu Datong on QQ" tabindex="0" loading="lazy" style="max-width: 600px; border: 1px solid #f1f1f1;">
-</a>
+> 👉 <a href="https://docs.qontology.cn/discuss.html">Click here to join the QQ community</a>
 
 ## 🖼️ Screenshots
 
