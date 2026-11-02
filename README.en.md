@@ -213,21 +213,7 @@ Before deploying qOntology, prepare the following environments according to the 
 
 qOntology is planned to offer an **Open-Source Edition** and a **Professional Edition**. The Open-Source Edition focuses on domain modeling, basic quality validation, lightweight data mapping, sample previews, and standard format exports. The Professional Edition expands these capabilities with visual modeling, runtime objects, actions, functions, and ontology-driven business capabilities.
 
-👉 For **custom branding licenses** or **Professional Edition inquiries**, scan the WeChat QR code below to contact us.
-
-<table>
-  <tr>
-    <td width="220" rowspan="6" valign="middle">
-      <img src=".gitee/wechat-qr.jpg" width="200" alt="WeChat QR Code">
-    </td>
-    <td><b>Open-Source Edition Custom Branding Licenses:</b> 👉 Scan the WeChat QR code to inquire</td>
-  </tr>
-  <tr><td><b>Professional / Education Edition Partnerships:</b> 👉 Scan the WeChat QR code to inquire</td></tr>
-  <tr><td><b>QQ Community:</b> <a href="https://docs.qontology.cn/discuss.html">👉 Click here to join the QQ community</a></td></tr>
-  <tr><td><b>Company:</b> <a href="https://qiantong.tech/">Jiangsu Qiantong Technology Co., Ltd.</a></td></tr>
-  <tr><td><b>Email:</b> sales@qiantong.tech</td></tr>
-  <tr><td><b>Address:</b> Jingang Science and Technology Innovation Park, Qixia District, Nanjing / West Zone, University Science and Technology Park, High-Tech District, Zhengzhou</td></tr>
-</table>
+👉 For **custom branding licenses** or **Professional Edition inquiries**, click the button to learn more: [💼 View Licensing Details](https://docs.qontology.cn/docs/overview/introduction.html#%F0%9F%9A%A8-%E5%95%86%E7%94%A8%E6%8E%88%E6%9D%83)
 
 ## 👥 QQ Community
 

@@ -38,7 +38,7 @@ export default [
             path: '',
             component: () => import('@/views/app/structTask/add/index.vue'),
             name: 'AppStructTaskAdd',
-            meta: { title: '结构化抽取配置', activeMenu: '/app/structTask' }
+            meta: { title: '结构化抽取配置', activeMenu: '/app/graph/structTask' }
         }]
     },
     {
@@ -51,10 +51,7 @@ export default [
                 component: () => import('@/views/app/extractResults/index.vue'),
                 hidden: true,
                 name: 'AppExtractResults',
-                meta: {
-                    title: '抽取结果',
-                    activeMenu: '/app/unstructTask'
-                }
+                meta: {title: '抽取结果', activeMenu: '/app/graph/structTask'}
             }
         ]
     }

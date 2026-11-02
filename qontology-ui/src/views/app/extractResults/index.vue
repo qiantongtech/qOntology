@@ -128,7 +128,7 @@ async function getExtractionResult() {
 /** 关闭当前页签并返回当前类型的抽取任务列表。 */
 function handleBack() {
   proxy.$tab.closeOpenPage({
-    path: isStructured.value ? "/app/structTask" : "/app/unstructTask",
+    path: isStructured.value ? "/app/graph/structTask" : "/app/graph/unstructTask",
     query: {
       pageNum: taskInfo.value.pageNum,
       pageSize: taskInfo.value.pageSize,

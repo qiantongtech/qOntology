@@ -341,6 +341,7 @@
 </template>
 
 <script setup>
+import { createRowKey } from "@/utils/rowKey";
 import {computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
@@ -494,7 +495,7 @@ async function listObjectAttributeOptions(objectTypeId, versionId) {
 }
 
 function createCondition() {
-  return {key: globalThis.crypto.randomUUID(), objectTypeId: '', attributeId: '', operator: 'LT', value: ''};
+  return {key: createRowKey(), objectTypeId: '', attributeId: '', operator: 'LT', value: ''};
 }
 
 function getBasicTypeCode(attribute, businessTypes) {
@@ -647,7 +648,7 @@ async function handleUpdate(row) {
     ...emptyForm(),
     ...response.data,
     conditions: response.data?.conditions?.length
-      ? response.data.conditions.map(condition => ({...condition, key: globalThis.crypto.randomUUID()}))
+      ? response.data.conditions.map(condition => ({...condition, key: createRowKey()}))
       : [createCondition()]
   };
   detailOpen.value = false;
