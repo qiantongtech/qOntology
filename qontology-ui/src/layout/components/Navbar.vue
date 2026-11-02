@@ -403,6 +403,7 @@ import { loginOut } from "@/api/system/sso-auth.js";
 // import MessageList from "@/views/system/system/message/components/messageList.vue";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import moment from "moment";
+import { getMessageWebSocketUrl } from "@/utils/messageWebSocket";
 import { listNotice } from "@/api/system/system/notice";
 import { getCurrentAppVersion } from "@/api/system/update/update.js";
 import picomatch from 'picomatch';
@@ -632,12 +633,22 @@ const noticeList = ref([]);
 const sessionValue = ref(null);
 getMessageNum(); // 第一次主要获取消息
 
-const wsUri =
-  import.meta.env.VITE_APP_WEBSOCKET_API +
-  "/websocket/message/" +
-  userStore.userId;
-// 建立socket连接
-const ws = new WebSocket(wsUri);
+let ws = null;
+const stopMessageSocket = watch(() => userStore.id, (id) => {
+  ws?.close();
+  const wsUri = getMessageWebSocketUrl(id);
+  ws = wsUri ? new WebSocket(wsUri) : null;
+  if (ws) ws.onmessage = handleSocketMessage;
+}, { immediate: true });
+
+function handleSocketMessage(event) {
+  const messageData = JSON.parse(event.data);
+  if (messageData) {
+    messageData.time = formatTimestamp(messageData.updateTime ?? messageData.createTime);
+    messages.value = [messageData, ...messages.value];
+  }
+  msgCount.value = messages.value.length;
+}
 
 const initWebSocket = () => {
   //查询通知公告
@@ -656,7 +667,7 @@ const initWebSocket = () => {
 
   //查询未读消息通知
   listMessage({
-    receiverId: userStore.userId,
+    receiverId: userStore.id,
     hasRead: 0,
     pageNum: 1,
     pageSize: 1000,
@@ -669,19 +680,7 @@ const initWebSocket = () => {
     messages.value = [...response.data.rows, ...messages.value];
     msgCount.value = messages.value ? messages.value.length : 0;
   });
-  ws.onmessage = (event) => {
-    const messageData = JSON.parse(event.data);
-    if (messageData) {
-      messageData.time =
-        messageData.updateTime != undefined && messageData.updateTime != null
-          ? formatTimestamp(messageData.updateTime)
-          : formatTimestamp(messageData.createTime);
-      // messages.value.push(messageData)
-      messages.value = [messageData, ...messages.value];
-    }
-    // 消息数量更新
-    msgCount.value = messages.value ? messages.value.length : 0;
-  };
+
 };
 
 onMounted(() => {
@@ -689,7 +688,8 @@ onMounted(() => {
 });
 // 页面注销
 onBeforeUnmount(() => {
-  ws.close(); // 关闭socket
+  stopMessageSocket();
+  ws?.close(); // 关闭socket
 });
 
 // 格式化时间戳为 YYYY-MM-DD HH:mm:ss 格式

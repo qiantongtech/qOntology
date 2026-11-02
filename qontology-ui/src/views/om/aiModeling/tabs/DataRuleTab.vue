@@ -316,6 +316,7 @@
   </div>
 </template>
 <script setup>
+import { createRowKey } from "@/utils/rowKey";
 import {
   listCandidates,
   getCandidate,
@@ -385,7 +386,7 @@ const rules = {
   conditionRelation: [{ required: true, message: "请选择条件关系", trigger: "change" }],
 };
 function createCondition(source = {}) {
-  return { key: globalThis.crypto.randomUUID(), objectCandidateId: source.objectCandidateId, attributeCandidateId: source.attributeCandidateId, operator: source.operator || "LT", value: source.value ?? "" };
+  return { key: createRowKey(), objectCandidateId: source.objectCandidateId, attributeCandidateId: source.attributeCandidateId, operator: source.operator || "LT", value: source.value ?? "" };
 }
 function getBasicTypeCode(attribute) {
   if (Number(attribute.typeCategory) !== 2) return Number(attribute.basicTypeCode);

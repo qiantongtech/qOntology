@@ -16,6 +16,8 @@
  * See the LICENSE file in the project root for full license information.
  */
 
+import { getMessageWebSocketUrl } from "@/utils/messageWebSocket";
+
 class WebSocketService {
     constructor(userId, token) {
         this.userId = userId;
@@ -30,7 +32,8 @@ class WebSocketService {
         }
 
         // 创建 WebSocket 连接
-        const wsUri = import.meta.env.VITE_APP_WEBSOCKET_API + `/websocket/message/${this.userId}`;
+        const wsUri = getMessageWebSocketUrl(this.userId);
+        if (!wsUri) return;
         // 建立socket连接
         this.socket = new WebSocket(wsUri);
 

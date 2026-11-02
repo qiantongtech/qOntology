@@ -252,7 +252,7 @@
                                     type="primary"
                                     @click="handleUpdate(scope.row)"
                                     v-hasPermi="['system:user:edit']"
-
+                                    v-if="scope.row.userId !== 1"
                                 >
                                     <i class="iconfont-mini icon-a-xiugaixianxing"></i>
                                     修改
@@ -262,7 +262,7 @@
                                     type="danger"
                                     @click="handleDelete(scope.row)"
                                     v-hasPermi="['system:user:remove']"
-
+                                    v-if="scope.row.userId !== 1"
                                 >
                                     <i class="iconfont-mini icon-a-shanchuxianxing"></i>
                                     删除
@@ -271,7 +271,7 @@
                                     placement="bottom"
                                     :width="150"
                                     trigger="click"
-
+                                    v-if="scope.row.userId !== 1"
                                 >
                                     <template #reference>
                                         <el-button link type="primary" icon="More">更多</el-button>
