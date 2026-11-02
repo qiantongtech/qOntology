@@ -1073,10 +1073,10 @@ UPDATE `system_menu` SET `menu_name` = '抽取日志', `parent_id` = 1156, `orde
 INSERT INTO system_dict_type VALUES(39, '事件类型', 'app_event_type', '0', '吴同', '2026-05-12 09:37:25', '', NULL, '知识管理事件分类');
 INSERT INTO system_dict_type VALUES(40, '实体类型', 'app_enetity_type', '0', '吴同', '2026-05-12 09:37:26', '', NULL, '实体类型');
 INSERT INTO system_dict_type VALUES(41, '标签类型', 'app_tag_category', '0', '吴同', '2026-05-12 09:37:26', '', NULL, '知识管理标签分类');
-INSERT INTO system_dict_data VALUES(125, 0, '关系事件', '0', 'app_event_type', NULL, NULL, 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '事件类型');
-INSERT INTO system_dict_data VALUES(126, 1, '实体事件', '1', 'app_event_type', NULL, NULL, 'N', '0', '吴同', '2026-05-12 09:38:37', '', NULL, '事件类型');
-INSERT INTO system_dict_data VALUES(127, 0, '结构化抽取', '1', 'app_enetity_type', NULL, 'primary', 'N', '0', '吴同', '2026-05-12 09:38:41', '', NULL, NULL);
-INSERT INTO system_dict_data VALUES(128, 1, '非结构化抽取', '2', 'app_enetity_type', NULL, 'primary', 'N', '0', '吴同', '2026-05-12 09:38:41', '', NULL, NULL);
-INSERT INTO system_dict_data VALUES(129, 0, '功能标签', '0', 'app_tag_category', NULL, '', 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '标签类型');
-INSERT INTO system_dict_data VALUES(130, 1, '业务标签', '1', 'app_tag_category', NULL, '', 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '标签类型');
+INSERT INTO system_dict_data VALUES(126, 0, '关系事件', '0', 'app_event_type', NULL, NULL, 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '事件类型');
+INSERT INTO system_dict_data VALUES(127, 1, '实体事件', '1', 'app_event_type', NULL, NULL, 'N', '0', '吴同', '2026-05-12 09:38:37', '', NULL, '事件类型');
+INSERT INTO system_dict_data VALUES(128, 0, '结构化抽取', '1', 'app_enetity_type', NULL, 'primary', 'N', '0', '吴同', '2026-05-12 09:38:41', '', NULL, NULL);
+INSERT INTO system_dict_data VALUES(129, 1, '非结构化抽取', '2', 'app_enetity_type', NULL, 'primary', 'N', '0', '吴同', '2026-05-12 09:38:41', '', NULL, NULL);
+INSERT INTO system_dict_data VALUES(130, 0, '功能标签', '0', 'app_tag_category', NULL, '', 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '标签类型');
+INSERT INTO system_dict_data VALUES(131, 1, '业务标签', '1', 'app_tag_category', NULL, '', 'N', '0', '吴同', '2026-05-12 09:38:36', '', NULL, '标签类型');
 
