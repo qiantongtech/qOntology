@@ -212,21 +212,7 @@ qOntology 采用前后端分离架构，后端基于 JDK 17 与 Spring Boot 3.5.
 
 qOntology 规划 **开源版** 与 **专业版**。开源版聚焦领域建模、基础质量验证、轻量数据映射、样例预览和标准格式导出；专业版扩展可视化建模、运行时对象、动作、函数及本体驱动的业务能力。
 
-👉 如需 **品牌定制授权** 或 **咨询专业版**，请使用微信扫描下方二维码联系
-
-<table>
-  <tr>
-    <td width="220" rowspan="6" valign="middle">
-      <img src=".gitee/wechat-qr.jpg" width="200" alt="微信二维码">
-    </td>
-    <td><b>开源版品牌定制授权</b>咨询：👉 微信扫码联系</td>
-  </tr>
-  <tr><td><b>专业版 / 教育版合作</b>咨询：👉 微信扫码联系</td></tr>
-  <tr><td><b>企鹅交流：</b><a href="https://docs.qontology.cn/discuss.html">👉 点此加入 QQ 交流群</a></td></tr>
-  <tr><td><b>公司名称：</b><a href="https://qiantong.tech/">江苏千桐科技有限公司</a></td></tr>
-  <tr><td><b>联系邮箱：</b>sales@qiantong.tech</td></tr>
-  <tr><td><b>联系地址：</b>南京市栖霞区金港科创园 / 郑州市高新区大科园西区</td></tr>
-</table>
+👉 如需 **品牌定制授权** 或 **咨询专业版**，请点击按钮查看详情：[💼 了解授权详情](https://docs.qontology.cn/docs/overview/introduction.html#%F0%9F%9A%A8-%E5%95%86%E7%94%A8%E6%8E%88%E6%9D%83)
 
 ## 👥 QQ交流群
 欢迎加入 qOntology 官方 QQ 交流群，获取最新动态、技术支持与使用交流。
