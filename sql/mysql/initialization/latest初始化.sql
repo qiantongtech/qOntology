@@ -2556,7 +2556,7 @@ CREATE TABLE `system_menu`  (
                                 `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
                                 `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '备注',
                                 PRIMARY KEY (`menu_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1195 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜单权限表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1196 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜单权限表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of system_menu
@@ -2710,12 +2710,12 @@ INSERT INTO `system_menu` VALUES (1134, '数据源查询', 1133, 1, '', NULL, NU
 INSERT INTO `system_menu` VALUES (1135, '数据源新增', 1133, 2, '', NULL, NULL, NULL, 1, 0, 'F', '0', '0', 'basic:datasource:datasource:add', '#', '吴同', '2025-06-17 10:23:51', '', NULL, '');
 INSERT INTO `system_menu` VALUES (1136, '数据源修改', 1133, 3, '', NULL, NULL, NULL, 1, 0, 'F', '0', '0', 'basic:datasource:datasource:edit', '#', '吴同', '2025-06-17 10:23:51', '', NULL, '');
 INSERT INTO `system_menu` VALUES (1137, '数据源删除', 1133, 4, '', NULL, NULL, NULL, 1, 0, 'F', '0', '0', 'basic:datasource:datasource:remove', '#', '吴同', '2025-06-17 10:23:52', '', NULL, '');
-INSERT INTO `system_menu` VALUES (1138, '文件分类', 1080, 5, 'fileCategory', 'basic/file/category/index', NULL, NULL, 1, 0, 'C', '0', '0', 'basic:file:category:list', '文件分类', 'admin', '2026-08-18 15:59:26', '吴同', '2026-10-23 10:36:35', '模型数据文件分类菜单');
+INSERT INTO `system_menu` VALUES (1138, '文件分类', 1195, 1, 'fileCategory', 'basic/file/category/index', NULL, NULL, 1, 0, 'C', '0', '0', 'basic:file:category:list', '文件分类', 'admin', '2026-08-18 15:59:26', '吴同', '2026-10-23 10:36:35', '模型数据文件分类菜单');
 INSERT INTO `system_menu` VALUES (1139, '文件分类查询', 1138, 1, '#', '', NULL, NULL, 1, 0, 'F', '0', '0', 'basic:file:category:query', '#', 'admin', '2026-08-18 15:59:27', '超级管理员', '2026-08-27 19:11:54', '');
 INSERT INTO `system_menu` VALUES (1140, '文件分类新增', 1138, 2, '#', '', NULL, NULL, 1, 0, 'F', '0', '0', 'basic:file:category:add', '#', 'admin', '2026-08-18 15:59:27', '超级管理员', '2026-08-27 19:12:02', '');
 INSERT INTO `system_menu` VALUES (1141, '文件分类修改', 1138, 3, '#', '', NULL, NULL, 1, 0, 'F', '0', '0', 'basic:file:category:edit', '#', 'admin', '2026-08-18 15:59:28', '超级管理员', '2026-08-27 19:12:10', '');
 INSERT INTO `system_menu` VALUES (1142, '文件分类删除', 1138, 4, '#', '', NULL, NULL, 1, 0, 'F', '0', '0', 'basic:file:category:remove', '#', 'admin', '2026-08-18 15:59:28', '超级管理员', '2026-08-27 19:12:22', '');
-INSERT INTO `system_menu` VALUES (1143, '文件管理', 1080, 6, 'fileManager', 'basic/file/manager/index', NULL, NULL, 1, 0, 'C', '0', '0', 'basic:file:manager:list', '文件管理', 'admin', '2026-08-18 15:59:42', '吴同', '2026-10-23 10:36:42', '模型数据文件菜单');
+INSERT INTO `system_menu` VALUES (1143, '文件管理', 1195, 2, 'fileManager', 'basic/file/manager/index', NULL, NULL, 1, 0, 'C', '0', '0', 'basic:file:manager:list', '文件管理', 'admin', '2026-08-18 15:59:42', '吴同', '2026-10-23 10:36:42', '模型数据文件菜单');
 INSERT INTO `system_menu` VALUES (1144, '文件查询', 1143, 1, '#', '', NULL, NULL, 1, 0, 'F', '0', '0', 'basic:file:manager:query', '#', 'admin', '2026-08-18 15:59:42', '超级管理员', '2026-08-27 19:10:53', '');
 INSERT INTO `system_menu` VALUES (1145, '文件新增', 1143, 2, '#', '', NULL, NULL, 1, 0, 'F', '0', '0', 'basic:file:manager:add', '#', 'admin', '2026-08-18 15:59:44', '超级管理员', '2026-08-27 19:11:01', '');
 INSERT INTO `system_menu` VALUES (1146, '文件修改', 1143, 3, '#', '', NULL, NULL, 1, 0, 'F', '0', '0', 'basic:file:manager:edit', '#', 'admin', '2026-08-18 15:59:44', '超级管理员', '2026-08-27 19:11:09', '');
@@ -2767,6 +2767,8 @@ INSERT INTO `system_menu` VALUES (1191, '任务导出', 1185, 6, '#', '', NULL, 
 INSERT INTO `system_menu` VALUES (1192, '任务导入', 1185, 7, '#', '', NULL, '', 1, 0, 'F', '0', '0', 'app:appStructTask:struct:import', '#', '吴同', '2026-10-22 20:06:15', '', NULL, '');
 INSERT INTO `system_menu` VALUES (1193, '项目管理导出', 1081, 5, '', NULL, NULL, '', 1, 0, 'F', '0', '0', 'basic:project:project:export', '#', '超级管理员', '2026-10-22 18:49:17', '超级管理员', '2026-10-22 18:49:30', '');
 INSERT INTO `system_menu` VALUES (1194, '枚举类型数据查看', 1128, 5, '', NULL, NULL, '', 1, 0, 'F', '0', '0', 'basic:enumeration:data:list', '#', '超级管理员', '2026-10-22 19:07:21', '超级管理员', '2026-10-22 19:07:29', '');
+-- 一级文件管理目录，原有页面和按钮权限保持不变。
+INSERT INTO `system_menu` VALUES (1195, '文件管理', 0, 4, 'file', NULL, NULL, '', 1, 0, 'M', '0', '0', '', '文件管理', 'admin', NOW(), '', NULL, '文件分类与文件管理统一入口');
 
 -- ----------------------------
 -- Table structure for system_notice
@@ -3484,6 +3486,9 @@ INSERT INTO `system_role_menu` VALUES (4, 1191);
 INSERT INTO `system_role_menu` VALUES (4, 1192);
 INSERT INTO `system_role_menu` VALUES (4, 1193);
 INSERT INTO `system_role_menu` VALUES (4, 1194);
+-- 已拥有文件页面权限的角色同步获得父目录，避免迁移后菜单不可见。
+INSERT IGNORE INTO `system_role_menu` (`role_id`, `menu_id`)
+SELECT DISTINCT `role_id`, 1195 FROM `system_role_menu` WHERE `menu_id` IN (1138, 1143);
 
 -- ----------------------------
 -- Table structure for system_user

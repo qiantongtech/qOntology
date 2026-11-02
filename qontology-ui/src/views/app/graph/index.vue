@@ -46,7 +46,7 @@
 
 
 <template>
-  <div class="app-container" ref="app-container">
+  <div class="app-container">
     <GuideTip tip-id="kg/graphExploration" />
     <div class="pagecont-one">
       <div class="page-tabs">

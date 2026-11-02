@@ -18,6 +18,28 @@
 
 /* 表格样式优化 - table-style-optimized.scss */
 
+// 单元格多行布局基础类
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-column-gap {
+    gap: 4px;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+}
+
+.text-ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
 // 任务标题行布局
 .task-title-row {
     display: flex;
@@ -113,6 +135,31 @@
 }
 
 // 操作区域 - 更多下拉按钮列表
+.task-action-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 4px;
+
+    .el-button {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0 !important;
+        text-align: center;
+        margin-bottom: 0 !important;
+        height: 28px;
+    }
+}
+
+// 两个字的按钮偏移，使其图标与四个字按钮的图标对齐
+.btn-icon-offset .el-icon,
+.btn-icon-offset span {
+    position: relative;
+    left: -14px;
+}
+
+// 操作区域 - 更多下拉按钮列表
 .butgdlist {
     display: flex;
     flex-direction: column;
@@ -125,4 +172,94 @@
 
 .app-container .task-title .el-tag--default .el-tag__content {
     font-size: 12px !important;
+}
+
+// QtTable 分页 - 右下角对齐
+.qt-table {
+    .tip-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .is-center.el-table__cell {
+        .tip-wrap {
+            justify-content: center;
+        }
+    }
+
+    /* 最近执行信息 (状态标签 + 相对时间 + 耗时) */
+    .last-execute-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+        color: #1e293b;
+    }
+
+    .last-execute-info__row {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .last-execute-info__value {
+        min-width: 0;
+        overflow: hidden;
+        color: #64748b;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 信息列 (图标 + 标题 + 标签 / 描述) */
+    .qt-table-info {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        text-align: left;
+
+        &__main {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+            min-width: 0;
+        }
+
+        .info-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .info-title {
+            font-size: 14px;
+            line-height: 22px;
+            font-weight: 500;
+            flex: 0 1 auto;
+            min-width: 0;
+            justify-content: flex-start;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .info-desc {
+            color: #999;
+            font-size: 12px;
+            line-height: 18px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            white-space: normal !important;
+        }
+    }
+
+    .qt-table--pagination {
+        padding: 20px 10px;
+        display: flex;
+        justify-content: flex-end;
+    }
 }

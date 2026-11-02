@@ -52,6 +52,13 @@ public class BasicFileCategorySaveReqVO extends BaseEntity {
     @NotNull(message = "显示顺序不能为空")
     private Long orderNum;
 
+    /**
+     * 文件分类启用状态，直接持久化到已有 valid_flag 字段。
+     */
+    @Schema(description = "状态，true启用、false禁用")
+    @NotNull(message = "状态不能为空")
+    private Boolean validFlag;
+
     @Schema(description = "祖级列表", example = "")
     @Size(max = 128, message = "祖级列表长度不能超过128个字符")
     private String ancestors;

@@ -16,255 +16,311 @@
  See the LICENSE file in the project root for full license information.
 -->
 <template>
-    <div v-if="visible" :class="['guide-tip', config.type]">
-        <div class="tip-header">
-            <span class="tip-title" ref="titleRef">
-                <svg-icon
-                    v-if="config.type === 'warning' || config.type === 'danger'"
-                    iconClass="warning"
-                    class="tip-icon"
-                />
-                <svg-icon v-if="config.type === 'remind'" iconClass="remind" class="tip-icon" />
-                <span v-html="config.title"></span>
-            </span>
-            <div class="header-buttons">
-                <el-button v-if="config.type !== 'danger'" class="btn-never-show" @click="neverShow"
-                    >不再展示</el-button
-                >
-                <el-button :class="['btn-close', config.type]" @click="close">关闭</el-button>
-            </div>
-        </div>
-        <div
-            v-if="config.content"
-            class="tip-content"
-            v-html="config.content"
-            @click="handleClick"
-        ></div>
+  <div v-if="visible" :class="['guide-tip', config.type]">
+    <div class="tip-header">
+      <span class="tip-title" ref="titleRef">
+        <svg-icon
+          v-if="config.type === 'warning' || config.type === 'danger'"
+          iconClass="warning"
+          class="tip-icon"
+        />
+        <svg-icon
+          v-if="config.type === 'remind'"
+          iconClass="remind"
+          class="tip-icon"
+        />
+        <span v-html="config.title"></span>
+      </span>
+      <div class="header-buttons">
+        <el-button
+          v-if="config.type !== 'danger'"
+          class="btn-never-show"
+          @click="neverShow"
+          >不再展示</el-button
+        >
+        <el-button :class="['btn-close', config.type]" @click="close"
+          >关闭</el-button
+        >
+      </div>
     </div>
+    <div
+      v-if="config.content"
+      class="tip-content"
+      v-html="config.content"
+      @click="handleClick"
+    ></div>
+  </div>
 </template>
 
 <script setup>
-    import { ref, onMounted, onActivated, computed } from 'vue';
-    import { guideTipConfig } from './guideTipConfig';
-    import { useRouter } from 'vue-router';
-    import useUserStore from '@/store/system/user';
+import { ref, onMounted, onActivated, computed } from "vue";
+import { guideTipConfig } from "./guideTipConfig";
+import { useRouter } from "vue-router";
+import useUserStore from "@/store/system/user";
 
-    const { proxy } = getCurrentInstance();
-    const userStore = useUserStore();
-    const STORAGE_KEY = 'guide_tip_status';
+const { proxy } = getCurrentInstance();
+const userStore = useUserStore();
+const STORAGE_KEY = "guide_tip_status";
 
-    const props = defineProps({
-        tipId: { type: String, required: true }
-    });
+const props = defineProps({
+  tipId: { type: String, required: true },
+});
 
-    const router = useRouter();
-    const visible = ref(true);
+const router = useRouter();
+const visible = ref(true);
 
-    const config = computed(() => guideTipConfig[props.tipId] || {});
+const config = computed(() => guideTipConfig[props.tipId] || {});
 
-    // 获取存储对象
-    function getGuideTipStorage() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            return JSON.parse(stored);
-        }
-        return {};
+// 获取存储对象
+function getGuideTipStorage() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return {};
+}
+
+// 生成存储 key，按用户区分
+function getStorageKey() {
+  return `${userStore.id}_${props.tipId}_v${config.value.version}`;
+}
+
+// 当前 guideTip 是否显示
+function isGuideTipShown() {
+  if (!config.value.version) return true;
+  const storage = getGuideTipStorage();
+  const key = getStorageKey();
+  return !storage[key] || storage[key].status === "shown";
+}
+
+// 更新 guideTip 状态
+function setGuideTipStatus(status) {
+  if (!config.value.version) return;
+  const storage = getGuideTipStorage();
+  const key = getStorageKey();
+  storage[key] = { status, timestamp: Date.now() };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+}
+
+// 激活时检查显示状态
+function checkVisible() {
+  visible.value = isGuideTipShown();
+}
+
+onMounted(() => {
+  checkVisible();
+});
+onActivated(() => {
+  checkVisible();
+});
+
+// 不再提醒
+function neverShow() {
+  setGuideTipStatus("hidden");
+  visible.value = false;
+  // proxy.$modal.msgSuccess("随时可在【个人中心】→【新手引导】重新开启，不怕找不到！");
+}
+
+function close() {
+  visible.value = false;
+}
+
+// 点击内容处理
+function handleClick(event) {
+  if (event.target.tagName.toLowerCase() === "a") return;
+  const funcName = event.target.dataset.func;
+  if (!funcName) return;
+  const link = event.target.dataset.link || "";
+  const id = event.target.dataset.id;
+  const info = event.target.dataset.info;
+  const row = { id, info };
+  if (methods[funcName] && typeof methods[funcName] === "function") {
+    methods[funcName](link, row);
+  }
+}
+
+// 在组件内定义的方法
+const methods = {
+  routeTo(link, row) {
+    if (link !== "" && link.indexOf("http") !== -1) {
+      window.location.href = link;
+      return;
     }
-
-    // 生成存储 key，按用户区分
-    function getStorageKey() {
-        return `${userStore.id}_${props.tipId}_v${config.value.version}`;
+    if (link !== "") {
+      if (link === router.currentRoute.value.path) {
+        window.location.reload();
+      } else {
+        router.push({
+          path: link,
+          query: {
+            id: row.id,
+            info: row.info,
+          },
+        });
+      }
     }
-
-    // 当前 guideTip 是否显示
-    function isGuideTipShown() {
-        if (!config.value.version) return true;
-        const storage = getGuideTipStorage();
-        const key = getStorageKey();
-        return !storage[key] || storage[key].status === 'shown';
-    }
-
-    // 更新 guideTip 状态
-    function setGuideTipStatus(status) {
-        if (!config.value.version) return;
-        const storage = getGuideTipStorage();
-        const key = getStorageKey();
-        storage[key] = { status, timestamp: Date.now() };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    }
-
-    // 激活时检查显示状态
-    function checkVisible() {
-        visible.value = isGuideTipShown();
-    }
-
-    onMounted(() => {
-        checkVisible();
-    });
-    onActivated(() => {
-        checkVisible();
-    });
-
-    // 不再提醒
-    function neverShow() {
-        setGuideTipStatus('hidden');
-        visible.value = false;
-        // proxy.$modal.msgSuccess("随时可在【个人中心】→【新手引导】重新开启，不怕找不到！");
-    }
-
-    function close() {
-        visible.value = false;
-    }
-
-    // 点击内容处理
-    function handleClick(event) {
-        if (event.target.tagName.toLowerCase() === 'a') return;
-        const funcName = event.target.dataset.func;
-        if (!funcName) return;
-        const link = event.target.dataset.link || '';
-        const id = event.target.dataset.id;
-        const info = event.target.dataset.info;
-        const row = { id, info };
-        if (methods[funcName] && typeof methods[funcName] === 'function') {
-            methods[funcName](link, row);
-        }
-    }
-
-    // 在组件内定义的方法
-    const methods = {
-        routeTo(link, row) {
-            if (link !== '' && link.indexOf('http') !== -1) {
-                window.location.href = link;
-                return;
-            }
-            if (link !== '') {
-                if (link === router.currentRoute.value.path) {
-                    window.location.reload();
-                } else {
-                    router.push({
-                        path: link,
-                        query: {
-                            id: row.id,
-                            info: row.info
-                        }
-                    });
-                }
-            }
-        }
-    };
+  },
+};
 </script>
 <style lang="less" scoped>
-    @font-title: 'PingFang SC', 'Microsoft YaHei';
-    @font-content: 'Microsoft YaHei';
-    @color-text-title: #000;
-    @color-text-content: #666;
+@font-title: "PingFang SC", "Microsoft YaHei";
+@font-content: "Microsoft YaHei";
+@color-text-title: #000;
+@color-text-content: #666;
 
-    .guide-tip {
-        width: 100%;
-        margin: 0 0 15px 0;
-        padding: 8px 19px 8px 19px;
-        position: relative;
+.guide-tip {
+  width: 100%;
+  margin: 0 0 15px 0;
+  padding: 8px 19px 8px 19px;
+  position: relative;
+  border-radius: 2px;
+
+  &.remind {
+    background-color: #fff7e6;
+    border: 1px solid #ffe58f;
+  }
+
+  &.warning {
+    background-color: #fceaea;
+    border: 1px solid #ffacae;
+  }
+
+  &.danger {
+    background-color: #ffacae;
+    border: 1px solid #fe4f4f;
+  }
+
+  &.info {
+    background-color: #fff;
+    border: 1px solid #ddd;
+  }
+
+  .tip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .tip-title {
+      font-family: @font-title;
+      font-weight: 600;
+      font-size: 14px;
+      color: @color-text-title;
+      line-height: 24px;
+      display: flex;
+      align-items: center;
+
+      .tip-icon {
+        font-size: 16px;
+        width: 1em;
+        height: 1em;
+        margin-right: 7px;
+      }
+    }
+
+    .header-buttons {
+      display: flex;
+      margin-top: 2px;
+
+      .el-button {
+        height: 22px;
+        font-family: PingFangSC-Regular, PingFangSC-Regular;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 18px;
+        text-align: left;
+        text-transform: none;
+        padding: 2px 4px;
         border-radius: 2px;
 
-        &.remind {
-            background-color: #fff7e6;
-            border: 1px solid #ffe58f;
+        &.btn-never-show {
+          background-color: #fff;
+          color: #565656;
+          border: 1px solid #ffffff;
         }
 
-        &.warning {
-            background-color: #fceaea;
-            border: 1px solid #ffacae;
+        &.btn-close.remind {
+          background-color: #f88825;
+          color: #fff;
+          border: none;
+          padding: 4px 7px;
+          margin-left: 9px;
         }
 
-        &.danger {
-            background-color: #ffacae;
-            border: 1px solid #fe4f4f;
+        &.btn-close.warning,
+        &.btn-close.danger {
+          background-color: #fe4f4f;
+          color: #fff;
+          border: none;
+          padding: 4px 7px;
+          margin-left: 9px;
         }
-
-        &.info {
-            background-color: #fff;
-            border: 1px solid #ddd;
-        }
-
-        .tip-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-
-            .tip-title {
-                font-family: @font-title;
-                font-weight: 600;
-                font-size: 14px;
-                color: @color-text-title;
-                line-height: 24px;
-                display: flex;
-                align-items: center;
-
-                .tip-icon {
-                    font-size: 16px;
-                    margin-right: 7px;
-                }
-            }
-
-            .header-buttons {
-                display: flex;
-                margin-top: 2px;
-
-                .el-button {
-                    height: 22px;
-                    font-family: PingFangSC-Regular, PingFangSC-Regular;
-                    font-weight: normal;
-                    font-size: 12px;
-                    line-height: 18px;
-                    text-align: left;
-                    text-transform: none;
-                    padding: 2px 4px;
-                    border-radius: 2px;
-
-                    &.btn-never-show {
-                        background-color: #fff;
-                        color: #565656;
-                        border: 1px solid #ffffff;
-                    }
-
-                    &.btn-close.remind {
-                        background-color: #f88825;
-                        color: #fff;
-                        border: none;
-                        padding: 4px 7px;
-                        margin-left: 9px;
-                    }
-
-                    &.btn-close.warning,
-                    &.btn-close.danger {
-                        background-color: #fe4f4f;
-                        color: #fff;
-                        border: none;
-                        padding: 4px 7px;
-                        margin-left: 9px;
-                    }
-                }
-            }
-        }
-
-        .tip-content {
-            font-family: @font-content;
-            font-weight: 400;
-            font-size: 14px;
-            color: @color-text-content;
-            line-height: 22px;
-            margin-top: 0px;
-            padding-left: 23px;
-            cursor: default;
-        }
+      }
     }
+  }
+
+  .tip-content {
+    font-family: @font-content;
+    font-weight: 400;
+    font-size: 14px;
+    color: @color-text-content;
+    line-height: 22px;
+    margin-top: 0px;
+    padding-left: 23px;
+    cursor: default;
+  }
+}
 </style>
 <style>
-    .tip-content a {
-        color: var(--el-color-primary);
-    }
-    .clickable {
-        color: var(--el-color-primary);
-        cursor: pointer;
-    }
+.tip-content a {
+  color: var(--el-color-primary);
+}
+.guide-tip .guide-tip-announcement-brand {
+  display: inline-block;
+  background: linear-gradient(90deg, #1677ff 0%, #7c3aed 45%, #1677ff 100%);
+  background-size: 200% auto;
+  color: transparent;
+  font-weight: 700;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: guide-tip-announcement-shine 3s linear infinite;
+}
+.guide-tip .guide-tip-announcement-dict-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  margin: 0 2px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 2px;
+  background: rgba(19, 90, 251, 0.06);
+  color: #0f62ff;
+  font-size: 12px;
+  line-height: 22px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.guide-tip .guide-tip-announcement-keyword {
+  background: linear-gradient(transparent 68%, rgba(255, 193, 7, 0.38) 0);
+  color: #3f3f46;
+  font-weight: 600;
+}
+@keyframes guide-tip-announcement-shine {
+  to {
+    background-position: -200% center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-tip .guide-tip-announcement-brand {
+    animation: none;
+  }
+}
+.clickable {
+  color: var(--el-color-primary);
+  cursor: pointer;
+}
+.guide-tip .tip-title .tip-unbold {
+  font-weight: normal;
+}
 </style>

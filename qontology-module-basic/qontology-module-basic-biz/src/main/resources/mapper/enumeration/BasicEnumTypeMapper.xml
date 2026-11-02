@@ -12,4 +12,19 @@
           AND del_flag = 0
     </select>
 
+    <!-- 按当前页枚举编码分组计数，排除已删除数据及非枚举类型的遗留关联值。
+         不限制 valid_flag，与关联业务数据类型列表保持相同的统计范围。 -->
+    <select id="selectReferenceCounts"
+            resultType="tech.qiantong.qontology.module.basic.dal.dataobject.enumeration.BasicEnumTypeDO">
+        SELECT enum_type AS enumType, COUNT(*) AS referenceCount
+        FROM basic_data_type
+        WHERE del_flag = 0
+          AND data_type = '5'
+          AND enum_type IN
+          <foreach collection="enumTypes" item="enumType" open="(" separator="," close=")">
+              #{enumType}
+          </foreach>
+        GROUP BY enum_type
+    </select>
+
 </mapper>

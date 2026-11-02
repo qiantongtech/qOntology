@@ -1,102 +1,128 @@
 <!--
- Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+  QtFormItem 组件说明:
+  基于 el-form-item 封装，用于表单字段，可在输入控件下方展示统一的提示文案。
+  - tip: 传入字符串时，在内容区下方展示提示文本（超出部分省略，悬停可查看完整内容）
+  - label、prop、class 等其余属性通过 $attrs 透传给 el-form-item
+  组件已全局注册，页面中直接使用 <qt-form-item> 即可，无需 import。
 
- This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+  使用示例:
+  1. 基础用法:
+     <qt-form-item label="项目领域" prop="domain">
+       <el-input v-model="form.domain" placeholder="请输入项目领域" />
+     </qt-form-item>
 
- qOntology is licensed under Apache License 2.0 with additional qOntology terms.
- You may use qOntology for commercial purposes, but you may not remove, hide,
- modify, or replace the qOntology logo, copyright notices, license notices,
- or attribution information without a separate commercial license.
+  2. 带提示文案:
+     <qt-form-item
+       label="命名空间"
+       prop="namespace"
+       tip="命名空间用于唯一标识本体的术语来源，遵循 W3C 标准。例如：https://example.com"
+     >
+       <el-input v-model="form.namespace" placeholder="请输入命名空间" />
+     </qt-form-item>
 
- White-label use, OEM distribution, rebranding, or presenting qOntology as
- another product requires separate commercial authorization from
- Jiangsu Qiantong Technology Co., Ltd.
-
- Business License: https://community.qontology.ai/business/policy.html
- See the LICENSE file in the project root for full license information.
+  3. 配合双列表单（.column-form）独占整行:
+     <qt-form-item label="命名空间" prop="namespace" class="row-full" tip="...">
+       <el-input v-model="form.namespace" />
+     </qt-form-item>
 -->
-<template>
-    <el-form-item v-bind="$attrs">
-        <template #default="scope">
-            <div class="default-wrap">
-                <slot name="default" v-bind="scope || {}" />
-                <div class="tip-content" v-if="isString && props.tip">
-                    <el-icon> <InfoFilled /> </el-icon>
-                    <span v-html="props.tip"></span>
-                </div>
-            </div>
-        </template>
 
-        <template #label="scope">
-            <div class="label-wrap">
-                <slot name="label" v-bind="scope">
-                    {{ scope.label }}
-                </slot>
-                <el-tooltip
-                    v-if="!isString"
-                    v-bind="props.tip"
-                    :effect="props.tip.effect || 'light'"
-                    :placement="props.tip.placement || 'right-start'"
-                >
-                    <el-icon class="tip-icon"> <InfoFilled /> </el-icon>
-                    <template #content v-if="props.tip.custom">
-                        <div class="tip-content" v-html="props.tip.content"></div>
-                    </template>
-                </el-tooltip>
-            </div>
-        </template>
-    </el-form-item>
+<template>
+  <el-form-item v-bind="$attrs" :class="{ 'has-tip': props.tip !== undefined }">
+    <template #default="scope">
+      <div class="default-wrap">
+        <slot name="default" v-bind="scope || {}" />
+        <div class="tip-content" v-if="isString && props.tip !== undefined">
+          <!-- <el-icon> <InfoFilled /> </el-icon> -->
+          <span :title="props.tip" v-html="props.tip || '&nbsp;'"></span>
+        </div>
+      </div>
+    </template>
+  </el-form-item>
 </template>
 
 <script setup name="QtFromItem">
-    import { computed } from 'vue';
+import { computed } from "vue";
 
-    const props = defineProps({
-        tip: {
-            type: [String, Object],
-            default: ''
-        }
-    });
+const props = defineProps({
+  tip: {
+    type: [String, Object],
+    default: undefined,
+  },
+});
 
-    const isString = computed(() => {
-        return typeof props.tip === 'string';
-    });
+const isString = computed(() => {
+  return typeof props.tip === "string" || props.tip === null;
+});
 </script>
 
 <style lang="scss" scoped>
-    .default-wrap {
-        width: 100%;
-        position: relative;
+:global(.column-form .el-form-item.has-tip) {
+  margin-bottom: 10px !important;
+}
 
-        .tip-content {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            color: #888;
-            font-size: 12px;
-            line-height: 1.5;
-            padding-top: 4px;
-            white-space: wrap;
-        }
-    }
+.default-wrap {
+  width: 100%;
+  position: relative;
 
-    .label-wrap {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        .el-icon {
-            color: #888;
-        }
-    }
+  .tip-content {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    padding-top: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    color: #888;
+    font-size: 12px;
+    font-weight: 400 !important;
+    line-height: 1;
+    letter-spacing: 0.2px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 
-    ::v-deep(.el-form-item__error) {
-        padding-top: 6px;
+    span {
+      flex: 1;
+      font-weight: 400 !important;
+      color: inherit;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
+  }
+}
 
-    .el-form-item.is-error {
-        padding-bottom: 16px;
-        .tip-content {
-            display: none;
-        }
-    }
+.label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  .el-icon {
+    color: #888;
+  }
+}
+
+::v-deep(.el-form-item__error) {
+  padding-top: 2px;
+  top: 100%;
+}
+
+.el-form-item.has-tip {
+  ::v-deep(.el-form-item__error) {
+    position: absolute;
+    top: 100%;
+    bottom: auto;
+    padding-top: 2px;
+    line-height: 1;
+    margin: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+.el-form-item.has-tip.is-error {
+  .tip-content {
+    display: none;
+  }
+}
 </style>

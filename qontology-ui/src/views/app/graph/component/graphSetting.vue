@@ -152,6 +152,7 @@
     </div>
 </template>
 <script setup name="GraphSetting">
+import { reactive, toRefs } from 'vue';
     // const emit = defineEmits(["toolLeft", "toolRight", "toolUp", "toolDown", "toolZoomIn", "toolZoomOut", "toolRotateLeft", "toolRotateRight"]);
     const emit = defineEmits(['updateSetting', 'handleToolClick']);
     const props = defineProps({
@@ -550,7 +551,7 @@
                     }
 
                     .tool-hover-wrap:hover {
-                        background-color: #3367fc; /* 悬浮时div背景色（可自定义） */
+                        background-color: var(--qt-primary, #3367fc); /* 悬浮时div背景色（可自定义） */
                     }
                     .tool-hover-wrap:hover .hover-img {
                         display: block; /* 显示悬浮图片 */

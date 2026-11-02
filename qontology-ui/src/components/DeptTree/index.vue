@@ -25,26 +25,21 @@
         }"
         class="left-pane"
     >
+        <div class="search-wrapper">
+            <el-input
+                class="filter-tree"
+                v-model="deptName"
+                :placeholder="placeholder"
+                clearable
+                prefix-icon="Search"
+            />
+        </div>
+
         <div class="left-tree">
-            <!-- <div class="tree-header">
-        <el-icon class="header-icon"><Histogram /></el-icon>
-        <span class="header-title">{{ title }}</span>
-      </div> -->
-            <div class="head-container mb10">
-                <el-input
-                    class="filter-tree"
-                    size="large"
-                    v-model="deptName"
-                    :placeholder="placeholder"
-                    clearable
-                    prefix-icon="Search"
-                />
-            </div>
-            <div class="head-container">
-                <el-tree
-                    class="dept-tree"
-                    :data="processedData"
-                    :props="{ label: 'name', children: 'children' }"
+            <el-tree
+                class="dept-tree"
+                :data="processedData"
+                :props="{ label: 'name', children: 'children' }"
                     :filter-node-method="filterNode"
                     ref="deptTreeRef"
                     node-key="id"
@@ -163,7 +158,6 @@
                         </span>
                     </template>
                 </el-tree>
-            </div>
         </div>
     </el-aside>
 
@@ -218,6 +212,11 @@
         defaultExpand: {
             type: Boolean,
             default: false
+        },
+        // 按页面配置默认展开层数，默认仍沿用原有的一层展开行为。
+        defaultExpandLevel: {
+            type: Number,
+            default: 1
         },
         editable: {
             type: Boolean,
@@ -438,11 +437,12 @@
                     val.length === 1 &&
                     val[0] &&
                     String(val[0].id) === '0' &&
+                    props.defaultExpandLevel === 1 &&
                     Array.isArray(val[0].children)
                 ) {
                     expandedKeys.value = [val[0].id];
                 } else {
-                    expandedKeys.value = getIdsByLevel(val, 1);
+                    expandedKeys.value = getIdsByLevel(val, props.defaultExpandLevel);
                 }
             }
         },
@@ -521,184 +521,302 @@
 </script>
 
 <style scoped lang="scss">
-    .left-wrapper {
-        display: flex;
-        height: 100%;
+// ==========================================
+// SCSS 变量定义（颜色 / 字体 / 尺寸 / 间距）
+// ==========================================
+
+// 颜色变量
+$bg-white: #ffffff;
+$bg-gray: #f0f2f5;
+$primary-color: var(--el-color-primary, #358cf3);
+$primary-color-light: var(--qt-primary-light);
+$text-primary: rgba(0, 0, 0, 0.85);
+$text-secondary: #999;
+$text-placeholder: #aaa;
+$border-gray: #ccc;
+$border-gray-light: #d6dae1;
+$icon-selected: #358cf3;
+$danger-color: var(--el-color-danger, #f56c6c);
+
+// 字体变量
+$font-family: PingFangSC-Regular, "PingFang SC", "Microsoft YaHei", Arial,
+  sans-serif;
+$font-size-base: 14px;
+$font-size-sm: 12px;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+
+// 尺寸变量
+$aside-width-min: 0;
+$aside-padding-y: 2px;
+$tree-padding: 15px;
+$node-padding-x: 12px;
+$node-padding-right: 36px;
+$icon-size-sm: 14px;
+$icon-size-base: 16px;
+$icon-size-md: 18px;
+$icon-size-lg: 28px;
+$collapse-icon-size: 28px;
+$resize-bar-width: 15px;
+$resize-handle-height: 50px;
+$resize-handle-width: 5px;
+
+// 间距变量
+$spacing-xs: 2px;
+
+// ==========================================
+// 基础布局样式
+// ==========================================
+.left-pane {
+  background-color: $bg-white;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin-bottom: 0px;
+  height: var(--qt-wrap-height);
+}
+
+// 保留类名以兼容可能的外部样式覆盖，但外观与 .left-pane 保持一致
+.el-aside {
+  background-color: $bg-white;
+}
+
+.left-tree {
+  padding: 0 10px 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  box-shadow: none !important;
+  background-color: $bg-white;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+}
+
+.left-tree::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.dept-tree {
+  min-width: 100%;
+  background: transparent;
+  color: #333333;
+}
+.dept-tree :deep(.el-tree-node__content) {
+  height: 36px;
+  padding: 4px 2px;
+}
+.dept-tree :deep(.el-tree-node__content:hover) { background: #f5f7fa; }
+.dept-tree :deep(.el-tree-node.is-current > .el-tree-node__content) { border: none; background: $primary-color-light; }
+.dept-tree :deep(.el-tree-node.is-current > .el-tree-node__content .treelabel) { color: var(--el-color-primary); }
+
+:deep(.dept-tree) {
+  .el-tree-node__expand-icon {
+    width: 14px;
+    height: 24px !important;
+    line-height: 24px !important;
+    padding: 0 4px 0 0;
+    color: transparent;
+    transform: none !important;
+    position: relative !important;
+    right: auto !important;
+    font-size: 14px !important;
+    flex-shrink: 0;
+
+    svg {
+      display: none;
     }
 
-    .left-pane {
-        background-color: #ffffff;
-        overflow: hidden;
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      border-right: 1.5px solid #666;
+      border-bottom: 1.5px solid #666;
+      transform: translate(-60%, -50%) rotate(-45deg);
+      transition: transform 0.16s ease;
     }
 
-    .left-tree {
-        padding: 15px 15px 15px 15px;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
+    &.expanded::before {
+      transform: translate(-50%, -65%) rotate(45deg);
     }
 
-    .tree-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 15px;
-        padding-left: 10px;
-
-        .header-icon {
-            font-size: 20px;
-            color: #409eff;
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        .header-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            font-family: PingFang SC;
-        }
+    &.is-leaf::before {
+      display: none;
     }
+  }
+}
 
-    .el-aside {
-        padding: 2px 0px;
-        margin-bottom: 0px;
-        background-color: #f0f2f5;
-    }
+// ==========================================
+// 节点内容样式
+// ==========================================
+.custom-tree-node {
+  width: calc(100% - 4px);
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  padding-right: 12px;
+  line-height: 1;
+}
 
-    .custom-tree-node {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        padding: 0 12px 0 12px;
-        overflow: hidden;
-        min-width: 0;
+.colorxz {
+  color: #358cf3;
+}
 
-        .treelabel {
-            margin-left: 10px;
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-family: PingFang SC;
-            font-weight: 400;
-            font-size: 14px;
-            color: rgba(0, 0, 0, 0.85);
-            min-width: 0;
-        }
+.colorwxz {
+  color: #afd1fa;
+}
 
-        .operation-trigger {
-            display: none;
-            margin-left: 2px;
-            cursor: pointer;
-            align-items: center;
-            transform: rotate(90deg); /* 旋转 90 度实现竖向三个点 */
-            flex-shrink: 0;
+.treelabel {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "PingFang SC", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #333333;
+  margin-left: 6px;
+}
 
-            &.is-active {
-                display: flex;
-            }
-        }
+.zjiconimg {
+  font-size: 12px;
+}
+.iconimg {
+  font-size: 15px;
+}
 
-        &:hover {
-            .operation-trigger {
-                display: flex;
-            }
-        }
+// ==========================================
+// 操作下拉菜单
+// ==========================================
+.operation-trigger {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  margin-left: auto;
+  padding: 2px 4px;
+  border-radius: 3px;
+  border: 0;
+  background: transparent;
+  color: #687385;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  pointer-events: none;
+  transform: rotate(90deg); /* 旋转 90 度实现竖向三个点 */
 
-        .action-icon {
-            font-size: 16px;
-            color: #999;
-        }
-    }
+  &.is-active,
+  &:hover {
+    opacity: 1;
+    pointer-events: auto;
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
 
-    .zjiconimg {
-        font-size: 12px;
-    }
+.custom-tree-node:hover .operation-trigger {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-    .colorxz {
-        color: #358cf3;
-    }
+.action-icon {
+  font-size: 16px;
+  color: #999;
+}
 
-    .colorwxz {
-        color: #afd1fa;
-    }
+// ==========================================
+// 拖拽栏 & 折叠/展开
+// ==========================================
+.resize-bar {
+  height: v-bind(qtWrapheight);
+  cursor: ew-resize;
+  background-color: $bg-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $resize-bar-width;
+  flex-shrink: 0;
+}
 
-    .iconimg {
-        font-size: 15px;
-    }
+.resize-handle-sx {
+  width: $resize-bar-width;
+  text-align: center;
+  position: relative;
+}
 
-    .resize-bar {
-        height: v-bind(qtWrapheight); /* 使用 CSS 变量绑定高度 */
-        cursor: ew-resize;
-        background-color: #f0f2f5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+.zjsx {
+  display: none;
+  width: $resize-handle-width;
+  height: $resize-handle-height;
+  border-left: 1px solid $border-gray;
+  border-right: 1px solid $border-gray;
+}
 
-    .resize-handle-sx {
-        width: 15px;
-        text-align: center;
-        position: relative;
-    }
+.collapse-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: $collapse-icon-size;
+  color: #aaa;
+  cursor: pointer;
+  z-index: 10;
+  padding: 5px;
+}
 
-    .zjsx {
-        display: none;
-        width: 5px;
-        height: 50px;
-        border-left: 1px solid #ccc;
-        border-right: 1px solid #ccc;
-    }
+// ==========================================
+// 搜索框样式
+// ==========================================
+.search-wrapper {
+  display: flex;
+  flex-direction: column;
+}
 
-    .collapse-icon {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 28px;
-        color: #aaa;
-        cursor: pointer;
-        z-index: 10;
-        padding: 5px;
-    }
+.head-container {
+  position: relative;
+  height: 32px !important;
+  box-shadow: none !important;
+  padding: 0;
+  margin-bottom: 16px;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.tree-container, .tree-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 100px;
+}
+
+.filter-tree {
+  width: auto;
+  margin: 10px 10px 15px !important;
+}
 </style>
 
 <style lang="scss">
-    .dept-tree-dropdown {
-        background-color: #ffffff !important;
-        border: 1px solid #ebeef5 !important;
-        padding: 4px 0 !important;
-        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1) !important;
-
-        .el-dropdown-menu__item {
-            color: #606266 !important;
-            font-size: 14px !important;
-            padding: 8px 16px !important;
-
-            &:hover {
-                background-color: #f5f7fa !important;
-                color: #409eff !important;
-            }
-
-            &.delete-item {
-                color: #f56c6c !important;
-                border-top: 1px solid #f0f2f5;
-                margin-top: 4px;
-                padding-top: 12px !important;
-
-                &:hover {
-                    background-color: #fef0f0 !important;
-                    color: #f56c6c !important;
-                }
-            }
-
-            .el-icon {
-                margin-right: 8px;
-            }
-        }
-
-        .el-popper__arrow::before {
-            background-color: #ffffff !important;
-            border: 1px solid #ebeef5 !important;
-        }
-    }
+.dept-tree-dropdown {
+  .dept-tree-menu-icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+    vertical-align: middle;
+    display: inline-block;
+  }
+  .delete-item {
+    color: var(--el-color-danger, #f56c6c);
+  }
+}
 </style>

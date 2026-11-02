@@ -22,6 +22,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import java.util.List;
 import tech.qiantong.qontology.module.ai.controller.admin.modelMarket.vo.AiApiKeyPageReqVO;
 import tech.qiantong.qontology.module.ai.dal.dataobject.modelMarket.AiApiKeyDO;
 import tech.qiantong.qontology.mybatis.core.mapper.BaseMapperX;
@@ -40,12 +41,15 @@ public interface AiApiKeyMapper extends BaseMapperX<AiApiKeyDO> {
             where aak.del_flag = 0
             	and aak.valid_flag = 1
             	and aak .status <![CDATA[ <> ]]> 0
-            <if test='reqVO.name != null and reqVO.name != "" ' >
-                and aak.name like concat('%',#{reqVO.name},'%') \s
-            </if>
+            <!-- 平台列表已按展示名称、提供方及模型能力筛选，分页前限制平台范围。 -->
+            and aak.platform in
+            <foreach collection="platforms" item="platform" open="(" separator="," close=")">
+                #{platform}
+            </foreach>
             group by aak.platform
             </script>
             """})
     Page<AiApiKeyPageReqVO> selectPage(IPage<AiApiKeyPageReqVO> page,
-                                @Param("reqVO") AiApiKeyPageReqVO reqVO);
+                                @Param("reqVO") AiApiKeyPageReqVO reqVO,
+                                @Param("platforms") List<String> platforms);
 }

@@ -160,6 +160,14 @@ export function parseStrEmpty(str) {
     return str;
 }
 
+// 格式化返回值
+export function getFormatValue(value) {
+    if (value === null || value === undefined || value === 'null') {
+        return '-';
+    }
+    return value;
+}
+
 // 数据合并
 export function mergeRecursive(source, target) {
     for (var p in target) {

@@ -18,296 +18,135 @@
 <template>
   <div ref="appContainer" class="app-container">
     <GuideTip tip-id="kg/ext/unstructTask.list" />
-    <div v-show="showSearch" class="pagecont-top">
-      <el-form
-        ref="queryRef"
-        class="btn-style"
-        :inline="true"
-        :model="queryParams"
-        label-width="75px"
-        @submit.prevent
-      >
-        <el-form-item label="任务名称" prop="name"
-          ><el-input
-            v-model="queryParams.name"
-            class="el-form-input-width"
-            clearable
-            placeholder="请输入任务名称"
-            @keyup.enter="handleQuery"
-        /></el-form-item>
-        <el-form-item label="任务状态" prop="status"
-          ><el-select
-            v-model="queryParams.status"
-            clearable
-            placeholder="请选择任务状态"
-            style="width: 200px"
-            ><el-option
-              v-for="item in app_task_status"
-              :key="item.value"
-              :label="item.label"
-              :value="Number(item.value)" /></el-select
-        ></el-form-item>
-        <el-form-item label="发布状态" prop="publishStatus"
-          ><el-select
-            v-model="queryParams.publishStatus"
-            clearable
-            placeholder="请选择发布状态"
-            style="width: 200px"
-            ><el-option
-              v-for="item in publish_status"
-              :key="item.value"
-              :label="item.label"
-              :value="Number(item.value)" /></el-select
-        ></el-form-item>
-        <el-form-item label="创建时间"
-          ><el-date-picker
-            v-model="createTimeRange"
-            class="el-form-input-width"
-            type="daterange"
-            value-format="YYYY-MM-DD"
-            range-separator="-"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-        /></el-form-item>
-        <el-form-item
-          ><el-button
-            plain
-            type="primary"
-            @click="handleQuery"
-            @mousedown="(event) => event.preventDefault()"
-            ><i class="iconfont-mini icon-a-zu22377 mr5" />查询</el-button
-          ><el-button
-            @click="resetQuery"
-            @mousedown="(event) => event.preventDefault()"
-            ><i class="iconfont-mini icon-a-zu22378 mr5" />重置</el-button
-          ></el-form-item
-        >
-      </el-form>
-    </div>
 
-    <div class="pagecont-bottom">
-      <div class="justify-between mb15">
-        <el-row :gutter="15" class="btn-style"
-          ><el-col :span="1.5"
-            ><el-button
-              v-hasPermi="['app:appUnstructTask:unstructtask:add']"
-              plain
-              type="primary"
-              @click="handleAdd"
-              @mousedown="(event) => event.preventDefault()"
-              ><i class="iconfont-mini icon-xinzeng mr5" />新增</el-button
-            ><el-button
-              :disabled="!ids.length"
-              plain
-              type="danger"
-              @click="handleDelete()"
-              @mousedown="(event) => event.preventDefault()"
-              ><i class="iconfont-mini icon-shanchu-huise mr5" />删除</el-button
-            ></el-col
-          >
-        </el-row>
-        <div class="justify-end top-right-btn">
-          <right-toolbar
-            v-model:showSearch="showSearch"
-            :columns="columns"
-            @queryTable="getList"
-          />
-        </div>
-      </div>
-      <el-table
-        v-loading="loading"
-        :data="taskList"
-        :default-sort="defaultSort"
-        stripe
-        @selection-change="handleSelectionChange"
-        @sort-change="handleSortChange"
-      >
-        <el-table-column type="selection" width="55" />
-        <el-table-column
-          v-if="columnVisible(1)"
-          align="center"
-          label="编号"
-          prop="id"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-          width="80"
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
         />
-        <el-table-column
-          v-if="columnVisible(2)"
-          align="left"
-          label="任务名称"
-          prop="name"
-          width="250"
-          :show-overflow-tooltip="{ effect: 'light' }"
-          ><template #default="scope">{{
-            scope.row.name || "-"
-          }}</template></el-table-column
+      </template>
+
+      <template #actions-data>
+        <el-button
+          v-hasPermi="['app:appUnstructTask:unstructtask:add']"
+          plain
+          type="primary"
+          @click="handleAdd"
+          @mousedown="(event) => event.preventDefault()"
+          ><i class="iconfont-mini icon-xinzeng mr5" />新增</el-button
+        ><el-button
+          :disabled="multiple"
+          plain
+          type="danger"
+          @click="handleDelete()"
+          @mousedown="(event) => event.preventDefault()"
+          ><i class="iconfont-mini icon-shanchu-huise mr5" />删除</el-button
         >
-        <el-table-column
-          v-if="columnVisible(3)"
-          align="left"
-          label="描述"
-          prop="remark"
-          min-width="260"
-          :show-overflow-tooltip="{ effect: 'light' }"
-          ><template #default="scope">{{
-            scope.row.remark || "-"
-          }}</template></el-table-column
-        >
-        <el-table-column
-          v-if="columnVisible(4)"
-          align="center"
-          label="任务状态"
-          prop="status"
-          width="100"
-          ><template #default="scope"
-            ><dict-tag
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <template #lastExecute="{ row }">
+          <div class="flex-column">
+            <dict-tag
+              class="execute-tag"
               :options="app_task_status"
-              :value="scope.row.status" /></template
-        ></el-table-column>
-        <el-table-column
-          v-if="columnVisible(5)"
-          align="center"
-          label="发布状态"
-          prop="publishStatus"
-          width="100"
-          ><template #default="scope"
-            ><dict-tag
-              :options="publish_status"
-              :value="scope.row.publishStatus" /></template
-        ></el-table-column>
-        <el-table-column
-          v-if="columnVisible(6)"
-          align="center"
-          label="发布人"
-          prop="publishBy"
-          width="100"
-          :show-overflow-tooltip="{ effect: 'light' }"
-          ><template #default="scope">{{
-            scope.row.publishBy || "-"
-          }}</template></el-table-column
-        >
-        <el-table-column
-          v-if="columnVisible(7)"
-          align="center"
-          label="发布时间"
-          prop="publishTime"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-          width="180"
-          ><template #default="scope">{{
-            scope.row.publishTime
-              ? parseTime(scope.row.publishTime, "{y}-{m}-{d} {h}:{i}")
-              : "-"
-          }}</template></el-table-column
-        >
-        <el-table-column
-          v-if="columnVisible(8)"
-          align="center"
-          label="创建人"
-          prop="createBy"
-          width="100"
-          :show-overflow-tooltip="{ effect: 'light' }"
-          ><template #default="scope">{{
-            scope.row.createBy || "-"
-          }}</template></el-table-column
-        >
-        <el-table-column
-          v-if="columnVisible(9)"
-          align="center"
-          label="创建时间"
-          prop="createTime"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-          width="180"
-          ><template #default="scope">{{
-            parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}")
-          }}</template></el-table-column
-        >
-        <el-table-column
-          v-if="columnVisible(10)"
-          align="center"
-          fixed="right"
-          label="操作"
-          width="280"
-          ><template #default="scope">
-            <el-button
-              :disabled="scope.row.publishStatus === 1 || isRunning(scope.row)"
-              icon="VideoPlay"
-              link
-              type="primary"
-              @click="handleExecute(scope.row)"
-              >执行</el-button
-            >
-            <el-button
-              :disabled="scope.row.status !== 2"
-              icon="View"
-              link
-              type="primary"
-              @click="handleResult(scope.row)"
-              >抽取结果</el-button
-            >
-            <el-popover placement="bottom" :width="100" trigger="click"
-              ><template #reference
-                ><el-button icon="ArrowDown" link type="primary"
-                  >更多</el-button
-                ></template
+              :value="row.status"
+              @click="showLogs(row)"
+            />
+            <div class="last-execute-info">
+              <div class="last-execute-info__row">
+                <span class="last-execute-info__value">{{
+                  row.lastExecuteTime ? timeAgo(row.lastExecuteTime) : "-"
+                }}</span>
+                <span class="ml10 last-execute-info__value">{{
+                  formatDuration(row.executeDuration)
+                }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <template #taskStatus="{ row }">
+          <div class="flex-center task-status">
+            <el-switch
+              v-model="row.validFlag"
+              @change="(value) => handleValidFlagChange(row, value)"
+            />
+          </div>
+        </template>
+
+        <template #action="{ row }">
+          <el-button
+            :disabled="row.publishStatus === 1 || isRunning(row)"
+            icon="VideoPlay"
+            link
+            type="primary"
+            @click="handleExecute(row)"
+            >执行</el-button
+          ><el-button
+            :disabled="row.status !== 2"
+            icon="View"
+            link
+            type="primary"
+            @click="handleResult(row)"
+            >抽取结果</el-button
+          >
+          <el-popover
+            placement="bottom"
+            :width="150"
+            trigger="click"
+            popper-class="handle-popover table-action-popover"
+          >
+            <template #reference>
+              <el-button icon="ArrowDown" link type="primary" @click.stop
+                >更多</el-button
               >
-              <div style="width: 90px" class="butgdlist">
-                <el-button
-                  icon="List"
-                  link
-                  type="primary"
-                  style="padding-left: 25px"
-                  @click="showLogs(scope.row)"
-                  >执行日志</el-button
-                ><el-button
-                  :disabled="
-                    scope.row.publishStatus === 1 || isRunning(scope.row)
-                  "
-                  icon="Edit"
-                  link
-                  type="primary"
-                  style="padding-left: 30px"
-                  @click="handleEdit(scope.row)"
-                  >修改</el-button
-                ><el-button
-                  :disabled="
-                    scope.row.publishStatus === 1 || isRunning(scope.row)
-                  "
-                  icon="Delete"
-                  link
-                  type="danger"
-                  style="padding-left: 30px"
-                  @click="handleDelete(scope.row)"
-                  >删除</el-button
-                >
-              </div></el-popover
-            >
-          </template></el-table-column
-        >
-        <template #empty
-          ><div class="emptyBg">
-            <img src="@/assets/system/images/no_data/noData.png" alt="" />
-            <p>暂无记录</p>
-          </div></template
-        >
-      </el-table>
-      <pagination
-        v-show="total > 0"
-        v-model:limit="queryParams.pageSize"
-        v-model:page="queryParams.pageNum"
-        :total="total"
-        @pagination="getList"
-      />
-    </div>
+            </template>
+            <div class="task-action-list">
+              <el-button
+                icon="List"
+                link
+                type="primary"
+                @click="showLogs(row)"
+                >执行日志</el-button
+              ><el-button
+                class="btn-icon-offset"
+                :disabled="row.publishStatus === 1 || isRunning(row)"
+                icon="Edit"
+                link
+                type="primary"
+                @click="handleEdit(row)"
+                >修改</el-button
+              ><el-button
+                class="btn-icon-offset"
+                :disabled="row.publishStatus === 1 || isRunning(row)"
+                icon="Delete"
+                link
+                type="danger"
+                @click="handleDelete(row)"
+                >删除</el-button
+              ><el-button
+                class="btn-icon-offset"
+                icon="Document"
+                link
+                type="primary"
+                @click="handleDetail"
+                >详情</el-button
+              >
+            </div>
+          </el-popover>
+        </template>
+      </qt-table>
+    </qt-wrap>
 
     <el-dialog
       v-model="open"
       :append-to="appContainer"
       draggable
       width="800px"
-      @closed="resetForm"
+      @closed="resetTaskForm"
     >
       <template #header
         ><span class="el-dialog__title">{{ title }}</span></template
@@ -341,11 +180,7 @@
               ></el-form-item
             >
             <div style="margin: 0 0 10px 80px">
-              <el-table
-                v-loading="loading"
-                :data="form.sourceFiles"
-                height="300px"
-                stripe
+              <el-table :data="form.sourceFiles" height="300px" stripe
                 ><el-table-column
                   label="文件名称"
                   prop="fileName"
@@ -397,8 +232,8 @@
             ><el-form-item label="描述" prop="remark"
               ><el-input
                 v-model="form.remark"
+                :maxlength="512"
                 :rows="3"
-                maxlength="512个字符"
                 show-word-limit
                 type="textarea"
                 placeholder="请输入描述" /></el-form-item></el-col
@@ -438,103 +273,185 @@ import {
 } from "@/api/app/unstructTask";
 import FileMultiple from "./fileMultiple.vue";
 import TaskLogDialog from "@/views/app/taskLog/taskLogDialog.vue";
+import { timeAgo } from "@/utils/time";
 
 const { proxy } = getCurrentInstance();
 const router = useRouter();
-const { app_task_status, publish_status } = proxy.useDict(
-  "app_task_status",
-  "publish_status"
-);
+const { app_task_status } = proxy.useDict("app_task_status");
 const appContainer = ref();
-const queryRef = ref();
+const tableRef = ref();
 const taskRef = ref();
 const fileMultipleRef = ref();
 const taskLogDialogRef = ref();
-const loading = ref(false);
 const submitting = ref(false);
-const showSearch = ref(true);
 const open = ref(false);
 const title = ref("");
-const taskList = ref([]);
-const ids = ref([]);
-const total = ref(0);
-const createTimeRange = ref([]);
+const selectedRows = ref([]);
+const multiple = ref(true);
 const form = ref({});
-const defaultSort = { prop: "createTime", order: "descending" };
-const columns = ref([
-  { key: 1, label: "编号", visible: true },
-  { key: 2, label: "任务名称", visible: true },
-  { key: 3, label: "描述", visible: true },
-  { key: 4, label: "任务状态", visible: true },
-  { key: 5, label: "发布状态", visible: true },
-  { key: 6, label: "发布人", visible: true },
-  { key: 7, label: "发布时间", visible: true },
-  { key: 8, label: "创建人", visible: true },
-  { key: 9, label: "创建时间", visible: true },
-  { key: 10, label: "操作", visible: true },
-]);
-const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
-  name: undefined,
-  status: undefined,
-  publishStatus: undefined,
-  orderByColumn: "createTime",
-  isAsc: "descending",
-  params: {},
-});
-const rules = {
-  name: [{ required: true, message: "任务名称不能为空", trigger: "blur" }],
-  sourceFiles: [
+
+/** 创建时间区间转换为后端约定的 params.beginCreateTime / endCreateTime。 */
+function formatParams(params) {
+  const { createTime, ...query } = params;
+  const [begin, end] = Array.isArray(createTime) ? createTime : [];
+  if (!begin || !end) return query;
+  return {
+    ...query,
+    params: { beginCreateTime: begin, endCreateTime: `${end} 23:59:59` },
+  };
+}
+
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "create_time", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    { type: "selection", width: 55 },
     {
-      required: true,
-      validator: (_, value, callback) =>
-        value?.length ? callback() : callback(new Error("添加文件不能为空")),
-      trigger: "change",
+      label: "编号",
+      prop: "id",
+      width: 80,
+      sortable: "custom",
+      sortableKey: "id",
+      sortOrders: ["descending", "ascending"],
+    },
+    {
+      label: "任务信息",
+      minWidth: 260,
+      align: "left",
+      info: {
+        title: "name",
+        desc: "remark",
+        click: (row) => handleEdit(row),
+      },
+    },
+    {
+      label: "执行情况",
+      width: 180,
+      slot: "lastExecute",
+      align: "left",
+    },
+    // {
+    //   label: "抽取成果",
+    //   minWidth: 150,
+    //   align: "left",
+    //   list: [
+    //     { label: "实体数", prop: (row) => formatCount(row.entityCount) },
+    //     { label: "关系数", prop: (row) => formatCount(row.relationCount) },
+    //     { label: "处理文件数", prop: (row) => formatCount(row.docCount) },
+    //   ],
+    // },
+    { label: "任务状态", slot: "taskStatus", width: 100 },
+    {
+      label: "发布人",
+      width: 120,
+      align: "left",
+      list: [{ prop: "publishBy" }, { prop: "publishPhone" }],
+    },
+    {
+      label: "负责人",
+      width: 120,
+      align: "left",
+      list: [{ prop: "createBy" }, { prop: "createPhone" }],
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 160,
+      sortable: "custom",
+      sortableKey: "create_time",
+      sortOrders: ["descending", "ascending"],
+    },
+    { label: "操作", slot: "action", width: 240, fixed: "right" },
+  ],
+  func: listUnstructTask,
+  params: {
+    name: null,
+    status: null,
+    createTime: null,
+  },
+  events: {
+    formatParams,
+    formatData,
+    onPageCurrentChange: rememberPage,
+    onPageSizeChange: rememberPage,
+  },
+});
+
+// 记录当前分页，供抽取结果页返回时还原列表位置
+const currentPage = reactive({ pageNum: 1, pageSize: 10 });
+
+function rememberPage(params) {
+  Object.assign(currentPage, {
+    pageNum: params.pageNum,
+    pageSize: params.pageSize,
+  });
+}
+
+const searchStore = reactive({
+  items: [
+    { label: "任务名称", prop: "name", component: { is: "input" } },
+    {
+      label: "任务状态",
+      prop: "status",
+      component: { is: "select", options: app_task_status },
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      component: {
+        is: "date-picker",
+        type: "daterange",
+        rangeSeparator: "-",
+        startPlaceholder: "开始日期",
+        endPlaceholder: "结束日期",
+        clearable: false,
+      },
     },
   ],
-  ttlFilePath: [
-    { required: true, message: "请上传TTL本体文件", trigger: "change" },
-  ],
-};
+});
 
-/** 判断列表列是否显示。 */ function columnVisible(key) {
-  return columns.value.find((item) => item.key === key)?.visible ?? true;
+/** 最近执行时间、执行耗时、抽取成果、发布人/负责人电话后端暂未返回，先按约定字段名占位。 */
+function formatDuration(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  const seconds = Math.max(Math.round(Number(value)), 0);
+  if (seconds < 60) return `${seconds}秒`;
+  return `${Math.floor(seconds / 60)}分${seconds % 60}秒`;
 }
-/** 查询非结构化抽取任务。 */ function getList() {
-  loading.value = true;
-  const params = { ...queryParams, params: {} };
-  if (createTimeRange.value?.length) {
-    params.params.beginCreateTime = createTimeRange.value[0];
-    params.params.endCreateTime = createTimeRange.value[1] + " 23:59:59";
-  }
-  listUnstructTask(params)
-    .then(({ data }) => {
-      taskList.value = data.rows;
-      total.value = data.total;
-    })
-    .finally(() => {
-      loading.value = false;
-    });
+
+/** 计数为 0 时 QtTable 会把假值渲染成 "-"，这里统一转成字符串。 */
+function formatCount(value) {
+  return value === null || value === undefined || value === ""
+    ? "-"
+    : `${value}`;
 }
-/** 执行列表查询。 */ function handleQuery() {
-  queryParams.pageNum = 1;
-  getList();
+
+/** 任务状态开关：接口未返回 validFlag 时按启用展示。 */
+function formatData(rows) {
+  return rows.map((row) => ({ ...row, validFlag: row.validFlag ?? true }));
 }
-/** 重置列表查询。 */ function resetQuery() {
-  createTimeRange.value = [];
-  proxy.resetForm("queryRef");
-  handleQuery();
+
+/** 任务状态（启用/停用）开关，后端启用/停用接口待提供。 */
+function handleValidFlagChange(row, value) {
+  proxy.$modal.msgWarning("后端暂未提供任务启用/停用接口，操作未生效");
+  row.validFlag = !value;
 }
-/** 处理列表排序。 */ function handleSortChange(column) {
-  queryParams.orderByColumn = column.prop;
-  queryParams.isAsc = column.order;
-  getList();
+
+/** 记录列表多选结果。 */
+function handleSelectionChange(rows) {
+  selectedRows.value = rows;
+  multiple.value = !rows.length;
 }
-/** 记录列表多选结果。 */ function handleSelectionChange(rows) {
-  ids.value = rows.map((item) => item.id);
-}
-/** 重置任务表单。 */ function resetForm() {
+
+/** 重置任务表单。 */
+function resetTaskForm() {
   form.value = {
     id: null,
     name: "",
@@ -546,19 +463,23 @@ const rules = {
   };
   proxy.resetForm("taskRef");
 }
-/** 打开新增任务弹框。 */ function handleAdd() {
-  resetForm();
+
+/** 打开新增任务弹框。 */
+function handleAdd() {
+  resetTaskForm();
   title.value = "新增非结构化抽取任务";
   open.value = true;
 }
-/** 打开修改任务弹框。 */ function handleEdit(row) {
+
+/** 打开修改任务弹框。 */
+function handleEdit(row) {
   if (isRunning(row)) {
     proxy.$modal.msgWarning(
       Number(row.status) === 4 ? "任务已在队列中" : "任务执行中"
     );
     return;
   }
-  resetForm();
+  resetTaskForm();
   getUnstructTask(row.id).then(({ data }) => {
     form.value = {
       id: data.id,
@@ -576,21 +497,29 @@ const rules = {
     open.value = true;
   });
 }
-/** 打开文件选择弹框。 */ function selectFiles() {
+
+/** 打开文件选择弹框。 */
+function selectFiles() {
   fileMultipleRef.value.open(form.value.sourceFiles);
 }
-/** 接收文件选择结果。 */ function confirmFiles(rows) {
+
+/** 接收文件选择结果。 */
+function confirmFiles(rows) {
   form.value.sourceFiles = rows.map((item) => ({
     id: item.id,
     fileName: item.fileName,
   }));
   taskRef.value?.validateField("sourceFiles");
 }
-/** 删除已选文件。 */ function removeSourceFile(index) {
+
+/** 删除已选文件。 */
+function removeSourceFile(index) {
   form.value.sourceFiles.splice(index, 1);
   taskRef.value?.validateField("sourceFiles");
 }
-/** 提交新增或修改任务。 */ function submitForm() {
+
+/** 提交新增或修改任务。 */
+function submitForm() {
   taskRef.value.validate((valid) => {
     if (!valid) return;
     const data = {
@@ -608,19 +537,21 @@ const rules = {
       .then(() => {
         proxy.$modal.msgSuccess(data.id ? "修改成功" : "新增成功");
         open.value = false;
-        getList();
+        tableRef.value.getList();
       })
       .finally(() => {
         submitting.value = false;
       });
   });
 }
-/** 判断任务是否执行中或队列中（不可执行/修改/删除）。 */ function isRunning(
-  row
-) {
+
+/** 判断任务是否执行中或队列中（不可执行/修改/删除）。 */
+function isRunning(row) {
   return [1, 4].includes(Number(row.status));
 }
-/** 执行抽取任务。 */ function handleExecute(row) {
+
+/** 执行抽取任务。 */
+function handleExecute(row) {
   if (isRunning(row)) {
     proxy.$modal.msgWarning(
       Number(row.status) === 4 ? "任务已在队列中" : "任务执行中"
@@ -632,26 +563,37 @@ const rules = {
     .then(() => executeUnstructTask(row.id))
     .then(() => {
       proxy.$modal.msgSuccess("任务已进入抽取队列");
-      getList();
+      tableRef.value.getList();
     })
     .catch(() => {});
 }
-/** 打开任务执行日志。 */ function showLogs(row) {
+
+/** 打开任务执行日志。 */
+function showLogs(row) {
   taskLogDialogRef.value.show(row.id, 1);
 }
-/** 查看非结构化抽取结果。 */ function handleResult(row) {
+
+/** 任务详情页面待开发。 */
+function handleDetail() {
+  proxy.$modal.msg("功能开发中");
+}
+
+/** 查看非结构化抽取结果。 */
+function handleResult(row) {
   router.push({
     path: "/app/extractResults",
     query: {
       id: row.id,
       name: row.name,
       pageType: "2",
-      pageNum: queryParams.pageNum,
-      pageSize: queryParams.pageSize,
+      pageNum: currentPage.pageNum,
+      pageSize: currentPage.pageSize,
     },
   });
 }
-/** 删除任务。 */ function handleDelete(row) {
+
+/** 删除任务。 */
+function handleDelete(row) {
   if (row) {
     if (isRunning(row)) {
       proxy.$modal.msgWarning(
@@ -664,15 +606,13 @@ const rules = {
       .then(() => delUnstructTask(String(row.id)))
       .then(() => {
         proxy.$modal.msgSuccess("删除成功");
-        getList();
+        tableRef.value.getList();
       })
       .catch(() => {});
     return;
   }
-  const targetIds = ids.value;
-  const runningRows = (taskList.value || []).filter(
-    (item) => ids.value.includes(item.id) && isRunning(item)
-  );
+  const targetIds = selectedRows.value.map((item) => item.id);
+  const runningRows = selectedRows.value.filter(isRunning);
   const deletableIds = targetIds.filter(
     (id) => !runningRows.some((item) => item.id === id)
   );
@@ -688,26 +628,19 @@ const rules = {
     .then(() => delUnstructTask(deletableIds.join(",")))
     .then(() => {
       proxy.$modal.msgSuccess("删除成功");
-      getList();
+      tableRef.value.getList();
     })
     .catch(() => {});
 }
-
-onMounted(getList);
 </script>
 
-<style lang="scss" scoped>
-.hint-style {
-  display: flex;
-  align-items: center;
-  .icon {
-    color: #efbd47;
-    cursor: pointer;
-  }
-  .text {
-    color: #efbd47;
-    cursor: pointer;
-    font-size: 12px;
-  }
+<style scoped lang="scss">
+.task-status {
+  justify-content: center;
+}
+
+.execute-tag {
+  align-self: flex-start;
+  cursor: pointer;
 }
 </style>

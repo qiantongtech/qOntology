@@ -41,26 +41,46 @@ public class BasicEnumTypeDO extends BaseEntity {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    /** 工作区id */
+    /**
+     * 工作区id
+     */
     private Long workspaceId;
 
-    /** 枚举主键 */
+    /**
+     * 枚举主键
+     */
     @TableId(value = "enum_id", type = IdType.AUTO)
     private Long enumId;
 
-    /** 枚举名称 */
+    /**
+     * 枚举名称
+     */
     private String enumName;
 
-    /** 枚举类型 */
+    /**
+     * 枚举类型
+     */
     private String enumType;
 
-    /** 状态 */
+    /**
+     * 引用当前枚举的业务数据类型总数，仅用于查询结果，不映射数据库字段。
+     */
+    @TableField(exist = false)
+    private Long referenceCount;
+
+    /**
+     * 状态
+     */
     private String status;
 
-    /** 是否有效 */
+    /**
+     * 是否有效
+     */
     private Boolean validFlag;
 
-    /** 删除标志 */
+    /**
+     * 删除标志
+     */
     @TableLogic
     private Boolean delFlag;
 

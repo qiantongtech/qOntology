@@ -303,7 +303,7 @@
                     <el-button
                       size="small"
                       @click="openTagMultiple"
-                      :style="{ 'margin-top': '5px' }"
+                      class="mt5"
                     >
                       + 绑定标签
                     </el-button>
@@ -315,33 +315,21 @@
                       <div class="collapse-title">关联数据源</div>
                     </template>
                     <div class="collapse-con1">
-                      <div
-                        style="
-                          display: grid;
-                          grid-template-columns: 1fr 1fr;
-                          margin-bottom: 8px;
-                        "
-                      >
-                        <div style="text-align: left">
+                      <div class="db-info mb8">
+                        <div class="db-info-item">
                           数据库名称:
                           {{ dataSource.database.type }}
                         </div>
-                        <div style="text-align: left">
+                        <div class="db-info-item">
                           数据库地址: {{ dataSource.database.host }}
                         </div>
                       </div>
-                      <div
-                        style="
-                          display: grid;
-                          grid-template-columns: 1fr 1fr;
-                          margin-bottom: 8px;
-                        "
-                      >
-                        <div style="text-align: left">
+                      <div class="db-info mb8">
+                        <div class="db-info-item">
                           数据库名称:
                           {{ dataSource.database.databaseName }}
                         </div>
-                        <div style="text-align: left">
+                        <div class="db-info-item">
                           表名称: {{ dataSource.database.tableName }}
                         </div>
                       </div>
@@ -411,7 +399,7 @@
                           >
                             {{ doc.name }}
                           </td>
-                          <td style="text-align: right">
+                          <td class="doc-time">
                             {{ parseTime(doc.createTime, "{y}-{m}-{d}") }}
                           </td>
                         </div>
@@ -478,22 +466,22 @@
           </template>
         </el-dialog>
         <!--  弹框  -->
-        <AddEntity
+        <add-entity
           ref="nodeRef"
           :title="addTitle"
           :graphId="taskInfo"
           @handle-refresh="handleRefresh"
-        ></AddEntity>
-        <AddRelationship
+        ></add-entity>
+        <add-relationship
           ref="edgeRef"
           :title="addTitle"
           :graphId="taskInfo"
           @handle-refresh="handleRefresh"
-        ></AddRelationship>
+        ></add-relationship>
         <!--                <TagMultiple ref="tagMultipleRef" @confirm="handleTagSingleConfirm" />-->
 
         <!-- 右侧弹框 -->
-        <NodeDialog
+        <node-dialog
           ref="nodeDialogRef"
           @dialogClose="nodeDialogClose"
           @handleRefresh="handleRefresh"
@@ -504,6 +492,8 @@
 </template>
 
 <script setup name="KEresult">
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, getCurrentInstance } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import AddEntity from "@/views/app/graph/graphExploration/addEntity.vue";
 import AddRelationship from "@/views/app/graph/graphExploration/addRelationship.vue";
 import "vis-network/dist/dist/vis-network.min.css";
@@ -534,7 +524,6 @@ import { getUnstructTaskTextList } from "@/api/app/unstructTask";
 // 概念列表
 // import { listSchema } from '@/api/ext/extSchema/schema';
 // import { entity, updateEntityTags, deleteEntity } from '@/api/kg/manage/tagEntity.js';
-import { watch } from "vue";
 // import TagMultiple from '@/views/kg/manage/tag/selection/tagMultiple.vue';
 // import { listType, getType, delType, addType, updateType } from '@/api/kg/dict/type';
 // import { listData, getData, delData, addData, updateData } from '@/api/kg/dict/data';
@@ -1956,6 +1945,42 @@ function openTagMultiple() {
   display: flex;
   flex-direction: column;
 
+  .head-title {
+    flex-shrink: 0;
+    height: 46px;
+    background: #fff;
+    padding: 0px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .name {
+      font-family: PingFang SC;
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+
+      &::before {
+        content: "";
+        display: inline-block;
+        background-color: var(--qt-primary, #2666fb);
+        width: 5px;
+        height: 20px;
+        margin-right: 10px;
+        border-radius: 2px;
+      }
+    }
+
+    .btns {
+      float: right;
+
+      .el-button {
+        height: 28px;
+      }
+    }
+  }
   .wrap-container {
     flex: 1;
     min-height: 0;
@@ -2292,6 +2317,15 @@ function openTagMultiple() {
             width: 100px;
           }
 
+          .db-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+
+            .db-info-item {
+              text-align: left;
+            }
+          }
+
           .docItem {
             display: flex;
             justify-content: space-between;
@@ -2303,6 +2337,9 @@ function openTagMultiple() {
               overflow: hidden;
               text-overflow: ellipsis;
               cursor: pointer;
+            }
+            .doc-time {
+              text-align: right;
             }
           }
         }

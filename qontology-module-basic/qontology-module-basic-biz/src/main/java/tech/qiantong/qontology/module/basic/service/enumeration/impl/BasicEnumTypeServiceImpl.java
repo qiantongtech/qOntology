@@ -60,9 +60,24 @@ public class BasicEnumTypeServiceImpl extends ServiceImpl<BasicEnumTypeMapper, B
     @Resource
     private BasicEnumDataMapper basicEnumDataMapper;
 
+    /** 分页加载枚举，并以一次分组查询补齐当前页所有枚举的业务数据类型引用数。 */
     @Override
     public PageResult<BasicEnumTypeDO> getBasicEnumTypePage(BasicEnumTypePageReqVO pageReqVO) {
-        return baseMapper.selectPage(pageReqVO);
+        PageResult<BasicEnumTypeDO> page = baseMapper.selectPage(pageReqVO);
+        List<BasicEnumTypeDO> rows = page.getList();
+        // 空页不执行统计查询，避免空的 IN 条件；分页总数保持原查询结果。
+        if (CollUtil.isEmpty(rows)) return page;
+
+        List<String> enumTypes = rows.stream()
+                .map(BasicEnumTypeDO::getEnumType)
+                .distinct()
+                .collect(Collectors.toList());
+        // 每页只发起一次聚合查询，避免每行单独查询造成数据库请求随页大小增长。
+        Map<String, Long> referenceCounts = baseMapper.selectReferenceCounts(enumTypes).stream()
+                .collect(Collectors.toMap(BasicEnumTypeDO::getEnumType, BasicEnumTypeDO::getReferenceCount));
+        // 分组结果不包含零引用的枚举，统一补零，保证前端可以区分零与字段缺失。
+        rows.forEach(row -> row.setReferenceCount(referenceCounts.getOrDefault(row.getEnumType(), 0L)));
+        return page;
     }
 
     @Override

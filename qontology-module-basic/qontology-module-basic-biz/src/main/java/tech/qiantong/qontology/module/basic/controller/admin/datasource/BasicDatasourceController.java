@@ -132,6 +132,14 @@ public class BasicDatasourceController extends BaseController {
     }
 
 
+    /** 测试当前表单连接，不要求数据源已保存；新增或修改权限均可使用。 */
+    @Operation(summary = "测试当前数据源配置连接")
+    @PreAuthorize("@ss.hasAnyPermi('basic:datasource:datasource:add,basic:datasource:datasource:edit')")
+    @PostMapping("/clientsTestStatus")
+    public AjaxResult clientsTestStatus(@Valid @RequestBody BasicDatasourceSaveReqVO request) {
+        return basicDatasourceService.clientsTestStatus(request);
+    }
+
     @Operation(summary = "获取数据源里面的数据表")
     @PreAuthorize("@ss.hasPermi('basic:datasource:datasource:query')")
     @GetMapping(value = "/tableList")

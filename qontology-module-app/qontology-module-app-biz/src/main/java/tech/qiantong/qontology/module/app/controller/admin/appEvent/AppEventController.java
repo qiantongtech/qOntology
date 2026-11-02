@@ -61,7 +61,7 @@ public class AppEventController extends BaseController {
     private IAppEventService AppEventService;
 
     @Operation(summary = "查询事件管理列表")
-    @PreAuthorize("@ss.hasPermi('App:event:event:list')")
+    @PreAuthorize("@ss.hasPermi('app:graph:event:list')")
     @GetMapping("/list")
     public CommonResult<PageResult<AppEventRespVO>> list(AppEventPageReqVO AppEvent) {
         PageResult<AppEventDO> page = AppEventService.getAppEventPage(AppEvent);
@@ -69,7 +69,7 @@ public class AppEventController extends BaseController {
     }
 
     @Operation(summary = "导出事件管理列表")
-    @PreAuthorize("@ss.hasPermi('App:event:event:export')")
+    @PreAuthorize("@ss.hasPermi('app:graph:event:export')")
     @Log(title = "事件管理", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, AppEventPageReqVO exportReqVO) {
@@ -80,7 +80,7 @@ public class AppEventController extends BaseController {
     }
 
     @Operation(summary = "导入事件管理列表")
-    @PreAuthorize("@ss.hasPermi('App:event:event:import')")
+    @PreAuthorize("@ss.hasPermi('app:graph:event:import')")
     @Log(title = "事件管理", businessType = BusinessType.IMPORT)
     @PostMapping("/importData")
     public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception {
@@ -92,7 +92,7 @@ public class AppEventController extends BaseController {
     }
 
     @Operation(summary = "获取事件管理详细信息")
-    @PreAuthorize("@ss.hasPermi('App:event:event:query')")
+    @PreAuthorize("@ss.hasPermi('app:graph:event:query')")
     @GetMapping(value = "/{id}")
     public CommonResult<AppEventRespVO> getInfo(@PathVariable("id") Long id) {
         AppEventDO AppEventDO = AppEventService.getAppEventById(id);
@@ -100,7 +100,7 @@ public class AppEventController extends BaseController {
     }
 
     @Operation(summary = "新增事件管理")
-    @PreAuthorize("@ss.hasPermi('App:event:event:add')")
+    @PreAuthorize("@ss.hasPermi('app:graph:event:add')")
     @Log(title = "事件管理", businessType = BusinessType.INSERT)
     @PostMapping
     public CommonResult<Long> add(@Valid @RequestBody AppEventSaveReqVO AppEvent) {
@@ -111,7 +111,7 @@ public class AppEventController extends BaseController {
     }
 
     @Operation(summary = "修改事件管理")
-    @PreAuthorize("@ss.hasPermi('App:event:event:edit')")
+    @PreAuthorize("@ss.hasPermi('app:graph:event:edit')")
     @Log(title = "事件管理", businessType = BusinessType.UPDATE)
     @PutMapping
     public CommonResult<Integer> edit(@Valid @RequestBody AppEventSaveReqVO AppEvent) {
@@ -122,7 +122,7 @@ public class AppEventController extends BaseController {
     }
 
     @Operation(summary = "删除事件管理")
-    @PreAuthorize("@ss.hasPermi('App:event:event:remove')")
+    @PreAuthorize("@ss.hasPermi('app:graph:event:remove')")
     @Log(title = "事件管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public CommonResult<Integer> remove(@PathVariable Long[] ids) {

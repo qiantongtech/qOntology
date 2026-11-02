@@ -97,7 +97,7 @@
                 type="primary"
                 plain
                 @click="handleAdd"
-                v-hasPermi="['kg:event:event:add']"
+                v-hasPermi="['app:graph:event:add']"
                 @mousedown="(e) => e.preventDefault()"
             >
               <i class="iconfont-mini icon-xinzeng mr5"></i>新增
@@ -110,7 +110,7 @@
                 plain
                 :disabled="multiple"
                 @click="handleDelete"
-                v-hasPermi="['kg:event:event:remove']"
+                v-hasPermi="['app:graph:event:remove']"
                 @mousedown="(e) => e.preventDefault()"
             >
               删除
@@ -244,7 +244,7 @@
                 type="primary"
                 icon="Edit"
                 @click="handleUpdate(scope.row)"
-                v-hasPermi="['kg:event:event:edit']"
+                v-hasPermi="['app:graph:event:edit']"
             >修改
             </el-button
             >
@@ -253,7 +253,7 @@
                 type="danger"
                 icon="Delete"
                 @click="handleDelete(scope.row)"
-                v-hasPermi="['kg:event:event:remove']"
+                v-hasPermi="['app:graph:event:remove']"
             >删除
             </el-button
             >
@@ -262,7 +262,7 @@
                 type="primary"
                 icon="view"
                 @click="handleDetail(scope.row)"
-                v-hasPermi="['kg:event:event:query']"
+                v-hasPermi="['app:graph:event:query']"
             >详情
             </el-button
             >
