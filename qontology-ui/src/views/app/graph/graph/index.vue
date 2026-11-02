@@ -835,7 +835,6 @@ function renderGraphData(sourceData) {
 
   // 合并三元组数据和单个实体数据
   searchData.value = [...tripletData, ...singleEntityData];
-  console.log("-----数据----", graphData.value);
   // 设置发布状态：已发布不能修改和不能删除，除了图谱探索页
   if (!componentProps.embedded && taskInfo.value.pageType == "0") {
     releaseStatus.value = false;
@@ -940,7 +939,6 @@ function initG6Gragh(option) {
         key: "clickControl",
         state: "click",
         onClick: (d) => {
-          console.log(d, "===点击事件===");
           if (d.target.nodeName === "document") {
             nodeDialogRef.value.dialogClose();
             currentNodeData.value = null;
@@ -1055,7 +1053,6 @@ onBeforeUnmount(() => {
   }
   // 清理 graphData
   graphData.value = { nodes: [], edges: [] };
-  console.log("G6实例已销毁");
 });
 
 const searchShow = ref(false);
@@ -1314,7 +1311,6 @@ const initTree = () => {
     return ids;
   };
   checkedKeys.value = getAllIds(treeData.value);
-  // console.log(checkedKeys.value);
 };
 
 // 更新搜索数据
@@ -1438,9 +1434,6 @@ const getAllChildIds = (nodeId) => {
 
 const handleCheck = (data, checked) => {
   const id = data.id;
-  console.log(id);
-  console.log(checked);
-
   // 更新 checkedKeys.value 为最新的勾选状态
   checkedKeys.value = checked.checkedKeys;
 
@@ -1511,7 +1504,6 @@ const handleCheck = (data, checked) => {
   updateSearchData();
 };
 const handleNodeClick = (data) => {
-  console.log(data.id);
   filterEmit(data);
 };
 const oldId = ref(null);
@@ -1595,17 +1587,14 @@ const handleDel = () => {
 
       // 接口
       deleteNode(id).then((response) => {
-        console.log("-------删除成功------", response);
         proxy.$modal.msgSuccess("删除成功");
       });
     })
     .catch((err) => {
-      console.log(err);
     });
 };
 const collapseAct = ref(["1", "2", "3", "4", "5"]);
 const collapseChange = (val) => {
-  console.log(val);
 };
 // 属性信息
 // const getAttrData = (node) => {
@@ -1740,7 +1729,6 @@ const tripletDelete = (row) => {
 
       // 接口
       deleteRelationshipById(id).then((response) => {
-        console.log("-------删除成功------", response);
         proxy.$modal.msgSuccess("删除成功");
       });
     })
@@ -1845,7 +1833,6 @@ function openTagMultiple() {
 /** 接收子组件选中的标签数据（子组件触发 confirm 事件时执行） */
 // function handleTagSingleConfirm(selectedTag) {
 //     // selectedTag 是子组件回传的选中标签对象（包含 id、name、graphId 等所有字段）
-//     console.log('选中的标签数据：', selectedTag);
 //     const updateTanEntityData = ref({
 //         entityId: entId,
 //         graphId: graphId,
@@ -1860,7 +1847,6 @@ function openTagMultiple() {
 //     entity(entId.value, graphId.value)
 //         .then((response) => {
 //             tagList.value = response.data;
-//             console.log('tagList.value-----', tagList.value);
 //         })
 //         .catch(() => {});
 // }

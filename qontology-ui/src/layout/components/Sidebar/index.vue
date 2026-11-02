@@ -139,10 +139,9 @@ const sidebar = computed(() => useAppStore().sidebar);
 const activeMenu = computed(() => {
   const { meta, path } = route;
   if (path === "/app/extractResults") {
-    return String(route.query.pageType) === "1" ? "/app/structTask" : "/app/unstructTask";
+    return String(route.query.pageType) === "1" ? "/app/graph/structTask" : "/app/graph/unstructTask";
   }
   // if set path, the sidebar will highlight the path you set
-  console.log(meta.activeMenu, sidebarRouters);
   if (meta.activeMenu) {
     return meta.activeMenu;
   }
@@ -150,10 +149,6 @@ const activeMenu = computed(() => {
 });
 
 const displayLogo = computed(() => {
-  console.log(
-    "defaultSettings.navbarLogoRoutes",
-    defaultSettings.navbarLogoRoutes
-  );
   const navbarLogoRoutes = defaultSettings.navbarLogoRoutes || [];
   const isSpecialRoute = navbarLogoRoutes.some((logoPath) =>
     route.path.startsWith(logoPath)

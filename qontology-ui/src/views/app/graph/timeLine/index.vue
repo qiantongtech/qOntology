@@ -491,17 +491,12 @@ See the LICENSE file in the project root for full license information.
                     key: 'clickControl',
                     state: 'click',
                     onClick: (d) => {
-                        console.log(d, '===dd');
                         if (d.target.nodeName === 'document') {
                             nodeDialogRef.value.dialogClose();
                             currentNodeData.value = null;
                         }
                         if (d.target.type == 'node') {
                             currentNodeData.value = nodes.value.find((e) => e.id == d.target.id);
-                            console.log(
-                                '---------currentNodeData.value-------',
-                                currentNodeData.value
-                            );
                             openNodeDialog(currentNodeData.value);
                         }
                     }
@@ -509,8 +504,6 @@ See the LICENSE file in the project root for full license information.
             ],
             ...option
         };
-        console.log('---------data---------', data);
-        console.log('---------options---------', options);
         relationGraph = new G6Network(timelineRef.value, data, options);
     };
 
@@ -541,7 +534,6 @@ See the LICENSE file in the project root for full license information.
             relationGraph.graphData.nodes.update(node);
         });
         relationGraph.on('click', function (d) {
-            console.log(d, data, relationGraph.graphData.nodes, '===dd');
             // 恢复颜色
             relationGraph.resetColor();
             if (d.nodes.length == 0) {
@@ -576,7 +568,6 @@ See the LICENSE file in the project root for full license information.
                 /** 高亮临节点-暂时不要了
        // d.edges.forEach((e) => {
        //   let edge = edges.value.find((f) => f.id == e);
-       //   console.log(edge, "===edge");
        //   if (edge) {
        //     let conNodes = nodes.value.filter((f) => f.id == edge.from || f.id == edge.to);
        //     if (conNodes.length > 0) {
@@ -606,7 +597,6 @@ See the LICENSE file in the project root for full license information.
                         }
                     }
                 ]);
-                console.log('---------currentNodeData.value-------', currentNodeData.value);
                 openNodeDialog(currentNodeData.value);
             }
         });
@@ -660,7 +650,6 @@ See the LICENSE file in the project root for full license information.
     }
 
     function handleEventClick(data) {
-        console.log('🚀 ~ handleEventClick ~ data:', data);
         // 未勾选任何事件：恢复全量图谱
         if (data == null) {
             getGraphData();
