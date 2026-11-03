@@ -9,6 +9,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import java.util.List;
 
 /** AI辅助建模任务创建 Request VO。 */
 @Schema(description = "AI辅助建模任务创建 Request VO")
@@ -28,5 +31,10 @@ public class OmAiTaskCreateReqVO {
     @NotNull(message = "项目版本ID不能为空")
     @Positive(message = "项目版本ID必须为正整数")
     private Long versionId;
+
+    @Schema(description = "已通过统一文件服务上传的文件列表")
+    @Valid
+    @NotEmpty(message = "请至少上传一个文件")
+    private List<OmAiUploadedFileReqVO> files;
 
 }

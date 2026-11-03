@@ -45,16 +45,9 @@ export function getAiTask(id) {
   return request({ url: `/om/aiTask/${id}`, method: 'get' })
 }
 
-/** 上传多个文件并创建 AI 辅助建模任务。 */
+/** 使用统一文件服务返回的文件元数据创建 AI 辅助建模任务。 */
 export function createAiTask(data) {
-  return request({
-    url: '/om/aiTask',
-    method: 'post',
-    data,
-    headers: { 'Content-Type': 'multipart/form-data', repeatSubmit: false },
-    // 文件上传完成后后端立即转为异步解析；大文件上传不使用全局 30 秒超时。
-    timeout: 0
-  })
+  return request({ url: '/om/aiTask', method: 'post', data })
 }
 
 /** 修改 AI 辅助建模任务基本信息。 */
@@ -62,15 +55,9 @@ export function updateAiTask(data) {
   return request({ url: '/om/aiTask', method: 'put', data })
 }
 
-/** 更新 AI 辅助建模任务的文件列表（FormData：taskId + retainedFileIds[] + files[]）。 */
-export function updateAiTaskFiles(formData) {
-  return request({
-    url: '/om/aiTask/files',
-    method: 'post',
-    data: formData,
-    headers: { 'Content-Type': 'multipart/form-data', repeatSubmit: false },
-    timeout: 0
-  })
+/** 更新文件列表但不触发解析，解析仅由“重新解析”操作启动。 */
+export function updateAiTaskFiles(data) {
+  return request({ url: '/om/aiTask/files', method: 'post', data })
 }
 
 /** 删除 AI 辅助建模任务。 */

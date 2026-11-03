@@ -16,7 +16,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import tech.qiantong.qontology.common.annotation.Log;
 import tech.qiantong.qontology.common.enums.BusinessType;
 import tech.qiantong.qontology.core.controller.BaseController;
@@ -62,14 +61,22 @@ public class OmAiTaskController extends BaseController {
         return CommonResult.success(BeanUtils.toBean(modelingService.get(id), OmAiTaskRespVO.class));
     }
 
-    /** 上传多个文件并创建AI辅助建模任务。 */
-    @Operation(summary = "上传多个文件并创建AI辅助建模任务")
+    /** 使用统一文件服务的上传结果创建任务，当前请求不启动解析。 */
+    @Operation(summary = "保存AI辅助建模任务及文件")
     @PreAuthorize("@ss.hasPermi('om:aiModeling:add')")
     @Log(title = "AI辅助建模任务", businessType = BusinessType.INSERT)
-    @PostMapping(consumes = "multipart/form-data")
-    public CommonResult<Long> create(@Valid OmAiTaskCreateReqVO reqVO,
-                                     @RequestPart("files") MultipartFile[] files) {
-        return CommonResult.success(modelingService.create(reqVO, getWorkSpaceId(), files));
+    @PostMapping
+    public CommonResult<Long> create(@Valid @RequestBody OmAiTaskCreateReqVO reqVO) {
+        return CommonResult.success(modelingService.create(reqVO, getWorkSpaceId()));
+    }
+
+    /** 修改文件列表，仅保存并重置为待解析状态。 */
+    @Operation(summary = "修改AI辅助建模任务文件")
+    @PreAuthorize("@ss.hasPermi('om:aiModeling:edit')")
+    @PostMapping("/files")
+    public CommonResult<Boolean> updateFiles(@Valid @RequestBody OmAiTaskFilesUpdateReqVO reqVO) {
+        modelingService.updateFiles(reqVO);
+        return CommonResult.success(true);
     }
 
     /**

@@ -3,9 +3,9 @@ package tech.qiantong.qontology.module.om.service.ai.aiModeling;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.springframework.web.multipart.MultipartFile;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiTaskCreateReqVO;
+import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiTaskFilesUpdateReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiTaskPageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiFile.OmAiFileDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiStage.OmAiStageDO;
@@ -23,7 +23,10 @@ public interface IOmAiModelingService {
     OmAiTaskDO get(Long id);
 
     /** 上传文件并创建 AI 建模任务。 */
-    Long create(OmAiTaskCreateReqVO request, Long workspaceId, MultipartFile[] files);
+    Long create(OmAiTaskCreateReqVO request, Long workspaceId);
+
+    /** 保存修改后的文件列表，不启动解析。 */
+    void updateFiles(OmAiTaskFilesUpdateReqVO request);
 
     /** 启动已保存任务的异步解析。 */
     void start(Long id);

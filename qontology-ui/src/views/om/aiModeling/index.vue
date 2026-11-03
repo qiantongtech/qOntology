@@ -296,12 +296,16 @@
             show-word-limit
           />
         </el-form-item>
-        <el-form-item label="上传文件">
-          <AiFileUpload
-            v-model="editForm.files"
-            :disabled="editSaving"
+        <el-form-item label="上传文件" prop="filePaths">
+          <FileUpload2
+            v-model="editForm.filePaths"
+            :file-name="editForm.fileNames"
             :limit="5"
-            :file-size="20"
+            :file-size="5"
+            :file-type="aiFileTypes"
+            :disabled="editSaving"
+            relative-url
+            @update:file-info-list="(files) => (editForm.files = files)"
           />
         </el-form-item>
       </el-form>
@@ -320,7 +324,7 @@
 <script setup name="AiModeling">
 import { useRouter } from "vue-router";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
-import AiFileUpload from "./components/AiFileUpload.vue";
+import FileUpload2 from "@/components/FileUpload2";
 import {
   deleteAiTask,
   getAiFiles,
@@ -336,6 +340,20 @@ const { proxy } = getCurrentInstance();
 const router = useRouter();
 const { versionId, requireVersion } = useOntologyVersion();
 const { om_ai_task_status } = proxy.useDict("om_ai_task_status");
+const aiFileTypes = [
+  "txt",
+  "pdf",
+  "html",
+  "xlsx",
+  "xls",
+  "docx",
+  "csv",
+  "md",
+  "mdx",
+  "htm",
+  "markdown",
+  "ttl",
+];
 
 const loading = ref(false);
 const showSearch = ref(true);
@@ -419,12 +437,17 @@ const editForm = reactive({
   id: null,
   taskName: "",
   description: "",
+  filePaths: "",
+  fileNames: [],
   files: [],
 });
 const editRules = {
   taskName: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
+  filePaths: [
+    { required: true, message: "上传文件不能为空", trigger: "change" },
+  ],
 };
-let editOriginalPersistedFileIds = [];
+let editOriginalFiles = [];
 let editOriginalBasicInfo = { taskName: "", description: "" };
 
 async function openEditDialog(row) {
@@ -441,14 +464,15 @@ async function openEditDialog(row) {
     const files = fileResponse.data || [];
     editForm.taskName = task.taskName || "";
     editForm.description = task.description || "";
+    editForm.filePaths = files.map((file) => file.fileUrl).join(",");
+    editForm.fileNames = files.map((file) => file.fileName);
     editForm.files = files.map((file) => ({
-      uid: `persisted-${file.id}`,
-      id: file.id,
-      name: file.fileName,
-      url: file.fileUrl,
-      persisted: true,
+      fileName: file.fileName,
+      fileUrl: file.fileUrl,
+      fileExt: file.fileExt,
+      fileSize: file.fileSize,
     }));
-    editOriginalPersistedFileIds = files.map((file) => file.id);
+    editOriginalFiles = files.map((file) => ({ ...file }));
     editOriginalBasicInfo = {
       taskName: task.taskName || "",
       description: task.description || "",
@@ -472,12 +496,17 @@ async function submitEdit() {
   if (!valid) return;
   editSaving.value = true;
   try {
-    const currentPersistedIds = editForm.files
-      .filter((f) => f.persisted)
-      .map((f) => f.id);
-    const hasNewFiles = editForm.files.some((f) => f.raw);
-    const hasRemovedFiles = editOriginalPersistedFileIds.some(
-      (id) => !currentPersistedIds.includes(id)
+    const currentUrls = editForm.filePaths ? editForm.filePaths.split(",") : [];
+    const currentPersistedIds = editOriginalFiles
+      .filter((file) => currentUrls.includes(file.fileUrl))
+      .map((file) => file.id);
+    const originalUrls = editOriginalFiles.map((file) => file.fileUrl);
+    const newFiles = editForm.files.filter(
+      (file) => file.fileUrl && !originalUrls.includes(file.fileUrl)
+    );
+    const hasNewFiles = newFiles.length > 0;
+    const hasRemovedFiles = editOriginalFiles.some(
+      (file) => !currentUrls.includes(file.fileUrl)
     );
     const fileChanged = hasNewFiles || hasRemovedFiles;
     const basicInfoChanged =
@@ -494,15 +523,16 @@ async function submitEdit() {
     }
 
     if (fileChanged) {
-      const formData = new FormData();
-      formData.append("taskId", editForm.id);
-      currentPersistedIds.forEach((id) =>
-        formData.append("retainedFileIds", id)
-      );
-      editForm.files
-        .filter((f) => f.raw)
-        .forEach((f) => formData.append("files", f.raw));
-      await updateAiTaskFiles(formData);
+      await updateAiTaskFiles({
+        taskId: editForm.id,
+        retainedFileIds: currentPersistedIds,
+        files: newFiles.map((file) => ({
+          fileName: file.fileName || file.name,
+          fileUrl: file.fileUrl || file.url,
+          fileExt: file.fileExt,
+          fileSize: file.fileSize || file.size || 0,
+        })),
+      });
       proxy.$modal.msgSuccess('文件已更新，请点击"重新解析"按钮执行解析');
     } else if (basicInfoChanged) {
       proxy.$modal.msgSuccess("修改成功");

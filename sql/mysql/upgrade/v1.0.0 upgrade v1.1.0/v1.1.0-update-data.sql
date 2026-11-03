@@ -275,7 +275,7 @@ INSERT INTO `om_ai_task` VALUES (11, '项目合同信息抽取', '解析项目�
 -- om_ai_file（AI 文件）
 -- ============================================================
 
-INSERT INTO `om_ai_file` VALUES (1, 1, '采购业务文档.docx', 'http://localhost:8099/profile/ai-modeling/2026/10/31/6ae5ddc5eefcfb2beff78a88.docx', 'docx', 15813, '3966d7c2d7abc98d8ff9efaae0baa777ffe0cb3da99f0d50758f802aa23e5299', 2, NULL, 27, 0, 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_file` VALUES (1, 1, '采购业务文档.docx', '/2026/10/31/6ae5ddc5eefcfb2beff78a88.docx', 'docx', 15813, NULL, 2, NULL, 27, 0, 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:23:36', NULL);
 
 -- ============================================================
 -- om_ai_stage（AI 解析阶段）
