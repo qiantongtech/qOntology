@@ -72,6 +72,19 @@
           />
           <span v-else>—</span>
         </template>
+        <!-- 取值配置：按业务数据类型以标签展示对应的关键配置。 -->
+        <template #typeConfig="{ row }">
+          <div v-if="typeConfigTags(row).length" class="type-config-tags">
+            <el-tag
+              v-for="(tag, index) in typeConfigTags(row)"
+              :key="index"
+              :type="tag.tagType"
+              effect="light"
+              >{{ tag.text }}
+            </el-tag>
+          </div>
+          <span v-else>—</span>
+        </template>
         <!-- 与枚举创建人和项目责任人保持一致：姓名在上，联系电话以灰色小字在下。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -422,13 +435,13 @@ const tableStore = reactive({
     },
   },
   columns: computed(() => [
-    ...(!props.readOnly ? [{ type: "selection", width: 55 }] : []),
+    { type: "selection", width: 55 },
     { label: "编号", prop: "id", slot: "text", width: 80, sortable: true },
     {
       label: "业务数据名称",
       prop: "name",
       slot: "text",
-      minWidth: 180,
+      width: 120,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -451,13 +464,14 @@ const tableStore = reactive({
           },
         ]
       : []),
-    // 单位沿用接口 unit 字段，未配置时由统一文本格式化逻辑显示占位符。
+    // 原“单位”列升级为按业务数据类型展示对应配置的标签列。
     {
-      label: "单位",
+      label: "取值配置",
       prop: "unit",
-      slot: "text",
-      width: 120,
-      showOverflowTooltip: { effect: "light" },
+      slot: "typeConfig",
+      width: 220,
+      align: "left",
+      headerAlign: "left",
     },
     {
       label: "创建人",
@@ -547,6 +561,63 @@ function formatListData(rows) {
   });
 }
 
+/** 按业务数据类型组装“取值配置”列的标签：文本看格式校验、整数/小数看单位、布尔看文案、日期看格式、枚举看类型。 */
+function typeConfigTags(row) {
+  // 列表统一将空值转为占位符，这里还原为“未填写”语义，避免将占位符当作有效配置展示。
+  const value = (field) => {
+    const raw = row[field];
+    return raw == null || raw === "-" ? "" : String(raw);
+  };
+  switch (String(row.dataType)) {
+    case dataTypeConstant.TEXT:
+      return [
+        {
+          text: `校验：${
+            textValidationLabels[row.validationType || "NONE"] ||
+            textValidationLabels.NONE
+          }`,
+          tagType: "info",
+        },
+      ];
+    case dataTypeConstant.INTEGER:
+    case dataTypeConstant.DECIMAL: {
+      const unit = value("unit");
+      const tags = [
+        { text: unit ? `单位：${unit}` : "未设置单位", tagType: unit ? "primary" : "info" },
+      ];
+      // 小数类型额外展示小数位数标签。
+      if (String(row.dataType) === dataTypeConstant.DECIMAL) {
+        const decimalPlaces = value("decimalPlaces");
+        tags.push({
+          text: decimalPlaces ? `位数：${decimalPlaces}` : "未设置位数",
+          tagType: decimalPlaces ? "success" : "info",
+        });
+      }
+      return tags;
+    }
+    case dataTypeConstant.BOOLEAN:
+      return [
+        { text: `true：${value("trueLabel") || "是"}`, tagType: "success" },
+        { text: `false：${value("falseLabel") || "否"}`, tagType: "danger" },
+      ];
+    case dataTypeConstant.DATE: {
+      const format = value("format");
+      return [{ text: format ? `格式：${format}` : "未设置格式", tagType: format ? "warning" : "info" }];
+    }
+    case dataTypeConstant.ENUM: {
+      const enumType = value("enumType");
+      const enumName =
+        enumTypeDict.value.find((item) => item.enumType === enumType)
+          ?.enumName || enumType;
+      return [
+        { text: enumName || "未设置枚举", tagType: enumName ? "success" : "info" },
+      ];
+    }
+    default:
+      return [];
+  }
+}
+
 /** 切换枚举时清空名称草稿及已提交条件，新表格实例会自动加载该枚举的第一页。 */
 watch(
   () => props.enumType,
@@ -574,13 +645,12 @@ const data = reactive({
       { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
     ],
     description: [
-      { max: 200, message: "描述不能超过200个字符", trigger: "blur" },
+      { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
     ],
     // 下拉框选择时触发 change，及时重新校验并清除先前的必填提示。
     dataType: [
       { required: true, message: "数据类型不能为空", trigger: "change" },
     ],
-    unit: [{ required: true, message: "单位不能为空", trigger: "blur" }],
     format: [{ required: true, message: "格式不能为空", trigger: "blur" }],
     enumType: [
       { required: true, message: "枚举类型不能为空", trigger: "change" },
@@ -743,3 +813,12 @@ function handleDelete(row) {
     .catch(() => {});
 }
 </script>
+
+<style scoped lang="scss">
+/* “取值配置”列内的多个标签（如布尔 true/false）换行排列。 */
+.type-config-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+</style>

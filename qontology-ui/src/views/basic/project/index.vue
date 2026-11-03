@@ -145,29 +145,31 @@
               ])
             "
             placement="bottom"
-            :width="107"
-            popper-class="handle-popover"
+            :width="150"
             trigger="click"
           >
             <template #reference>
-              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+              <el-button link  type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              v-if="auth.hasPermi('basic:project:project:edit')"
-              link
-              type="primary"
-              icon="Edit"
-              @click="handleUpdate(row)"
+            <div class="butgdlist">
+              <el-button
+                  v-if="auth.hasPermi('basic:project:project:edit')"
+                  link
+                  type="primary"
+                  icon="Edit"
+                  @click="handleUpdate(row)"
               >修改</el-button
-            >
-            <el-button
-              v-if="auth.hasPermi('basic:project:project:remove')"
-              link
-              type="danger"
-              icon="Delete"
-              @click="handleDelete(row)"
+              >
+              <el-button
+                  v-if="auth.hasPermi('basic:project:project:remove')"
+                  link
+                  type="danger"
+                  icon="Delete"
+                  @click="handleDelete(row)"
               >删除</el-button
-            >
+              >
+            </div>
+
           </el-popover>
         </template>
       </qt-table>
