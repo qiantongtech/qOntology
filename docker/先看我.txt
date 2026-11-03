@@ -1,0 +1,16 @@
+如之前部署过，先删除之前的镜像crpi-kf13onfj0v8f6jax.cn-shanghai.personal.cr.aliyuncs.com/qiantongkeji/qontology-server-ce
+
+1、安装docker和docker-compose
+自行百度
+
+2、进入docker目录
+
+3、启动项目
+执行 sh qontology.sh
+Windows 请双击 start-all.bat 启动，uninstall.bat 完整卸载
+
+4、地址：localhost:8897
+初始账号密码：qOntology/qOntology123
+超级管理员：admin/qOntology123
+
+5、系统启动后，需要登陆超级管理员，进入“基础管理-模型市场-模型市场”配置大模型，否则会导致一些功能无法正常使用。

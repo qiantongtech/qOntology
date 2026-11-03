@@ -17,15 +17,15 @@
 
 services:
   redis:
-    image: redis:6-alpine
+    image: ${QONTOLOGY_HUB}/redis:6-alpine
     profiles: ["all", "base"]
     env_file: .env
     restart: always
     environment:
       REDISCLI_AUTH: ${REDIS_PASSWORD:-tF0cC3aE2tD2hK0dA0oT}
-#    volumes:
-#      # Mount the redis data directory to the container.
-#      - ./redis/data:/data
+    #    volumes:
+    #      # Mount the redis data directory to the container.
+    #      - ./redis/data:/data
     # Set the redis password when startup redis server.
     command: redis-server --requirepass ${REDIS_PASSWORD:-tF0cC3aE2tD2hK0dA0oT}
     ports:
@@ -38,7 +38,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   nginx:
-    image: nginx:1.24.0
+    image: ${QONTOLOGY_HUB}/nginx:1.24.0
     restart: always
     profiles: ["all", "base"]
     env_file: .env
@@ -79,7 +79,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   neo4j:
-    image: neo4j:4.4.40
+    image: ${QONTOLOGY_HUB}/neo4j:4.4.40
     profiles: ["all", "base"]
     restart: always
     ports:
@@ -103,7 +103,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   kkfileview:
-    image: keking/kkfileview:latest
+    image: ${QONTOLOGY_HUB}/kkfileview:latest
     profiles: [ "all", "base" ]
     restart: always
     ports:
@@ -131,7 +131,7 @@ services:
       - ./qOntology/kkfileview/logs:/opt/kkfileview/logs/
     healthcheck:
       # 使用 kkFileView 根路径进行健康检查。
-      test: [ "CMD-SHELL", "curl -fs http://127.0.0.1:8012/kkfileview/ || exit 1" ]
+      test: [ "CMD-SHELL", "wget -q --spider http://127.0.0.1:8012/kkfileview/ || exit 1" ]
       interval: 30s
       timeout: 15s
       retries: 6
