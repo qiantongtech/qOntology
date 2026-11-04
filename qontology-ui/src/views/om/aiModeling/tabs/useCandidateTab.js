@@ -8,15 +8,30 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
   const loading = ref(false)
   const selectedIds = ref([])
   const selectedRows = ref([])
+  const pageSize = options.pageSize ?? 10
   const query = reactive({
     taskId,
     pageNum: 1,
-    pageSize: options.pageSize ?? 10,
+    pageSize,
     orderByColumn: 'createTime',
     isAsc: 'desc'
   })
   const evidenceVisible = ref(false)
   const evidences = ref([])
+  const tableRef = ref(null)
+
+  /**
+   * 供 QtTable 使用的取数方法；强制携带任务编号，避免无上下文查询。
+   * @param {Object} params QtTable 合并分页、排序后的查询参数
+   * @returns {Promise<Object>} 候选列表接口返回体
+   */
+  function fetchRows(params) {
+    return listCandidates(type, { ...params, taskId })
+  }
+
+  function refresh() {
+    return tableRef.value ? tableRef.value.getList() : load()
+  }
 
   async function load() {
     loading.value = true
@@ -53,7 +68,7 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     if (message) { proxy.$modal.msgWarning(message); return }
     await adoptCandidate(type, row.id)
     proxy.$modal.msgSuccess('采纳成功')
-    await load()
+    await refresh()
   }
 
   async function adoptBatch() {
@@ -77,7 +92,7 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     }
     const reasonText = failureMessages.length ? `；失败原因：${failureMessages.slice(0, 3).join('；')}` : ''
     proxy.$modal[failed ? 'msgWarning' : 'msgSuccess'](`批量采纳完成：成功 ${success} 条，失败 ${failed} 条${reasonText}`)
-    await load()
+    await refresh()
   }
 
   async function remove(row) {
@@ -86,7 +101,7 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     await proxy.$modal.confirm(`是否确认删除选中的 ${ids.length} 条候选数据？`)
     await deleteCandidate(type, ids.join(','))
     proxy.$modal.msgSuccess('删除成功')
-    await load()
+    await refresh()
   }
 
   async function showEvidence(row) {
@@ -95,5 +110,5 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     evidenceVisible.value = true
   }
 
-  return { rows, total, loading, selectedIds, query, evidenceVisible, evidences, load, select, handleSortChange, adoptOne, adoptBatch, remove, showEvidence }
+  return { rows, total, loading, selectedIds, selectedRows, query, evidenceVisible, evidences, tableRef, pageSize, fetchRows, refresh, load, select, handleSortChange, adoptOne, adoptBatch, remove, showEvidence }
 }

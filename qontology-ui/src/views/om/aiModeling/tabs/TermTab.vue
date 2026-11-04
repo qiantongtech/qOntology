@@ -17,156 +17,52 @@
 -->
 <template>
   <div ref="pageRef" class="candidate-tab-page">
-    <div class="justify-between mb15">
-      <el-row :gutter="15" class="btn-style"
-        ><el-col :span="1.5"
-          ><el-button
-            type="primary"
-            plain
-            :disabled="!selectedIds.length"
-            @click="adoptBatch"
-            >批量采纳</el-button
-          ></el-col
-        ><el-col :span="1.5"
-          ><el-button
-            type="danger"
-            plain
-            :disabled="!selectedIds.length"
-            @click="remove()"
-            ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button
-          ></el-col
-        ></el-row
-      >
-      <right-toolbar :search="false" :columns="columns" @queryTable="load" />
-    </div>
-    <el-table
-      v-loading="loading"
-      :data="rows"
-      stripe
-      @sort-change="handleSortChange"
-      :default-sort="{ prop: 'createTime', order: 'descending' }"
-      @selection-change="select"
+    <qt-wrap
+      :columns="tableStore.columns"
+      :table-ref="tableRef"
+      :config="wrapConfig"
     >
-      <el-table-column
-        type="selection"
-        width="55"
-        align="center"
-        :selectable="(row) => row.adoptStatus !== 1"
-      />
-      <el-table-column
-        v-if="visible('id')"
-        prop="id"
-        label="编号"
-        width="80"
-        align="center"
-        fixed="left"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending', null]"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      />
-      <el-table-column
-        v-if="visible('stdName')"
-        prop="stdName"
-        label="名称"
-        min-width="140"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.stdName || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('description')"
-        prop="description"
-        label="描述"
-        min-width="240"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.description || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('enName')"
-        prop="enName"
-        label="英文名称"
-        min-width="150"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.enName || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('alias')"
-        prop="alias"
-        label="别名"
-        min-width="160"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.alias || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('abbr')"
-        prop="abbr"
-        label="缩写"
-        min-width="120"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.abbr || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('source')"
-        prop="source"
-        label="来源"
-        min-width="180"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.source || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('adoptStatus')"
-        label="采纳状态"
-        width="110"
-        align="center"
-        ><template #default="{ row }"
-          ><dict-tag
-            :options="om_ai_adopt_status"
-            :value="row.adoptStatus" /></template
-      ></el-table-column>
-      <el-table-column
-        v-if="visible('createBy')"
-        prop="createBy"
-        label="创建人"
-        width="120"
-        align="center"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.createBy || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('createTime')"
-        prop="createTime"
-        label="创建时间"
-        width="180"
-        align="center"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending', null]"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('operation')"
-        label="操作"
-        width="200"
-        align="center"
-        fixed="right"
-        class-name="small-padding fixed-width"
-      >
-        <template #default="{ row }">
+      <template #actions-data>
+        <el-button
+          type="primary"
+          plain
+          :disabled="!selectedIds.length"
+          @click="adoptBatch"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-queren mr5"></i>批量采纳
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          :disabled="!selectedIds.length"
+          @click="remove()"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop]
+        }}</template>
+        <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
+        </template>
+        <template #adoptStatus="{ row }">
+          <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus" />
+        </template>
+        <template #handle="{ row }">
           <el-button
             link
             type="primary"
@@ -182,68 +78,74 @@
             @click="showEvidence(row)"
             >来源</el-button
           >
-          <el-popover placement="bottom" :width="120" trigger="click">
+          <el-popover
+            placement="bottom"
+            :width="107"
+            popper-class="handle-popover"
+            trigger="click"
+          >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <div class="butgdlist">
-              <el-button
-                link
-                type="primary"
-                icon="View"
-                @click="
-                  detail = row;
-                  detailOpen = true;
-                "
-                >详情</el-button
-              >
-              <el-button
-                link
-                type="primary"
-                icon="Edit"
-                :disabled="row.adoptStatus === 1"
-                @click="edit(row)"
-                >修改</el-button
-              >
-              <el-button
-                link
-                type="danger"
-                icon="Delete"
-                :disabled="row.adoptStatus === 1"
-                @click="remove(row)"
-                >删除</el-button
-              >
-            </div>
+            <el-button
+              link
+              type="primary"
+              icon="View"
+              @click="openDetail(row)"
+              >详情</el-button
+            >
+            <el-button
+              link
+              type="primary"
+              icon="Edit"
+              :disabled="row.adoptStatus === 1"
+              @click="edit(row)"
+              >修改</el-button
+            >
+            <el-button
+              link
+              type="danger"
+              icon="Delete"
+              :disabled="row.adoptStatus === 1"
+              @click="remove(row)"
+              >删除</el-button
+            >
           </el-popover>
         </template>
-      </el-table-column>
-    </el-table>
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      v-model:page="query.pageNum"
-      v-model:limit="query.pageSize"
-      @pagination="load"
-    />
+      </qt-table>
+    </qt-wrap>
+
+    <!-- 添加或修改术语对话框 -->
     <el-dialog
       v-model="open"
       title="修改术语"
       width="800px"
       :append-to="pageRef"
+      :close-on-press-escape="!saving"
       draggable
-      ><el-form ref="formRef" :model="form" :rules="rules" label-width="90px"
-        ><el-form-item label="名称" prop="stdName"
-          ><el-input
+    >
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="90px"
+      >
+        <el-form-item label="名称" prop="stdName">
+          <el-input
             v-model="form.stdName"
-            maxlength="200个字符"
-            placeholder="请输入名称" /></el-form-item
-        ><el-form-item label="英文名称" prop="enName"
-          ><el-input
+            :maxlength="200"
+            placeholder="请输入名称"
+          />
+        </el-form-item>
+        <el-form-item label="英文名称" prop="enName">
+          <el-input
             v-model="form.enName"
-            maxlength="200个字符"
-            placeholder="请输入英文名称" /></el-form-item
-        ><el-form-item label="别名" prop="alias"
-          ><div class="flex gap-2 alias-tags">
+            :maxlength="200"
+            placeholder="请输入英文名称"
+          />
+        </el-form-item>
+        <el-form-item label="别名" prop="alias">
+          <div class="flex gap-2 alias-tags">
             <el-tag
               v-for="item in aliasTags"
               :key="item"
@@ -266,47 +168,61 @@
               @click="showAliasInput"
               >+ 添加别名</el-button
             >
-          </div></el-form-item
-        ><el-form-item label="缩写" prop="abbr"
-          ><el-input
+          </div>
+        </el-form-item>
+        <el-form-item label="缩写" prop="abbr">
+          <el-input
             v-model="form.abbr"
-            maxlength="200个字符"
-            placeholder="请输入缩写" /></el-form-item
-        ><el-form-item label="来源" prop="source"
-          ><el-input
+            :maxlength="200"
+            placeholder="请输入缩写"
+          />
+        </el-form-item>
+        <el-form-item label="来源" prop="source">
+          <el-input
             v-model="form.source"
             type="textarea"
             :rows="3"
-            maxlength="200个字符"
+            :maxlength="200"
             show-word-limit
-            placeholder="请输入来源" /></el-form-item
-        ><el-form-item label="描述"
-          ><el-input
+            placeholder="请输入来源"
+          />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input
             v-model="form.description"
             type="textarea"
             :rows="4"
-            maxlength="500个字符"
+            :maxlength="500"
             show-word-limit
-            placeholder="请输入描述" /></el-form-item></el-form
-      ><template #footer
-        ><div class="dialog-footer">
-          <el-button @click="open = false">取 消</el-button
-          ><el-button type="primary" @click="save">确 定</el-button>
-        </div></template
-      ></el-dialog
-    >
+            placeholder="请输入描述"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button :disabled="saving" @click="open = false">取 消</el-button>
+          <el-button type="primary" :loading="saving" @click="save"
+            >确 定</el-button
+          >
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 术语详情对话框 -->
     <el-dialog
       v-model="detailOpen"
       title="术语详情"
       width="800px"
       :append-to="pageRef"
       draggable
-      ><el-form label-width="90px"
-        ><el-form-item
+    >
+      <el-form label-width="90px">
+        <el-form-item
           v-for="field in fields"
           :key="field.prop"
           :label="field.label"
-          ><div v-if="field.prop === 'alias'" class="form-readonly alias-tags">
+        >
+          <div v-if="field.prop === 'alias'" class="form-readonly alias-tags">
             <el-tag v-for="item in parseAliases(detail.alias)" :key="item">{{
               item
             }}</el-tag
@@ -325,79 +241,48 @@
                   "-"
                 : detail[field.prop] || "-"
             }}
-          </div></el-form-item
-        ></el-form
-      ><template #footer
-        ><el-button @click="detailOpen = false">关闭</el-button></template
-      ></el-dialog
-    ><CandidateEvidenceDrawer
-      v-model="evidenceVisible"
-      :evidences="evidences"
-    />
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="detailOpen = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <CandidateEvidenceDrawer v-model="evidenceVisible" :evidences="evidences" />
   </div>
 </template>
+
 <script setup>
 import { computed, getCurrentInstance, nextTick, ref } from "vue";
 import { updateCandidate } from "@/api/om/aiModeling";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import CandidateEvidenceDrawer from "../components/CandidateEvidenceDrawer.vue";
 import { useCandidateTab } from "./useCandidateTab";
+
 const props = defineProps({ taskId: { type: Number, required: true } });
 const { proxy } = getCurrentInstance();
 const { om_ai_adopt_status } = proxy.useDict("om_ai_adopt_status");
+
 const pageRef = ref();
 const formRef = ref();
+const { creatorPhones } = useCreatorPhones();
 const aliasInputRef = ref();
 const aliasInputVisible = ref(false);
 const aliasInputValue = ref("");
 const open = ref(false);
 const detailOpen = ref(false);
+const saving = ref(false);
 const form = ref({});
-const columns = ref([
-  { key: "id", label: "编号", visible: true },
-  { key: "stdName", label: "名称", visible: true },
-  { key: "description", label: "描述", visible: true },
-  { key: "enName", label: "英文名称", visible: true },
-  { key: "alias", label: "别名", visible: true },
-  { key: "abbr", label: "缩写", visible: true },
-  { key: "source", label: "来源", visible: true },
-  { key: "adoptStatus", label: "采纳状态", visible: true },
-  { key: "createBy", label: "创建人", visible: true },
-  { key: "createTime", label: "创建时间", visible: true },
-  { key: "operation", label: "操作", visible: true },
-]);
-const visible = (key) =>
-  columns.value.find((item) => item.key === key)?.visible !== false;
-
 const detail = ref({});
-const parseAliases = (value) => [
-  ...new Set(
-    (value || "")
-      .split(/[,，]/)
-      .map((item) => item.trim())
-      .filter(Boolean)
-  ),
-];
-const aliasTags = computed(() => parseAliases(form.value.alias));
-async function showAliasInput() {
-  aliasInputVisible.value = true;
-  await nextTick();
-  aliasInputRef.value?.focus();
-}
-function confirmAlias() {
-  const items = [
-    ...new Set([...aliasTags.value, ...parseAliases(aliasInputValue.value)]),
-  ];
-  form.value.alias = items.join("，");
-  aliasInputValue.value = "";
-  aliasInputVisible.value = false;
-}
-function removeAlias(item) {
-  form.value.alias = aliasTags.value
-    .filter((value) => value !== item)
-    .join("，");
-}
-const required = (row) =>
-  [
+
+/**
+ * 收集采纳前缺失的必填项名称，供公共页签逻辑提示用户。
+ * @param {Object} row 当前候选行数据
+ * @returns {Array<string>} 缺失字段的中文名称列表
+ */
+function required(row) {
+  return [
     ["stdName", "名称"],
     ["enName", "英文名称"],
     ["alias", "别名"],
@@ -406,22 +291,153 @@ const required = (row) =>
   ]
     .filter(([key]) => !row[key]?.trim())
     .map(([, label]) => label);
+}
+
+const tab = useCandidateTab("term", props.taskId, required);
 const {
-  rows,
-  total,
-  loading,
+  tableRef,
+  fetchRows,
   selectedIds,
-  query,
   evidenceVisible,
   evidences,
-  load,
-  select,
-  handleSortChange,
+  refresh,
+  select: handleSelectionChange,
   adoptOne,
   adoptBatch,
   remove,
   showEvidence,
-} = useCandidateTab("term", props.taskId, required);
+} = tab;
+
+/**
+ * 页签嵌在宿主容器内：详情页的外层卡片已带白底与内边距，开启 full 会重复一层间距和阴影并把内容强撑高；
+ * 页签内又没有搜索区，所以同时关闭操作栏的“隐藏搜索”按钮。
+ */
+const wrapConfig = {
+  fullContent: false,
+  actions: { table: { search: false } },
+};
+
+// 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      align: "center",
+      selectable: (row) => row.adoptStatus !== 1,
+    },
+    {
+      label: "编号",
+      prop: "id",
+      slot: "text",
+      width: 80,
+      minWidth: 80,
+      align: "center",
+      fixed: "left",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "名称",
+      prop: "stdName",
+      slot: "text",
+      width: 160,
+      minWidth: 160,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "英文名称",
+      prop: "enName",
+      slot: "text",
+      width: 150,
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "别名",
+      prop: "alias",
+      slot: "text",
+      width: 160,
+      minWidth: 160,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "缩写",
+      prop: "abbr",
+      slot: "text",
+      width: 120,
+      minWidth: 120,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "来源",
+      prop: "source",
+      slot: "text",
+      width: 180,
+      minWidth: 180,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 240,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      slot: "adoptStatus",
+      width: 110,
+      minWidth: 110,
+      align: "center",
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 120,
+      minWidth: 120,
+      align: "center",
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 180,
+      minWidth: 180,
+      align: "center",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 200,
+      minWidth: 200,
+      align: "center",
+      fixed: "right",
+    },
+  ],
+  func: fetchRows,
+});
+
 const rules = {
   stdName: [{ required: true, message: "名称不能为空" }],
   enName: [{ required: true, message: "英文名称不能为空" }],
@@ -440,28 +456,93 @@ const fields = [
   { prop: "createBy", label: "创建人" },
   { prop: "createTime", label: "创建时间" },
 ];
+
+/**
+ * 拆分别名字符串，兼容中英文逗号并去重去空。
+ * @param {string} value 原始别名文本
+ * @returns {Array<string>} 别名列表
+ */
+const parseAliases = (value) => [
+  ...new Set(
+    (value || "")
+      .split(/[,，]/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+  ),
+];
+const aliasTags = computed(() => parseAliases(form.value.alias));
+
+/** 展示别名输入框并自动聚焦。 */
+async function showAliasInput() {
+  aliasInputVisible.value = true;
+  await nextTick();
+  aliasInputRef.value?.focus();
+}
+
+/** 确认新增别名，合并已有标签后写回表单。 */
+function confirmAlias() {
+  const items = [
+    ...new Set([...aliasTags.value, ...parseAliases(aliasInputValue.value)]),
+  ];
+  form.value.alias = items.join("，");
+  aliasInputValue.value = "";
+  aliasInputVisible.value = false;
+}
+
+/**
+ * 删除指定别名标签。
+ * @param {string} item 待删除的别名
+ */
+function removeAlias(item) {
+  form.value.alias = aliasTags.value
+    .filter((value) => value !== item)
+    .join("，");
+}
+
+/**
+ * 打开详情弹窗。
+ * @param {Object} row 当前行数据
+ */
+function openDetail(row) {
+  detail.value = row;
+  detailOpen.value = true;
+}
+
+/**
+ * 打开修改弹窗。
+ * @param {Object} row 当前行数据
+ */
 function edit(row) {
   form.value = { ...row };
   open.value = true;
 }
+
+/** 提交修改，提交期间锁定确定按钮避免重复入库。 */
 async function save() {
-  if (!(await formRef.value.validate().catch(() => false))) return;
-  await updateCandidate("term", {
-    id: form.value.id,
-    taskId: props.taskId,
-    stdName: form.value.stdName,
-    enName: form.value.enName,
-    alias: form.value.alias,
-    abbr: form.value.abbr,
-    source: form.value.source,
-    description: form.value.description,
-  });
-  proxy.$modal.msgSuccess("修改成功");
-  open.value = false;
-  load();
+  if (saving.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid || saving.value || !open.value) return;
+  saving.value = true;
+  try {
+    await updateCandidate("term", {
+      id: form.value.id,
+      taskId: props.taskId,
+      stdName: form.value.stdName,
+      enName: form.value.enName,
+      alias: form.value.alias,
+      abbr: form.value.abbr,
+      source: form.value.source,
+      description: form.value.description,
+    });
+    proxy.$modal.msgSuccess("修改成功");
+    open.value = false;
+    refresh();
+  } finally {
+    saving.value = false;
+  }
 }
-load();
 </script>
+
 <style scoped>
 .alias-tags {
   display: flex;
@@ -473,4 +554,3 @@ load();
   width: 180px;
 }
 </style>
-
