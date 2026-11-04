@@ -17,151 +17,63 @@
 -->
 <template>
   <div ref="pageRef" class="candidate-tab-page">
-    <div class="justify-between mb15">
-      <el-row :gutter="15" class="btn-style">
-        <el-col :span="1.5"
-          ><el-button
-            type="primary"
-            plain
-            :disabled="!selectedIds.length"
-            @click="adoptBatch"
-            ><i class="iconfont-mini icon-queren mr5"></i>批量采纳</el-button
-          ></el-col
-        >
-        <el-col :span="1.5"
-          ><el-button
-            type="danger"
-            plain
-            :disabled="!selectedIds.length"
-            @click="remove()"
-            ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button
-          ></el-col
-        >
-      </el-row>
-      <right-toolbar :search="false" :columns="columns" @queryTable="load" />
-    </div>
-    <el-table
-      v-loading="loading"
-      :data="rows"
-      row-key="id"
-      stripe
-      @sort-change="handleSortChange"
-      :default-sort="{ prop: 'createTime', order: 'descending' }"
-      @selection-change="select"
+    <qt-wrap
+      :columns="tableStore.columns"
+      :table-ref="tableRef"
+      :config="wrapConfig"
     >
-      <el-table-column
-        type="selection"
-        width="55"
-        align="center"
-        :selectable="selectable"
-      />
-      <el-table-column
-        v-if="visible('id')"
-        prop="id"
-        label="编号"
-        width="80"
-        align="center"
-        fixed="left"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending', null]"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      />
-      <el-table-column
-        v-if="visible('name')"
-        prop="name"
-        label="属性名称"
-        width="240"
-        fixed="left"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.name || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('code')"
-        prop="code"
-        label="属性代码"
-        width="190"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.code || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('objectType')"
-        label="所属对象类型"
-        width="180"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
+      <template #actions-data>
+        <el-button
+          type="primary"
+          plain
+          :disabled="!selectedIds.length"
+          @click="adoptBatch"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-queren mr5"></i>批量采纳
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          :disabled="!selectedIds.length"
+          @click="remove()"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop]
+        }}</template>
+        <!-- 所属对象类型存的是候选编号，需要换成名称展示。 -->
+        <template #objectType="{ row }">{{
           objectName(row.objectCandidateId)
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('description')"
-        prop="description"
-        label="描述"
-        min-width="260"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.description || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('dataType')"
-        label="数据类型"
-        width="150"
-        align="center"
-        ><template #default="{ row }"
-          ><el-tag
+        }}</template>
+        <template #dataType="{ row }">
+          <el-tag
             :type="row.typeCategory === 2 ? 'success' : 'primary'"
             effect="light"
             >{{ dataTypeLabel(row.typeCategory) }}</el-tag
-          ></template
-        ></el-table-column
-      >
-      <el-table-column
-        v-if="visible('adoptStatus')"
-        label="采纳状态"
-        width="110"
-        align="center"
-        ><template #default="{ row }"
-          ><dict-tag
-            :options="om_ai_adopt_status"
-            :value="row.adoptStatus" /></template
-      ></el-table-column>
-      <el-table-column
-        v-if="visible('createBy')"
-        prop="createBy"
-        label="创建人"
-        width="120"
-        align="center"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.createBy || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('createTime')"
-        prop="createTime"
-        label="创建时间"
-        width="180"
-        align="center"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending', null]"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('operation')"
-        label="操作"
-        width="200"
-        align="center"
-        fixed="right"
-        class-name="small-padding fixed-width"
-      >
-        <template #default="{ row }">
+          >
+        </template>
+        <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
+        </template>
+        <template #adoptStatus="{ row }">
+          <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus" />
+        </template>
+        <template #handle="{ row }">
           <el-button
             link
             type="primary"
@@ -177,60 +89,51 @@
             @click="showEvidence(row)"
             >来源</el-button
           >
-          <el-popover placement="bottom" :width="120" trigger="click">
+          <el-popover
+            placement="bottom"
+            :width="107"
+            popper-class="handle-popover"
+            trigger="click"
+          >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <div class="butgdlist">
-              <el-button
-                link
-                type="primary"
-                icon="View"
-                :disabled="row.adoptStatus === 1"
-                @click="showDetail(row)"
-                >详情</el-button
-              >
-              <el-button
-                link
-                type="primary"
-                icon="Edit"
-                :disabled="row.adoptStatus === 1"
-                @click="edit(row)"
-                >修改</el-button
-              >
-              <el-button
-                link
-                type="danger"
-                icon="Delete"
-                :disabled="row.adoptStatus === 1"
-                @click="remove(row)"
-                >删除</el-button
-              >
-            </div>
+            <el-button
+              link
+              type="primary"
+              icon="View"
+              @click="showDetail(row)"
+              >详情</el-button
+            >
+            <el-button
+              link
+              type="primary"
+              icon="Edit"
+              :disabled="row.adoptStatus === 1"
+              @click="edit(row)"
+              >修改</el-button
+            >
+            <el-button
+              link
+              type="danger"
+              icon="Delete"
+              :disabled="row.adoptStatus === 1"
+              @click="remove(row)"
+              >删除</el-button
+            >
           </el-popover>
         </template>
-      </el-table-column>
-      <template #empty
-        ><div class="emptyBg">
-          <img src="@/assets/system/images/no_data/noData.png" alt="暂无属性" />
-          <p>暂无属性</p>
-        </div></template
-      >
-    </el-table>
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      v-model:page="query.pageNum"
-      v-model:limit="query.pageSize"
-      @pagination="load"
-    />
+      </qt-table>
+    </qt-wrap>
 
+    <!-- 修改属性对话框 -->
     <el-dialog
       v-model="open"
       title="修改属性"
       width="800px"
       :append-to="pageRef"
       :close-on-click-modal="false"
+      :close-on-press-escape="!saving"
       draggable
       destroy-on-close
       @closed="formRef?.clearValidate()"
@@ -243,79 +146,88 @@
         label-width="110px"
       >
         <div class="h2-title">基础信息</div>
-        <el-form-item label="所属对象类型" prop="objectCandidateId"
-          ><el-select
+        <el-form-item label="所属对象类型" prop="objectCandidateId">
+          <el-select
             v-model="form.objectCandidateId"
             placeholder="请选择所属对象类型"
             style="width: 100%"
             @change="loadTypeOptions"
-            ><el-option
+          >
+            <el-option
               v-for="item in objects"
               :key="item.id"
               :label="item.name"
-              :value="item.id" /></el-select
-        ></el-form-item>
-        <el-form-item label="属性名称" prop="name"
-          ><el-input
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="属性名称" prop="name">
+          <el-input
             v-model="form.name"
             placeholder="请输入属性名称"
-            maxlength="128个字符"
-        /></el-form-item>
-        <el-form-item label="属性代码" prop="code"
-          ><el-input
+            :maxlength="128"
+          />
+        </el-form-item>
+        <el-form-item label="属性代码" prop="code">
+          <el-input
             v-model="form.code"
             placeholder="例如 purchase_amount"
-            maxlength="128个字符"
-        /></el-form-item>
-        <el-form-item label="描述" prop="description"
-          ><el-input
+            :maxlength="128"
+          />
+        </el-form-item>
+        <el-form-item label="描述" prop="description">
+          <el-input
             v-model="form.description"
             class="character-count"
             type="textarea"
             :rows="4"
             placeholder="请输入描述"
-            maxlength="500"
+            :maxlength="500"
             show-word-limit
-        /></el-form-item>
+          />
+        </el-form-item>
         <div class="h2-title">数据定义</div>
-        <el-form-item label="数据类型" prop="typeCategory"
-          ><el-radio-group
-            v-model="form.typeCategory"
-            @change="changeTypeCategory"
-            ><el-radio
+        <el-form-item label="数据类型" prop="typeCategory">
+          <el-radio-group v-model="form.typeCategory" @change="changeTypeCategory">
+            <el-radio
               v-for="option in dataTypeOptions"
               :key="option.value"
-              :label="option.value"
+              :value="option.value"
               >{{ option.label }}</el-radio
-            ></el-radio-group
-          ></el-form-item
-        >
+            >
+          </el-radio-group>
+        </el-form-item>
         <el-form-item
           v-if="form.typeCategory === 1"
           label="基础数据类型"
           prop="basicTypeCode"
-          ><el-select
+        >
+          <el-select
             v-model="form.basicTypeCode"
             placeholder="请选择基础数据类型"
             style="width: 100%"
             clearable
             @change="clearTypeConfig"
-            ><el-option
+          >
+            <el-option
               v-for="item in basic_data_type"
               :key="item.value"
               :label="item.label"
-              :value="Number(item.value)" /></el-select
-        ></el-form-item>
-        <el-form-item v-else label="业务数据类型" prop="businessTypeId"
-          ><el-select
+              :value="Number(item.value)"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-else label="业务数据类型" prop="businessTypeId">
+          <el-select
             v-model="businessKey"
             placeholder="请选择业务数据类型"
             style="width: 100%"
             filterable
             clearable
-            ><template #label
-              ><span class="business-type-label"
-                >{{ selectedBusinessType?.name || "-" }}
+          >
+            <template #label>
+              <span class="business-type-label">
+                {{ selectedBusinessType?.name || "-" }}
                 <el-tag
                   :type="
                     form.businessTypeSource === 'PROJECT' ? 'primary' : 'info'
@@ -324,27 +236,30 @@
                   >{{
                     form.businessTypeSource === "PROJECT" ? "当前项目" : "全局"
                   }}</el-tag
-                ></span
-              ></template
-            ><el-option-group
+                >
+              </span>
+            </template>
+            <el-option-group
               v-for="group in businessTypeGroups"
               :key="group.source"
               :label="group.label"
-              ><el-option
+            >
+              <el-option
                 v-for="item in group.options"
                 :key="group.source + ':' + item.id"
                 :label="item.name"
-                :value="
-                  group.source + ':' + item.id
-                " /></el-option-group></el-select
-        ></el-form-item>
-        <template v-if="form.typeCategory === 2 && form.businessTypeId"
-          ><el-form-item label="基础数据类型"
-            ><div class="form-readonly">
+                :value="group.source + ':' + item.id"
+              />
+            </el-option-group>
+          </el-select>
+        </el-form-item>
+        <template v-if="form.typeCategory === 2 && form.businessTypeId">
+          <el-form-item label="基础数据类型">
+            <div class="form-readonly">
               {{ basicTypeLabel(effectiveConfig.basicTypeCode) }}
-            </div></el-form-item
-          ></template
-        >
+            </div>
+          </el-form-item>
+        </template>
         <AttributeTypeConfig
           v-if="form.typeCategory === 1 || form.businessTypeId"
           :model="effectiveConfig"
@@ -357,19 +272,23 @@
         <el-form-item
           v-if="form.typeCategory === 2 && selectedBusinessType?.description"
           label="类型描述"
-          ><div class="form-readonly textarea">
-            {{ selectedBusinessType.description }}
-          </div></el-form-item
         >
+          <div class="form-readonly textarea">
+            {{ selectedBusinessType.description }}
+          </div>
+        </el-form-item>
       </el-form>
-      <template #footer
-        ><div class="dialog-footer">
-          <el-button size="mini" @click="open = false">取 消</el-button
-          ><el-button type="primary" size="mini" @click="save">确 定</el-button>
-        </div></template
-      >
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button :disabled="saving" @click="open = false">取 消</el-button>
+          <el-button type="primary" :loading="saving" @click="save"
+            >确 定</el-button
+          >
+        </div>
+      </template>
     </el-dialog>
 
+    <!-- 属性详情对话框 -->
     <el-dialog
       v-model="detailOpen"
       title="属性详情"
@@ -379,44 +298,45 @@
     >
       <el-form class="attribute-dialog-form" label-width="110px">
         <div class="h2-title">基础信息</div>
-        <el-form-item label="所属对象类型"
-          ><div class="form-readonly">
+        <el-form-item label="所属对象类型">
+          <div class="form-readonly">
             {{ objectName(detail.objectCandidateId) }}
-          </div></el-form-item
-        >
-        <el-form-item label="属性名称"
-          ><div class="form-readonly">
+          </div>
+        </el-form-item>
+        <el-form-item label="属性名称">
+          <div class="form-readonly">
             {{ detail.name || "-" }}
-          </div></el-form-item
-        >
-        <el-form-item label="属性代码"
-          ><div class="form-readonly">
+          </div>
+        </el-form-item>
+        <el-form-item label="属性代码">
+          <div class="form-readonly">
             {{ detail.code || "-" }}
-          </div></el-form-item
-        >
-        <el-form-item label="描述"
-          ><div class="form-readonly textarea">
+          </div>
+        </el-form-item>
+        <el-form-item label="描述">
+          <div class="form-readonly textarea">
             {{ detail.description || "-" }}
-          </div></el-form-item
-        >
+          </div>
+        </el-form-item>
         <div class="h2-title">数据定义</div>
-        <el-form-item label="数据类型"
-          ><div class="form-readonly">
+        <el-form-item label="数据类型">
+          <div class="form-readonly">
             {{ dataTypeLabel(detail.typeCategory) }}
-          </div></el-form-item
-        >
-        <el-form-item label="类型配置"
-          ><div class="form-readonly">
+          </div>
+        </el-form-item>
+        <el-form-item label="类型配置">
+          <div class="form-readonly">
             {{ typeSummary(detail) }}
-          </div></el-form-item
-        >
+          </div>
+        </el-form-item>
       </el-form>
-      <template #footer
-        ><div class="dialog-footer">
-          <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
-        </div></template
-      >
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="detailOpen = false">关 闭</el-button>
+        </div>
+      </template>
     </el-dialog>
+
     <CandidateEvidenceDrawer v-model="evidenceVisible" :evidences="evidences" />
   </div>
 </template>
@@ -429,6 +349,7 @@ import {
   listCandidates,
   updateCandidate,
 } from "@/api/om/aiModeling";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import AttributeTypeConfig from "../../om/object/type/detail/AttributeTypeConfig.vue";
 import CandidateEvidenceDrawer from "../components/CandidateEvidenceDrawer.vue";
 import { useCandidateTab } from "./useCandidateTab";
@@ -441,32 +362,174 @@ const { om_ai_adopt_status, om_attribute_data_type, basic_data_type } =
     "om_attribute_data_type",
     "basic_data_type"
   );
+
 const pageRef = ref();
 const formRef = ref();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
+const saving = ref(false);
 const form = ref({});
-const columns = ref([
-  { key: "id", label: "编号", visible: true },
-  { key: "name", label: "属性名称", visible: true },
-  { key: "code", label: "属性代码", visible: true },
-  { key: "objectType", label: "所属对象类型", visible: true },
-  { key: "description", label: "描述", visible: true },
-  { key: "dataType", label: "数据类型", visible: true },
-  { key: "adoptStatus", label: "采纳状态", visible: true },
-  { key: "createBy", label: "创建人", visible: true },
-  { key: "createTime", label: "创建时间", visible: true },
-  { key: "operation", label: "操作", visible: true },
-]);
-const visible = (key) =>
-  columns.value.find((item) => item.key === key)?.visible !== false;
-
 const detail = ref({});
 const objects = ref([]);
 const businessTypes = ref([]);
 const enumOptions = ref([]);
 const enumsLoading = ref(false);
 const enumsError = ref("");
+
+/**
+ * 收集采纳前缺失的必填项名称，供公共页签逻辑提示用户。
+ * @param {Object} row 当前候选行数据
+ * @returns {Array<string>} 缺失字段的中文名称列表
+ */
+function required(row) {
+  const missing = [];
+  if (!row.objectCandidateId) missing.push("所属对象类型");
+  if (!row.name?.trim()) missing.push("属性名称");
+  if (!row.code?.trim()) missing.push("属性代码");
+  if (![1, 2].includes(Number(row.typeCategory))) missing.push("数据类型");
+  if (Number(row.typeCategory) === 1 && row.basicTypeCode == null)
+    missing.push("基础数据类型");
+  if (Number(row.typeCategory) === 2 && !row.businessTypeId)
+    missing.push("业务数据类型");
+  return missing;
+}
+
+const tab = useCandidateTab("attribute", props.taskId, required);
+const {
+  tableRef,
+  fetchRows,
+  selectedIds,
+  evidenceVisible,
+  evidences,
+  refresh,
+  select: handleSelectionChange,
+  adoptOne,
+  adoptBatch,
+  remove,
+  showEvidence,
+} = tab;
+
+/**
+ * 页签嵌在宿主容器内：详情页的外层卡片已带白底与内边距，开启 full 会重复一层间距和阴影并把内容强撑高；
+ * 页签内又没有搜索区，所以同时关闭操作栏的“隐藏搜索”按钮。
+ */
+const wrapConfig = {
+  fullContent: false,
+  actions: { table: { search: false } },
+};
+
+// 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      align: "center",
+      selectable: (row) => row.adoptStatus !== 1,
+    },
+    {
+      label: "编号",
+      prop: "id",
+      slot: "text",
+      width: 80,
+      minWidth: 80,
+      align: "center",
+      fixed: "left",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "属性名称",
+      prop: "name",
+      slot: "text",
+      width: 240,
+      minWidth: 240,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "属性代码",
+      prop: "code",
+      slot: "text",
+      width: 190,
+      minWidth: 190,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "所属对象类型",
+      prop: "objectCandidateId",
+      slot: "objectType",
+      width: 180,
+      minWidth: 180,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 260,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "数据类型",
+      prop: "typeCategory",
+      slot: "dataType",
+      width: 150,
+      minWidth: 150,
+      align: "center",
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      slot: "adoptStatus",
+      width: 110,
+      minWidth: 110,
+      align: "center",
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 120,
+      minWidth: 120,
+      align: "center",
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 180,
+      minWidth: 180,
+      align: "center",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 200,
+      minWidth: 200,
+      align: "center",
+      fixed: "right",
+    },
+  ],
+  func: fetchRows,
+});
+
 const dataTypeOptions = computed(() =>
   om_attribute_data_type.value.map((item) => ({
     label: item.label,
@@ -514,34 +577,7 @@ const businessKey = computed({
     form.value.businessTypeId = parts[1] || undefined;
   },
 });
-const required = (row) => {
-  const missing = [];
-  if (!row.objectCandidateId) missing.push("所属对象类型");
-  if (!row.name?.trim()) missing.push("属性名称");
-  if (!row.code?.trim()) missing.push("属性代码");
-  if (![1, 2].includes(Number(row.typeCategory))) missing.push("数据类型");
-  if (Number(row.typeCategory) === 1 && row.basicTypeCode == null)
-    missing.push("基础数据类型");
-  if (Number(row.typeCategory) === 2 && !row.businessTypeId)
-    missing.push("业务数据类型");
-  return missing;
-};
-const {
-  rows,
-  total,
-  loading,
-  selectedIds,
-  query,
-  evidenceVisible,
-  evidences,
-  load,
-  select,
-  handleSortChange,
-  adoptOne,
-  adoptBatch,
-  remove,
-  showEvidence,
-} = useCandidateTab("attribute", props.taskId, required);
+
 const rules = {
   objectCandidateId: [
     { required: true, message: "请选择所属对象类型", trigger: "change" },
@@ -588,15 +624,38 @@ const rules = {
     },
   ],
 };
-const selectable = (row) => row.adoptStatus !== 1;
+
+/**
+ * 按候选编号取对象类型名称。
+ * @param {number|string} id 对象候选编号
+ * @returns {string} 对象类型名称，找不到时返回占位符
+ */
 const objectName = (id) =>
   objects.value.find((item) => item.id === id)?.name || "-";
+
+/**
+ * 取数据类型字典文案。
+ * @param {number|string} value 数据类型分类
+ * @returns {string} 字典标签
+ */
 const dataTypeLabel = (value) =>
   dataTypeOptions.value.find((item) => item.value === Number(value))?.label ||
   "-";
+
+/**
+ * 取基础数据类型字典文案。
+ * @param {number|string} value 基础数据类型编码
+ * @returns {string} 字典标签
+ */
 const basicTypeLabel = (value) =>
   basic_data_type.value.find((item) => Number(item.value) === Number(value))
     ?.label || "-";
+
+/**
+ * 汇总类型配置，业务数据类型展示名称与来源。
+ * @param {Object} row 当前行数据
+ * @returns {string} 类型配置摘要
+ */
 const typeSummary = (row) => {
   if (Number(row.typeCategory) !== 2) return basicTypeLabel(row.basicTypeCode);
   const item = businessTypes.value.find(
@@ -610,6 +669,12 @@ const typeSummary = (row) => {
       }）`
     : "-";
 };
+
+/**
+ * 把后端返回的字符串数字统一成表单控件需要的类型。
+ * @param {Object} row 原始行数据
+ * @returns {Object} 可直接绑定表单的数据
+ */
 function normalize(row) {
   return {
     ...row,
@@ -623,6 +688,8 @@ function normalize(row) {
     businessTypeSource: row.businessTypeSource || "GLOBAL",
   };
 }
+
+/** 清空基础数据类型下的附加配置。 */
 function clearTypeConfig() {
   Object.assign(form.value, {
     unit: "",
@@ -632,6 +699,8 @@ function clearTypeConfig() {
     enumSource: "PROJECT",
   });
 }
+
+/** 切换数据类型分类时重置类型与配置项。 */
 function changeTypeCategory() {
   Object.assign(form.value, {
     basicTypeCode: undefined,
@@ -641,6 +710,8 @@ function changeTypeCategory() {
   clearTypeConfig();
   nextTick(() => formRef.value?.clearValidate());
 }
+
+/** 加载对象类型候选，供所属对象类型回显和下拉选择使用。 */
 async function loadObjects() {
   const response = await listCandidates("object", {
     taskId: props.taskId,
@@ -649,6 +720,8 @@ async function loadObjects() {
   });
   objects.value = response.data?.rows || [];
 }
+
+/** 加载当前任务可选的业务数据类型（项目级 + 全局）。 */
 async function loadTypeOptions() {
   businessTypes.value = [];
   enumOptions.value = [];
@@ -665,6 +738,8 @@ async function loadTypeOptions() {
     })
   );
 }
+
+/** 加载枚举候选，失败时只提示不阻断表单。 */
 async function loadEnums() {
   if (enumsLoading.value) return;
   enumsLoading.value = true;
@@ -690,6 +765,11 @@ async function loadEnums() {
     enumsLoading.value = false;
   }
 }
+
+/**
+ * 打开修改弹窗并加载类型可选项。
+ * @param {Object} row 当前行数据
+ */
 async function edit(row) {
   form.value = normalize(row);
   open.value = true;
@@ -697,30 +777,46 @@ async function edit(row) {
   await loadEnums();
   nextTick(() => formRef.value?.clearValidate());
 }
+
+/**
+ * 打开详情弹窗。
+ * @param {Object} row 当前行数据
+ */
 function showDetail(row) {
   detail.value = normalize(row);
   detailOpen.value = true;
 }
+
+/** 提交修改，提交期间锁定确定按钮避免重复入库。 */
 async function save() {
-  if (!(await formRef.value.validate().catch(() => false))) return;
-  const data = {
-    ...form.value,
-    taskId: props.taskId,
-    businessTypeId:
-      form.value.typeCategory === 2 ? Number(form.value.businessTypeId) : null,
-    businessTypeSource:
-      form.value.typeCategory === 2 ? form.value.businessTypeSource : null,
-    basicTypeCode:
-      form.value.typeCategory === 1 ? form.value.basicTypeCode : null,
-  };
-  await updateCandidate("attribute", data);
-  proxy.$modal.msgSuccess("修改成功");
-  open.value = false;
-  await load();
+  if (saving.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid || saving.value || !open.value) return;
+  saving.value = true;
+  try {
+    await updateCandidate("attribute", {
+      ...form.value,
+      taskId: props.taskId,
+      businessTypeId:
+        form.value.typeCategory === 2
+          ? Number(form.value.businessTypeId)
+          : null,
+      businessTypeSource:
+        form.value.typeCategory === 2 ? form.value.businessTypeSource : null,
+      basicTypeCode:
+        form.value.typeCategory === 1 ? form.value.basicTypeCode : null,
+    });
+    proxy.$modal.msgSuccess("修改成功");
+    open.value = false;
+    refresh();
+  } finally {
+    saving.value = false;
+  }
 }
+
 loadObjects();
-load();
 </script>
+
 <style scoped>
 .h2-title {
   font-size: 16px;
@@ -759,4 +855,3 @@ load();
   padding-bottom: 24px;
 }
 </style>
-

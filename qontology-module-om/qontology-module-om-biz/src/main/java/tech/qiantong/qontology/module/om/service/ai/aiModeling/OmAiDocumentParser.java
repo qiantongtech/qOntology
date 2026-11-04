@@ -11,8 +11,6 @@ import java.util.Optional;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.poi.hwpf.HWPFDocument;
-import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -27,6 +25,7 @@ import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import tech.qiantong.qontology.module.om.enums.ai.OmAiFileTypeEnum;
 
 /** 将上传文件解析为带原文位置的原子证据块。 */
 @Component
@@ -69,14 +68,11 @@ public class OmAiDocumentParser {
         String extension = fileName.contains(".")
                 ? fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
                 : "";
-        return switch (extension) {
-            case "txt" -> parseText(file);
-            case "docx" -> parseDocx(file);
-            case "doc" -> parseDoc(file);
-            case "pdf" -> parsePdf(file);
-            case "xls", "xlsx" -> parseExcel(file);
-            case "png", "jpg", "jpeg" -> List.of(imagePlaceholder(1, 1, 1, "图片文件"));
-            default -> throw new IllegalArgumentException("不支持的文件格式：" + extension);
+        return switch (OmAiFileTypeEnum.fromExtension(extension)) {
+            case TXT, HTML, HTM, CSV, MD, MDX, MARKDOWN, TTL -> parseText(file);
+            case DOCX -> parseDocx(file);
+            case PDF -> parsePdf(file);
+            case XLS, XLSX -> parseExcel(file);
         };
     }
 
@@ -172,25 +168,6 @@ public class OmAiDocumentParser {
             }
         }
         return blockNo;
-    }
-
-    /** 解析 Word 97-2003 段落。 */
-    private List<Block> parseDoc(MultipartFile file) throws IOException {
-        List<Block> result = new ArrayList<>();
-        try (HWPFDocument document = new HWPFDocument(file.getInputStream());
-             WordExtractor extractor = new WordExtractor(document)) {
-            int blockNo = 1;
-            int paragraphNo = 0;
-            for (String value : extractor.getParagraphText()) {
-                paragraphNo++;
-                String text = value.trim();
-                if (!text.isBlank()) {
-                    result.add(new Block(blockNo++, "PARAGRAPH", null, null, paragraphNo,
-                            null, null, null, null, null, null, text));
-                }
-            }
-        }
-        return result;
     }
 
     /** 按页解析 PDF；无文本页作为多模态识别占位。 */

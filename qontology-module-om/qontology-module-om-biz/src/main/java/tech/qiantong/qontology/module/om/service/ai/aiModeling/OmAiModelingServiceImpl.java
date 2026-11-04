@@ -2,9 +2,6 @@ package tech.qiantong.qontology.module.om.service.ai.aiModeling;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -12,16 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.dromara.x.file.storage.core.FileInfo;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 import tech.qiantong.qontology.common.exception.ServiceException;
 import tech.qiantong.qontology.core.page.PageResult;
-import tech.qiantong.qontology.file.util.FileUploadUtil;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiTaskCreateReqVO;
+import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiTaskFilesUpdateReqVO;
+import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiUploadedFileReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTask.vo.OmAiTaskPageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmDataRuleSaveReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.constraint.vo.OmModelAxiomSaveReqVO;
@@ -92,6 +88,7 @@ import tech.qiantong.qontology.module.om.enums.TargetPriorityEnum;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiAdoptStatusEnum;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiCandidateTypeEnum;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiFileParseStatusEnum;
+import tech.qiantong.qontology.module.om.enums.ai.OmAiFileTypeEnum;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiTaskStatusEnum;
 import tech.qiantong.qontology.module.om.service.enumeration.IOmEnumDataService;
 import tech.qiantong.qontology.module.om.service.enumeration.IOmEnumTypeService;
@@ -109,9 +106,6 @@ import com.alibaba.fastjson2.JSONObject;
 /** AI 辅助建模任务、候选数据和采纳流程服务实现。 */
 @Service
 public class OmAiModelingServiceImpl implements IOmAiModelingService {
-
-    private static final Set<String> SUPPORTED_FILE_EXTENSIONS = Set.of(
-            "doc", "docx", "pdf", "txt", "png", "jpg", "jpeg", "xls", "xlsx");
 
     @Resource
     private OmAiTaskMapper taskMapper;
@@ -206,10 +200,8 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     /** 第一步：创建任务并保存上传文件，不在当前请求中启动解析。 */
     @Override
-    public Long create(OmAiTaskCreateReqVO request, Long workspaceId, MultipartFile[] files) {
-        if (files == null || files.length == 0) {
-            throw new ServiceException("请至少上传一个文件");
-        }
+    @Transactional(rollbackFor = Exception.class)
+    public Long create(OmAiTaskCreateReqVO request, Long workspaceId) {
         OmAiTaskDO task = OmAiTaskDO.builder()
                 .taskName(request.getTaskName())
                 .description(request.getDescription())
@@ -223,7 +215,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
                 .build();
         taskMapper.insert(task);
         try {
-            for (MultipartFile file : files) {
+            for (OmAiUploadedFileReqVO file : request.getFiles()) {
                 saveSourceFile(task.getId(), file);
             }
         } catch (RuntimeException exception) {
@@ -267,29 +259,51 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     }
 
     /** 保存原始文件；结构化解析由异步处理器执行。 */
-    private void saveSourceFile(Long taskId, MultipartFile file) {
-        try {
-            String extension = FilenameUtils.getExtension(file.getOriginalFilename()).toLowerCase();
-            if (!SUPPORTED_FILE_EXTENSIONS.contains(extension)) {
-                throw new ServiceException("不支持的文件格式：" + extension);
-            }
-            byte[] fileBytes = file.getBytes();
-            MultipartFile stableFile = new ByteArrayMultipartFile(
-                    file.getName(), file.getOriginalFilename(), file.getContentType(), fileBytes);
-            FileInfo fileInfo = FileUploadUtil.upload(stableFile, "ai-modeling/");
-            OmAiFileDO fileData = OmAiFileDO.builder()
-                    .taskId(taskId).fileName(file.getOriginalFilename()).fileUrl(fileInfo.getUrl())
-                    .fileExt(extension).fileSize((long) fileBytes.length)
-                    .contentHash(DigestUtils.sha256Hex(fileBytes))
-                    .parseStatus(OmAiFileParseStatusEnum.WAITING.getCode())
-                    .blockCount(0).delFlag(false).build();
-            fileMapper.insert(fileData);
-        } catch (Exception exception) {
-            if (exception instanceof RuntimeException runtimeException) {
-                throw runtimeException;
-            }
-            throw new ServiceException("文件解析失败：" + exception.getMessage());
+    private void saveSourceFile(Long taskId, OmAiUploadedFileReqVO file) {
+        if (file.getFileUrl().startsWith("http://") || file.getFileUrl().startsWith("https://")) {
+            throw new ServiceException("文件地址必须使用系统文件服务返回的相对路径");
         }
+        String extension = Optional.ofNullable(file.getFileExt())
+                .filter(value -> !value.isBlank())
+                .orElseGet(() -> FilenameUtils.getExtension(file.getFileName()))
+                .toLowerCase();
+        OmAiFileTypeEnum.fromExtension(extension);
+        fileMapper.insert(OmAiFileDO.builder()
+                .taskId(taskId).fileName(file.getFileName()).fileUrl(file.getFileUrl())
+                .fileExt(extension).fileSize(file.getFileSize()).contentHash(null)
+                .parseStatus(OmAiFileParseStatusEnum.WAITING.getCode())
+                .blockCount(0).delFlag(false).build());
+    }
+
+    /** 文件修改只保存数据并清理旧解析结果，等待用户点击“重新解析”。 */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public synchronized void updateFiles(OmAiTaskFilesUpdateReqVO request) {
+        OmAiTaskDO task = getRequiredTask(request.getTaskId());
+        if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus())) {
+            throw new ServiceException("任务正在解析，不能修改文件");
+        }
+        List<Long> retainedIds = Optional.ofNullable(request.getRetainedFileIds()).orElse(List.of());
+        List<OmAiFileDO> existing = files(task.getId());
+        boolean invalidId = retainedIds.stream().anyMatch(id -> existing.stream().noneMatch(file -> file.getId().equals(id)));
+        if (invalidId) {
+            throw new ServiceException("保留文件不属于当前任务");
+        }
+        List<OmAiUploadedFileReqVO> newFiles = Optional.ofNullable(request.getFiles()).orElse(List.of());
+        if (retainedIds.isEmpty() && newFiles.isEmpty()) {
+            throw new ServiceException("请至少保留一个文件");
+        }
+        existing.stream().filter(file -> !retainedIds.contains(file.getId()))
+                .forEach(file -> fileMapper.deleteById(file.getId()));
+        newFiles.forEach(file -> saveSourceFile(task.getId(), file));
+        clearTaskResults(task.getId());
+        task.setStatus(OmAiTaskStatusEnum.WAITING.getCode());
+        task.setCurrentStage(null);
+        task.setCandidateCount(0);
+        task.setStartedTime(null);
+        task.setFinishedTime(null);
+        task.setFailureReason(null);
+        taskMapper.updateById(task);
     }
 
     /** 删除任务记录。 */
@@ -336,65 +350,6 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
             task.setFinishedTime(new Date());
             taskMapper.updateById(task);
             throw new ServiceException("后台解析任务提交失败，请稍后重试");
-        }
-    }
-
-    /**
-     * 基于内存字节提供可重复读取的上传文件，避免解析器关闭临时上传流后文件无法再次上传。
-     */
-    private static final class ByteArrayMultipartFile implements MultipartFile {
-
-        private final String name;
-        private final String originalFilename;
-        private final String contentType;
-        private final byte[] content;
-
-        private ByteArrayMultipartFile(
-                String name, String originalFilename, String contentType, byte[] content) {
-            this.name = name;
-            this.originalFilename = originalFilename;
-            this.contentType = contentType;
-            this.content = content;
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public String getOriginalFilename() {
-            return originalFilename;
-        }
-
-        @Override
-        public String getContentType() {
-            return contentType;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return content.length == 0;
-        }
-
-        @Override
-        public long getSize() {
-            return content.length;
-        }
-
-        @Override
-        public byte[] getBytes() {
-            return content.clone();
-        }
-
-        @Override
-        public InputStream getInputStream() {
-            return new ByteArrayInputStream(content);
-        }
-
-        @Override
-        public void transferTo(java.io.File dest) throws IOException {
-            java.nio.file.Files.write(dest.toPath(), content);
         }
     }
 

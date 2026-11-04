@@ -50,4 +50,6 @@ public class OmAiRelationTargetRespVO implements Serializable {
     @Schema(description = "更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
+    @Schema(description = "创建人ID")
+    private Long creatorId;
 }

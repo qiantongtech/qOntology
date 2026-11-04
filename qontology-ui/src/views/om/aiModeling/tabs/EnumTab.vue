@@ -17,352 +17,199 @@
 -->
 <template>
   <div ref="pageRef" class="candidate-tab-page enum-page">
-    <template v-if="!currentType">
-      <div class="justify-between mb15">
-        <el-row :gutter="15" class="btn-style"
-          ><el-col :span="1.5"
-            ><el-button
-              type="primary"
-              plain
-              :disabled="!selectedIds.length"
-              @click="adoptBatch"
-              >批量采纳</el-button
-            ></el-col
-          ><el-col :span="1.5"
-            ><el-button
-              type="danger"
-              plain
-              :disabled="!selectedIds.length"
-              @click="remove()"
-              ><i class="iconfont-mini icon-shanchu-huise mr5"></i
-              >删除</el-button
-            ></el-col
-          ></el-row
+    <!-- 枚举类型列表 -->
+    <qt-wrap
+      v-if="!currentType"
+      :columns="typeTableStore.columns"
+      :table-ref="tableRef"
+      :config="wrapConfig"
+    >
+      <template #actions-data>
+        <el-button
+          type="primary"
+          plain
+          :disabled="!selectedIds.length"
+          @click="adoptBatch"
+          @mousedown="(e) => e.preventDefault()"
         >
-        <right-toolbar
-          :search="false"
-          :columns="typeColumns"
-          @queryTable="loadTypes"
-        />
-      </div>
-      <el-table
-        v-loading="loading"
-        :data="rows"
-        stripe
-        :default-sort="{ prop: 'createTime', order: 'descending' }"
-        @selection-change="select"
-        @sort-change="handleSortChange"
-      >
-        <el-table-column
-          type="selection"
-          width="55"
-          align="center"
-          :selectable="(row) => row.adoptStatus !== 1"
-        />
-        <el-table-column
-          v-if="visible(typeColumns, 'id')"
-          prop="id"
-          label="编号"
-          width="80"
-          align="center"
-          sortable="custom"
-        />
-        <el-table-column
-          v-if="visible(typeColumns, 'enumName')"
-          prop="enumName"
-          label="枚举名称"
-          min-width="150"
-          :show-overflow-tooltip="{ effect: 'light' }"
-          ><template #default="{ row }">{{
-            row.enumName || "-"
-          }}</template></el-table-column
+          <i class="iconfont-mini icon-queren mr5"></i>批量采纳
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          :disabled="!selectedIds.length"
+          @click="remove()"
+          @mousedown="(e) => e.preventDefault()"
         >
-        <el-table-column
-          v-if="visible(typeColumns, 'enumType')"
-          prop="enumType"
-          label="枚举类型"
-          min-width="160"
-          :show-overflow-tooltip="{ effect: 'light' }"
-          ><template #default="{ row }"
-            ><el-button link type="primary" @click="openValues(row)">{{
-              row.enumType || "-"
-            }}</el-button></template
-          ></el-table-column
-        >
-        <el-table-column
-          v-if="visible(typeColumns, 'status')"
-          label="状态"
-          width="100"
-          align="center"
-          ><template #default="{ row }"
-            ><dict-tag
-              :options="sys_normal_disable"
-              :value="row.status || '0'" /></template
-        ></el-table-column>
-        <el-table-column
-          v-if="visible(typeColumns, 'adoptStatus')"
-          label="采纳状态"
-          width="110"
-          align="center"
-          ><template #default="{ row }"
-            ><dict-tag
-              :options="om_ai_adopt_status"
-              :value="row.adoptStatus" /></template
-        ></el-table-column>
-        <el-table-column
-          v-if="visible(typeColumns, 'createBy')"
-          prop="createBy"
-          label="创建人"
-          width="120"
-          align="center"
-          ><template #default="{ row }">{{
-            row.createBy || "-"
-          }}</template></el-table-column
-        >
-        <el-table-column
-          v-if="visible(typeColumns, 'createTime')"
-          prop="createTime"
-          label="创建时间"
-          width="170"
-          align="center"
-          sortable="custom"
-          ><template #default="{ row }">{{
-            proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-          }}</template></el-table-column
-        >
-        <el-table-column
-          v-if="visible(typeColumns, 'operation')"
-          label="操作"
-          width="260"
-          align="center"
-          fixed="right"
-          class-name="small-padding fixed-width"
-          ><template #default="{ row }"
-            ><el-button
-              link
-              type="primary"
-              icon="Check"
-              :disabled="row.adoptStatus === 1"
-              @click="adoptOne(row)"
-              >采纳</el-button
-            ><el-button
-              link
-              type="primary"
-              icon="Document"
-              @click="showEvidence(row)"
-              >来源</el-button
-            ><el-popover placement="bottom" :width="120" trigger="click"
-              ><template #reference
-                ><el-button link type="primary" icon="ArrowDown"
-                  >更多</el-button
-                ></template
-              >
-              <div class="butgdlist">
-                <el-button
-                  link
-                  type="primary"
-                  icon="View"
-                  @click="showTypeDetail(row)"
-                  >详情</el-button
-                ><el-button
-                  link
-                  type="primary"
-                  icon="Edit"
-                  :disabled="row.adoptStatus === 1"
-                  @click="editType(row)"
-                  >修改</el-button
-                ><el-button
-                  link
-                  type="danger"
-                  icon="Delete"
-                  :disabled="row.adoptStatus === 1"
-                  @click="remove(row)"
-                  >删除</el-button
-                >
-              </div></el-popover
-            ></template
-          ></el-table-column
-        >
-        <template #empty
-          ><div class="emptyBg">
-            <img
-              src="@/assets/system/images/no_data/noData.png"
-              alt="暂无记录"
-            />
-            <p>暂无记录</p>
-          </div></template
-        >
-      </el-table>
-      <pagination
-        v-show="total > 0"
-        :total="total"
-        v-model:page="query.pageNum"
-        v-model:limit="query.pageSize"
-        @pagination="loadTypes"
-      />
-    </template>
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
 
-    <template v-else>
-      <div class="justify-between mb15">
-        <el-row :gutter="15" class="btn-style"
-          ><el-col :span="1.5"
-            ><el-button
-              type="danger"
-              plain
-              :disabled="!valueSelectedIds.length"
-              @click="removeValue()"
-              ><i class="iconfont-mini icon-shanchu-huise mr5"></i
-              >删除</el-button
-            ></el-col
+      <qt-table v-bind="typeTableStore" ref="tableRef">
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop]
+        }}</template>
+        <!-- 枚举类型列可点击下钻到该类型的枚举数据。 -->
+        <template #enumType="{ row }">
+          <el-button link type="primary" @click="openValues(row)">{{
+            row.enumType || "-"
+          }}</el-button>
+        </template>
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
+        </template>
+        <template #status="{ row }">
+          <dict-tag :options="sys_normal_disable" :value="row.status || '0'" />
+        </template>
+        <template #adoptStatus="{ row }">
+          <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus" />
+        </template>
+        <template #handle="{ row }">
+          <el-button
+            link
+            type="primary"
+            icon="Check"
+            :disabled="row.adoptStatus === 1"
+            @click="adoptOne(row)"
+            >采纳</el-button
           >
-          <el-col :span="1.5">
-            <el-button type="warning" plain icon="Close" @click="closeValues"
-              >关闭</el-button
-            >
-          </el-col> </el-row
-        ><right-toolbar
-          :search="false"
-          :columns="valueColumns"
-          @queryTable="loadValues"
-        />
-      </div>
-      <el-table
-        v-loading="valueLoading"
-        :data="valueRows"
-        stripe
-        :default-sort="{ prop: 'createTime', order: 'descending' }"
-        @selection-change="selectValues"
-        @sort-change="handleValueSort"
-      >
-        <el-table-column
-          type="selection"
-          width="55"
-          align="center"
-          :selectable="(row) => row.adoptStatus !== 1"
-        /><el-table-column
-          v-if="visible(valueColumns, 'id')"
-          prop="id"
-          label="编号"
-          width="80"
-          align="center"
-          sortable="custom"
-        /><el-table-column
-          v-if="visible(valueColumns, 'enumLabel')"
-          prop="enumLabel"
-          label="枚举标签"
-          min-width="150"
-          ><template #default="{ row }">{{
-            row.enumLabel || "-"
-          }}</template></el-table-column
-        ><el-table-column
-          v-if="visible(valueColumns, 'enumValue')"
-          prop="enumValue"
-          label="枚举键值"
-          min-width="150"
-          ><template #default="{ row }">{{
-            row.enumValue || "-"
-          }}</template></el-table-column
-        ><el-table-column
-          v-if="visible(valueColumns, 'enumSort')"
-          prop="enumSort"
-          label="排序"
-          width="100"
-          align="center"
-          sortable="custom"
-        /><el-table-column
-          v-if="visible(valueColumns, 'status')"
-          label="状态"
-          width="100"
-          align="center"
-          ><template #default="{ row }"
-            ><dict-tag
-              :options="sys_normal_disable"
-              :value="row.status || '0'" /></template></el-table-column
-        ><el-table-column
-          v-if="visible(valueColumns, 'adoptStatus')"
-          label="采纳状态"
-          width="110"
-          align="center"
-          ><template #default="{ row }"
-            ><dict-tag
-              :options="om_ai_adopt_status"
-              :value="row.adoptStatus" /></template></el-table-column
-        ><el-table-column
-          v-if="visible(valueColumns, 'createBy')"
-          prop="createBy"
-          label="创建人"
-          width="120"
-          align="center"
-          ><template #default="{ row }">{{
-            row.createBy || "-"
-          }}</template></el-table-column
-        ><el-table-column
-          v-if="visible(valueColumns, 'createTime')"
-          prop="createTime"
-          label="创建时间"
-          width="170"
-          sortable="custom"
-          align="center"
-          ><template #default="{ row }">{{
-            proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-          }}</template></el-table-column
-        ><el-table-column
-          v-if="visible(valueColumns, 'operation')"
-          label="操作"
-          width="200"
-          align="center"
-          fixed="right"
-          class-name="small-padding fixed-width"
-          ><template #default="{ row }"
-            ><el-button
-              link
-              type="primary"
-              icon="Document"
-              @click="showValueEvidence(row)"
-              >来源</el-button
-            >
+          <el-button
+            link
+            type="primary"
+            icon="Document"
+            @click="showEvidence(row)"
+            >来源</el-button
+          >
+          <el-popover
+            placement="bottom"
+            :width="107"
+            popper-class="handle-popover"
+            trigger="click"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
             <el-button
               link
               type="primary"
               icon="View"
-              @click="showValueDetail(row)"
+              @click="showTypeDetail(row)"
               >详情</el-button
             >
-            <el-popover placement="bottom" :width="120" trigger="click">
-              <template #reference
-                ><el-button link type="primary" icon="ArrowDown"
-                  >更多</el-button
-                ></template
-              >
-              <div class="butgdlist">
-                <el-button
-                  link
-                  type="primary"
-                  icon="Edit"
-                  :disabled="row.adoptStatus === 1"
-                  @click="editValue(row)"
-                  >修改</el-button
-                >
-                <el-button
-                  link
-                  type="danger"
-                  icon="Delete"
-                  :disabled="row.adoptStatus === 1"
-                  @click="removeValue(row)"
-                  >删除</el-button
-                >
-              </div>
-            </el-popover></template
-          ></el-table-column
-        > </el-table
-      ><pagination
-        v-show="valueTotal > 0"
-        :total="valueTotal"
-        v-model:page="valueQuery.pageNum"
-        v-model:limit="valueQuery.pageSize"
-        @pagination="loadValues"
-      />
-    </template>
+            <el-button
+              link
+              type="primary"
+              icon="Edit"
+              :disabled="row.adoptStatus === 1"
+              @click="editType(row)"
+              >修改</el-button
+            >
+            <el-button
+              link
+              type="danger"
+              icon="Delete"
+              :disabled="row.adoptStatus === 1"
+              @click="remove(row)"
+              >删除</el-button
+            >
+          </el-popover>
+        </template>
+      </qt-table>
+    </qt-wrap>
+
+    <!-- 枚举数据列表 -->
+    <qt-wrap
+      v-else
+      :columns="valueTableStore.columns"
+      :table-ref="valueTableRef"
+      :config="wrapConfig"
+    >
+      <template #actions-data>
+        <el-button
+          type="danger"
+          plain
+          :disabled="!valueSelectedIds.length"
+          @click="removeValue()"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+        <el-button type="warning" plain icon="Close" @click="closeValues"
+          >关闭</el-button
+        >
+      </template>
+
+      <qt-table v-bind="valueTableStore" ref="valueTableRef" :key="currentType.id">
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop]
+        }}</template>
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
+        </template>
+        <template #status="{ row }">
+          <dict-tag :options="sys_normal_disable" :value="row.status || '0'" />
+        </template>
+        <template #adoptStatus="{ row }">
+          <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus" />
+        </template>
+        <template #valueHandle="{ row }">
+          <el-button
+            link
+            type="primary"
+            icon="Document"
+            @click="showValueEvidence(row)"
+            >来源</el-button
+          >
+          <el-button
+            link
+            type="primary"
+            icon="View"
+            @click="showValueDetail(row)"
+            >详情</el-button
+          >
+          <el-popover
+            placement="bottom"
+            :width="107"
+            popper-class="handle-popover"
+            trigger="click"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
+            <el-button
+              link
+              type="primary"
+              icon="Edit"
+              :disabled="row.adoptStatus === 1"
+              @click="editValue(row)"
+              >修改</el-button
+            >
+            <el-button
+              link
+              type="danger"
+              icon="Delete"
+              :disabled="row.adoptStatus === 1"
+              @click="removeValue(row)"
+              >删除</el-button
+            >
+          </el-popover>
+        </template>
+      </qt-table>
+    </qt-wrap>
 
     <el-dialog
       v-model="typeOpen"
@@ -379,12 +226,12 @@
           ><el-input
             v-model="typeForm.enumName"
             placeholder="请输入枚举名称"
-            maxlength="128个字符" /></el-form-item
+            :maxlength="128" /></el-form-item
         ><el-form-item label="枚举类型" prop="enumType"
           ><el-input
             v-model="typeForm.enumType"
             placeholder="请输入枚举类型"
-            maxlength="100个字符" /></el-form-item
+            :maxlength="100" /></el-form-item
         ><el-form-item label="状态" prop="status"
           ><el-radio-group v-model="typeForm.status"
             ><el-radio
@@ -399,7 +246,7 @@
             v-model="typeForm.remark"
             type="textarea"
             :rows="3"
-            maxlength="512个字符"
+            :maxlength="512"
             show-word-limit
             placeholder="请输入备注" /></el-form-item></el-form
       ><template #footer
@@ -442,12 +289,12 @@
           ><el-input
             v-model="valueForm.enumLabel"
             placeholder="请输入枚举标签"
-            maxlength="128个字符" /></el-form-item
+            :maxlength="128" /></el-form-item
         ><el-form-item label="枚举键值" prop="enumValue"
           ><el-input
             v-model="valueForm.enumValue"
             placeholder="请输入枚举键值"
-            maxlength="128个字符" /></el-form-item
+            :maxlength="128" /></el-form-item
         ><el-form-item label="排序" prop="enumSort"
           ><el-input-number
             v-model="valueForm.enumSort"
@@ -467,7 +314,7 @@
             v-model="valueForm.remark"
             type="textarea"
             :rows="3"
-            maxlength="512个字符"
+            :maxlength="512"
             show-word-limit
             placeholder="请输入备注" /></el-form-item></el-form
       ><template #footer
@@ -509,6 +356,7 @@ import {
   listCandidates,
   updateCandidate,
 } from "@/api/om/aiModeling";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import CandidateEvidenceDrawer from "../components/CandidateEvidenceDrawer.vue";
 import DetailForm from "../components/EnumCandidateDetailForm.vue";
 import { useCandidateTab } from "./useCandidateTab";
@@ -518,55 +366,29 @@ const { om_ai_adopt_status, sys_normal_disable } = proxy.useDict(
   "om_ai_adopt_status",
   "sys_normal_disable"
 );
-const pageRef = ref(),
-  typeFormRef = ref(),
-  valueFormRef = ref();
+const pageRef = ref();
+const typeFormRef = ref();
+const valueFormRef = ref();
+const { creatorPhones } = useCreatorPhones();
 const currentType = ref(null);
-const typeOpen = ref(false),
-  typeDetailOpen = ref(false),
-  valueOpen = ref(false),
-  valueDetailOpen = ref(false);
-const typeForm = ref({}),
-  typeDetail = ref({}),
-  valueForm = ref({}),
-  valueDetail = ref({});
-const valueRows = ref([]),
-  valueTotal = ref(0),
-  valueLoading = ref(false),
-  valueSelectedIds = ref([]);
-const valueEvidenceVisible = ref(false),
-  valueEvidences = ref([]);
-const typeFilters = reactive({ enumName: "", enumType: "", status: "" });
-const valueFilters = reactive({ enumLabel: "", status: "" });
-const valueQuery = reactive({
-  taskId: props.taskId,
-  enumTypeId: null,
-  pageNum: 1,
-  pageSize: 10,
-  orderByColumn: "createTime",
-  isAsc: "desc",
-});
-const typeColumns = ref([
-  { key: "id", label: "编号", visible: true },
-  { key: "enumName", label: "枚举名称", visible: true },
-  { key: "enumType", label: "枚举类型", visible: true },
-  { key: "status", label: "状态", visible: true },
-  { key: "adoptStatus", label: "采纳状态", visible: true },
-  { key: "createBy", label: "创建人", visible: true },
-  { key: "createTime", label: "创建时间", visible: true },
-  { key: "operation", label: "操作", visible: true },
-]);
-const valueColumns = ref([
-  { key: "id", label: "编号", visible: true },
-  { key: "enumLabel", label: "枚举标签", visible: true },
-  { key: "enumValue", label: "枚举键值", visible: true },
-  { key: "enumSort", label: "排序", visible: true },
-  { key: "status", label: "状态", visible: true },
-  { key: "adoptStatus", label: "采纳状态", visible: true },
-  { key: "createBy", label: "创建人", visible: true },
-  { key: "createTime", label: "创建时间", visible: true },
-  { key: "operation", label: "操作", visible: true },
-]);
+const typeOpen = ref(false);
+const typeDetailOpen = ref(false);
+const valueOpen = ref(false);
+const valueDetailOpen = ref(false);
+const typeForm = ref({});
+const typeDetail = ref({});
+const valueForm = ref({});
+const valueDetail = ref({});
+const valueTableRef = ref(null);
+const valueSelectedIds = ref([]);
+const valueEvidenceVisible = ref(false);
+const valueEvidences = ref([]);
+
+/**
+ * 枚举类型采纳前的必填项校验，供公共页签逻辑提示用户。
+ * @param {Object} row 当前候选行数据
+ * @returns {Array<string>} 缺失字段的中文名称列表
+ */
 const required = (row) =>
   [
     ["enumName", "枚举名称"],
@@ -575,22 +397,246 @@ const required = (row) =>
   ]
     .filter(([key]) => row[key] == null || row[key] === "")
     .map(([, label]) => label);
+
+const tab = useCandidateTab("enum_type", props.taskId, required);
 const {
-  rows,
-  total,
-  loading,
+  tableRef,
+  fetchRows,
   selectedIds,
-  query,
   evidenceVisible,
   evidences,
-  load,
-  select,
-  handleSortChange,
+  refresh,
+  select: handleSelectionChange,
   adoptOne,
   adoptBatch,
   remove,
   showEvidence,
-} = useCandidateTab("enum_type", props.taskId, required);
+} = tab;
+
+/**
+ * 页签嵌在宿主容器内：详情页的外层卡片已带白底与内边距，开启 full 会重复一层间距和阴影并把内容强撑高；
+ * 页签内又没有搜索区，所以同时关闭操作栏的“隐藏搜索”按钮。
+ */
+const wrapConfig = {
+  fullContent: false,
+  actions: { table: { search: false } },
+};
+
+// 枚举类型表格配置。
+const typeTableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      align: "center",
+      selectable: (row) => row.adoptStatus !== 1,
+    },
+    {
+      label: "编号",
+      prop: "id",
+      slot: "text",
+      width: 80,
+      minWidth: 80,
+      align: "center",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "枚举名称",
+      prop: "enumName",
+      slot: "text",
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "枚举类型",
+      prop: "enumType",
+      slot: "enumType",
+      minWidth: 160,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "状态",
+      prop: "status",
+      slot: "status",
+      width: 100,
+      minWidth: 100,
+      align: "center",
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      slot: "adoptStatus",
+      width: 110,
+      minWidth: 110,
+      align: "center",
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 120,
+      minWidth: 120,
+      align: "center",
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 170,
+      minWidth: 170,
+      align: "center",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 240,
+      minWidth: 240,
+      align: "center",
+      fixed: "right",
+    },
+  ],
+  func: fetchRows,
+});
+
+/**
+ * 枚举数据取数：强制携带当前枚举类型编号，切换类型时由 :key 触发重新挂载首查。
+ * @param {Object} params QtTable 合并分页、排序后的查询参数
+ * @returns {Promise<Object>} 枚举数据列表接口返回体
+ */
+function fetchValues(params) {
+  return listCandidates("enum_data", {
+    ...params,
+    taskId: props.taskId,
+    enumTypeId: currentType.value.id,
+  });
+}
+
+/**
+ * 记录枚举数据勾选的可删除行编号。
+ * @param {Array<Object>} selection 当前勾选行
+ */
+function handleValueSelection(selection) {
+  valueSelectedIds.value = selection
+    .filter((row) => row.adoptStatus !== 1)
+    .map((row) => row.id);
+}
+
+// 枚举数据表格配置。
+const valueTableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleValueSelection,
+    },
+  },
+  columns: [
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      align: "center",
+      selectable: (row) => row.adoptStatus !== 1,
+    },
+    {
+      label: "编号",
+      prop: "id",
+      slot: "text",
+      width: 80,
+      minWidth: 80,
+      align: "center",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "枚举标签",
+      prop: "enumLabel",
+      slot: "text",
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "枚举键值",
+      prop: "enumValue",
+      slot: "text",
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "排序",
+      prop: "enumSort",
+      slot: "text",
+      width: 100,
+      minWidth: 100,
+      align: "center",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "状态",
+      prop: "status",
+      slot: "status",
+      width: 100,
+      minWidth: 100,
+      align: "center",
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      slot: "adoptStatus",
+      width: 110,
+      minWidth: 110,
+      align: "center",
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 120,
+      minWidth: 120,
+      align: "center",
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 170,
+      minWidth: 170,
+      align: "center",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "操作",
+      slot: "valueHandle",
+      width: 200,
+      minWidth: 200,
+      align: "center",
+      fixed: "right",
+    },
+  ],
+  func: fetchValues,
+});
+
 const typeRules = {
   enumName: [{ required: true, message: "枚举名称不能为空" }],
   enumType: [
@@ -628,21 +674,26 @@ const valueDetailFields = [
   { prop: "createTime", label: "创建时间" },
   { prop: "remark", label: "备注" },
 ];
-function visible(columns, key) {
-  return columns.find((item) => item.key === key)?.visible !== false;
-}
-async function loadTypes() {
-  Object.assign(query, typeFilters);
-  await load();
-}
+
+/**
+ * 打开枚举类型修改弹窗。
+ * @param {Object} row 当前行数据
+ */
 function editType(row) {
   typeForm.value = { ...row, status: row.status || "0" };
   typeOpen.value = true;
 }
+
+/**
+ * 打开枚举类型详情弹窗。
+ * @param {Object} row 当前行数据
+ */
 function showTypeDetail(row) {
   typeDetail.value = row;
   typeDetailOpen.value = true;
 }
+
+/** 保存枚举类型，新增或修改后刷新类型列表。 */
 async function saveType() {
   if (!(await typeFormRef.value.validate().catch(() => false))) return;
   const payload = {
@@ -657,53 +708,41 @@ async function saveType() {
   else await createCandidate("enum_type", payload);
   proxy.$modal.msgSuccess(payload.id ? "修改成功" : "新增成功");
   typeOpen.value = false;
-  loadTypes();
+  refresh();
 }
+
+/**
+ * 下钻查看某个枚举类型下的数据，切换 currentType 后数据表自动首查。
+ * @param {Object} row 当前枚举类型行
+ */
 function openValues(row) {
   currentType.value = row;
-  valueQuery.enumTypeId = row.id;
-  valueQuery.pageNum = 1;
-  loadValues();
 }
+
+/** 关闭枚举数据视图，返回枚举类型列表。 */
 function closeValues() {
   currentType.value = null;
-  valueRows.value = [];
-  valueTotal.value = 0;
 }
-async function loadValues() {
-  if (!currentType.value) return;
-  valueLoading.value = true;
-  try {
-    const response = await listCandidates("enum_data", {
-      ...valueQuery,
-      ...valueFilters,
-    });
-    valueRows.value = response.data?.rows || [];
-    valueTotal.value = Number(response.data?.total || 0);
-    valueSelectedIds.value = [];
-  } finally {
-    valueLoading.value = false;
-  }
-}
-function handleValueSort({ prop, order }) {
-  valueQuery.orderByColumn = order ? prop : "createTime";
-  valueQuery.isAsc = order === "ascending" ? "asc" : "desc";
-  valueQuery.pageNum = 1;
-  loadValues();
-}
-function selectValues(selection) {
-  valueSelectedIds.value = selection
-    .filter((row) => row.adoptStatus !== 1)
-    .map((row) => row.id);
-}
+
+/**
+ * 打开枚举数据修改弹窗。
+ * @param {Object} row 当前行数据
+ */
 function editValue(row) {
   valueForm.value = { ...row, status: row.status || "0" };
   valueOpen.value = true;
 }
+
+/**
+ * 打开枚举数据详情弹窗，补充枚举类型名称用于展示。
+ * @param {Object} row 当前行数据
+ */
 function showValueDetail(row) {
   valueDetail.value = { ...row, enumType: currentType.value?.enumType };
   valueDetailOpen.value = true;
 }
+
+/** 保存枚举数据，新增或修改后刷新数据列表。 */
 async function saveValue() {
   if (!(await valueFormRef.value.validate().catch(() => false))) return;
   const payload = {
@@ -720,8 +759,13 @@ async function saveValue() {
   else await createCandidate("enum_data", payload);
   proxy.$modal.msgSuccess(payload.id ? "修改成功" : "新增成功");
   valueOpen.value = false;
-  loadValues();
+  valueTableRef.value?.getList();
 }
+
+/**
+ * 删除单条或批量删除枚举数据。
+ * @param {Object} [row] 指定行，缺省时删除已勾选行
+ */
 async function removeValue(row) {
   const ids = row ? [row.id] : valueSelectedIds.value;
   if (!ids.length) return;
@@ -730,41 +774,22 @@ async function removeValue(row) {
   );
   await deleteCandidate("enum_data", ids.join(","));
   proxy.$modal.msgSuccess("删除成功");
-  loadValues();
+  valueTableRef.value?.getList();
 }
+
+/**
+ * 查看枚举数据的来源证据。
+ * @param {Object} row 当前行数据
+ */
 async function showValueEvidence(row) {
   const response = await getCandidateEvidence("enum_data", row.id);
   valueEvidences.value = response.data || [];
   valueEvidenceVisible.value = true;
 }
-loadTypes();
 </script>
 
 <style scoped lang="scss">
-.enum-search {
-  margin-bottom: 15px;
-  padding: 15px;
-}
-.value-page-title {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 15px;
-  font-size: 16px;
-  font-weight: 600;
-}
-.butgdlist {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-.butgdlist .el-button {
-  width: 100%;
-  justify-content: center;
-  margin-left: 0;
-}
 :deep(.el-input-number) {
   width: 100%;
 }
 </style>
-

@@ -15,6 +15,7 @@ public class OmAiDataRuleRespVO extends OmAiDataRuleSaveReqVO {
     private String adoptMessage;
     private BigDecimal confidence;
     private String createBy;
+    private Long creatorId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
     private String updateBy;

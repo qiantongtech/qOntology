@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import jakarta.annotation.Resource;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -20,8 +22,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import tech.qiantong.qontology.ai.api.chat.AiChatMedia;
+import tech.qiantong.qontology.common.constant.Constants;
 import tech.qiantong.qontology.ai.api.chat.AiChatMessage;
 import tech.qiantong.qontology.ai.api.chat.AiChatRequest;
 import tech.qiantong.qontology.ai.api.chat.AiChatService;
@@ -86,12 +89,20 @@ import tech.qiantong.qontology.module.om.enums.ai.OmAiTaskStatusEnum;
 @Component
 public class OmAiModelingAsyncProcessor {
 
+    private static final String CHINESE_OUTPUT_SYSTEM_PROMPT = """
+            你是中文业务建模助手。所有面向用户的自然语言内容必须使用简体中文。
+            analysisProcess、analysisSummary、解释、判断、校验结论和自检内容不得使用英文句子。
+            JSON 字段名、枚举编码、程序标识符、模型名称、不可翻译的专有名称和原文引用可以保留英文。
+            输出前必须检查自然语言内容；若存在英文推理、英文说明或英文自检语句，必须先翻译为中文再输出。
+            """;
+    @Value("${dromara.x-file-storage.local-plus[0].storage-path}")
+    private String localStoragePath;
+
     private static final int WINDOW_SIZE = 30;
     private static final int WINDOW_OVERLAP = 2;
     /** AI 辅助建模固定使用的通义模型配置。 */
     private static final Long MODEL_KEY_ID = 1L;
     private static final String TEXT_MODEL_NAME = "qwen3.6-plus";
-    private static final String VISION_MODEL_NAME = "qwen3.6-plus";
     private final Set<Long> runningTaskIds = ConcurrentHashMap.newKeySet();
     private final ThreadLocal<Long> currentCreatorId = new ThreadLocal<>();
     private final ThreadLocal<String> currentCreateBy = new ThreadLocal<>();
@@ -328,7 +339,7 @@ public class OmAiModelingAsyncProcessor {
         return "已按文件、页码、章节、段落和表格位置建立证据索引；抽取轮次只读取证据窗口和前序候选索引";
     }
 
-    /** 执行一轮文本和图片抽取。 */
+    /** 执行一轮文档证据抽取。 */
     private String executeRound(OmAiTaskDO task, OmAiExtractionRoundEnum round) {
         List<OmAiEvidenceDO> evidenceList = evidenceMapper.selectList(
                 new QueryWrapper<OmAiEvidenceDO>()
@@ -338,13 +349,9 @@ public class OmAiModelingAsyncProcessor {
             throw new IllegalStateException("没有可用于本轮抽取的证据，任务已终止");
         }
         int textWindowCount = Math.max(1, (evidenceList.size() + WINDOW_SIZE - 1) / WINDOW_SIZE);
-        int imageCount = Math.toIntExact(fileMapper.selectCount(new QueryWrapper<OmAiFileDO>()
-                .eq("task_id", task.getId()).in("file_ext", List.of("png", "jpg", "jpeg"))));
-        int totalCalls = textWindowCount + imageCount;
+        int totalCalls = textWindowCount;
         int[] completedCalls = {0};
-        int textCalls = executeTextWindows(task, round, evidenceList, totalCalls, completedCalls);
-        int visionCalls = executeImageFiles(task, round, totalCalls, completedCalls);
-//        return round.name() + "完成：文本窗口调用 " + textCalls + " 次，多模态调用 " + visionCalls + " 次";
+        executeTextWindows(task, round, evidenceList, totalCalls, completedCalls);
         return round.getStage().getLabel();
     }
 
@@ -373,48 +380,10 @@ public class OmAiModelingAsyncProcessor {
             String analysisSummary = extractAnalysisSummary(responseContent);
             updateStageReasoning(joinReasoning(
                     Optional.ofNullable(currentStage.get()).map(OmAiStageDO::getReasoningContent).orElse(""),
-                    "文本证据窗口 " + calls + " 分析结论", analysisSummary));
+                    "分析结论", analysisSummary));
             updateStageProgress(callProgress(completedCalls[0], totalCalls),
                     "文本模型已完成第 " + calls + " 个证据窗口分析。模型分析摘要：" + analysisSummary,
                     TEXT_MODEL_NAME, toIndex - fromIndex, completedCalls[0]);
-        }
-        return calls;
-    }
-
-    /** 对图片文件执行同一轮多模态抽取。 */
-    private int executeImageFiles(OmAiTaskDO task, OmAiExtractionRoundEnum round, int totalCalls, int[] completedCalls) {
-        int calls = 0;
-        List<OmAiFileDO> files = fileMapper.selectList(
-                new QueryWrapper<OmAiFileDO>().eq("task_id", task.getId()));
-        for (OmAiFileDO file : files) {
-            if (!Set.of("png", "jpg", "jpeg").contains(file.getFileExt())) {
-                continue;
-            }
-            String prompt = promptLoader.load(round.getPromptResource())
-                    + "\n\n前序候选索引：" + loadEntityIndex(task.getId())
-                    + "\n\n当前图片文件：" + file.getFileName();
-            AiChatMessage message = AiChatMessage.user(
-                    prompt,
-                    List.of(new AiChatMedia(mime(file.getFileExt()), download(file.getFileUrl()), file.getFileName())));
-            updateStageProgress(callProgress(completedCalls[0], totalCalls),
-                    "正在调用多模态模型分析图片：" + file.getFileName() + "，重点识别：" + stageThinking(round.getStage().getCode()),
-                    VISION_MODEL_NAME, 1, completedCalls[0]);
-            AiChatRequest request = auditableStreamingRequest(
-                    modelApi.getModelRef(MODEL_KEY_ID, VISION_MODEL_NAME),
-                    List.of(message), 8000);
-            String responseContent = streamModelResponse(
-                    request, VISION_MODEL_NAME, callProgress(completedCalls[0], totalCalls),
-                    "图片 " + file.getFileName());
-            handleRoundResponse(task, round, responseContent);
-            calls++;
-            completedCalls[0]++;
-            updateStageReasoning(joinReasoning(
-                    Optional.ofNullable(currentStage.get()).map(OmAiStageDO::getReasoningContent).orElse(""),
-                    "图片 " + file.getFileName() + " 分析结论", extractAnalysisSummary(responseContent)));
-            updateStageProgress(callProgress(completedCalls[0], totalCalls),
-                    "多模态模型已完成图片 " + file.getFileName() + " 的分析。模型分析摘要："
-                            + extractAnalysisSummary(responseContent),
-                    VISION_MODEL_NAME, 1, completedCalls[0]);
         }
         return calls;
     }
@@ -475,16 +444,28 @@ public class OmAiModelingAsyncProcessor {
 
     /** 读取媒体文件。 */
     private byte[] download(String url) {
-        try (var input = new URL(url).openStream()) {
-            return input.readAllBytes();
+        try {
+            if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+                try (var input = new URL(url).openStream()) {
+                    return input.readAllBytes();
+                }
+            }
+            String relativePath = Optional.ofNullable(url).orElse("").replace('\\', '/');
+            if (relativePath.startsWith(Constants.RESOURCE_PREFIX + "/")) {
+                relativePath = relativePath.substring(Constants.RESOURCE_PREFIX.length() + 1);
+            }
+            while (relativePath.startsWith("/")) {
+                relativePath = relativePath.substring(1);
+            }
+            Path storageRoot = Path.of(localStoragePath).toAbsolutePath().normalize();
+            Path filePath = storageRoot.resolve(relativePath).normalize();
+            if (!filePath.startsWith(storageRoot)) {
+                throw new IllegalArgumentException("非法文件路径");
+            }
+            return Files.readAllBytes(filePath);
         } catch (Exception exception) {
             throw new IllegalStateException("媒体文件读取失败：" + url, exception);
         }
-    }
-
-    /** 获得图片 MIME 类型。 */
-    private String mime(String extension) {
-        return Set.of("jpg", "jpeg").contains(extension) ? "image/jpeg" : "image/png";
     }
 
     /** 加载前序候选索引。 */
@@ -721,7 +702,7 @@ public class OmAiModelingAsyncProcessor {
                 updateStageProgress(streamingStageId, streamingStage, progress,
                         analysisProcess.isBlank()
                                 ? "正在分析" + batchName + "，模型推理过程正在流式输出。"
-                                : "正在分析" + batchName + "，结构化中文分析过程正在流式输出。",
+                                : "正在分析" + batchName + "，结构化分析过程正在流式输出。",
                         modelName, null, modelReasoning.length() + content.length());
                 updateStageReasoning(streamingStageId, streamingStage,
                         joinReasoning(previousReasoning, batchName, currentReasoning));
@@ -749,13 +730,13 @@ public class OmAiModelingAsyncProcessor {
             return "模型请求已建立，正在等待首个推理分片。";
         }
         if (reasoning.isBlank()) {
-            return "【中文分析过程】\n" + analysis;
+            return "【分析过程】\n" + analysis;
         }
         if (analysis.isBlank()) {
             return "【模型推理过程】\n" + trim(reasoning, 60000);
         }
         return "【模型推理过程】\n" + trim(reasoning, 60000)
-                + "\n\n【中文分析过程】\n" + analysis;
+                + "\n\n【分析过程】\n" + analysis;
     }
 
     /**
@@ -822,12 +803,15 @@ public class OmAiModelingAsyncProcessor {
     }
 
     /**
-     * 构造包含模型推理通道和结构化中文分析过程的流式请求。
+     * 构造包含模型推理通道和结构化分析过程的流式请求。
      * reasoningContent 与正文 analysisProcess 均通过当前阶段 SSE 实时推送。
      */
     private AiChatRequest auditableStreamingRequest(tech.qiantong.qontology.ai.api.model.AiModelRef model,
                                                      List<AiChatMessage> messages, int maxTokens) {
-        return new AiChatRequest(model, messages, 0.0, maxTokens, Map.of("enable_thinking", true));
+        List<AiChatMessage> requestMessages = new ArrayList<>();
+        requestMessages.add(AiChatMessage.system(CHINESE_OUTPUT_SYSTEM_PROMPT));
+        requestMessages.addAll(messages);
+        return new AiChatRequest(model, requestMessages, 0.0, maxTokens, Map.of("enable_thinking", true));
     }
 
     /** 保存枚举类型及全部枚举值。 */

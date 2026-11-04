@@ -73,12 +73,16 @@
                   show-word-limit
                 />
               </el-form-item>
-              <el-form-item label="上传文件" prop="files">
-                <AiFileUpload
-                  v-model="form.files"
-                  :disabled="submitting || isEditMode"
+              <el-form-item label="上传文件" prop="filePaths">
+                <FileUpload2
+                  v-model="form.filePaths"
+                  :file-name="form.fileNames"
                   :limit="5"
-                  :file-size="20"
+                  :file-size="5"
+                  :file-type="aiFileTypes"
+                  :disabled="submitting || isEditMode"
+                  relative-url
+                  @update:file-info-list="(files) => (form.files = files)"
                 />
               </el-form-item>
             </el-form>
@@ -275,8 +279,9 @@
 
 <script setup name="AiModelingAdd">
 import { useRoute, useRouter } from "vue-router";
+import useTagsViewStore from "@/store/system/tagsView";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
-import AiFileUpload from "../components/AiFileUpload.vue";
+import FileUpload2 from "@/components/FileUpload2";
 import TargetTab from "../tabs/TargetTab.vue";
 import TermTab from "../tabs/TermTab.vue";
 import EnumTab from "../tabs/EnumTab.vue";
@@ -297,6 +302,7 @@ import { getToken } from "@/utils/auth";
 const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
+const tagsViewStore = useTagsViewStore();
 const { versionId, requireVersion } = useOntologyVersion();
 const { om_ai_stage_status } = proxy.useDict("om_ai_stage_status");
 
@@ -311,20 +317,33 @@ const expandedReasoning = ref([]);
 const reasoningContainers = new Map();
 let streamController = null;
 
-const form = reactive({ taskName: "", description: "", files: [] });
+const aiFileTypes = [
+  "txt",
+  "pdf",
+  "html",
+  "xlsx",
+  "xls",
+  "docx",
+  "csv",
+  "md",
+  "mdx",
+  "htm",
+  "markdown",
+  "ttl",
+];
+const form = reactive({
+  taskName: "",
+  description: "",
+  filePaths: "",
+  fileNames: [],
+  files: [],
+});
 const isEditMode = computed(() => Boolean(Number(route.query.id)));
 const rules = computed(() => ({
   taskName: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
-  files: isEditMode.value
-    ? []
-    : [
-        {
-          validator: (_, value, callback) =>
-            value?.length ? callback() : callback(new Error("请上传文件")),
-          trigger: "change",
-        },
-      ],
-  files: [{ required: true, message: "上传文件不能为空", trigger: "change" }],
+  filePaths: [
+    { required: true, message: "上传文件不能为空", trigger: "change" },
+  ],
 }));
 
 const tabs = [
@@ -415,14 +434,17 @@ async function saveAndContinue() {
       startAnalysisStream();
       return;
     }
-    const data = new FormData();
-    data.append("taskName", form.taskName);
-    data.append("description", form.description || "");
-    data.append("versionId", versionId.value);
-    form.files
-      .filter((file) => file.raw)
-      .forEach((file) => data.append("files", file.raw));
-    const response = await createAiTask(data);
+    const response = await createAiTask({
+      taskName: form.taskName,
+      description: form.description || "",
+      versionId: versionId.value,
+      files: form.files.map((file) => ({
+        fileName: file.fileName || file.name,
+        fileUrl: file.fileUrl || file.url,
+        fileExt: file.fileExt,
+        fileSize: file.fileSize || file.size || 0,
+      })),
+    });
     taskId.value = Number(response.data);
     router.replace({ path: route.path, query: { taskId: taskId.value } });
     activeStep.value = 1;
@@ -536,9 +558,19 @@ async function adoptEverything() {
   );
 }
 
-function goList() {
+async function goList() {
   stopAnalysisStream();
-  proxy.$tab.closeOpenPage({ path: `/om/${versionId.value}/aiModeling` });
+  const listPath = `/om/${versionId.value}/aiModeling`;
+  // 列表页被 keep-alive 缓存，直接跳回只会复用旧实例；先移除其缓存，
+  // 返回时重新挂载列表页，从而触发列表页自身的数据加载逻辑。
+  const listView = tagsViewStore.visitedViews.find(
+    (view) => view.path === listPath
+  );
+  if (listView) {
+    await tagsViewStore.delCachedView(listView);
+    await nextTick();
+  }
+  proxy.$tab.closeOpenPage({ path: listPath });
 }
 
 function timelineType(status) {
@@ -585,11 +617,14 @@ onMounted(async () => {
       getAiFiles(editTaskId),
     ]);
     task.value = taskResponse.data || {};
-    form.files = (fileResponse.data || []).map((file) => ({
-      uid: `persisted-${file.id}`,
-      name: file.fileName,
-      url: file.fileUrl,
-      persisted: true,
+    const files = fileResponse.data || [];
+    form.filePaths = files.map((file) => file.fileUrl).join(",");
+    form.fileNames = files.map((file) => file.fileName);
+    form.files = files.map((file) => ({
+      fileName: file.fileName,
+      fileUrl: file.fileUrl,
+      fileExt: file.fileExt,
+      fileSize: file.fileSize,
     }));
     form.taskName = task.value.taskName || "";
     form.description = task.value.description || "";

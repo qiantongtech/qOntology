@@ -17,154 +17,59 @@
 -->
 <template>
   <div ref="pageRef" class="candidate-tab-page">
-    <div class="justify-between mb15">
-      <el-row :gutter="15" class="btn-style"
-        ><el-col :span="1.5"
-          ><el-button
-            type="primary"
-            plain
-            :disabled="!selectedIds.length"
-            @click="adoptBatch"
-            ><i class="iconfont-mini icon-queren mr5"></i>批量采纳</el-button
-          ></el-col
-        ><el-col :span="1.5"
-          ><el-button
-            type="danger"
-            plain
-            :disabled="!selectedIds.length"
-            @click="remove()"
-            ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button
-          ></el-col
-        ></el-row
-      >
-      <right-toolbar :search="false" :columns="columns" @queryTable="load" />
-    </div>
-    <el-table
-      v-loading="loading"
-      :data="rows"
-      row-key="id"
-      stripe
-      @sort-change="handleSortChange"
-      :default-sort="{ prop: 'createTime', order: 'descending' }"
-      @selection-change="select"
+    <qt-wrap
+      :columns="tableStore.columns"
+      :table-ref="tableRef"
+      :config="wrapConfig"
     >
-      <el-table-column
-        type="selection"
-        width="55"
-        align="center"
-        :selectable="(row) => row.adoptStatus !== 1"
-      />
-      <el-table-column
-        v-if="visible('id')"
-        prop="id"
-        label="编号"
-        width="80"
-        align="center"
-        fixed="left"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending', null]"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      />
-      <el-table-column
-        v-if="visible('startType')"
-        label="起点类型"
-        min-width="150"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          objectName(row.startObjectCandidateId)
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('name')"
-        prop="name"
-        label="关系名称"
-        min-width="160"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.name || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('endType')"
-        label="终点类型"
-        min-width="150"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          objectName(row.endObjectCandidateId)
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('description')"
-        prop="description"
-        label="描述"
-        min-width="240"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.description || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('reversibleFlag')"
-        label="是否可逆"
-        width="100"
-        align="center"
-        ><template #default="{ row }">{{
+      <template #actions-data>
+        <el-button
+          type="primary"
+          plain
+          :disabled="!selectedIds.length"
+          @click="adoptBatch"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-queren mr5"></i>批量采纳
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          :disabled="!selectedIds.length"
+          @click="remove()"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop]
+        }}</template>
+        <!-- 起止类型存的是候选编号，需要换成对象类型名称展示。 -->
+        <template #objectName="{ row, column_data }">{{
+          objectName(row[column_data.prop])
+        }}</template>
+        <template #reversibleFlag="{ row }">{{
           reversibleLabel(row.reversibleFlag)
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('reverseName')"
-        prop="reverseName"
-        label="反向名称"
-        min-width="150"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.reverseName || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('adoptStatus')"
-        label="采纳状态"
-        width="110"
-        align="center"
-        ><template #default="{ row }"
-          ><dict-tag
-            :options="om_ai_adopt_status"
-            :value="row.adoptStatus" /></template
-      ></el-table-column>
-      <el-table-column
-        v-if="visible('createBy')"
-        prop="createBy"
-        label="创建人"
-        width="120"
-        align="center"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row.createBy || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('createTime')"
-        prop="createTime"
-        label="创建时间"
-        width="180"
-        align="center"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending', null]"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column
-        v-if="visible('operation')"
-        label="操作"
-        width="200"
-        align="center"
-        fixed="right"
-        class-name="small-padding fixed-width"
-      >
-        <template #default="{ row }">
+        }}</template>
+        <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
+        </template>
+        <template #adoptStatus="{ row }">
+          <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus" />
+        </template>
+        <template #handle="{ row }">
           <el-button
             link
             type="primary"
@@ -180,135 +85,143 @@
             @click="showEvidence(row)"
             >来源</el-button
           >
-          <el-popover placement="bottom" :width="120" trigger="click">
+          <el-popover
+            placement="bottom"
+            :width="107"
+            popper-class="handle-popover"
+            trigger="click"
+          >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <div class="butgdlist">
-              <el-button
-                link
-                type="primary"
-                icon="View"
-                @click="showDetail(row)"
-                >详情</el-button
-              >
-              <el-button
-                link
-                type="primary"
-                icon="Edit"
-                :disabled="row.adoptStatus === 1"
-                @click="edit(row)"
-                >修改</el-button
-              >
-              <el-button
-                link
-                type="danger"
-                icon="Delete"
-                :disabled="row.adoptStatus === 1"
-                @click="remove(row)"
-                >删除</el-button
-              >
-            </div>
+            <el-button
+              link
+              type="primary"
+              icon="View"
+              @click="showDetail(row)"
+              >详情</el-button
+            >
+            <el-button
+              link
+              type="primary"
+              icon="Edit"
+              :disabled="row.adoptStatus === 1"
+              @click="edit(row)"
+              >修改</el-button
+            >
+            <el-button
+              link
+              type="danger"
+              icon="Delete"
+              :disabled="row.adoptStatus === 1"
+              @click="remove(row)"
+              >删除</el-button
+            >
           </el-popover>
         </template>
-      </el-table-column>
-      <template #empty
-        ><div class="emptyBg">
-          <img src="@/assets/system/images/no_data/noData.png" alt="暂无关系" />
-          <p>暂无关系</p>
-        </div></template
-      >
-    </el-table>
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      v-model:page="query.pageNum"
-      v-model:limit="query.pageSize"
-      @pagination="load"
-    />
+      </qt-table>
+    </qt-wrap>
+
+    <!-- 修改关系对话框 -->
     <el-dialog
       v-model="open"
       title="修改关系"
       width="1100px"
       :append-to="pageRef"
       :close-on-click-modal="false"
+      :close-on-press-escape="!saving"
       draggable
       destroy-on-close
       @closed="formRef?.clearValidate()"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-row :gutter="20">
-          <el-col :span="24"
-            ><el-form-item label="起点类型" prop="startObjectCandidateId"
-              ><el-select
+          <el-col :span="24">
+            <el-form-item label="起点类型" prop="startObjectCandidateId">
+              <el-select
                 v-model="form.startObjectCandidateId"
                 placeholder="请选择起点类型"
                 clearable
                 style="width: 100%"
-                ><el-option
+              >
+                <el-option
                   v-for="item in objects"
                   :key="item.id"
                   :label="item.name"
-                  :value="item.id" /></el-select></el-form-item
-          ></el-col>
-          <el-col :span="24"
-            ><el-form-item label="关系名称" prop="name"
-              ><el-input
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="关系名称" prop="name">
+              <el-input
                 v-model="form.name"
                 placeholder="请输入关系名称"
-                maxlength="128个字符" /></el-form-item
-          ></el-col>
-          <el-col :span="24"
-            ><el-form-item label="终点类型" prop="endObjectCandidateId"
-              ><el-select
+                :maxlength="128"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="终点类型" prop="endObjectCandidateId">
+              <el-select
                 v-model="form.endObjectCandidateId"
                 placeholder="请选择终点类型"
                 clearable
                 style="width: 100%"
-                ><el-option
+              >
+                <el-option
                   v-for="item in objects"
                   :key="item.id"
                   :label="item.name"
-                  :value="item.id" /></el-select></el-form-item
-          ></el-col>
-          <el-col :span="24"
-            ><el-form-item label="是否可逆" prop="reversibleFlag"
-              ><el-radio-group
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="是否可逆" prop="reversibleFlag">
+              <el-radio-group
                 v-model="form.reversibleFlag"
                 @change="(value) => value !== 1 && (form.reverseName = '')"
-                ><el-radio
+              >
+                <el-radio
                   v-for="dict in sys_yes_no"
                   :key="dict.value"
-                  :label="dict.value === 'Y' ? 1 : 0"
+                  :value="dict.value === 'Y' ? 1 : 0"
                   >{{ dict.label }}</el-radio
-                ></el-radio-group
-              ></el-form-item
-            ></el-col
-          >
-          <el-col v-if="form.reversibleFlag === 1" :span="24"
-            ><el-form-item label="反向名称" prop="reverseName" required
-              ><el-input
+                >
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col v-if="form.reversibleFlag === 1" :span="24">
+            <el-form-item label="反向名称" prop="reverseName" required>
+              <el-input
                 v-model="form.reverseName"
                 placeholder="请输入反向名称"
-                maxlength="128个字符" /></el-form-item
-          ></el-col>
-          <el-col :span="24"
-            ><el-form-item label="描述" prop="description"
-              ><el-input
+                :maxlength="128"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="描述" prop="description">
+              <el-input
                 v-model="form.description"
                 class="character-count"
                 type="textarea"
                 :rows="4"
                 placeholder="请输入描述"
-                maxlength="512个字符"
-                show-word-limit /></el-form-item
-          ></el-col>
-          <el-col :span="24"
-            ><el-form-item label="关联建模目标" prop="targetIds"
-              ><el-button type="primary" plain @click="targetPickerOpen = true"
+                :maxlength="512"
+                show-word-limit
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="关联建模目标" prop="targetIds">
+              <el-button type="primary" plain @click="targetPickerOpen = true"
                 >导入建模目标</el-button
-              ></el-form-item
-            >
+              >
+            </el-form-item>
             <div class="target-table">
               <TargetTable
                 :targets="selectedTargets"
@@ -319,13 +232,16 @@
           </el-col>
         </el-row>
       </el-form>
-      <template #footer
-        ><div class="dialog-footer">
-          <el-button size="mini" @click="open = false">取 消</el-button
-          ><el-button type="primary" size="mini" @click="save">确 定</el-button>
-        </div></template
-      >
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button :disabled="saving" @click="open = false">取 消</el-button>
+          <el-button type="primary" :loading="saving" @click="save"
+            >确 定</el-button
+          >
+        </div>
+      </template>
     </el-dialog>
+
     <CandidateTargetPicker
       v-model="targetPickerOpen"
       :task-id="taskId"
@@ -333,44 +249,54 @@
       :append-to="pageRef"
       @confirm="addTargets"
     />
+
+    <!-- 关系详情对话框 -->
     <el-dialog
       v-model="detailOpen"
       title="关系详情"
       width="800px"
       :append-to="pageRef"
       draggable
-      ><el-form label-width="110px"
-        ><el-form-item label="起点类型"
-          ><div class="form-readonly">
-            {{ objectName(detail.startObjectCandidateId) }}
-          </div></el-form-item
-        ><el-form-item label="关系名称"
-          ><div class="form-readonly">
-            {{ detail.name || "-" }}
-          </div></el-form-item
-        ><el-form-item label="终点类型"
-          ><div class="form-readonly">
-            {{ objectName(detail.endObjectCandidateId) }}
-          </div></el-form-item
-        ><el-form-item label="是否可逆"
-          ><div class="form-readonly">
-            {{ reversibleLabel(detail.reversibleFlag) }}
-          </div></el-form-item
-        ><el-form-item v-if="detail.reversibleFlag === 1" label="反向名称"
-          ><div class="form-readonly">
-            {{ detail.reverseName || "-" }}
-          </div></el-form-item
-        ><el-form-item label="描述"
-          ><div class="form-readonly textarea">
-            {{ detail.description || "-" }}
-          </div></el-form-item
-        ></el-form
-      ><template #footer
-        ><div class="dialog-footer">
-          <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
-        </div></template
-      ></el-dialog
     >
+      <el-form label-width="110px">
+        <el-form-item label="起点类型">
+          <div class="form-readonly">
+            {{ objectName(detail.startObjectCandidateId) }}
+          </div>
+        </el-form-item>
+        <el-form-item label="关系名称">
+          <div class="form-readonly">
+            {{ detail.name || "-" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="终点类型">
+          <div class="form-readonly">
+            {{ objectName(detail.endObjectCandidateId) }}
+          </div>
+        </el-form-item>
+        <el-form-item label="是否可逆">
+          <div class="form-readonly">
+            {{ reversibleLabel(detail.reversibleFlag) }}
+          </div>
+        </el-form-item>
+        <el-form-item v-if="detail.reversibleFlag === 1" label="反向名称">
+          <div class="form-readonly">
+            {{ detail.reverseName || "-" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="描述">
+          <div class="form-readonly textarea">
+            {{ detail.description || "-" }}
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="detailOpen = false">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
     <CandidateEvidenceDrawer v-model="evidenceVisible" :evidences="evidences" />
   </div>
 </template>
@@ -383,6 +309,7 @@ import {
   saveCandidateTargets,
   updateCandidate,
 } from "@/api/om/aiModeling";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import TargetTable from "../../om/object/type/TargetTable.vue";
 import CandidateTargetPicker from "../components/CandidateTargetPicker.vue";
 import CandidateEvidenceDrawer from "../components/CandidateEvidenceDrawer.vue";
@@ -394,32 +321,25 @@ const { om_ai_adopt_status, sys_yes_no } = proxy.useDict(
   "om_ai_adopt_status",
   "sys_yes_no"
 );
+
 const pageRef = ref();
 const formRef = ref();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
+const saving = ref(false);
 const form = ref({});
-const columns = ref([
-  { key: "id", label: "编号", visible: true },
-  { key: "startType", label: "起点类型", visible: true },
-  { key: "name", label: "关系名称", visible: true },
-  { key: "endType", label: "终点类型", visible: true },
-  { key: "description", label: "描述", visible: true },
-  { key: "reversibleFlag", label: "是否可逆", visible: true },
-  { key: "reverseName", label: "反向名称", visible: true },
-  { key: "adoptStatus", label: "采纳状态", visible: true },
-  { key: "createBy", label: "创建人", visible: true },
-  { key: "createTime", label: "创建时间", visible: true },
-  { key: "operation", label: "操作", visible: true },
-]);
-const visible = (key) =>
-  columns.value.find((item) => item.key === key)?.visible !== false;
-
 const detail = ref({});
 const objects = ref([]);
 const targetPickerOpen = ref(false);
 const selectedTargets = ref([]);
-const required = (row) => {
+
+/**
+ * 收集采纳前缺失的必填项名称，供公共页签逻辑提示用户。
+ * @param {Object} row 当前候选行数据
+ * @returns {Array<string>} 缺失字段的中文名称列表
+ */
+function required(row) {
   const missing = [];
   if (!row.startObjectCandidateId) missing.push("起点类型");
   if (!row.name?.trim()) missing.push("关系名称");
@@ -428,23 +348,152 @@ const required = (row) => {
   if (Number(row.reversibleFlag) === 1 && !row.reverseName?.trim())
     missing.push("反向名称");
   return missing;
-};
+}
+
+const tab = useCandidateTab("relation", props.taskId, required);
 const {
-  rows,
-  total,
-  loading,
+  tableRef,
+  fetchRows,
   selectedIds,
-  query,
   evidenceVisible,
   evidences,
-  load,
-  select,
-  handleSortChange,
+  refresh,
+  select: handleSelectionChange,
   adoptOne,
   adoptBatch,
   remove,
   showEvidence,
-} = useCandidateTab("relation", props.taskId, required);
+} = tab;
+
+/**
+ * 页签嵌在宿主容器内：详情页的外层卡片已带白底与内边距，开启 full 会重复一层间距和阴影并把内容强撑高；
+ * 页签内又没有搜索区，所以同时关闭操作栏的“隐藏搜索”按钮。
+ */
+const wrapConfig = {
+  fullContent: false,
+  actions: { table: { search: false } },
+};
+
+// 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      align: "center",
+      selectable: (row) => row.adoptStatus !== 1,
+    },
+    {
+      label: "编号",
+      prop: "id",
+      slot: "text",
+      width: 80,
+      minWidth: 80,
+      align: "center",
+      fixed: "left",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "起点类型",
+      prop: "startObjectCandidateId",
+      slot: "objectName",
+      width: 160,
+      minWidth: 160,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "关系名称",
+      prop: "name",
+      slot: "text",
+      width: 160,
+      minWidth: 160,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "终点类型",
+      prop: "endObjectCandidateId",
+      slot: "objectName",
+      width: 160,
+      minWidth: 160,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 240,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "是否可逆",
+      prop: "reversibleFlag",
+      slot: "reversibleFlag",
+      width: 100,
+      minWidth: 100,
+      align: "center",
+    },
+    {
+      label: "反向名称",
+      prop: "reverseName",
+      slot: "text",
+      width: 150,
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      slot: "adoptStatus",
+      width: 110,
+      minWidth: 110,
+      align: "center",
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 120,
+      minWidth: 120,
+      align: "center",
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 180,
+      minWidth: 180,
+      align: "center",
+      sortable: "custom",
+      sortOrders: ["descending", "ascending", null],
+    },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 200,
+      minWidth: 200,
+      align: "center",
+      fixed: "right",
+    },
+  ],
+  func: fetchRows,
+});
+
 const rules = {
   startObjectCandidateId: [
     { required: true, message: "请选择起点类型", trigger: "change" },
@@ -488,12 +537,26 @@ const rules = {
     },
   ],
 };
+
+/**
+ * 按候选编号取对象类型名称。
+ * @param {number|string} id 对象候选编号
+ * @returns {string} 对象类型名称，找不到时返回占位符
+ */
 const objectName = (id) =>
   objects.value.find((item) => item.id === id)?.name || "-";
+
+/**
+ * 将是否可逆的数字标记转成字典文案。
+ * @param {number|string} value 可逆标记
+ * @returns {string} 字典标签
+ */
 const reversibleLabel = (value) =>
   sys_yes_no.value.find(
     (item) => item.value === (Number(value) === 1 ? "Y" : "N")
   )?.label || "-";
+
+/** 加载对象类型候选，供起止类型名称回显和下拉选择使用。 */
 async function loadObjects() {
   const response = await listCandidates("object", {
     taskId: props.taskId,
@@ -502,16 +565,31 @@ async function loadObjects() {
   });
   objects.value = response.data?.rows || [];
 }
+
+/**
+ * 追加导入的建模目标。
+ * @param {Array<Object>} targets 选中的目标候选
+ */
 function addTargets(targets) {
   selectedTargets.value = [...selectedTargets.value, ...targets];
   form.value.targetIds = selectedTargets.value.map((item) => item.id);
 }
+
+/**
+ * 移除已关联的建模目标。
+ * @param {Object} row 待移除的目标行
+ */
 function removeTarget(row) {
   selectedTargets.value = selectedTargets.value.filter(
     (item) => String(item.id) !== String(row.id)
   );
   form.value.targetIds = selectedTargets.value.map((item) => item.id);
 }
+
+/**
+ * 打开修改弹窗并回显已关联的建模目标。
+ * @param {Object} row 当前行数据
+ */
 async function edit(row) {
   form.value = {
     ...row,
@@ -524,43 +602,58 @@ async function edit(row) {
   open.value = true;
   nextTick(() => formRef.value?.clearValidate());
 }
-async function showDetail(row) {
+
+/**
+ * 打开详情弹窗。
+ * @param {Object} row 当前行数据
+ */
+function showDetail(row) {
   detail.value = { ...row };
   detailOpen.value = true;
 }
+
+/** 提交修改与目标关联，提交期间锁定确定按钮避免重复入库。 */
 async function save() {
-  if (!(await formRef.value.validate().catch(() => false))) return;
-  await updateCandidate("relation", {
-    id: form.value.id,
-    taskId: props.taskId,
-    name: form.value.name.trim(),
-    description: (form.value.description || "").trim(),
-    startObjectCandidateId: form.value.startObjectCandidateId,
-    endObjectCandidateId: form.value.endObjectCandidateId,
-    reversibleFlag: form.value.reversibleFlag,
-    reverseName:
-      form.value.reversibleFlag === 1 ? form.value.reverseName?.trim() : "",
-  });
-  await saveCandidateTargets("relation", form.value.id, form.value.targetIds);
-  proxy.$modal.msgSuccess("修改成功");
-  open.value = false;
-  await load();
+  if (saving.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid || saving.value || !open.value) return;
+  saving.value = true;
+  try {
+    await updateCandidate("relation", {
+      id: form.value.id,
+      taskId: props.taskId,
+      name: form.value.name.trim(),
+      description: (form.value.description || "").trim(),
+      startObjectCandidateId: form.value.startObjectCandidateId,
+      endObjectCandidateId: form.value.endObjectCandidateId,
+      reversibleFlag: form.value.reversibleFlag,
+      reverseName:
+        form.value.reversibleFlag === 1 ? form.value.reverseName?.trim() : "",
+    });
+    await saveCandidateTargets("relation", form.value.id, form.value.targetIds);
+    proxy.$modal.msgSuccess("修改成功");
+    open.value = false;
+    refresh();
+  } finally {
+    saving.value = false;
+  }
 }
+
 loadObjects();
-load();
 </script>
 
 <style scoped lang="scss">
 .target-table {
   margin: 0 0 10px 120px;
 }
+
 @media (max-width: 600px) {
   .target-table {
     margin-left: 0;
   }
 }
+
 .character-count :deep(.el-input__count) {
   background: transparent;
 }
 </style>
-

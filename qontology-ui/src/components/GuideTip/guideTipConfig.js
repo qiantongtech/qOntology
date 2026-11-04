@@ -116,19 +116,19 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'om/object/relation.list': {
-        title: '对象类型关系',
+        title: '对象类型关系<span class="tip-unbold"> —— 业务对象间的语义关联</span>',
         content: '定义对象类型之间的业务联系，配置起点类型、终点类型及可逆关系，并关联建模目标，明确业务对象之间的语义关联。',
         type: 'remind',
         version: '1.0'
     },
     'om/constraint/model.list': {
-        title: '模型公理',
+        title: '模型公理<span class="tip-unbold"> —— 本体建模的语义约束基准</span>',
         content: '统一维护对象类型、关系和属性的模型公理，为本体建模提供一致的语义约束。',
         type: 'remind',
         version: '1.0'
     },
     'om/constraint/data.list': {
-        title: '数据规则',
+        title: '数据规则<span class="tip-unbold"> —— 数据质量校验的统一口径</span>',
         content: '维护必填、枚举、取值范围和格式校验规则，配置失败条件、条件关系及提示级别，统一数据质量检查口径。',
         type: 'remind',
         version: '1.0'
@@ -140,15 +140,22 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'ontology/aiModeling.list': {
-        title: 'AI辅助建模',
+        title: 'AI辅助建模<span class="tip-unbold"> —— 业务文档到本体模型的智能转化中枢</span>',
         content: '通过上传业务文档，由 AI 自动分析其中的业务概念、核心问题及业务规则，生成候选术语、建模目标、对象类型、属性、关系、枚举值和约束规则，帮助您梳理“业务中有哪些对象、对象具备哪些信息、彼此如何关联、需要遵循什么规则”。分析结果供您审核，可查看、修改或删除候选内容，确认后按需批量采纳或一键全部采纳，将文档中的业务知识转化为当前项目可用的建模内容。',
         type: 'remind',
         version: '1.0'
     },
     // 基础管理
     'basic/project.list': {
-        title: '项目管理',
+        title: '项目管理<span class="tip-unbold"> —— 本体建模的独立工作空间</span>',
         content: '定义本体建模项目，维护项目名称、项目领域、命名空间与状态，为建模目标、语义资产和本体模型提供独立的建模上下文与命名基础，支持项目导出。',
+        type: 'remind',
+        version: '1.0'
+    },
+    'basic/projectVersion.list': {
+        title: '版本管理<span class="tip-unbold"> —— 建模资产的版本基线与追溯中枢</span>',
+        content:
+            '集中维护当前项目的全量版本，支持按版本号快速查询，提供版本的新增、修改、删除与详情查看；可基于任意版本建立新基线，并对两个版本的建模内容进行差异对比，清晰记录每一次变更，实现“版本可管理、变更可追溯”。',
         type: 'remind',
         version: '1.0'
     },
