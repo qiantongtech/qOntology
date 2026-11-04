@@ -63,8 +63,7 @@
                 class="ability-row"
               >
                 <el-checkbox v-model="item.enabled"
-                  ><b>{{ item.name }}</b
-                  ><small>{{ item.description }}</small></el-checkbox
+                  ><b>{{ item.name }}</b></el-checkbox
                 ><dict-tag
                   :options="abilityStatusOptions"
                   :value="item.enabled ? 'enabled' : 'disabled'"
@@ -129,7 +128,6 @@
               <el-button
                 class="send-button"
                 type="primary"
-                circle
                 :icon="Promotion"
                 :loading="debugging"
                 @click="sendDebug"
@@ -190,19 +188,16 @@ const abilityGroups = reactive([
       {
         id: 1,
         name: "对象条件查询",
-        description: "按对象类型与属性条件检索实例",
         enabled: true,
       },
       {
         id: 2,
         name: "关系路径追溯",
-        description: "沿本体关系查询上下游对象",
         enabled: true,
       },
       {
         id: 3,
         name: "对象集查询",
-        description: "调用项目已配置的对象集",
         enabled: true,
       },
     ],
@@ -217,19 +212,16 @@ const abilityGroups = reactive([
       {
         id: 4,
         name: "对象指标统计",
-        description: "按业务维度统计对象指标",
         enabled: true,
       },
       {
         id: 5,
         name: "约束规则校验",
-        description: "使用本体约束检查对象数据",
         enabled: true,
       },
       {
         id: 6,
         name: "关系影响分析",
-        description: "分析多级关系影响范围",
         enabled: false,
       },
     ],
@@ -244,19 +236,16 @@ const abilityGroups = reactive([
       {
         id: 7,
         name: "生成分析清单",
-        description: "整理查询结果和来源依据",
         enabled: true,
       },
       {
         id: 8,
         name: "创建跟进任务",
-        description: "创建关联来源对象的任务",
         enabled: true,
       },
       {
         id: 9,
         name: "发送站内提醒",
-        description: "向指定角色发送业务提醒",
         enabled: false,
       },
     ],
@@ -334,15 +323,22 @@ onMounted(loadProjects);
 </script>
 
 <style scoped lang="scss">
+/*
+ * 设计 Token 对齐首页 (system/index.vue)
+ * 字号体系：16px(标题/500~600) → 14px(正文/表单/辅助)
+ * 颜色：重点 rgba(0,0,0,0.85) | 正文 rgba(0,0,0,0.65) | 辅助 var(--qt-text-secondary)
+ * 分隔线：板块 #e8e8e8 | 卡片内 #e2e2e2
+ * 圆角：统一 2px（图标容器 4/8px 例外）
+ */
 .config-page {
   height: calc(100vh - 84px);
   padding: 15px;
-  background: #f2f4f7;
+  background: #f0f2f5;
   box-sizing: border-box;
 }
 .workspace {
   display: grid;
-  grid-template-columns: minmax(600px, 1fr) minmax(440px, 0.78fr);
+  grid-template-columns: minmax(480px, 0.7fr) minmax(620px, 1.3fr);
   gap: 15px;
   height: 100%;
 }
@@ -351,6 +347,7 @@ onMounted(loadProjects);
   margin-bottom: 0px;
   min-height: 0;
   background: #fff;
+  border-radius: 2px;
 }
 .setting-panel {
   display: flex;
@@ -359,10 +356,10 @@ onMounted(loadProjects);
 .panel-head {
   display: flex;
   align-items: center;
-  height: 54px;
+  height: 50px;
   flex: none;
   padding: 0 20px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid #e8e8e8;
 }
 .panel-head .h2-titles {
   margin: 0;
@@ -378,7 +375,7 @@ onMounted(loadProjects);
   justify-content: flex-end;
   gap: 8px;
   padding: 12px 20px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid #e8e8e8;
   flex: none;
 }
 .panel-foot :deep(.el-button) {
@@ -390,9 +387,9 @@ onMounted(loadProjects);
   display: flex;
   align-items: center;
   margin-bottom: 16px;
-  color: rgba(0, 0, 0, 0.85);
   font-size: 16px;
   font-weight: 500;
+  line-height: 22px;
 }
 .h2-titles:before {
   display: inline-block;
@@ -400,7 +397,7 @@ onMounted(loadProjects);
   height: 16px;
   margin-right: 8px;
   border-radius: 3px;
-  background: #2666fb;
+  background: var(--el-color-primary);
   content: "";
 }
 .agent-form {
@@ -423,8 +420,9 @@ onMounted(loadProjects);
   justify-content: space-between;
   margin: 5px 0 14px;
   padding: 12px 14px;
-  border: 1px solid #e1e6ee;
-  background: #f7f8fa;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  border-radius: 2px;
 }
 .ontology-card > div {
   display: flex;
@@ -433,28 +431,32 @@ onMounted(loadProjects);
 }
 .ontology-card svg {
   width: 18px;
-  color: #2666fb;
+  color: var(--el-color-primary);
 }
 .ontology-card b,
 .ontology-card small {
   display: block;
 }
 .ontology-card b {
-  color: #303133;
+  color: rgba(0, 0, 0, 0.85);
   font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .ontology-card small {
   margin-top: 3px;
-  color: #909399;
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .sub-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 9px;
-  color: #606266;
-  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
+  line-height: 22px;
 }
 .object-list {
   display: grid;
@@ -469,29 +471,30 @@ onMounted(loadProjects);
 .object-list svg {
   width: 15px;
   margin-right: 6px;
-  color: #2666fb;
+  color: var(--el-color-primary);
 }
 .ability-list {
   display: grid;
-  gap: 12px;
+  gap: 15px;
 }
 .ability-group {
-  border: 1px solid #e1e6ee;
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
 }
 .ability-head {
   display: flex;
   align-items: center;
   gap: 9px;
   padding: 10px 12px;
-  background: #f7f8fa;
-  border-bottom: 1px solid #e7ebf1;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
 }
 .ability-head > span {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 5px;
+  width: 38px;
+  height: 38px;
+  border-radius: 2px;
 }
 .ability-head svg {
   width: 16px;
@@ -501,20 +504,23 @@ onMounted(loadProjects);
   display: block;
 }
 .ability-head strong {
-  color: #303133;
-  font-size: 14px;
+  font-family: PingFang SC;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  color: rgba(0, 0, 0, 0.85);
 }
 .ability-head small {
-  margin-top: 3px;
-  color: #909399;
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .ability-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 13px;
-  border-bottom: 1px solid #edf0f4;
+  border-bottom: 1px solid #e8e8e8;
 }
 .ability-row:last-child {
   border-bottom: 0;
@@ -524,13 +530,16 @@ onMounted(loadProjects);
   display: block;
 }
 .ability-row :deep(.el-checkbox__label) b {
-  color: #4a5568;
+  color: rgba(0, 0, 0, 0.65);
   font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .ability-row :deep(.el-checkbox__label) small {
   margin-top: 3px;
-  color: #909399;
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .debug-panel {
   display: flex;
@@ -539,10 +548,9 @@ onMounted(loadProjects);
 .debug-title {
   display: flex;
   align-items: center;
-  height: 54px;
+  height: 50px;
   flex: none;
-  padding: 0 20px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid #e8e8e8;
   background: #fff;
 }
 .debug-title .h2-titles {
@@ -552,7 +560,7 @@ onMounted(loadProjects);
   flex: 1;
   overflow: auto;
   padding: 18px;
-  background: #fafbfc;
+  background: #fff;
 }
 .empty-debug {
   display: flex;
@@ -564,33 +572,39 @@ onMounted(loadProjects);
   text-align: center;
 }
 .empty-debug > svg {
-  width: 50px;
-  height: 50px;
-  color: #c4cada;
+  width: 62px;
+  height: 62px;
+  color: #d4d9e3;
 }
 .empty-debug strong {
-  margin-top: 14px;
-  color: #606266;
-  font-size: 13px;
+  margin-top: 18px;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .empty-debug p {
-  color: #909399;
+  margin: 8px 0 18px;
+  color: var(--qt-text-secondary);
   font-size: 14px;
+  line-height: 22px;
 }
 .empty-debug button {
-  width: 290px;
-  margin-top: 7px;
+  width: 300px;
+  height: 34px;
+  margin-top: 8px;
   padding: 8px 10px;
-  border: 1px solid #dfe4ec;
+  border: 1px solid #e8e8e8;
   border-radius: 2px;
-  color: #606266;
+  color: rgba(0, 0, 0, 0.65);
   background: #fff;
   font-size: 14px;
+  line-height: 17px;
   cursor: pointer;
 }
 .empty-debug button:hover {
-  border-color: #9cb8f3;
-  color: #2666fb;
+  border-color: var(--el-color-primary);
+  color: var(--el-color-primary);
 }
 .message {
   display: flex;
@@ -606,9 +620,9 @@ onMounted(loadProjects);
   width: 30px;
   height: 30px;
   flex: none;
-  border-radius: 4px;
+  border-radius: 2px;
   color: #fff;
-  background: #2666fb;
+  background: var(--el-color-primary);
 }
 .message > span svg {
   width: 16px;
@@ -619,74 +633,80 @@ onMounted(loadProjects);
 .message p {
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid #e1e6ee;
+  border: 1px solid #e8e8e8;
   border-radius: 2px;
-  color: #4f5c70;
+  color: rgba(0, 0, 0, 0.65);
   background: #fff;
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 22px;
 }
 .message.user p {
   color: #fff;
-  border-color: #2666fb;
-  background: #2666fb;
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary);
 }
 .source-box {
   margin-top: 7px;
   padding: 9px 11px;
-  border: 1px solid #dce7fb;
-  background: #f6f9ff;
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
+  background: #fafbfc;
 }
 .source-box b,
 .source-box small {
   display: block;
 }
 .source-box b {
-  color: #46638f;
-  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .source-box small {
   margin-top: 4px;
-  color: #7a879a;
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .debug-foot {
   flex: none;
   padding: 12px 20px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid #e8e8e8;
 }
 .composer {
   padding: 10px 11px 7px 14px;
-  border: 1px solid #e0e7f1;
-  border-radius: 9px;
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
   background: #fff;
-  box-shadow: 0 5px 14px #385f9808;
-  transition: 0.2s;
 }
 .composer.focused {
-  border-color: #a6c3fc;
-  box-shadow: 0 0 0 3px #2666fb12;
+  border-color: var(--el-color-primary);
+  box-shadow: 0 0 0 2px rgba(38, 102, 251, 0.1);
 }
 .composer :deep(.el-textarea__inner) {
   padding: 0;
   border: 0;
   box-shadow: none;
-  color: #4c5870;
+  color: rgba(0, 0, 0, 0.85);
   font-size: 14px;
+  line-height: 22px;
 }
 .composer-tools {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 5px;
-  color: #abb4c1;
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .send-button {
   width: 30px;
   height: 30px;
   border: 0;
-  box-shadow: 0 5px 11px #2666fb2b;
+  border-radius: 2px;
+  padding: 0;
+  box-shadow: 0 5px 11px rgba(38, 102, 251, 0.17);
 }
 .send-button :deep(svg) {
   width: 15px;
@@ -697,30 +717,7 @@ onMounted(loadProjects);
   }
   .debug-panel {
     display: none;
+    padding: 0px 20px;
   }
-}
-.workspace {
-  grid-template-columns: minmax(480px, 0.7fr) minmax(620px, 1.3fr);
-}
-.messages {
-  background: #fff;
-}
-.empty-debug > svg {
-  width: 62px;
-  height: 62px;
-  color: #d4d9e3;
-}
-.empty-debug strong {
-  margin-top: 18px;
-  color: #303133;
-  font-size: 13px;
-}
-.empty-debug p {
-  margin: 8px 0 18px;
-}
-.empty-debug button {
-  width: 300px;
-  height: 34px;
-  margin-top: 8px;
 }
 </style>

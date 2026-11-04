@@ -1265,7 +1265,6 @@ function sleep(ms) {
     padding-left: 20px;
     display: flex;
     width: auto;
-    color: #303133;
     transition: 0.3s;
     transform: translateZ(0);
 

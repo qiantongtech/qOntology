@@ -147,14 +147,6 @@
             </div></el-col
           >
         </el-row>
-        <el-alert
-          v-if="task.status === 3 && task.failureReason"
-          class="mt15"
-          type="error"
-          :closable="false"
-          show-icon
-          :title="task.failureReason"
-        />
       </div>
     </div>
 

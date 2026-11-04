@@ -1,4 +1,6 @@
 import request from '@/utils/request'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
+import { getToken } from '@/utils/auth'
 
 /** 候选数据类型与后端驼峰资源路径的映射。 */
 const candidatePaths = {
@@ -58,6 +60,34 @@ export function updateAiTask(data) {
 /** 更新文件列表但不触发解析，解析仅由“重新解析”操作启动。 */
 export function updateAiTaskFiles(data) {
   return request({ url: '/om/aiTask/files', method: 'post', data })
+}
+
+/** 启动 AI 解析并逐条接收任务、阶段和模型输出事件。 */
+export function streamAiTaskAnalysis(taskId, ctrl, onMessage, onError, onClose) {
+  return fetchEventSource(
+    `${import.meta.env.VITE_APP_BASE_API}/om/aiTask/${taskId}/analyze-stream`,
+    {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+        Accept: 'text/event-stream'
+      },
+      openWhenHidden: true,
+      signal: ctrl.signal,
+      async onopen(response) {
+        if (!response.ok) {
+          throw new Error(`AI解析流连接失败（${response.status}）`)
+        }
+        const contentType = response.headers.get('content-type') || ''
+        if (!contentType.startsWith('text/event-stream')) {
+          throw new Error(`AI解析流响应类型异常（${contentType || '未知'}）`)
+        }
+      },
+      onmessage: onMessage,
+      onerror: onError,
+      onclose: onClose
+    }
+  )
 }
 
 /** 删除 AI 辅助建模任务。 */

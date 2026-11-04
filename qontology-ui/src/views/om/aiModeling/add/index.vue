@@ -76,7 +76,7 @@
               <el-form-item label="上传文件" prop="filePaths">
                 <FileUpload2
                   v-model="form.filePaths"
-                  :file-name="form.fileNames"
+                  v-model:file-name="form.fileNames"
                   :limit="5"
                   :file-size="5"
                   :file-type="aiFileTypes"
@@ -295,9 +295,9 @@ import {
   createAiTask,
   getAiFiles,
   getAiTask,
+  streamAiTaskAnalysis,
   updateAiTask,
 } from "@/api/om/aiModeling";
-import { getToken } from "@/utils/auth";
 
 const { proxy } = getCurrentInstance();
 const route = useRoute();
@@ -316,6 +316,20 @@ const activeTab = ref("target");
 const expandedReasoning = ref([]);
 const reasoningContainers = new Map();
 let streamController = null;
+const durationTick = ref(0);
+let durationTimer = null;
+
+function startDurationTimer() {
+  stopDurationTimer();
+  durationTick.value = 0;
+  durationTimer = setInterval(() => durationTick.value++, 1000);
+}
+function stopDurationTimer() {
+  if (durationTimer) {
+    clearInterval(durationTimer);
+    durationTimer = null;
+  }
+}
 
 const aiFileTypes = [
   "txt",
@@ -376,11 +390,21 @@ const analysisEvidenceCount = computed(() =>
   Number(fileParseStage.value?.outputCount || 0)
 );
 const analysisDuration = computed(() => {
-  const duration = stages.value.reduce(
-    (total, stage) => total + Number(stage.durationMs || 0),
-    0
-  );
-  return duration > 0 ? formatDuration(duration) : "-";
+  const startedMs = Date.parse(task.value.startedTime);
+  if (!startedMs) return "-";
+  if (task.value.status === 2 || task.value.status === 3) {
+    // 已结束：用任务起止时间差，或回退到各阶段 durationMs 之和
+    const finishedMs = Date.parse(task.value.finishedTime);
+    if (finishedMs) return formatDuration(finishedMs - startedMs);
+    const fallback = stages.value.reduce(
+      (total, stage) => total + Number(stage.durationMs || 0),
+      0
+    );
+    return fallback > 0 ? formatDuration(fallback) : "-";
+  }
+  // 运行中：实时累加；依赖 durationTick 确保每秒刷新视图
+  durationTick.value;
+  return formatDuration(Date.now() - startedMs);
 });
 const overallProgress = computed(() => {
   if (task.value.status === 2) return 100;
@@ -465,71 +489,22 @@ async function startAnalysisStream() {
   streamController = new AbortController();
 
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_APP_BASE_API}/om/aiTask/${
-        taskId.value
-      }/analyze-stream`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          Accept: "text/event-stream",
-        },
-        signal: streamController.signal,
-      }
+    await streamAiTaskAnalysis(
+      taskId.value,
+      streamController,
+      (message) => {
+        if (!message.data) return;
+        const streamEvent = JSON.parse(message.data.replace(/^data:/, ""));
+        handleStreamEvent({
+          ...streamEvent,
+          eventType: streamEvent.eventType || message.event,
+        });
+      },
+      (error) => {
+        throw error;
+      },
+      () => {}
     );
-    if (!response.ok || !response.body) {
-      throw new Error(`AI解析流连接失败（${response.status}）`);
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
-      const events = buffer.split("\n\n");
-      buffer = events.pop() || "";
-      for (const rawEvent of events) {
-        const data = rawEvent
-          .split("\n")
-          .filter((line) => line.startsWith("data:"))
-          .map((line) => line.slice(5).trim())
-          .join("\n");
-        if (!data) continue;
-        const streamEvent = JSON.parse(data);
-        if (streamEvent.eventType === "snapshot") {
-          task.value = streamEvent.task || {};
-          stages.value = streamEvent.stages || [];
-        } else if (streamEvent.eventType === "task") {
-          task.value = { ...task.value, ...(streamEvent.task || {}) };
-        } else if (streamEvent.eventType === "stage" && streamEvent.stage) {
-          const index = stages.value.findIndex(
-            (item) => item.id === streamEvent.stage.id
-          );
-          if (index >= 0) {
-            stages.value.splice(index, 1, {
-              ...stages.value[index],
-              ...streamEvent.stage,
-            });
-          } else {
-            stages.value.push(streamEvent.stage);
-            stages.value.sort(
-              (left, right) => left.sequenceNo - right.sequenceNo
-            );
-          }
-          if (
-            streamEvent.stage.status === 1 &&
-            !expandedReasoning.value.includes(String(streamEvent.stage.id))
-          ) {
-            expandedReasoning.value.push(String(streamEvent.stage.id));
-          }
-          await nextTick();
-          scrollReasoningToBottom(streamEvent.stage.id);
-        }
-      }
-    }
   } catch (error) {
     if (error?.name !== "AbortError") {
       proxy.$modal.msgError(
@@ -539,6 +514,40 @@ async function startAnalysisStream() {
   } finally {
     streamController = null;
   }
+}
+
+/** 收到一条完整 SSE 消息后立即同步到页面。 */
+function handleStreamEvent(streamEvent) {
+  if (streamEvent.eventType === "snapshot") {
+    task.value = streamEvent.task || {};
+    stages.value = streamEvent.stages || [];
+    return;
+  }
+  if (streamEvent.eventType === "task") {
+    task.value = { ...task.value, ...(streamEvent.task || {}) };
+    return;
+  }
+  if (streamEvent.eventType !== "stage" || !streamEvent.stage) return;
+
+  const index = stages.value.findIndex(
+    (item) => item.id === streamEvent.stage.id
+  );
+  if (index >= 0) {
+    stages.value.splice(index, 1, {
+      ...stages.value[index],
+      ...streamEvent.stage,
+    });
+  } else {
+    stages.value.push(streamEvent.stage);
+    stages.value.sort((left, right) => left.sequenceNo - right.sequenceNo);
+  }
+  if (
+    streamEvent.stage.status === 1 &&
+    !expandedReasoning.value.includes(String(streamEvent.stage.id))
+  ) {
+    expandedReasoning.value.push(String(streamEvent.stage.id));
+  }
+  nextTick(() => scrollReasoningToBottom(streamEvent.stage.id));
 }
 
 function stopAnalysisStream() {
@@ -606,7 +615,19 @@ function formatDuration(duration) {
     : `${Math.floor(seconds / 60)}分${seconds % 60}秒`;
 }
 
-onUnmounted(stopAnalysisStream);
+onUnmounted(() => {
+  stopAnalysisStream();
+  stopDurationTimer();
+});
+
+watch(
+  () => task.value.status,
+  (status) => {
+    if (status === 1) startDurationTimer();
+    else stopDurationTimer();
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   const editTaskId = Number(route.query.id);
@@ -651,7 +672,6 @@ onMounted(async () => {
     padding-left: 20px;
     display: flex;
     width: auto;
-    color: #303133;
     transition: 0.3s;
     transform: translateZ(0);
     &::-webkit-scrollbar {
@@ -905,7 +925,6 @@ onMounted(async () => {
   content: "";
 }
 .analysis-stat-item strong {
-  color: #303133;
   font-size: 17px;
   font-weight: 600;
   line-height: 24px;
