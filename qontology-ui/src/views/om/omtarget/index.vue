@@ -222,7 +222,7 @@ const tableStore = reactive({
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
-    { label: "关联元素", slot: "relatedElementCount", minWidth: 220, align: "left" },
+    { label: "关联元素", slot: "relatedElementCount", minWidth: 240, align: "left" },
     { label: "优先级", prop: "priority", slot: "priority", width: 100 },
     { label: "验证状态", prop: "acceptStatus", slot: "acceptStatus", width: 100 },
     { label: "操作", slot: "action", fixed: "right", width: 240 },
@@ -295,7 +295,7 @@ async function loadTargets(params) {
       listObjectTypes(query),
       listRelations(query),
     ]);
-    const labels = ["对象类型", "对象关系"];
+    const labels = ["对象类型", "对象类型关系"];
     return {
       ...row,
       relatedElementTags: results.map((result, index) => {
