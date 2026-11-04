@@ -54,22 +54,15 @@
                      @click="handleDetail(row)"
           >详情
           </el-button>
-          <el-popover
-            v-if="auth.hasPermiOr(['om:constraint:datarule:edit', 'om:constraint:datarule:remove'])"
-            placement="bottom" :width="107" popper-class="handle-popover" trigger="click"
-          >
-            <template #reference>
-              <el-button link type="primary" icon="ArrowDown">更多</el-button>
-            </template>
-            <el-button v-if="auth.hasPermi('om:constraint:datarule:edit')" link type="primary" icon="Edit"
-                       :disabled="saving" @click="handleUpdate(row)"
-            >修改
-            </el-button>
-            <el-button v-if="auth.hasPermi('om:constraint:datarule:remove')" link type="danger" icon="Delete"
-                       :disabled="deleting" @click="handleDelete(row)"
-            >删除
-            </el-button>
-          </el-popover>
+          <!-- 操作区仅三个按钮，直展不折叠到“更多”。 -->
+          <el-button v-if="auth.hasPermi('om:constraint:datarule:edit')" link type="primary" icon="Edit"
+                     :disabled="saving" @click="handleUpdate(row)"
+          >修改
+          </el-button>
+          <el-button v-if="auth.hasPermi('om:constraint:datarule:remove')" link type="danger" icon="Delete"
+                     :disabled="deleting" @click="handleDelete(row)"
+          >删除
+          </el-button>
         </template>
       </qt-table>
     </qt-wrap>
@@ -81,8 +74,8 @@
                @submit.prevent="submitForm"
       >
         <div class="h2-title">基本信息</div>
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入数据规则名称" maxlength="128"/>
+        <el-form-item label="规则名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入规则名称" maxlength="128"/>
         </el-form-item>
         <el-form-item label="类型" prop="type">
           <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
@@ -207,7 +200,7 @@
           />
         </el-form-item>
         <el-form-item label="创建人">
-          <el-input :model-value="detail.createBy || '-'"/>
+          <el-input :model-value="formatCreator(detail)"/>
         </el-form-item>
         <el-form-item label="创建时间">
           <el-input :model-value="proxy.parseTime(detail.createTime, '{y}-{m}-{d} {h}:{i}') || '-'"/>
@@ -313,7 +306,7 @@ const open = ref(false);
 const detailOpen = ref(false);
 const dialogTitle = ref('新增数据规则');
 const detail = ref({});
-const {creatorPhones} = useCreatorPhones();
+const {creatorPhones, formatCreator} = useCreatorPhones();
 
 /**
  * 分页查询数据规则列表；版本号缺失时返回空列表，避免无版本上下文发起无效查询。
@@ -340,14 +333,14 @@ const tableStore = reactive({
   },
   columns: [
     {type: 'selection', width: 55, minWidth: 55},
-    {label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'left', sortable: true},
-    {label: '名称', prop: 'name', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: {effect: 'light'}},
+    {label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true},
+    {label: '规则名称', prop: 'name', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '描述', prop: 'description', slot: 'text', minWidth: 240, align: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '规则类型', prop: 'type', dict: 'om_data_rule_type', width: 150, minWidth: 150},
     {label: '级别', prop: 'level', dict: 'om_rule_level', width: 90, minWidth: 90},
     {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left'},
     {label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true},
-    {label: '操作', slot: 'handle', width: 170, minWidth: 170, fixed: 'right'}
+    {label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right'}
   ],
   func: fetchDataRules,
   params: {
@@ -391,8 +384,8 @@ const emptyForm = () => ({
 const form = ref(emptyForm());
 const rules = {
   name: [
-    {required: true, whitespace: true, message: '数据规则名称不能为空', trigger: 'blur'},
-    {max: 128, message: '名称不能超过128个字符', trigger: 'blur'}
+    {required: true, whitespace: true, message: '规则名称不能为空', trigger: 'blur'},
+    {max: 128, message: '规则名称不能超过128个字符', trigger: 'blur'}
   ],
   type: [{required: true, message: '请选择类型', trigger: 'change'}],
   level: [{required: true, message: '请选择级别', trigger: 'change'}],

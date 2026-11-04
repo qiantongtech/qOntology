@@ -210,7 +210,7 @@
         </el-form-item>
         <el-form-item label="创建人" prop="createBy">
           <div class="form-readonly">
-            {{ form.createBy }}
+            {{ formatCreator(form) }}
           </div>
         </el-form-item>
         <el-form-item label="创建时间" prop="createTime">
@@ -241,7 +241,7 @@ import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 const { proxy } = getCurrentInstance();
-const { creatorPhones } = useCreatorPhones();
+const { creatorPhones, formatCreator } = useCreatorPhones();
 const route = useRoute();
 const router = useRouter();
 
@@ -269,7 +269,7 @@ const tableStore = reactive({
       slot: "text",
       width: 80,
       minWidth: 80,
-      align: "left",
+      align: "center",
       sortable: true,
     },
     {

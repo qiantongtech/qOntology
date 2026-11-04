@@ -127,7 +127,7 @@
           <el-col :span="8"
             ><div class="infotop-row border-top">
               <div class="infotop-row-lable">创建人</div>
-              <div class="infotop-row-value">{{ task.createBy || "-" }}</div>
+              <div class="infotop-row-value">{{ formatCreator(task) }}</div>
             </div></el-col
           >
           <el-col :span="8"
@@ -190,8 +190,11 @@ import AxiomTab from "../tabs/AxiomTab.vue";
 import DataRuleTab from "../tabs/DataRuleTab.vue";
 import TimelineTab from "../tabs/TimelineTab.vue";
 import { adoptAll, getAiFiles, getAiTask } from "@/api/om/aiModeling";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 const { proxy } = getCurrentInstance();
+// 详情页创建人与列表一致，姓名后拼接联系电话。
+const { formatCreator } = useCreatorPhones();
 const route = useRoute();
 const router = useRouter();
 const { versionId } = useOntologyVersion();

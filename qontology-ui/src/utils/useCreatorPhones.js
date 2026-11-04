@@ -24,5 +24,18 @@ export function useCreatorPhones() {
   });
 
   onBeforeUnmount(() => { disposed = true; });
-  return {creatorPhones};
+
+  /**
+   * 拼接详情页“姓名/电话”单行展示文本；电话缺失时仅展示姓名，姓名也缺失时回退为 '-'。
+   * @param {Object} record 含 createBy 与 creatorId 的详情记录
+   * @returns {string} 创建人展示文本
+   */
+  function formatCreator(record) {
+    const name = record?.createBy || '';
+    const phone = record?.creatorId == null ? '' : creatorPhones.value[String(record.creatorId)] || '';
+    if (!name) return phone || '-';
+    return phone ? `${name}/${phone}` : name;
+  }
+
+  return {creatorPhones, formatCreator};
 }

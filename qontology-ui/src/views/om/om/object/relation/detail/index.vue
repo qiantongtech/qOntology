@@ -83,7 +83,7 @@
                         <el-col :xs="24" :sm="8">
                             <div class="infotop-row border-top">
                                 <div class="infotop-row-lable">创建人</div>
-                                <div class="infotop-row-value">{{ detail.createBy || '-' }}</div>
+                                <div class="infotop-row-value">{{ formatCreator(detail) }}</div>
                             </div>
                         </el-col>
                         <el-col :xs="24" :sm="8">
@@ -127,6 +127,7 @@
     import { useRoute, useRouter } from 'vue-router';
     import { ElMessage } from 'element-plus';
     import { getRelation } from '@/api/om/object/relation';
+    import { useCreatorPhones } from '@/utils/useCreatorPhones';
     import TargetPanel from './TargetPanel.vue';
 
     defineOptions({ name: 'OmObjectTypeRelationDetail' });
@@ -134,6 +135,8 @@
     const router = useRouter();
     const { proxy } = getCurrentInstance();
     const { sys_yes_no } = proxy.useDict('sys_yes_no');
+    // 详情页创建人与列表一致，姓名后拼接联系电话。
+    const { formatCreator } = useCreatorPhones();
     const reversibleLabel = (value) =>
         sys_yes_no.value.find((dict) => dict.value === (value === 1 ? 'Y' : value === 0 ? 'N' : ''))?.label || '-';
     const detail = ref({});

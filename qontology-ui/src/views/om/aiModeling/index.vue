@@ -260,7 +260,7 @@ const tableStore = reactive({
       slot: "text",
       width: 80,
       minWidth: 80,
-      align: "left",
+      align: "center",
       sortable: true,
     },
     {

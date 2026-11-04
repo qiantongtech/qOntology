@@ -57,8 +57,10 @@
                         <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
                     </div>
                 </template>
-                <!-- 是否可逆用 1/0 存储，这里沿用页面的字典转换。 -->
-                <template #reversible="{ row }">{{ reversibleLabel(row.reversibleFlag) }}</template>
+                <!-- 是否可逆接口用 1/0 存储，这里映射为 sys_yes_no 字典值渲染。 -->
+                <template #reversible="{ row }">
+                    <dict-tag :options="sys_yes_no" :value="reversibleDictValue(row.reversibleFlag)" />
+                </template>
                 <template #handle="{ row }">
                     <el-button
                         v-hasPermi="['om:object:relation:query']"
@@ -68,35 +70,25 @@
                         @click="handleDetail(row)"
                         >详情</el-button
                     >
-                    <el-popover
-                        v-if="auth.hasPermiOr(['om:object:relation:edit', 'om:object:relation:remove'])"
-                        placement="bottom"
-                        :width="107"
-                        popper-class="handle-popover"
-                        trigger="click"
+                    <!-- 操作区仅三个按钮，直展不折叠到“更多”。 -->
+                    <el-button
+                        v-if="auth.hasPermi('om:object:relation:edit')"
+                        link
+                        type="primary"
+                        icon="Edit"
+                        :disabled="saving"
+                        @click="handleUpdate(row)"
+                        >修改</el-button
                     >
-                        <template #reference>
-                            <el-button link type="primary" icon="ArrowDown">更多</el-button>
-                        </template>
-                        <el-button
-                            v-if="auth.hasPermi('om:object:relation:edit')"
-                            link
-                            type="primary"
-                            icon="Edit"
-                            :disabled="saving"
-                            @click="handleUpdate(row)"
-                            >修改</el-button
-                        >
-                        <el-button
-                            v-if="auth.hasPermi('om:object:relation:remove')"
-                            link
-                            type="danger"
-                            icon="Delete"
-                            :disabled="deleting"
-                            @click="handleDelete(row)"
-                            >删除</el-button
-                        >
-                    </el-popover>
+                    <el-button
+                        v-if="auth.hasPermi('om:object:relation:remove')"
+                        link
+                        type="danger"
+                        icon="Delete"
+                        :disabled="deleting"
+                        @click="handleDelete(row)"
+                        >删除</el-button
+                    >
                 </template>
             </qt-table>
         </qt-wrap>
@@ -111,7 +103,7 @@
             destroy-on-close
             @closed="relationRef?.clearValidate()"
         >
-            <el-form ref="relationRef" :model="form" :rules="rules" label-width="120px" @submit.prevent="submitForm">
+            <el-form ref="relationRef" :model="form" :rules="rules" label-width="140px" @submit.prevent="submitForm">
                 <el-row :gutter="20">
                     <el-col :span="24">
                         <el-form-item label="起点类型" prop="startTypeId">
@@ -129,8 +121,8 @@
                         </el-form-item>
                     </el-col>
                     <el-col :span="24">
-                        <el-form-item label="关系名称" prop="name">
-                            <el-input v-model="form.name" placeholder="请输入关系名称" maxlength="128" />
+                        <el-form-item label="对象类型关系名称" prop="name">
+                            <el-input v-model="form.name" placeholder="请输入对象类型关系名称" maxlength="128" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="24">
@@ -244,9 +236,8 @@
     const { proxy } = getCurrentInstance();
     const { creatorPhones } = useCreatorPhones();
     const { sys_yes_no } = proxy.useDict('sys_yes_no');
-    /** 将 1/0 可逆标识转换为字典文本。 */
-    const reversibleLabel = (value) =>
-        sys_yes_no.value.find((dict) => dict.value === (value === 1 ? 'Y' : value === 0 ? 'N' : ''))?.label || '-';
+    /** 将 1/0 可逆标识转换为 sys_yes_no 字典值。 */
+    const reversibleDictValue = (value) => (value === 1 ? 'Y' : 'N');
     const tableRef = ref();
     const relationRef = ref();
     const selectedIds = ref([]);
@@ -288,16 +279,16 @@
         },
         columns: [
             { type: 'selection', width: 55, minWidth: 55 },
-            { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'left', sortable: true },
+            { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true },
+            { label: '对象类型关系名称', prop: 'name', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '起点类型', prop: 'startTypeName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '关系名称', prop: 'name', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '终点类型', prop: 'endTypeName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '描述', prop: 'description', slot: 'text', minWidth: 240, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 100 },
             { label: '反向名称', prop: 'reverseName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left' },
             { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true },
-            { label: '操作', slot: 'handle', width: 170, minWidth: 170, fixed: 'right' }
+            { label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right' }
         ],
         func: fetchRelations,
         params: {
@@ -309,7 +300,7 @@
     // 搜索项配置
     const searchStore = reactive({
         items: [
-            { label: '关系名称', prop: 'name', component: { is: 'input' } },
+            { label: '对象类型关系名称', prop: 'name', component: { is: 'input' } },
             { label: '是否可逆', prop: 'reversibleFlag', component: { is: 'select', options: reversibleOptions } }
         ]
     });
@@ -329,10 +320,10 @@
     const rules = {
         targetIds: [{ type: 'array', required: true, min: 1, message: '请至少关联一个建模目标', trigger: 'change' }],
         name: [
-            { required: true, whitespace: true, message: '关系名称不能为空', trigger: 'blur' },
+            { required: true, whitespace: true, message: '对象类型关系名称不能为空', trigger: 'blur' },
             {
                 max: 128,
-                message: '关系名称不能超过128个字符',
+                message: '对象类型关系名称不能超过128个字符',
                 trigger: 'blur'
             }
         ],
@@ -563,7 +554,7 @@
         width: 100%;
     }
     .target-table {
-        margin: 0 0 10px 120px;
+        margin: 0 0 10px 140px;
     }
     .object-type-relation-page :deep(.el-dialog) {
         max-width: calc(100vw - 32px);

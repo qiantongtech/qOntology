@@ -242,7 +242,7 @@
   </div>
 </template>
 <script setup>
-import { computed, getCurrentInstance, ref } from "vue";
+import { computed, getCurrentInstance, nextTick, ref } from "vue";
 import {
   getCandidateTargets,
   listCandidates,
@@ -272,8 +272,6 @@ const isExpandAll = ref(true);
 const editingRoot = ref(false);
 // 平铺的对象候选：既用于弹窗内上级/名称回显查询，也用于构建表格树。
 const objectRows = ref([]);
-// 最近一次构建的树节点：整树展开/折叠时逐行调用 el-table 用。
-const treeNodes = ref([]);
 const required = (row) => (!row.name?.trim() ? ["对象类型名称"] : []);
 const tab = useCandidateTab("object", props.taskId, required);
 const {
@@ -318,8 +316,7 @@ function fetchRows(params) {
  */
 function formatData(data) {
   objectRows.value = data || [];
-  treeNodes.value = buildTree(objectRows.value);
-  return treeNodes.value;
+  return buildTree(objectRows.value);
 }
 
 /**
@@ -457,24 +454,10 @@ const objectName = (id) =>
 const hasParent = (row) =>
   row.parentCandidateId != null && String(row.parentCandidateId) !== "0";
 
-/**
- * 展开或折叠全部树节点。
- * 当前 element-plus 为 2.7.6，el-table 尚未提供 toggleAllExpansion（2.9.x 才加入），
- * 直接调用会抛 TypeError 导致整树无任何反应，这里改为遍历树逐行 toggleRowExpansion。
- */
+/** 展开或折叠全部树节点，借助 el-table 实例的全量切换方法。 */
 function toggleExpandAll() {
   isExpandAll.value = !isExpandAll.value;
-  const elTable = tableRef.value?.elTableRef;
-  if (!elTable) return;
-  const walk = (nodes) => {
-    nodes.forEach((node) => {
-      if (node.children?.length) {
-        elTable.toggleRowExpansion(node, isExpandAll.value);
-        walk(node.children);
-      }
-    });
-  };
-  walk(treeNodes.value);
+  nextTick(() => tableRef.value?.elTableRef?.toggleAllExpansion());
 }
 function addTargets(targets) {
   selectedTargets.value = [...selectedTargets.value, ...targets];
