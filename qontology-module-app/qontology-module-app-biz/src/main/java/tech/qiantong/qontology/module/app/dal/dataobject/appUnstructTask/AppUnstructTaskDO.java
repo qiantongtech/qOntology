@@ -38,6 +38,10 @@ public class AppUnstructTaskDO extends BaseEntity {
     private String ttlFilePath;
     /** 任务状态。 */
     private Integer status;
+    /** 最后执行时间。 */
+    private Date lastExecuteTime;
+    /** 执行时长。 */
+    private Integer executeDuration;
     /** 发布状态。 */
     private Integer publishStatus;
     /** 发布时间。 */
@@ -46,6 +50,15 @@ public class AppUnstructTaskDO extends BaseEntity {
     private Long publisherId;
     /** 发布人。 */
     private String publishBy;
+    /**
+     * 责任人用户编号；允许显式更新为空，以支持清除责任人。
+     */
+    private Long responsibleUserId;
+
+    /**
+     * 保存项目时从用户资料读取的责任人姓名快照。
+     */
+    private String responsiblePersonName;
     /** 是否有效。 */
     private Boolean validFlag;
     /** 删除标志。 */

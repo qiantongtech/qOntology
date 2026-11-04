@@ -85,10 +85,10 @@
         </qt-form-item>
       </template>
 
-      <qt-form-item v-if="localForm.dataType === DATA_TYPE.DECIMAL" label="总精度" prop="totalPrecision"
+      <qt-form-item v-if="localForm.dataType === DATA_TYPE.DECIMAL" label="总精度" prop="allPlaces"
                     class="row-full"
       >
-        <el-input-number v-model="localForm.totalPrecision" :min="1" :max="2147483647" :precision="0"
+        <el-input-number v-model="localForm.allPlaces" :min="1" :max="2147483647" :precision="0"
                          controls-position="right"
         />
       </qt-form-item>
@@ -101,14 +101,14 @@
       </qt-form-item>
       <!-- 整数与小数共用数值范围；整数只允许整数边界，小数保留输入的小数边界。 -->
       <template v-if="isNumeric">
-        <qt-form-item label="最小值" prop="minValue" class="row-full">
-          <el-input-number v-model="localForm.minValue"
+        <qt-form-item label="最小值" prop="minLength" class="row-full">
+          <el-input-number v-model="localForm.minLength"
                            :precision="localForm.dataType === DATA_TYPE.INTEGER ? 0 : undefined"
                            controls-position="right" placeholder="不限制"
           />
         </qt-form-item>
-        <qt-form-item label="最大值" prop="maxValue" class="row-full">
-          <el-input-number v-model="localForm.maxValue"
+        <qt-form-item label="最大值" prop="maxLength" class="row-full">
+          <el-input-number v-model="localForm.maxLength"
                            :precision="localForm.dataType === DATA_TYPE.INTEGER ? 0 : undefined"
                            controls-position="right" placeholder="不限制"
           />
@@ -132,14 +132,14 @@
             <el-option v-for="format in dateFormats" :key="format" :label="format" :value="format"/>
           </el-select>
         </qt-form-item>
-        <qt-form-item label="最早日期" prop="minDate" class="row-full">
-          <el-date-picker v-model="localForm.minDate" type="date" :format="localForm.format" value-format="YYYY-MM-DD"
-                          :disabled-date="disableMinDate" clearable placeholder="不限制"
+        <qt-form-item label="最早日期" prop="earliestTime" class="row-full">
+          <el-date-picker v-model="localForm.earliestTime" type="date" :format="localForm.format" value-format="YYYY-MM-DD"
+                          :disabled-date="disableEarliestTime" clearable placeholder="不限制"
           />
         </qt-form-item>
-        <qt-form-item label="最晚日期" prop="maxDate" class="row-full" tip="选填；用于约束允许录入的日期范围。">
-          <el-date-picker v-model="localForm.maxDate" type="date" :format="localForm.format" value-format="YYYY-MM-DD"
-                          :disabled-date="disableMaxDate" clearable placeholder="不限制"
+        <qt-form-item label="最晚日期" prop="latestTime" class="row-full" tip="选填；用于约束允许录入的日期范围。">
+          <el-date-picker v-model="localForm.latestTime" type="date" :format="localForm.format" value-format="YYYY-MM-DD"
+                          :disabled-date="disableLatestTime" clearable placeholder="不限制"
           />
         </qt-form-item>
       </template>
@@ -198,13 +198,11 @@ function createEmptyForm() {
     description: null,
     unit: null,
     decimalPlaces: 2,
-    totalPrecision: 10,
-    minValue: null,
-    maxValue: null,
+    allPlaces: 10,
     trueLabel: '是',
     falseLabel: '否',
-    minDate: null,
-    maxDate: null,
+    earliestTime: null,
+    latestTime: null,
     format: 'YYYY-MM-DD',
     enumType: null,
     minLength: null,
@@ -235,24 +233,24 @@ function validateValueRange(_rule, value, callback) {
   if (value != null && (!Number.isFinite(value) || (localForm.value.dataType === DATA_TYPE.INTEGER && !Number.isInteger(value)))) {
     return callback(new Error(localForm.value.dataType === DATA_TYPE.INTEGER ? '请输入整数' : '请输入有效数值'));
   }
-  const {minValue, maxValue} = localForm.value;
-  callback(minValue != null && maxValue != null && minValue > maxValue ? new Error('最小值不能大于最大值') : undefined);
+  const {minLength, maxLength} = localForm.value;
+  callback(minLength != null && maxLength != null && minLength > maxLength ? new Error('最小值不能大于最大值') : undefined);
 }
 
 /** 总精度包含整数与小数部分，小数位数必须为非负整数且不能超过总精度。 */
 function validatePrecision(_rule, _value, callback) {
-  const {totalPrecision, decimalPlaces} = localForm.value;
-  if (!Number.isInteger(totalPrecision) || totalPrecision < 1 || totalPrecision > 2147483647) {
+  const {allPlaces, decimalPlaces} = localForm.value;
+  if (!Number.isInteger(allPlaces) || allPlaces < 1 || allPlaces > 2147483647) {
     return callback(new Error('总精度必须为正整数'));
   }
   if (!Number.isInteger(decimalPlaces) || decimalPlaces < 0) return callback(new Error('小数位数必须为非负整数'));
-  callback(decimalPlaces > totalPrecision ? new Error('小数位数不能大于总精度') : undefined);
+  callback(decimalPlaces > allPlaces ? new Error('小数位数不能大于总精度') : undefined);
 }
 
 /** 日期选择器固定输出 ISO 日期字符串，可直接比较先后；留空表示不限制。 */
 function validateDateRange(_rule, _value, callback) {
-  const {minDate, maxDate} = localForm.value;
-  callback(minDate && maxDate && minDate > maxDate ? new Error('最早日期不能晚于最晚日期') : undefined);
+  const {earliestTime, latestTime} = localForm.value;
+  callback(earliestTime && latestTime && earliestTime > latestTime ? new Error('最早日期不能晚于最晚日期') : undefined);
 }
 
 /** 按本地日历日期生成比较键，避免使用 UTC 解析导致日期边界偏移。 */
@@ -261,13 +259,13 @@ function dateKey(date) {
 }
 
 /** 禁止选择晚于已设最晚日期的起始日期，相等日期允许选择。 */
-function disableMinDate(date) {
-  return Boolean(localForm.value.maxDate && dateKey(date) > localForm.value.maxDate);
+function disableEarliestTime(date) {
+  return Boolean(localForm.value.latestTime && dateKey(date) > localForm.value.latestTime);
 }
 
 /** 禁止选择早于已设最早日期的结束日期，相等日期允许选择。 */
-function disableMaxDate(date) {
-  return Boolean(localForm.value.minDate && dateKey(date) < localForm.value.minDate);
+function disableLatestTime(date) {
+  return Boolean(localForm.value.earliestTime && dateKey(date) < localForm.value.earliestTime);
 }
 
 /** 检查长度为非负整数，并同时检查上下限，空值表示不限制。 */
@@ -307,17 +305,17 @@ const formRules = computed(() => ({
     }]
   } : {}),
   ...(isNumeric.value ? {
-    minValue: [{validator: validateValueRange, trigger: 'change'}],
-    maxValue: [{validator: validateValueRange, trigger: 'change'}]
+    minLength: [{validator: validateValueRange, trigger: 'change'}],
+    maxLength: [{validator: validateValueRange, trigger: 'change'}]
   } : {}),
   ...(localForm.value.dataType === DATA_TYPE.DECIMAL ? {
-    totalPrecision: [{required: true, validator: validatePrecision, trigger: 'change'}],
+    allPlaces: [{required: true, validator: validatePrecision, trigger: 'change'}],
     decimalPlaces: [{required: true, validator: validatePrecision, trigger: 'change'}]
   } : {}),
   ...(localForm.value.dataType === DATA_TYPE.DATE ? {
     format: [{required: true, message: '请选择展示格式', trigger: 'change'}],
-    minDate: [{validator: validateDateRange, trigger: 'change'}],
-    maxDate: [{validator: validateDateRange, trigger: 'change'}]
+    earliestTime: [{validator: validateDateRange, trigger: 'change'}],
+    latestTime: [{validator: validateDateRange, trigger: 'change'}]
   } : {})
 }));
 

@@ -81,6 +81,44 @@ public class BasicDataTypeDO extends BaseEntity {
      * 枚举类型
      */
     private String enumType;
+    /**
+     * 最大长度
+     */
+    private Integer maxLength;
+    /**
+     * 最小长度
+     */
+    private Integer minLength;
+    /**
+     * 最早日期
+     */
+    private String earliestTime;
+    /**
+     * 最晚日期
+     */
+    private String latestTime;
+    /**
+     * true 对应文案
+     */
+    private String trueLabel;
+    /**
+     * false 对应文案
+     */
+    private String falseLabel;
+    /**
+     * 总位数
+     */
+    private Integer allPlaces;
+
+    /**
+     * 格式验证
+     */
+    private String validationType;
+
+    /**
+     * 正则表达式
+     */
+    private String validationPattern;
 
     /**
      * 是否有效

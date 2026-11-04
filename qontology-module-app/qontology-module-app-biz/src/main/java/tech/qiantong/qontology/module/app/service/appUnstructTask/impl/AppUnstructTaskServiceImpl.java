@@ -235,6 +235,7 @@ public class AppUnstructTaskServiceImpl extends ServiceImpl<AppUnstructTaskMappe
         Long logId = appTaskLogService.startInvoke(
                 unstructTaskDO.getWorkspaceId(), taskId, unstructTaskDO.getName(), AppTaskTypeEnum.UNSTRUCTURED,
                 unstructTaskDO.getCreateBy(), unstructTaskDO.getCreatorId());
+        long startedAt = System.currentTimeMillis();
         try {
             unstructTaskDO.setStatus(AppTaskStatus.INPROGRESS.getValue());
             appUnstructTaskMapper.updateAppUnstructTask(unstructTaskDO);
@@ -242,15 +243,20 @@ public class AppUnstructTaskServiceImpl extends ServiceImpl<AppUnstructTaskMappe
             List<AppUnstructTaskDocRelDO> docRelDOList = appUnstructTaskDocRelService.findByTaskId(taskId);
             execTaskByModel(unstructTaskDO, docRelDOList, logId);
             unstructTaskDO.setStatus(AppTaskStatus.EXECUTED.getValue());
+            unstructTaskDO.setLastExecuteTime(new Date());
+            unstructTaskDO.setExecuteDuration((int) (System.currentTimeMillis() - startedAt)/1000);
             appUnstructTaskMapper.updateAppUnstructTask(unstructTaskDO);
             appTaskLogService.endInvoke(logId, AppLogStatusEnum.SUCCESS, "");
         } catch (Exception exception) {
             unstructTaskDO.setStatus(AppTaskStatus.ERROR.getValue());
+            unstructTaskDO.setLastExecuteTime(new Date());
+            unstructTaskDO.setExecuteDuration((int) (System.currentTimeMillis() - startedAt)/1000);
             appUnstructTaskMapper.updateAppUnstructTask(unstructTaskDO);
             appTaskLogService.recordStep(logId, exception.getMessage());
             appTaskLogService.endInvoke(logId, AppLogStatusEnum.FAIL, exception.getMessage());
             log.error("非结构化抽取失败，taskId={}", taskId, exception);
         }
+
     }
 
     /**

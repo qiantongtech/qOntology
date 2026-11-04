@@ -75,11 +75,16 @@
         <template #text="{ row, column_data }">{{
           row[column_data.prop] || "-"
         }}</template>
+        <!-- 与枚举类型列表一致：正常/停用用开关表示，未取得的空状态仍显示占位符。 -->
         <template #status="{ row }">
-          <dict-tag
-            v-if="row.status !== '-'"
-            :options="sys_normal_disable"
-            :value="row.status"
+          <el-switch
+            v-if="row.status === '0' || row.status === '1'"
+            v-model="row.status"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            active-value="0"
+            inactive-value="1"
+            @change="(e) => handleStatusChange(row, e)"
           />
           <span v-else>—</span>
         </template>
@@ -515,6 +520,35 @@ function cancel() {
   if (saving.value) return;
   open.value = false;
   reset();
+}
+
+/** 状态开关：确认后只切换当前行状态，取消或失败时还原原值。 */
+function handleStatusChange(row, status) {
+  const text = status === "0" ? "启用" : "停用";
+  const previous = status === "0" ? "1" : "0";
+  proxy.$modal
+    .confirm('确认要"' + text + '","' + row.enumLabel + '"枚举数据吗？')
+    .then(() => getData(row.enumCode))
+    .then(function (response) {
+      if (!response.data) throw new Error("记录已不存在，请刷新");
+      // 修改接口要求标签、键值、排序、类型及状态必填，故基于最新记录仅替换状态；
+      // 排序为空时回退为默认值 0，避免历史空值让开关无法切换。
+      return updateData({
+        enumCode: response.data.enumCode,
+        enumLabel: response.data.enumLabel,
+        enumValue: response.data.enumValue,
+        enumSort: response.data.enumSort ?? 0,
+        enumType: defaultEnumType.value || response.data.enumType,
+        status: status,
+        remark: response.data.remark || "",
+      });
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess("操作成功");
+    })
+    .catch(function () {
+      row.status = previous;
+    });
 }
 
 /** 同步当前选中的枚举数据编码，并控制批量删除按钮状态。 */

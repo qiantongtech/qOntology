@@ -31,4 +31,14 @@ public class AppUnstructTaskSaveReqVO extends BaseEntity {
     private Integer status;
     @Schema(description = "发布状态")
     private Integer publishStatus;
+
+    /**
+     * 责任人用户编号；允许显式更新为空，以支持清除责任人。
+     */
+    private Long responsibleUserId;
+
+    /**
+     * 保存项目时从用户资料读取的责任人姓名快照。
+     */
+    private String responsiblePersonName;
 }

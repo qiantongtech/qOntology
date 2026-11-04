@@ -69,6 +69,34 @@ public class BasicDataTypeSaveReqVO extends BaseEntity {
     @Size(max = 100, message = "枚举类型长度不能超过100个字符")
     private String enumType;
 
+    @Schema(description = "最大长度", example = "")
+    private Integer maxLength;
+
+    @Schema(description = "最小长度", example = "")
+    private Integer minLength;
+
+    @Schema(description = "最早日期", example = "")
+    private String earliestTime;
+
+    @Schema(description = "最晚日期", example = "")
+    private String latestTime;
+
+    @Schema(description = "true 对应文案", example = "")
+    private String trueLabel;
+
+    @Schema(description = "false 对应文案", example = "")
+    private String falseLabel;
+
+    @Schema(description = "总位数", example = "")
+    private Integer allPlaces;
+
+    @Schema(description = "格式验证", example = "")
+    private String validationType;
+
+    @Schema(description = "正则表达式", example = "")
+    @Size(max = 256, message = "正则表达式长度不能超过256个字符")
+    private String validationPattern;
+
     @Schema(description = "备注", example = "")
     @Size(max = 512, message = "备注长度不能超过512个字符")
     private String remark;
