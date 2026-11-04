@@ -20,13 +20,14 @@
   <div v-loading="loading" class="app-container enum-detail-page">
     <!-- 使用自由布局保留枚举专属字段；返回行为由本页接管，确保关闭详情后回到枚举列表。 -->
     <detail-info
+      v-if="detail.enumId != null"
       :data="detail"
       :header="{
         className: 'clearfixs',
         idKey: 'enumId',
         nameKey: 'enumName',
         statusKey: 'status',
-        statusOptions: sys_normal_disable,
+        statusOptions: enumStatusOptions,
         routerBack: false,
       }"
       :items="detailItems"
@@ -41,14 +42,14 @@
     <div
       v-if="
         detail.enumId != null &&
-        (auth.hasPermi('basic:enumeration:data:list') ||
-          auth.hasPermi('basic:dataType:datatype:list'))
+          (auth.hasPermi(permissions.data) ||
+            auth.hasPermi(permissions.dataType))
       "
       class="pagecont-bottom"
     >
       <el-tabs v-model="activeName">
         <el-tab-pane
-          v-if="auth.hasPermi('basic:enumeration:data:list')"
+          v-if="auth.hasPermi(permissions.data)"
           label="枚举数据"
           name="data"
         >
@@ -60,7 +61,7 @@
         </el-tab-pane>
         <!-- 直接复用业务数据类型页面；首次切换时加载，并以内嵌模式管理当前枚举的关联业务数据类型。 -->
         <el-tab-pane
-          v-if="auth.hasPermi('basic:dataType:datatype:list')"
+          v-if="auth.hasPermi(permissions.dataType)"
           label="业务数据类型"
           name="related"
           lazy
@@ -77,17 +78,44 @@
 </template>
 
 <script setup name="BasicEnumDetail">
-import { getCurrentInstance, onBeforeUnmount, ref, watch } from "vue";
+import { toEnumStatusOptions } from "@/utils/enumStatus";
+import { computed, defineAsyncComponent, getCurrentInstance, onBeforeUnmount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { getType } from "@/api/basic/enumeration/type";
-import { listData } from "@/api/basic/enumeration/data";
+import { getType as getGlobalType } from "@/api/basic/enumeration/type";
+import { listData as listGlobalData } from "@/api/basic/enumeration/data";
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
-import EnumData from "../data/index.vue";
-import BusinessDataTypes from "@/views/basic/dataType/index.vue";
+import GlobalEnumData from "../data/index.vue";
+import GlobalBusinessDataTypes from "@/views/basic/dataType/index.vue";
+
+// 项目枚举复用相同详情布局，只切换接口、权限和项目版本范围。
+import { useOntologyVersion } from "@/views/om/useOntologyVersion";
+import { getType as getProjectType } from "@/api/om/enumeration/type";
+import { listData as listProjectData } from "@/api/om/enumeration/data";
+
+const props = defineProps({
+  scope: { type: String, default: "global" },
+});
+const isProject = computed(() => props.scope === "project");
+const { versionId } = useOntologyVersion();
+const ProjectEnumData = defineAsyncComponent(() => import("@/views/om/semantic/enum/data/index.vue"));
+const ProjectBusinessDataTypes = defineAsyncComponent(() => import("@/views/om/semantic/dataType/index.vue"));
+const EnumData = computed(() => isProject.value ? ProjectEnumData : GlobalEnumData);
+const BusinessDataTypes = computed(() => isProject.value ? ProjectBusinessDataTypes : GlobalBusinessDataTypes);
+const permissions = computed(() => ({
+  data: `${isProject.value ? "om" : "basic"}:enumeration:data:list`,
+  dataType: `${isProject.value ? "om" : "basic"}:dataType:datatype:list`,
+}));
+function getType(enumId) {
+  return isProject.value ? getProjectType(enumId) : getGlobalType(enumId);
+}
+function listData(params) {
+  return isProject.value ? listProjectData({ ...params, versionId: versionId.value }) : listGlobalData(params);
+}
 
 const { proxy } = getCurrentInstance();
-const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
+const { project_status } = proxy.useDict("project_status");
+const enumStatusOptions = computed(() => toEnumStatusOptions(project_status.value));
 const route = useRoute();
 const { creatorPhones } = useCreatorPhones();
 const detail = ref({});
@@ -99,7 +127,7 @@ const detailItems = [
   { label: "枚举名称", key: "enumName" },
   { label: "枚举类型", key: "enumType" },
   { label: "枚举数据数", key: "enumDataCount" },
-  { label: "备注", key: "remark", span: 24, className: "mt2 mb2" },
+  { label: "备注", key: "remark", span: 24, className: "mt2 mb2", formatter: (value) => value?.trim() || "-" },
   { label: "创建人", key: "createBy", formatter: formatCreator },
   { label: "创建时间", key: "createTime", type: "time" },
   { label: "更新时间", key: "updateTime", type: "time" },
@@ -116,21 +144,25 @@ let countRequest = 0;
 
 /** 跟随路由重新加载枚举详情，清空旧数据并选择当前用户可访问的标签页。 */
 watch(
-  () => route.params.enumId,
-  async (enumId) => {
+  () => [route.params.enumId, isProject.value ? versionId.value : undefined],
+  async ([enumId]) => {
     const request = ++requestVersion;
     detail.value = {};
-    activeName.value = auth.hasPermi("basic:enumeration:data:list")
+    activeName.value = auth.hasPermi(permissions.value.data)
       ? "data"
       : "related";
     emptyMessage.value = "枚举类型已不存在";
     loading.value = false;
-    if (!enumId) return;
+    if (!enumId || (isProject.value && !versionId.value)) return;
     loading.value = true;
     try {
       const response = await getType(enumId);
       // 仅采纳当前枚举的最新详情响应，忽略切换前仍未完成的请求。
       if (request !== requestVersion) return;
+      if (isProject.value && response.data && String(response.data.versionId) !== String(versionId.value)) {
+        emptyMessage.value = "枚举不属于当前项目版本";
+        return;
+      }
       detail.value = response.data || {};
       loadDataCount();
     } catch {
@@ -147,7 +179,7 @@ watch(
 watch(
   () => route.query.tab,
   (tab) => {
-    if (tab === "data" && auth.hasPermi("basic:enumeration:data:list"))
+    if (tab === "data" && auth.hasPermi(permissions.value.data))
       activeName.value = "data";
   },
   { immediate: true }
@@ -158,7 +190,7 @@ async function loadDataCount() {
   const request = ++countRequest;
   const version = requestVersion;
   // 缺少关联键或列表权限时不请求数据接口，避免无效查询及权限错误。
-  if (!detail.value.enumType || !auth.hasPermi("basic:enumeration:data:list"))
+  if (!detail.value.enumType || !auth.hasPermi(permissions.value.data))
     return;
   try {
     // 单独查询未筛选的总数，避免标签或状态筛选影响详情概要。
@@ -185,7 +217,15 @@ onBeforeUnmount(() => {
 
 /** 关闭当前详情页签，并返回固定的枚举列表入口。 */
 function handleReturn() {
-  proxy.$tab.closeOpenPage({ path: "/basic/basicEnum" });
+  proxy.$tab.closeOpenPage({
+    path: isProject.value ? `/om/${versionId.value}/semantic/omEnum` : "/basic/basicEnum",
+  });
 }
 </script>
 
+<style lang="scss" scoped>
+// 两个页签共用详情容器的内边距，搜索栏与操作栏、表格保持左对齐。
+.enum-detail-page :deep(.qt-wrap--search) {
+  padding: 0;
+}
+</style>

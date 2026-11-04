@@ -60,3 +60,8 @@ export function delTerm(id) {
         method: 'delete'
     });
 }
+
+// 仅更新术语状态，避免覆盖名称、别名等其他字段。
+export function updateTermStatus(data) {
+    return request({ url: '/om/term/status', method: 'put', data });
+}

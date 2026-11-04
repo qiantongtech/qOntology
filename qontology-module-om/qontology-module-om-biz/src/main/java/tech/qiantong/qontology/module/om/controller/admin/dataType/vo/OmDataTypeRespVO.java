@@ -21,6 +21,8 @@ package tech.qiantong.qontology.module.om.controller.admin.dataType.vo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import lombok.Data;
 import tech.qiantong.qontology.core.annotation.Excel;
@@ -76,6 +78,56 @@ public class OmDataTypeRespVO implements Serializable {
 
     @Schema(description = "枚举来源：PROJECT 当前项目版本，GLOBAL 全局；与 enumType 配合使用")
     private String enumSource;
+
+    /** 文本最大长度 */
+    @Schema(description = "文本最大长度")
+    private Integer maxLength;
+
+    /** 文本最小长度 */
+    @Schema(description = "文本最小长度")
+    private Integer minLength;
+
+    /** 最早日期 */
+    @Schema(description = "最早日期")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime earliestTime;
+
+    /** 最晚日期 */
+    @Schema(description = "最晚日期")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime latestTime;
+
+    /** true 对应文案 */
+    @Schema(description = "true 对应文案")
+    private String trueValue;
+
+    /** false 对应文案 */
+    @Schema(description = "false 对应文案")
+    private String falseValue;
+
+    /** 总位数 */
+    @Schema(description = "总位数")
+    private Integer allPlaces;
+
+    /** 文本格式校验编码 */
+    @Schema(description = "文本格式校验编码")
+    private String validationType;
+
+    /** 自定义正则表达式 */
+    @Schema(description = "自定义正则表达式")
+    private String validationPattern;
+
+    /** 示例值 */
+    @Schema(description = "示例值")
+    private String exampleValue;
+
+    /** 数值最小值 */
+    @Schema(description = "数值最小值")
+    private BigDecimal minValue;
+
+    /** 数值最大值 */
+    @Schema(description = "数值最大值")
+    private BigDecimal maxValue;
 
     @Schema(description = "是否有效：true 有效，false 无效", example = "")
     @Excel(name = "是否有效")

@@ -19,6 +19,8 @@
 package tech.qiantong.qontology.module.om.dal.dataobject.dataType;
 
 import com.baomidou.mybatisplus.annotation.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.*;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
@@ -76,6 +78,54 @@ public class OmDataTypeDO extends BaseEntity {
 
     /** 枚举来源：PROJECT 当前项目版本，GLOBAL 全局；与 enumType 配合使用 */
     private String enumSource;
+
+    /** 文本最大长度 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Integer maxLength;
+
+    /** 文本最小长度 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Integer minLength;
+
+    /** 最早日期 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private LocalDateTime earliestTime;
+
+    /** 最晚日期 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private LocalDateTime latestTime;
+
+    /** true 对应文案 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String trueValue;
+
+    /** false 对应文案 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String falseValue;
+
+    /** 总位数 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Integer allPlaces;
+
+    /** 文本格式校验编码 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String validationType;
+
+    /** 自定义正则表达式 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String validationPattern;
+
+    /** 示例值 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String exampleValue;
+
+    /** 数值最小值 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private BigDecimal minValue;
+
+    /** 数值最大值 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private BigDecimal maxValue;
 
     /** 是否有效：true 有效，false 无效 */
     private Boolean validFlag;

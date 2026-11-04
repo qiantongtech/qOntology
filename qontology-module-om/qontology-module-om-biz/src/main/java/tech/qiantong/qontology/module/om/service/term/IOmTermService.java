@@ -59,6 +59,9 @@ public interface IOmTermService extends IService<OmTermDO> {
      */
     int updateOmTerm(OmTermSaveReqVO updateReqVO);
 
+    /** 仅修改当前项目版本内术语的启用状态。 */
+    int updateOmTermStatus(Long id, Long versionId, Integer status);
+
     /**
      * 删除术语
      *

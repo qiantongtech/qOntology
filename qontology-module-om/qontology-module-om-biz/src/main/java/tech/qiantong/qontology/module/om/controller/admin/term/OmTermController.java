@@ -43,6 +43,7 @@ import tech.qiantong.qontology.core.utils.poi.ExcelUtil;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermPageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermSaveReqVO;
+import tech.qiantong.qontology.module.om.controller.admin.term.vo.OmTermStatusReqVO;
 import tech.qiantong.qontology.module.om.convert.term.OmTermConvert;
 import tech.qiantong.qontology.module.om.dal.dataobject.term.OmTermDO;
 import tech.qiantong.qontology.module.om.service.term.IOmTermService;
@@ -153,6 +154,14 @@ public class OmTermController extends BaseController {
     @PutMapping
     public CommonResult<Integer> edit(@Valid @RequestBody OmTermSaveReqVO omTerm) {
         return CommonResult.toAjax(omTermService.updateOmTerm(omTerm));
+    }
+
+    @Operation(summary = "修改术语状态")
+    @PreAuthorize("@ss.hasPermi('om:term:term:edit')")
+    @Log(title = "术语状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/status")
+    public CommonResult<Integer> updateStatus(@Valid @RequestBody OmTermStatusReqVO request) {
+        return CommonResult.toAjax(omTermService.updateOmTermStatus(request.getId(), request.getVersionId(), request.getStatus()));
     }
 
     /**

@@ -79,8 +79,23 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
         // 修改内容时不能将术语迁移到其他项目版本
         updateObj.setWorkspaceId(existing.getWorkspaceId());
         updateObj.setVersionId(existing.getVersionId());
+        if (updateObj.getStatus() == null) updateObj.setStatus(existing.getStatus());
         validateNameUnique(updateObj);
         return omTermMapper.updateById(updateObj);
+    }
+
+    @Override
+    public int updateOmTermStatus(Long id, Long versionId, Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new ServiceException("状态只能为0或1", 601);
+        }
+        OmTermDO existing = omTermMapper.selectById(id);
+        if (existing == null || versionId == null || !versionId.equals(existing.getVersionId())) {
+            throw new ServiceException("术语不存在或不属于当前项目版本", 601);
+        }
+        OmTermDO patch = new OmTermDO();
+        patch.setStatus(status);
+        return omTermMapper.update(patch, new QueryWrapper<OmTermDO>().eq("id", id).eq("version_id", versionId));
     }
 
     @Override
@@ -141,6 +156,7 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
                         if (existingOmTerm != null) {
                             omTermDO.setVersionId(existingOmTerm.getVersionId());
                             omTermDO.setWorkspaceId(existingOmTerm.getWorkspaceId());
+                            if (omTermDO.getStatus() == null) omTermDO.setStatus(existingOmTerm.getStatus());
                             validateNameUnique(omTermDO);
                             omTermMapper.updateById(omTermDO);
                             successNum++;
@@ -195,6 +211,10 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
      * @throws ServiceException 版本无效、名称为空或同版本存在同名记录时抛出业务警告
      */
     private void validateNameUnique(OmTermDO record) {
+        if (record.getStatus() == null) record.setStatus(1);
+        if (record.getStatus() != 0 && record.getStatus() != 1) {
+            throw new ServiceException("状态只能为0或1", 601);
+        }
         if (record.getVersionId() == null || record.getVersionId() <= 0) throw new ServiceException("请选择项目版本", 601);
         String name = record.getStdName() == null ? "" : record.getStdName().trim();
         if (name.isEmpty()) throw new ServiceException("术语名称不能为空", 601);

@@ -80,26 +80,32 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'om/target.list': {
-        title: '建模目标',
+        title: '建模目标<span class="tip-unbold"> —— 明确业务问题与建模验收依据</span>',
         content: '围绕业务问题定义建模目标，明确业务场景、优先级和验收标准，关联对象类型与对象关系，跟踪目标覆盖和验证情况。',
         type: 'remind',
         version: '1.0'
     },
     'om/semantic/term.list': {
-        title: '术语管理',
+        title: '术语管理<span class="tip-unbold"> —— 统一业务概念与标准表达</span>',
         content: '维护当前项目版本的标准术语、英文名称、别名及业务释义，统一业务概念的表达，为对象类型和属性命名提供依据。',
         type: 'remind',
         version: '1.0'
     },
     'om/semantic/dataType.list': {
-        title: '业务数据类型',
+        title: '业务数据类型<span class="tip-unbold"> —— 规范属性取值与数据格式</span>',
         content: '维护当前项目版本的业务数据类型，配置基础类型及单位、小数位数、日期格式或枚举，供对象属性和属性范围公理引用。',
         type: 'remind',
         version: '1.0'
     },
     'om/semantic/enum.list': {
-        title: '枚举管理',
+        title: '枚举管理<span class="tip-unbold"> —— 统一业务字段的可选值</span>',
         content: '维护当前项目版本的枚举定义及枚举项，统一状态、类别等业务字段的可选值，供数据类型和对象属性引用。',
+        type: 'remind',
+        version: '1.0'
+    },
+    'om/semantic/enum.data': {
+        title: '枚举项管理<span class="tip-unbold"> —— 维护枚举标签与标准键值</span>',
+        content: '维护当前项目版本的枚举项，配置标签、键值、排序和状态，为业务数据类型提供一致的可选值。',
         type: 'remind',
         version: '1.0'
     },

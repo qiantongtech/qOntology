@@ -18,6 +18,7 @@
 
 <template>
   <div class="app-container overview-page">
+    <GuideTip tip-id="om/overview" />
 
     <!-- 顶部统计卡片 -->
     <div class="metric-grid">

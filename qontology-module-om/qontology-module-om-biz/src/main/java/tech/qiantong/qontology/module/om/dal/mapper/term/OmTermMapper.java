@@ -50,6 +50,7 @@ public interface OmTermMapper extends BaseMapperX<OmTermDO> {
             new LambdaQueryWrapperX<OmTermDO>()
                 .eqIfPresent(OmTermDO::getWorkspaceId, reqVO.getWorkspaceId())
                 .eqIfPresent(OmTermDO::getVersionId, reqVO.getVersionId())
+                .eqIfPresent(OmTermDO::getStatus, reqVO.getStatus())
                 .likeIfPresent(OmTermDO::getStdName, reqVO.getStdName())
                 .likeIfPresent(OmTermDO::getEnName, reqVO.getEnName())
                 .eqIfPresent(OmTermDO::getAlias, reqVO.getAlias())

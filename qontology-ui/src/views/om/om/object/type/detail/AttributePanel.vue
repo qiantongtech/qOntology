@@ -37,13 +37,9 @@
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" plain @click="search"
-          ><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询</el-button
-        >
+        <el-button type="primary" plain @click="search"><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询</el-button>
 
-        <el-button @click="resetSearch"
-          ><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button
-        >
+        <el-button @click="resetSearch"><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button>
       </el-form-item>
     </el-form>
 
@@ -144,13 +140,10 @@
         width="150"
         align="center"
       >
-        <template #default="{ row }"
-          ><el-tag
+        <template #default="{ row }"><el-tag
             :type="row.typeCategory === 2 ? 'success' : 'primary'"
             effect="light"
-            >{{ dataTypeLabel(row.typeCategory) }}</el-tag
-          ></template
-        >
+            >{{ dataTypeLabel(row.typeCategory) }}</el-tag></template>
       </el-table-column>
 
       <el-table-column
@@ -193,8 +186,7 @@
             type="primary"
             icon="View"
             @click="handleDetail(row)"
-            >详情</el-button
-          >
+            >详情</el-button>
 
           <el-button
             v-hasPermi="['om:object:type:edit']"
@@ -203,8 +195,7 @@
             icon="Edit"
             :disabled="saving"
             @click="handleUpdate(row)"
-            >修改</el-button
-          >
+            >修改</el-button>
 
           <el-button
             v-hasPermi="['om:object:type:edit']"
@@ -213,8 +204,7 @@
             icon="Delete"
             :disabled="deleting"
             @click="handleDelete(row)"
-            >删除</el-button
-          >
+            >删除</el-button>
         </template>
       </el-table-column>
 
@@ -257,21 +247,17 @@
         <div class="h2-title">基础信息</div>
 
         <el-row :gutter="20">
-          <el-col :span="24"
-            ><el-form-item label="属性名称" prop="name"
-              ><el-input
+          <el-col :span="24"><el-form-item label="属性名称" prop="name"><el-input
                 v-model="form.name"
                 placeholder="请输入属性名称"
-                maxlength="128" /></el-form-item
-          ></el-col>
+                maxlength="128"
+/></el-form-item></el-col>
 
-          <el-col :span="24"
-            ><el-form-item label="属性代码" prop="code"
-              ><el-input
+          <el-col :span="24"><el-form-item label="属性代码" prop="code"><el-input
                 v-model="form.code"
                 placeholder="例如 purchase_amount"
-                maxlength="128" /></el-form-item
-          ></el-col>
+                maxlength="128"
+/></el-form-item></el-col>
         </el-row>
 
         <el-form-item label="描述" prop="description">
@@ -297,8 +283,7 @@
               v-for="option in dataTypeOptions"
               :key="option.value"
               :label="option.value"
-              >{{ option.label }}</el-radio
-            >
+              >{{ option.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -324,59 +309,39 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item
-          v-else
-          label="业务数据类型"
-          prop="businessTypeId"
-          required
-        >
-          <el-select
-            v-model="selectedBusinessKey"
-            placeholder="请选择业务数据类型"
-            style="width: 100%"
-            filterable
-            clearable
-            :loading="businessTypesLoading && !businessDataTypes.length"
-            no-data-text="暂无可用业务数据类型"
-            @visible-change="(value) => value && loadBusinessDataTypes()"
-          >
-            <template #label>
-              <span class="business-type-label"
-                >{{ selectedBusinessType?.name || form.businessTypeId }}
-
-                <el-tag
-                  :type="
-                    form.businessTypeSource === 'PROJECT' ? 'primary' : 'info'
-                  "
-                  size="small"
-                  >{{
-                    form.businessTypeSource === "PROJECT" ? "当前项目" : "全局"
-                  }}</el-tag
-                >
-              </span>
-            </template>
-
-            <el-option-group
-              v-for="group in businessTypeGroups"
-              :key="group.source"
-              :label="group.label"
+        <template v-else>
+          <el-form-item label="业务类型来源" prop="businessTypeSource" required>
+            <el-radio-group v-model="form.businessTypeSource" @change="handleBusinessSourceChange">
+              <el-radio value="PROJECT">当前项目</el-radio>
+              <el-radio value="GLOBAL">全局</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="业务数据类型" prop="businessTypeId" required>
+            <el-select
+              v-model="form.businessTypeId"
+              placeholder="请选择业务数据类型"
+              style="width: 100%"
+              filterable
+              clearable
+              :loading="businessTypesLoading && !businessDataTypes.length"
+              no-data-text="暂无可用业务数据类型"
+              @change="clearTypeConfig"
+              @visible-change="(value) => value && loadBusinessDataTypes()"
             >
               <el-option
-                v-for="item in group.options"
-                :key="group.source + ':' + item.id"
+                v-for="item in filteredBusinessTypes"
+                :key="item.businessTypeSource + ':' + item.id"
                 :label="item.name"
-                :value="group.source + ':' + item.id"
+                :value="String(item.id)"
               />
-            </el-option-group>
-          </el-select>
-        </el-form-item>
+            </el-select>
+          </el-form-item>
+        </template>
 
         <template v-if="form.typeCategory === 2 && form.businessTypeId">
-          <el-form-item label="基础数据类型"
-            ><div class="form-readonly">
+          <el-form-item label="基础数据类型"><div class="form-readonly">
               {{ basicTypeLabel(effectiveConfig.basicTypeCode) }}
-            </div></el-form-item
-          >
+            </div></el-form-item>
         </template>
 
         <AttributeTypeConfig
@@ -400,17 +365,14 @@
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" :disabled="saving" @click="open = false"
-            >取 消</el-button
-          >
+          <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
 
           <el-button
             type="primary"
             size="mini"
             :loading="saving"
             @click="submitForm"
-            >确 定</el-button
-          >
+            >确 定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -426,67 +388,51 @@
         <div class="h2-title">基础信息</div>
 
         <el-row :gutter="20">
-          <el-col :span="24"
-            ><el-form-item label="属性名称"
-              ><div class="form-readonly">
+          <el-col :span="24"><el-form-item label="属性名称"><div class="form-readonly">
                 {{ attributeDetail.name }}
-              </div></el-form-item
-            ></el-col
-          >
+              </div></el-form-item></el-col>
 
-          <el-col :span="24"
-            ><el-form-item label="属性代码"
-              ><div class="form-readonly">
+          <el-col :span="24"><el-form-item label="属性代码"><div class="form-readonly">
                 {{ attributeDetail.code }}
-              </div></el-form-item
-            ></el-col
-          >
+              </div></el-form-item></el-col>
         </el-row>
 
-        <el-form-item label="描述"
-          ><div class="form-readonly textarea">
+        <el-form-item label="描述"><div class="form-readonly textarea">
             {{ attributeDetail.description || "-" }}
-          </div></el-form-item
-        >
+          </div></el-form-item>
 
-        <el-form-item label="创建人"
-          ><div class="form-readonly">
+        <el-form-item label="创建人"><div class="form-readonly">
             {{ attributeDetail.createBy || "-" }}
-          </div></el-form-item
-        >
+          </div></el-form-item>
 
-        <el-form-item label="创建时间"
-          ><div class="form-readonly">
+        <el-form-item label="创建时间"><div class="form-readonly">
             {{
               proxy.parseTime(
                 attributeDetail.createTime,
                 "{y}-{m}-{d} {h}:{i}"
               ) || "-"
             }}
-          </div></el-form-item
-        >
+          </div></el-form-item>
 
         <div class="h2-title">数据定义</div>
 
-        <el-form-item label="数据类型"
-          ><div class="form-readonly">
+        <el-form-item label="数据类型"><div class="form-readonly">
             {{ dataTypeLabel(attributeDetail.typeCategory) }}
-          </div></el-form-item
-        >
+          </div></el-form-item>
 
+        <el-form-item v-if="attributeDetail.typeCategory === 2" label="业务类型来源">
+          <div class="form-readonly">{{ attributeDetail.businessTypeSource === "PROJECT" ? "当前项目" : "全局" }}</div>
+        </el-form-item>
         <el-form-item
           v-if="attributeDetail.typeCategory === 2"
           label="业务数据类型"
           ><div class="form-readonly">
-            {{ selectedTypeLabel(attributeDetail) }}
-          </div></el-form-item
-        >
+            {{ findBusinessType(attributeDetail)?.name || selectedTypeLabel(attributeDetail) }}
+          </div></el-form-item>
 
-        <el-form-item label="基础数据类型"
-          ><div class="form-readonly">
+        <el-form-item label="基础数据类型"><div class="form-readonly">
             {{ basicTypeLabel(detailConfig.basicTypeCode) }}
-          </div></el-form-item
-        >
+          </div></el-form-item>
 
         <AttributeTypeConfig
           :model="detailConfig"
@@ -495,11 +441,9 @@
         />
       </el-form>
 
-      <template #footer
-        ><div class="dialog-footer">
+      <template #footer><div class="dialog-footer">
           <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
-        </div></template
-      >
+        </div></template>
     </el-dialog>
   </div>
 </template>
@@ -638,7 +582,7 @@ const emptyForm = () => ({
 
   businessTypeId: undefined,
 
-  businessTypeSource: "GLOBAL",
+  businessTypeSource: "PROJECT",
 
   unit: "",
 
@@ -659,42 +603,17 @@ const attributeDetail = ref({});
 
 const selectedBusinessType = computed(() => findBusinessType(form.value));
 
-const selectedBusinessKey = computed({
-  get: () =>
-    form.value.businessTypeId
-      ? `${form.value.businessTypeSource || "GLOBAL"}:${
-          form.value.businessTypeId
-        }`
-      : undefined,
-
-  set: (value) => {
-    const at = (value || "").indexOf(":");
-
-    form.value.businessTypeSource = at < 0 ? "GLOBAL" : value.slice(0, at);
-
-    form.value.businessTypeId = at < 0 ? undefined : value.slice(at + 1);
-
-    clearTypeConfig();
-  },
-});
-
-const businessTypeGroups = computed(() =>
-  [
-    { source: "PROJECT", label: "当前项目" },
-
-    { source: "GLOBAL", label: "全局" },
-  ]
-
-    .map((group) => ({
-      ...group,
-
-      options: businessDataTypes.value.filter(
-        (item) => item.businessTypeSource === group.source
-      ),
-    }))
-
-    .filter((group) => group.options.length)
+const filteredBusinessTypes = computed(() =>
+  businessDataTypes.value.filter((item) =>
+    item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL"),
+  ),
 );
+
+function handleBusinessSourceChange() {
+  form.value.businessTypeId = undefined;
+  clearTypeConfig();
+  nextTick(() => attributeRef.value?.clearValidate("businessTypeId"));
+}
 
 function findBusinessType(attribute) {
   return businessDataTypes.value.find(
@@ -849,6 +768,8 @@ function normalizeAttribute(attribute = {}) {
 
     businessTypeSource: attribute.businessTypeSource || "GLOBAL",
 
+    enumSource: attribute.enumSource || "PROJECT",
+
     businessTypeId:
       attribute.businessTypeId == null || attribute.businessTypeId === ""
         ? undefined
@@ -967,7 +888,7 @@ function handleDataTypeChange() {
 
   form.value.businessTypeId = undefined;
 
-  form.value.businessTypeSource = "GLOBAL";
+  form.value.businessTypeSource = "PROJECT";
 
   clearTypeConfig();
 

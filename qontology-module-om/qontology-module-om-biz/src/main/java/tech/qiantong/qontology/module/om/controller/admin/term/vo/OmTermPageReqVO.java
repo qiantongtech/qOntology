@@ -58,6 +58,11 @@ public class OmTermPageReqVO extends PageParam {
     @Schema(description = "术语来源", example = "")
     private String source;
 
+    @Schema(description = "状态：0 禁用，1 启用")
+    @jakarta.validation.constraints.Min(value = 0, message = "状态只能为0或1")
+    @jakarta.validation.constraints.Max(value = 1, message = "状态只能为0或1")
+    private Integer status;
+
     @Schema(description = "描述", example = "")
     private String description;
 }

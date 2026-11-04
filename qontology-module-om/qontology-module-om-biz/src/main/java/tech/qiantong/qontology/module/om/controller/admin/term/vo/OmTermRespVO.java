@@ -69,6 +69,10 @@ public class OmTermRespVO implements Serializable {
     @Excel(name = "来源")
     private String source;
 
+    @Schema(description = "状态：0 禁用，1 启用")
+    @Excel(name = "状态", readConverterExp = "0=禁用,1=启用")
+    private Integer status;
+
     @Schema(description = "描述", example = "")
     @Excel(name = "描述")
     private String description;

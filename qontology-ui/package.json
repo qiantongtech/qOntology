@@ -10,6 +10,8 @@
     "build:prod": "vite build",
     "build:stage": "vite build --mode staging",
     "preview": "vite preview",
+    "format": "node scripts/format.mjs",
+    "format:check": "node scripts/format.mjs --check",
     "eslint:lint": "eslint src",
     "eslint:fix": "eslint src --fix"
   },

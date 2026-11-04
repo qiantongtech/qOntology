@@ -80,7 +80,7 @@
               :key="index"
               :type="tag.tagType"
               effect="light"
-              >{{ tag.text }}
+            >{{ tag.text }}
             </el-tag>
           </div>
           <span v-else>—</span>
@@ -110,7 +110,7 @@
             type="primary"
             icon="View"
             @click="handleDetail(row)"
-            >详情
+          >详情
           </el-button>
           <el-button
             v-hasPermi="['basic:dataType:datatype:edit']"
@@ -118,7 +118,7 @@
             type="primary"
             icon="Edit"
             @click="handleUpdate(row)"
-            >修改
+          >修改
           </el-button>
           <el-button
             v-hasPermi="['basic:dataType:datatype:remove']"
@@ -126,7 +126,7 @@
             type="danger"
             icon="Delete"
             @click="handleDelete(row)"
-            >删除
+          >删除
           </el-button>
         </template>
       </qt-table>
@@ -182,41 +182,24 @@
         <el-row :gutter="20">
           <!-- 只读详情展示已保存的文本约束，与编辑组件使用相同的格式编码。 -->
           <template v-if="form.dataType === dataTypeConstant.TEXT">
-            <el-col :span="24"
-              ><el-form-item label="最小长度"
-                ><div class="form-readonly">
-                  {{ form.minLength ?? "不限制" }}
-                </div></el-form-item
-              ></el-col
-            >
-            <el-col :span="24"
-              ><el-form-item label="最大长度"
-                ><div class="form-readonly">
-                  {{ form.maxLength ?? "不限制" }}
-                </div></el-form-item
-              ></el-col
-            >
-            <el-col :span="24"
-              ><el-form-item label="格式校验"
-                ><div class="form-readonly">
-                  {{ textValidationLabels[form.validationType || "NONE"] }}
-                </div></el-form-item
-              ></el-col
-            >
-            <el-col v-if="form.validationType === 'CUSTOM'" :span="24"
-              ><el-form-item label="正则表达式"
-                ><div class="form-readonly">
-                  {{ form.validationPattern }}
-                </div></el-form-item
-              ></el-col
-            >
-            <el-col :span="24"
-              ><el-form-item label="示例值"
-                ><div class="form-readonly">
-                  {{ form.exampleValue || "-" }}
-                </div></el-form-item
-              ></el-col
-            >
+            <el-col :span="24"><el-form-item label="最小长度"><div class="form-readonly">
+              {{ form.minLength ?? "不限制" }}
+            </div></el-form-item></el-col>
+            <el-col :span="24"><el-form-item label="最大长度"><div class="form-readonly">
+              {{ form.maxLength ?? "不限制" }}
+            </div></el-form-item></el-col>
+            <el-col :span="24"><el-form-item label="格式校验"><div class="form-readonly">
+              {{ textValidationLabels[form.validationType || "NONE"] }}
+            </div></el-form-item></el-col>
+            <el-col
+              v-if="form.validationType === 'CUSTOM'"
+              :span="24"
+            ><el-form-item label="正则表达式"><div class="form-readonly">
+              {{ form.validationPattern }}
+            </div></el-form-item></el-col>
+            <el-col :span="24"><el-form-item label="示例值"><div class="form-readonly">
+              {{ form.exampleValue || "-" }}
+            </div></el-form-item></el-col>
           </template>
           <el-col
             :span="24"
@@ -240,57 +223,36 @@
               )
             "
           >
-            <el-col :span="24"
-              ><el-form-item label="最小值"
-                ><div class="form-readonly">
-                  {{ form.minValue ?? "不限制" }}
-                </div></el-form-item
-              ></el-col
-            >
-            <el-col :span="24"
-              ><el-form-item label="最大值"
-                ><div class="form-readonly">
-                  {{ form.maxValue ?? "不限制" }}
-                </div></el-form-item
-              ></el-col
-            >
+            <el-col :span="24"><el-form-item label="最小值"><div class="form-readonly">
+              {{ form.minValue ?? "不限制" }}
+            </div></el-form-item></el-col>
+            <el-col :span="24"><el-form-item label="最大值"><div class="form-readonly">
+              {{ form.maxValue ?? "不限制" }}
+            </div></el-form-item></el-col>
           </template>
-          <el-col v-if="form.dataType === dataTypeConstant.DECIMAL" :span="24"
-            ><el-form-item label="总精度"
-              ><div class="form-readonly">
-                {{ form.totalPrecision ?? "-" }}
-              </div></el-form-item
-            ></el-col
-          >
+          <el-col
+            v-if="form.dataType === dataTypeConstant.DECIMAL"
+            :span="24"
+          ><el-form-item label="总位数"><div class="form-readonly">
+            {{ form.allPlaces ?? "-" }}
+          </div></el-form-item></el-col>
           <template v-if="form.dataType === dataTypeConstant.BOOLEAN">
-            <el-col :span="24"
-              ><el-form-item label="true 对应文案"
-                ><el-input
-                  :model-value="form.trueLabel ?? '是'"
-                  disabled /></el-form-item
-            ></el-col>
-            <el-col :span="24"
-              ><el-form-item label="false 对应文案"
-                ><el-input
-                  :model-value="form.falseLabel ?? '否'"
-                  disabled /></el-form-item
-            ></el-col>
+            <el-col :span="24"><el-form-item label="true 对应文案"><el-input
+              :model-value="form.trueValue ?? '是'"
+              disabled
+            /></el-form-item></el-col>
+            <el-col :span="24"><el-form-item label="false 对应文案"><el-input
+              :model-value="form.falseValue ?? '否'"
+              disabled
+            /></el-form-item></el-col>
           </template>
           <template v-if="form.dataType === dataTypeConstant.DATE">
-            <el-col :span="24"
-              ><el-form-item label="最早日期"
-                ><div class="form-readonly">
-                  {{ form.minDate || "不限制" }}
-                </div></el-form-item
-              ></el-col
-            >
-            <el-col :span="24"
-              ><el-form-item label="最晚日期"
-                ><div class="form-readonly">
-                  {{ form.maxDate || "不限制" }}
-                </div></el-form-item
-              ></el-col
-            >
+            <el-col :span="24"><el-form-item label="最早日期"><div class="form-readonly">
+              {{ form.earliestTime || "不限制" }}
+            </div></el-form-item></el-col>
+            <el-col :span="24"><el-form-item label="最晚日期"><div class="form-readonly">
+              {{ form.latestTime || "不限制" }}
+            </div></el-form-item></el-col>
           </template>
           <el-col
             :span="24"
@@ -597,8 +559,8 @@ function typeConfigTags(row) {
     }
     case dataTypeConstant.BOOLEAN:
       return [
-        { text: `true：${value("trueLabel") || "是"}`, tagType: "success" },
-        { text: `false：${value("falseLabel") || "否"}`, tagType: "danger" },
+        { text: `true：${value("trueValue") || "是"}`, tagType: "success" },
+        { text: `false：${value("falseValue") || "否"}`, tagType: "danger" },
       ];
     case dataTypeConstant.DATE: {
       const format = value("format");
@@ -701,13 +663,13 @@ function reset() {
     description: null,
     unit: null,
     decimalPlaces: 2,
-    totalPrecision: 10,
+    allPlaces: 10,
     minValue: null,
     maxValue: null,
-    trueLabel: "是",
-    falseLabel: "否",
-    minDate: null,
-    maxDate: null,
+    trueValue: "是",
+    falseValue: "否",
+    earliestTime: null,
+    latestTime: null,
     minLength: null,
     maxLength: null,
     validationType: "NONE",

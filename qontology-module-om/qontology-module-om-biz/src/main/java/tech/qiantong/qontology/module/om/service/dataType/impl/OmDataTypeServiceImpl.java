@@ -147,6 +147,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
      */
     private void validateDataType(OmDataTypeSaveReqVO request) {
         requireVersion(request.getVersionId());
+        OmDataTypeConfigValidator.normalize(request);
         String name = request.getName() == null ? "" : request.getName().trim();
         if (name.isEmpty()) throw new ServiceException("业务数据类型名称不能为空", 601);
         request.setName(name);
@@ -162,9 +163,7 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
             return;
         }
         if (request.getEnumType() == null || request.getEnumType().isBlank()) {
-            request.setEnumType(null);
-            request.setEnumSource("PROJECT");
-            return;
+            throw new ServiceException("请选择枚举类型", 601);
         }
         request.setEnumType(request.getEnumType().trim());
         String source = request.getEnumSource() == null ? "PROJECT" : request.getEnumSource();

@@ -17,257 +17,113 @@
 -->
 
 <template>
-  <div ref="pageRef" class="app-container enum-page">
-    <div v-show="showSearch" class="pagecont-top">
-      <el-form
-        ref="queryRef"
-        class="btn-style"
-        :model="queryParams"
-        :inline="true"
-        @submit.prevent="handleQuery"
-      >
-        <el-form-item label="枚举名称" prop="enumType">
-          <el-select
-            v-model="queryParams.enumType"
-            class="el-form-input-width"
-            filterable
-            placeholder="请选择枚举名称"
-          >
-            <el-option
-              v-for="item in typeOptions"
-              :key="item.enumId"
-              :label="item.enumName"
-              :value="item.enumType"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="枚举标签" prop="enumLabel">
-          <el-input
-            v-model="queryParams.enumLabel"
-            class="el-form-input-width"
-            placeholder="请输入枚举标签"
-            clearable
-            @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-select
-            v-model="queryParams.status"
-            class="el-form-input-width"
-            placeholder="请选择状态"
-            clearable
-          >
-            <el-option
-              v-for="dict in sys_normal_disable"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" plain @click="handleQuery"
-            ><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-          </el-button>
-          <el-button @click="resetQuery"
-            ><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button
-          >
-        </el-form-item>
-      </el-form>
-    </div>
-    <div class="pagecont-bottom">
-      <div class="justify-between mb15">
-        <el-row :gutter="15" class="btn-style">
-          <el-col :span="1.5">
-            <el-button
-              v-hasPermi="['om:enumeration:data:add']"
-              type="primary"
-              plain
-              :disabled="!appliedFilters.enumType"
-              @click="handleAdd"
-              ><i class="iconfont-mini icon-xinzeng mr5"></i>新增
-            </el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-hasPermi="['om:enumeration:data:remove']"
-              type="danger"
-              plain
-              :disabled="multiple || deleting"
-              @click="handleDelete()"
-              ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
-            </el-button>
-          </el-col>
-          <el-col v-if="route.params.enumId" :span="1.5">
-            <el-button type="warning" plain icon="Close" @click="handleClose"
-              >关闭</el-button
-            >
-          </el-col>
-        </el-row>
-        <right-toolbar
-          v-model:showSearch="showSearch"
-          :columns="columns"
-          @queryTable="getList"
+  <div
+    ref="pageRef"
+    v-loading="!contextReady"
+    class="enum-page"
+    :class="embedded ? 'enum-data-embedded' : 'app-container'"
+  >
+    <!-- 两种入口共用标准列表组件，详情内嵌时不重复显示整页卡片和搜索阴影。 -->
+    <qt-wrap
+      :columns="tableStore.columns"
+      :table-ref="tableRef"
+      :config="{ fullContent: !embedded, searchShadow: !embedded }"
+    >
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
+          @query="applyFilters"
+          @reset="applyFilters"
         />
-      </div>
-      <el-table
+      </template>
+      <template #actions-data>
+        <el-button
+          v-hasPermi="['om:enumeration:data:add']"
+          type="primary"
+          plain
+          :disabled="!defaultEnumType || !contextReady"
+          @click="handleAdd"
+        ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button>
+        <el-button
+          v-hasPermi="['om:enumeration:data:remove']"
+          type="danger"
+          plain
+          :disabled="multiple || deleting"
+          @click="handleDelete()"
+        ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button>
+        <el-button
+          v-if="!embedded && route.params.enumId"
+          type="warning"
+          plain
+          icon="Close"
+          @click="handleClose"
+        >关闭</el-button>
+      </template>
+      <!-- 路由入口先解析枚举编码，再挂载表格；切换上下文时重建实例，隔离旧列表响应。 -->
+      <qt-table
+        v-if="contextReady"
+        :key="`${versionId}:${defaultEnumType}`"
+        v-bind="tableStore"
         ref="tableRef"
-        v-loading="loading"
-        :data="dataList"
-        row-key="enumCode"
-        stripe
-        :default-sort="defaultSort"
-        @sort-change="handleSortChange"
-        @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column
-          v-if="getColumnVisibility(0)"
-          label="编号"
-          prop="enumCode"
-          width="80"
-          align="center"
-          sortable="custom"
-        />
-        <el-table-column
-          v-if="getColumnVisibility(1)"
-          label="枚举标签"
-          prop="enumLabel"
-          align="left"
-          min-width="150"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="scope">
-            <span>{{ scope.row.enumLabel ?? "-" }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(2)"
-          label="枚举键值"
-          prop="enumValue"
-          align="left"
-          min-width="150"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="scope">
-            <span>{{ scope.row.enumValue ?? "-" }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(3)"
-          label="排序"
-          prop="enumSort"
-          align="center"
-          :show-overflow-tooltip="{ effect: 'light' }"
-          sortable="custom"
-        >
-          <template #default="scope">
-            <span>{{ scope.row.enumSort ?? "-" }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(4)"
-          label="状态"
-          prop="status"
-          align="center"
-        >
-          <template #default="scope">
-            <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(5)"
-          label="创建人"
-          prop="createBy"
-          width="120"
-          align="center"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        />
-        <el-table-column
-          v-if="getColumnVisibility(6)"
-          label="创建时间"
-          prop="createTime"
-          width="150"
-          align="center"
-          sortable="custom"
-        >
-          <template #default="scope">{{
-            parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-          }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(7)"
-          label="备注"
-          prop="remark"
-          min-width="200"
-          align="left"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="scope">{{ scope.row.remark || "-" }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(8)"
-          label="操作"
-          width="240"
-          fixed="right"
-          align="center"
-          class-name="small-padding fixed-width"
-        >
-          <template #default="scope">
-            <el-button
-              v-hasPermi="['om:enumeration:data:query']"
-              link
-              type="primary"
-              icon="View"
-              @click="handleDetail(scope.row)"
-              >详情
-            </el-button>
-            <el-button
-              v-hasPermi="['om:enumeration:data:edit']"
-              link
-              type="primary"
-              icon="Edit"
-              @click="handleUpdate(scope.row)"
-              >修改
-            </el-button>
-            <el-button
-              v-hasPermi="['om:enumeration:data:remove']"
-              link
-              type="danger"
-              icon="Delete"
-              :disabled="deleting"
-              @click="handleDelete(scope.row)"
-              >删除
-            </el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <div class="emptyBg">
-            <img
-              src="@/assets/system/images/no_data/noData.png"
-              alt="暂无记录"
-            />
-            <p>
-              {{
-                appliedFilters.enumType ? "暂无记录" : "请先选择枚举类型并查询"
-              }}
-            </p>
-          </div>
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop] || "-"
+        }}</template>
+        <template #status="{ row }">
+          <el-switch
+            v-if="row.status === '0' || row.status === '1'"
+            v-model="row.status"
+            active-value="0"
+            inactive-value="1"
+            :loading="statusSaving[row.enumCode] === true"
+            :disabled="!auth.hasPermi('om:enumeration:data:edit') || !auth.hasPermi('om:enumeration:data:query') || statusSaving[row.enumCode] === true"
+            :aria-label="`${row.enumLabel}状态`"
+            @change="(value) => handleStatusChange(row, value)"
+          />
+          <span v-else>-</span>
         </template>
-      </el-table>
-      <pagination
-        v-show="total > 0"
-        :total="total"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-      />
-    </div>
+        <template #createTime="{ row }">
+          {{
+            row.createTime === "—"
+              ? "—"
+              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "—"
+          }}
+        </template>
+        <template #handle="{ row }">
+          <el-button
+            v-hasPermi="['om:enumeration:data:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+          >详情</el-button>
+          <el-button
+            v-hasPermi="['om:enumeration:data:edit']"
+            link
+            type="primary"
+            icon="Edit"
+            @click="handleUpdate(row)"
+          >修改</el-button>
+          <el-button
+            v-hasPermi="['om:enumeration:data:remove']"
+            link
+            type="danger"
+            icon="Delete"
+            :disabled="deleting"
+            @click="handleDelete(row)"
+          >删除</el-button>
+        </template>
+      </qt-table>
+    </qt-wrap>
     <el-dialog
       v-model="open"
       :title="title"
       width="800px"
       :append-to="pageRef"
+      :close-on-click-modal="false"
       :close-on-press-escape="!saving"
       :before-close="handleBeforeClose"
       draggable
@@ -278,76 +134,65 @@
         :model="form"
         :rules="rules"
         label-width="90px"
+        class="column-form"
         @submit.prevent="submitForm"
       >
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="枚举类型">
-              <el-input v-model="form.enumType" disabled />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="枚举标签" prop="enumLabel">
-              <el-input
-                v-model="form.enumLabel"
-                placeholder="请输入枚举标签"
-                :maxlength="128"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="枚举键值" prop="enumValue">
-              <el-input
-                v-model="form.enumValue"
-                placeholder="请输入枚举键值"
-                :maxlength="128"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="排序" prop="enumSort">
-              <el-input-number
-                v-model="form.enumSort"
-                :min="0"
-                :max="2147483647"
-                :precision="0"
-                controls-position="right"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="状态" prop="status">
-              <el-radio-group v-model="form.status">
-                <el-radio
-                  v-for="dict in sys_normal_disable"
-                  :key="dict.value"
-                  :label="dict.value"
-                  >{{ dict.label }}
-                </el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="form.remark"
-                class="character-count"
-                type="textarea"
-                :rows="3"
-                :maxlength="500"
-                show-word-limit
-                placeholder="请输入备注"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <el-form-item class="row-full" label="枚举类型">
+          <el-input v-model="form.enumType" disabled />
+        </el-form-item>
+        <el-form-item class="row-full" label="枚举标签" prop="enumLabel">
+          <el-input
+            v-model="form.enumLabel"
+            placeholder="请输入枚举标签"
+            :maxlength="128"
+          />
+        </el-form-item>
+        <el-form-item class="row-full" label="枚举键值" prop="enumValue">
+          <el-input
+            v-model="form.enumValue"
+            placeholder="请输入枚举键值"
+            :maxlength="128"
+          />
+        </el-form-item>
+        <el-form-item class="row-full" label="排序" prop="enumSort">
+          <el-input-number
+            v-model="form.enumSort"
+            :min="0"
+            :max="2147483647"
+            :precision="0"
+            controls-position="right"
+          />
+        </el-form-item>
+        <el-form-item class="row-full" label="状态" prop="status">
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in enumStatusOptions"
+              :key="dict.value"
+              :label="dict.value"
+            >{{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item class="row-full" label="备注" prop="remark">
+          <el-input
+            v-model="form.remark"
+            class="character-count"
+            type="textarea"
+            :rows="3"
+            :maxlength="512"
+            show-word-limit
+            placeholder="请输入备注"
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
           <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm"
-            >确 定</el-button
-          >
+          <el-button
+            type="primary"
+            size="mini"
+            @click="submitForm"
+          >确 定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -363,123 +208,49 @@
         :model="detail"
         label-width="90px"
         label-position="right"
-        class="enum-detail-form"
+        class="enum-detail-form column-form"
       >
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="编号">
-              <div class="form-readonly">{{ detail.enumCode }}</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="枚举类型">
-              <div class="form-readonly">{{ detail.enumType }}</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="枚举标签">
-              <div class="form-readonly">{{ detail.enumLabel ?? "-" }}</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="枚举键值">
-              <div class="form-readonly">{{ detail.enumValue ?? "-" }}</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="排序">
-              <div class="form-readonly">{{ detail.enumSort ?? "-" }}</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="状态">
-              <div class="form-readonly">
-                <dict-tag
-                  :options="sys_normal_disable"
-                  :value="detail.status"
-                />
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="创建人">
-              <div class="form-readonly">{{ detail.createBy || "-" }}</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="创建时间">
-              <div class="form-readonly">
-                {{ parseTime(detail.createTime) || "-" }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注">
-              <div class="form-readonly textarea">
-                {{ detail.remark || "-" }}
-              </div>
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <el-form-item class="row-full" label="编号">
+          <div class="form-readonly">{{ detail.enumCode }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="枚举类型">
+          <div class="form-readonly">{{ detail.enumType }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="枚举标签">
+          <div class="form-readonly">{{ detail.enumLabel ?? "—" }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="枚举键值">
+          <div class="form-readonly">{{ detail.enumValue ?? "—" }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="排序">
+          <div class="form-readonly">{{ detail.enumSort ?? "—" }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="状态">
+          <dict-tag :options="enumStatusOptions" :value="detail.status" class="con-value access-tag" />
+        </el-form-item>
+        <el-form-item class="row-full" label="创建人">
+          <div class="form-readonly">{{ detail.createBy || "—" }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="创建时间">
+          <div class="form-readonly">
+            {{ parseTime(detail.createTime) || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item class="row-full" label="备注">
+          <div class="form-readonly textarea">{{ detail.remark?.trim() || "-" }}</div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="openDetail = false">关闭</el-button>
-      </template>
-    </el-dialog>
-    <el-dialog
-      v-model="upload.open"
-      title="枚举数据导入"
-      width="500px"
-      :append-to="pageRef"
-      :close-on-press-escape="!upload.isUploading"
-      :show-close="!upload.isUploading"
-    >
-      <el-upload
-        ref="uploadRef"
-        :action="upload.url"
-        :headers="upload.headers"
-        :data="{
-          updateSupport: upload.updateSupport,
-          enumType: appliedFilters.enumType,
-        }"
-        :auto-upload="false"
-        :limit="1"
-        accept=".xlsx,.xls"
-        :disabled="upload.isUploading"
-        :before-upload="handleFileUploadProgress"
-        :on-success="handleFileSuccess"
-        :on-error="handleFileError"
-      >
-        <el-button>选择 Excel 文件</el-button>
-        <template #tip>
-          <div class="el-upload__tip">
-            请使用导入模板，数据中的枚举类型须与当前类型一致。
-          </div>
-        </template>
-      </el-upload>
-      <el-checkbox v-model="upload.updateSupport">更新已有数据</el-checkbox>
-      <el-button link type="primary" @click="importTemplate"
-        >下载模板</el-button
-      >
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button :disabled="upload.isUploading" @click="upload.open = false"
-            >取 消</el-button
-          >
-          <el-button
-            type="primary"
-            :loading="upload.isUploading"
-            @click="submitFileForm"
-            >确 定</el-button
-          >
-        </div>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup name="OmEnumData">
+import { toEnumStatusOptions } from "@/utils/enumStatus";
 import {
+  computed,
   onBeforeUnmount,
   ref,
   reactive,
@@ -489,7 +260,6 @@ import {
   getCurrentInstance,
 } from "vue";
 import { useRoute } from "vue-router";
-import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 import {
   listData,
   getData,
@@ -497,57 +267,129 @@ import {
   updateData,
   delData,
 } from "@/api/om/enumeration/data";
-import { listType, getType } from "@/api/om/enumeration/type";
-import { getToken } from "@/utils/auth";
 import auth from "@/plugins/auth";
+import { getType } from "@/api/om/enumeration/type";
+import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 
+// 传入 enumType 时作为详情页内嵌列表使用；未传入时沿用独立页面的路由加载逻辑。
+const props = defineProps({
+  enumType: { type: String, default: undefined },
+});
+// 增删改成功后通知详情页重新查询未筛选总数，不将表格的筛选总数当作概要计数。
+const emit = defineEmits(["dataChange"]);
+const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
-const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
+const { project_status } = proxy.useDict("project_status");
+const enumStatusOptions = computed(() => toEnumStatusOptions(project_status.value));
 const route = useRoute();
 const { versionId, requireVersion } = useOntologyVersion();
 const pageRef = ref();
-const queryRef = ref();
 const tableRef = ref();
 const dataRef = ref();
-const uploadRef = ref();
-const dataList = ref([]);
 const open = ref(false);
 const openDetail = ref(false);
-const loading = ref(false);
-const showSearch = ref(true);
 const saving = ref(false);
 const deleting = ref(false);
+const statusSaving = reactive({});
 const ids = ref([]);
-const single = ref(true);
 const multiple = ref(true);
-const total = ref(0);
 const title = ref("");
 const detail = ref({});
-const typeOptions = ref([]);
 const defaultEnumType = ref("");
+const contextReady = ref(false);
 const defaultSort = { prop: "enumSort", order: "ascending" };
-const columns = ref([
-  { key: 0, label: "编号", visible: true },
-  { key: 1, label: "枚举标签", visible: true },
-  { key: 2, label: "枚举键值", visible: true },
-  { key: 3, label: "排序", visible: true },
-  { key: 4, label: "状态", visible: true },
-  { key: 5, label: "创建人", visible: true },
-  { key: 6, label: "创建时间", visible: true },
-  { key: 7, label: "备注", visible: true },
-  { key: 8, label: "操作", visible: true },
-]);
+// 查询条件仅在点击查询或重置时提交，分页、排序与刷新不使用输入草稿。
+const appliedFilters = reactive({ enumLabel: "", status: "" });
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "enumCode",
+      defaultSort,
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    { type: "selection", width: 55 },
+    {
+      label: "编号",
+      prop: "enumCode",
+      slot: "text",
+      width: 80,
+      sortable: true,
+    },
+    {
+      label: "枚举标签",
+      prop: "enumLabel",
+      slot: "text",
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "枚举键值",
+      prop: "enumValue",
+      slot: "text",
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "排序",
+      prop: "enumSort",
+      slot: "text",
+      width: 100,
+      sortable: true,
+    },
+    { label: "状态", prop: "status", slot: "status", width: 100 },
+    {
+      label: "备注",
+      prop: "remark",
+      slot: "text",
+      minWidth: 200,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "text",
+      width: 120,
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      slot: "createTime",
+      width: 160,
+      sortable: true,
+    },
+    { label: "操作", slot: "handle", width: 220, fixed: "right" },
+  ],
+  func: loadEnumData,
+  params: { enumLabel: "", status: "" },
+  events: {
+    formatParams: formatListParams,
+    formatData: formatListData,
+    onDataLoaded: clearSelection,
+  },
+});
+
+// 与枚举列表相同的配置式搜索栏，状态筛选沿用正常/停用字典。
+const searchStore = reactive({
+  items: [
+    { label: "枚举标签", prop: "enumLabel", component: { is: "input" } },
+    {
+      label: "状态",
+      prop: "status",
+      component: { is: "select", options: enumStatusOptions },
+    },
+  ],
+});
+
 const data = reactive({
   form: {},
-  queryParams: {
-    pageNum: 1,
-    pageSize: 10,
-    enumType: "",
-    enumLabel: "",
-    status: "",
-    orderByColumn: defaultSort.prop,
-    isAsc: defaultSort.order,
-  },
   rules: {
     enumLabel: [
       {
@@ -580,107 +422,102 @@ const data = reactive({
     remark: [{ max: 512, message: "备注不能超过512个字符", trigger: "blur" }],
   },
 });
-const { queryParams, form, rules } = toRefs(data);
-// 筛选表单仅在查询时提交，分页、排序和刷新沿用已提交的条件
-const appliedFilters = reactive({ enumType: "", enumLabel: "", status: "" });
-const upload = reactive({
-  open: false,
-  isUploading: false,
-  updateSupport: false,
-  headers: { Authorization: "Bearer " + getToken() },
-  url: import.meta.env.VITE_APP_BASE_API + "/om/data/importData",
-});
-let listRequest = 0;
+const { form, rules } = toRefs(data);
 let contextRequest = 0;
 let detailRequest = 0;
 
-function getColumnVisibility(key) {
-  return columns.value.find((column) => column.key === key)?.visible !== false;
+/** 提交搜索条件；公共搜索栏随后重置页码并加载表格。 */
+function applyFilters() {
+  appliedFilters.enumLabel = (tableStore.params.enumLabel || "").trim();
+  appliedFilters.status = tableStore.params.status ?? "";
 }
 
-async function getList() {
-  const request = ++listRequest;
-  if (!versionId.value || !appliedFilters.enumType) {
-    dataList.value = [];
-    total.value = 0;
-    handleSelectionChange([]);
-    loading.value = false;
-    return;
-  }
-  loading.value = true;
-  try {
-    const response = await listData({
-      ...queryParams.value,
-      ...appliedFilters,
-      versionId: versionId.value,
+/** 固定当前枚举编码，取消排序时恢复默认的枚举排序值升序。 */
+function formatListParams(params) {
+  return {
+    ...params,
+    ...appliedFilters,
+    versionId: versionId.value,
+    enumType: defaultEnumType.value,
+    orderByColumn: params.isAsc ? params.orderByColumn : defaultSort.prop,
+    isAsc: params.isAsc || defaultSort.order,
+  };
+}
+
+/** 无枚举编码时返回空页，禁止接口因忽略空条件而查询其他枚举的数据。 */
+function loadEnumData(params) {
+  if (!params.versionId || !params.enumType)
+    return Promise.resolve({ data: { rows: [], total: 0 } });
+  return listData(params);
+}
+
+/** 统一公共表格和插槽的空值占位符，保留枚举键值与排序值中的数值零。 */
+function formatListData(rows) {
+  const fields = tableStore.columns
+    .map((column) => column.prop)
+    .filter(Boolean);
+  return rows.map((row) => {
+    const record = { ...row };
+    fields.forEach((field) => {
+      if (record[field] == null || record[field] === "") record[field] = "—";
     });
-    if (request !== listRequest) return;
-    dataList.value = response.data.rows;
-    total.value = response.data.total;
-    handleSelectionChange([]);
-    tableRef.value?.clearSelection();
-  } finally {
-    if (request === listRequest) loading.value = false;
-  }
+    if (row.status != null) record.status = String(row.status);
+    record.remark = row.remark == null || String(row.remark).trim() === "" ? "-" : row.remark;
+    return record;
+  });
 }
 
+/** 列表刷新后移除旧的选中项，避免批量删除使用上一次查询的数据。 */
+function clearSelection() {
+  handleSelectionChange([]);
+  tableRef.value?.elTableRef?.clearSelection();
+}
+
+/** 保存后通过公共表格刷新当前页，保留已提交的筛选条件。 */
+function getList() {
+  tableRef.value?.getList();
+}
+
+/** 重置新增或修改表单，枚举编码始终取自当前页面上下文。 */
 function reset() {
   form.value = {
     enumCode: undefined,
-    versionId: versionId.value,
     enumLabel: "",
     enumValue: "",
     enumSort: 0,
-    enumType: appliedFilters.enumType,
+    enumType: defaultEnumType.value,
     status: "0",
     remark: "",
   };
   clearValidation();
 }
 
+/** 清除表单旧的校验结果。 */
 function clearValidation() {
   dataRef.value?.clearValidate();
 }
 
+/** 保存期间阻止关闭弹窗，避免重复操作。 */
 function handleBeforeClose(done) {
   if (!saving.value) done();
 }
 
+/** 未保存时关闭弹窗并重置表单。 */
 function cancel() {
   if (saving.value) return;
   open.value = false;
   reset();
 }
 
-function handleQuery() {
-  appliedFilters.enumType = queryParams.value.enumType;
-  appliedFilters.enumLabel = queryParams.value.enumLabel.trim();
-  appliedFilters.status = queryParams.value.status;
-  queryParams.value.pageNum = 1;
-  getList();
-}
-
-function resetQuery() {
-  queryRef.value?.resetFields();
-  queryParams.value.enumType = defaultEnumType.value;
-  handleQuery();
-}
-
+/** 同步当前选中的枚举数据编码，并控制批量删除按钮状态。 */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.enumCode);
-  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
 
-function handleSortChange({ prop, order }) {
-  queryParams.value.orderByColumn = order ? prop : defaultSort.prop;
-  queryParams.value.isAsc = order || defaultSort.order;
-  queryParams.value.pageNum = 1;
-  getList();
-}
-
+/** 新增前使旧的弹窗请求失效，避免迟到响应覆盖新增表单。 */
 async function handleAdd() {
-  if (!requireVersion()) return;
+  if (!defaultEnumType.value || !contextReady.value) return;
   ++detailRequest;
   reset();
   title.value = "新增枚举数据";
@@ -689,6 +526,7 @@ async function handleAdd() {
   clearValidation();
 }
 
+/** 加载修改表单，仅采纳当前操作的最新响应。 */
 async function handleUpdate(row) {
   const request = ++detailRequest;
   const response = await getData(row?.enumCode ?? ids.value[0]);
@@ -705,6 +543,7 @@ async function handleUpdate(row) {
   clearValidation();
 }
 
+/** 加载选中数据的只读详情，忽略已切换上下文的旧响应。 */
 async function handleDetail(row) {
   const request = ++detailRequest;
   const response = await getData(row.enumCode);
@@ -717,18 +556,49 @@ async function handleDetail(row) {
   openDetail.value = true;
 }
 
-async function submitForm() {
-  if (!requireVersion()) return;
+/** 确认后切换枚举数据状态，取消或失败时还原开关。 */
+async function handleStatusChange(row, value) {
+  const previous = value === "0" ? "1" : "0";
+  const context = contextRequest;
   const submittingVersion = versionId.value;
-  if (saving.value) return;
+  const submittingEnumType = defaultEnumType.value;
+  const action = value === "0" ? "启用" : "禁用";
+  statusSaving[row.enumCode] = true;
+  try {
+    await proxy.$modal.confirm(`确认要${action}枚举数据“${row.enumLabel}”吗？`);
+    if (context !== contextRequest) {
+      row.status = previous;
+      return;
+    }
+    // 读取原始详情，避免把列表占位符写回备注等业务字段。
+    const { data: record } = await getData(row.enumCode);
+    if (context !== contextRequest) {
+      row.status = previous;
+      return;
+    }
+    if (!record || String(record.versionId) !== String(submittingVersion) || record.enumType !== submittingEnumType) {
+      proxy.$modal.msgWarning("记录已不存在或不属于当前枚举，请刷新");
+      row.status = previous;
+      return;
+    }
+    await updateData({ ...record, status: value });
+    if (context !== contextRequest) return;
+    proxy.$modal.msgSuccess("操作成功");
+    emit("dataChange");
+    getList();
+  } catch {
+    row.status = previous;
+  } finally {
+    delete statusSaving[row.enumCode];
+  }
+}
+
+/** 校验并保存枚举数据，成功后通知父级同步总数并刷新当前列表。 */
+async function submitForm() {
+  if (!requireVersion() || saving.value) return;
+  const submittingVersion = versionId.value;
   const valid = await dataRef.value.validate().catch(() => false);
-  if (
-    !valid ||
-    saving.value ||
-    submittingVersion !== versionId.value ||
-    !open.value
-  )
-    return;
+  if (!valid || saving.value || !open.value || submittingVersion !== versionId.value) return;
   saving.value = true;
   try {
     const payload = {
@@ -747,145 +617,103 @@ async function submitForm() {
       await addData(payload);
     }
     if (submittingVersion !== versionId.value) return;
+    emit("dataChange");
     proxy.$modal.msgSuccess(
-      form.value.enumCode != null ? "修改成功" : "新增成功"
+      form.value.enumCode != null ? "修改成功" : "新增成功",
     );
     open.value = false;
-    await getList();
+    getList();
   } finally {
     saving.value = false;
   }
 }
 
+/** 确认并删除选中数据，仅在枚举上下文未改变时刷新列表和父级计数。 */
 async function handleDelete(row) {
   const context = contextRequest;
-  const deletingVersion = versionId.value;
   const recordIds = row ? [row.enumCode] : [...ids.value];
   if (!recordIds.length || deleting.value) return;
   try {
     await proxy.$modal.confirm(
-      '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
+      '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？',
     );
   } catch {
     return;
   }
-  if (
-    deleting.value ||
-    context !== contextRequest ||
-    deletingVersion !== versionId.value
-  )
-    return;
+  if (deleting.value || context !== contextRequest) return;
   deleting.value = true;
   try {
     await delData(recordIds.join(","));
-    if (context !== contextRequest || deletingVersion !== versionId.value)
-      return;
-    if (
-      queryParams.value.pageNum > 1 &&
-      dataList.value.length <= recordIds.length
-    )
-      queryParams.value.pageNum--;
-    await getList();
+    if (context !== contextRequest) return;
+    emit("dataChange");
+    // 删除后回到第一页，避免删除末页全部数据后保留空页。
+    tableRef.value?.resetQuery();
     proxy.$modal.msgSuccess("删除成功");
   } finally {
     deleting.value = false;
   }
 }
 
-function handleExport() {
-  proxy.download(
-    "om/data/export",
-    { ...queryParams.value, ...appliedFilters, versionId: versionId.value },
-    "枚举数据.xlsx"
-  );
-}
-
-function handleImport() {
-  upload.open = true;
-}
-
-function importTemplate() {
-  proxy.download("om/data/importTemplate", {}, "枚举数据模板.xlsx");
-}
-
-function handleFileUploadProgress() {
-  upload.isUploading = true;
-  return true;
-}
-
-function handleFileError() {
-  upload.isUploading = false;
-  proxy.$modal.msgError("导入失败，请重试");
-}
-
-function handleFileSuccess(response) {
-  upload.isUploading = false;
-  if (response.code !== 200) {
-    proxy.$modal.msgError(response.msg || "导入失败");
-    return;
-  }
-  upload.open = false;
-  uploadRef.value?.clearFiles();
-  proxy.$modal.msgSuccess(response.msg || "导入成功");
-  getList();
-}
-
-function submitFileForm() {
-  uploadRef.value?.submit();
-}
-
+/** 关闭独立数据页签并返回枚举列表。 */
 function handleClose() {
-  proxy.$tab.closeOpenPage({ path: `/om/${versionId.value}/semantic/enum` });
+  proxy.$tab.closeOpenPage({ path: `/om/${versionId.value}/semantic/omEnum` });
 }
 
 let typeRequest = 0;
+/** 解析内嵌参数或独立页面路由的枚举编码，切换时重置列表、筛选和弹窗上下文。 */
 watch(
-  () => [route.params.enumId, versionId.value],
-  async ([enumId]) => {
+  () => [props.enumType, embedded.value ? undefined : route.params.enumId, versionId.value],
+  async ([enumType, enumId]) => {
     ++contextRequest;
     const request = ++typeRequest;
     ++detailRequest;
-    ++listRequest;
-    loading.value = false;
-    dataList.value = [];
-    total.value = 0;
+    contextReady.value = false;
+    defaultEnumType.value = "";
     open.value = false;
     openDetail.value = false;
     handleSelectionChange([]);
-    typeOptions.value = [];
-    appliedFilters.enumType = "";
-    defaultEnumType.value = "";
-    if (!versionId.value) return;
-    const [typesResponse, typeResponse] = await Promise.all([
-      listType({ pageNum: 1, pageSize: -1, versionId: versionId.value }),
-      enumId ? getType(enumId) : Promise.resolve(null),
-    ]);
+    tableStore.params.enumLabel = "";
+    tableStore.params.status = "";
+    appliedFilters.enumLabel = "";
+    appliedFilters.status = "";
+    // 等待旧表格卸载，即使新旧入口解析出相同编码，也重新建立分页和请求上下文。
+    await nextTick();
     if (request !== typeRequest) return;
-    typeOptions.value = typesResponse.data.rows;
-    if (enumId) {
-      if (
-        !typeResponse.data ||
-        String(typeResponse.data.versionId) !== versionId.value
-      ) {
-        queryParams.value.enumType = "";
-        proxy.$modal.msgWarning("枚举类型已不存在");
-        return;
+    try {
+      if (enumType !== undefined) {
+        // 详情页已取得枚举编码，直接复用，避免重复加载类型详情及全量选项。
+        defaultEnumType.value = enumType;
+      } else if (enumId) {
+        const response = await getType(enumId);
+        if (request !== typeRequest) return;
+        if (!response.data) {
+          proxy.$modal.msgWarning("枚举类型已不存在");
+          return;
+        }
+        if (String(response.data.versionId) !== String(versionId.value)) {
+          proxy.$modal.msgWarning("枚举不属于当前项目版本");
+          return;
+        }
+        defaultEnumType.value = response.data.enumType;
       }
-      defaultEnumType.value = typeResponse.data.enumType;
-    } else {
-      defaultEnumType.value = "";
+    } catch {
+      // 错误由全局请求层提示；保持空编码，避免失败后继续展示上一个枚举的数据。
+    } finally {
+      if (request === typeRequest) contextReady.value = true;
     }
-    queryParams.value.enumType = defaultEnumType.value;
-    handleQuery();
   },
-  { immediate: true }
+  { immediate: true },
 );
+
+// 页面离开后使类型加载、删除确认及弹窗详情请求失效。
 onBeforeUnmount(() => {
   ++contextRequest;
+  ++typeRequest;
+  ++detailRequest;
 });
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .enum-detail-form {
   padding: 0;
 }
@@ -910,6 +738,8 @@ onBeforeUnmount(() => {
   min-height: 85px;
   display: block;
 }
+
+/* 内嵌到枚举详情页时，搜索区沿用外层卡片，不再保留独立的宫格间距。 */
 
 .enum-page :deep(.enum-detail-dialog .el-form-item) {
   margin-bottom: 16px;

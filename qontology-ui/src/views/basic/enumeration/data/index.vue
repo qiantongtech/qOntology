@@ -46,24 +46,21 @@
           plain
           :disabled="!defaultEnumType || !contextReady"
           @click="handleAdd"
-          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button
-        >
+        ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button>
         <el-button
           v-hasPermi="['om:enumeration:data:remove']"
           type="danger"
           plain
           :disabled="multiple || deleting"
           @click="handleDelete()"
-          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button
-        >
+        ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button>
         <el-button
           v-if="!embedded && route.params.enumId"
           type="warning"
           plain
           icon="Close"
           @click="handleClose"
-          >关闭</el-button
-        >
+        >关闭</el-button>
       </template>
       <!-- 路由入口先解析枚举编码，再挂载表格；切换上下文时重建实例，隔离旧列表响应。 -->
       <qt-table
@@ -78,7 +75,7 @@
         <template #status="{ row }">
           <dict-tag
             v-if="row.status !== '-'"
-            :options="sys_normal_disable"
+            :options="enumStatusOptions"
             :value="row.status"
           />
           <span v-else>—</span>
@@ -97,43 +94,22 @@
             type="primary"
             icon="View"
             @click="handleDetail(row)"
-            >详情</el-button
-          >
-          <el-popover
-            v-if="
-              auth.hasPermiOr([
-                'om:enumeration:data:edit',
-                'om:enumeration:data:remove',
-              ])
-            "
-            placement="bottom"
-            :width="107"
-            popper-class="handle-popover"
-            trigger="click"
-          >
-            <template #reference
-              ><el-button link type="primary" icon="ArrowDown"
-                >更多</el-button
-              ></template
-            >
-            <el-button
-              v-if="auth.hasPermi('om:enumeration:data:edit')"
-              link
-              type="primary"
-              icon="Edit"
-              @click="handleUpdate(row)"
-              >修改</el-button
-            >
-            <el-button
-              v-if="auth.hasPermi('om:enumeration:data:remove')"
-              link
-              type="danger"
-              icon="Delete"
-              :disabled="deleting"
-              @click="handleDelete(row)"
-              >删除</el-button
-            >
-          </el-popover>
+          >详情</el-button>
+          <el-button
+            v-hasPermi="['om:enumeration:data:edit']"
+            link
+            type="primary"
+            icon="Edit"
+            @click="handleUpdate(row)"
+          >修改</el-button>
+          <el-button
+            v-hasPermi="['om:enumeration:data:remove']"
+            link
+            type="danger"
+            icon="Delete"
+            :disabled="deleting"
+            @click="handleDelete(row)"
+          >删除</el-button>
         </template>
       </qt-table>
     </qt-wrap>
@@ -185,10 +161,10 @@
         <el-form-item class="row-full" label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio
-              v-for="dict in sys_normal_disable"
+              v-for="dict in enumStatusOptions"
               :key="dict.value"
               :label="dict.value"
-              >{{ dict.label }}
+            >{{ dict.label }}
             </el-radio>
           </el-radio-group>
         </el-form-item>
@@ -207,9 +183,11 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm"
-            >确 定</el-button
-          >
+          <el-button
+            type="primary"
+            size="mini"
+            @click="submitForm"
+          >确 定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -243,7 +221,7 @@
           <div class="form-readonly">{{ detail.enumSort ?? "—" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="状态">
-          <dict-tag :options="sys_normal_disable" :value="detail.status" />
+          <dict-tag :options="enumStatusOptions" :value="detail.status" class="con-value access-tag" />
         </el-form-item>
         <el-form-item class="row-full" label="创建人">
           <div class="form-readonly">{{ detail.createBy || "—" }}</div>
@@ -265,6 +243,7 @@
 </template>
 
 <script setup name="OmEnumData">
+import { toEnumStatusOptions } from "@/utils/enumStatus";
 import {
   computed,
   onBeforeUnmount,
@@ -284,7 +263,6 @@ import {
   delData,
 } from "@/api/basic/enumeration/data";
 import { getType } from "@/api/basic/enumeration/type";
-import auth from "@/plugins/auth";
 
 // 传入 enumType 时作为详情页内嵌列表使用；未传入时沿用独立页面的路由加载逻辑。
 const props = defineProps({
@@ -294,7 +272,8 @@ const props = defineProps({
 const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
-const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
+const { project_status } = proxy.useDict("project_status");
+const enumStatusOptions = computed(() => toEnumStatusOptions(project_status.value));
 const route = useRoute();
 const pageRef = ref();
 const tableRef = ref();
@@ -357,6 +336,7 @@ const tableStore = reactive({
     { label: "状态", prop: "status", slot: "status", width: 100 },
     {
       label: "备注",
+      prop: "remark",
       slot: "text",
       minWidth: 200,
       align: "left",
@@ -376,7 +356,7 @@ const tableStore = reactive({
       width: 160,
       sortable: true,
     },
-    { label: "操作", slot: "handle", width: 200, fixed: "right" },
+    { label: "操作", slot: "handle", width: 220, fixed: "right" },
   ],
   func: loadEnumData,
   params: { enumLabel: "", status: "" },
@@ -394,7 +374,7 @@ const searchStore = reactive({
     {
       label: "状态",
       prop: "status",
-      component: { is: "select", options: sys_normal_disable },
+      component: { is: "select", options: enumStatusOptions },
     },
   ],
 });
@@ -704,9 +684,6 @@ onBeforeUnmount(() => {
 }
 
 /* 内嵌到枚举详情页时，搜索区沿用外层卡片，不再保留独立的宫格间距。 */
-.enum-data-embedded :deep(.qt-wrap--search) {
-  padding: 0;
-}
 
 .enum-page :deep(.enum-detail-dialog .el-form-item) {
   margin-bottom: 16px;

@@ -49,51 +49,42 @@
       :maxlength="128"
     />
   </el-form-item>
-  <el-form-item v-if="typeCode === 5" label="枚举类型" prop="enumType">
-    <div v-if="readonly" class="form-readonly">{{ enumDisplay }}</div>
-    <template v-else>
+  <template v-if="typeCode === 5">
+    <el-form-item label="枚举来源" prop="enumSource">
+      <div v-if="readonly" class="form-readonly">{{ model.enumSource === "GLOBAL" ? "全局" : "当前项目" }}</div>
+      <el-radio-group v-else v-model="model.enumSource" @change="handleEnumSourceChange">
+        <el-radio value="PROJECT">当前项目</el-radio>
+        <el-radio value="GLOBAL">全局</el-radio>
+      </el-radio-group>
+    </el-form-item>
+    <el-form-item label="枚举类型" prop="enumType">
+      <div v-if="readonly" class="form-readonly">{{ enumName }}</div>
       <el-select
-        v-model="selectedEnum"
+        v-else
+        v-model="model.enumType"
         filterable
         clearable
         style="width: 100%"
         placeholder="请选择枚举类型"
         :loading="enumLoading && !enumOptions.length"
-        @visible-change="(value) => value && emit('enum-open')"
+        @visible-change="(value) => value && emit('enumOpen')"
       >
-        <template #label>
-          <span class="enum-label"
-            >{{ enumName
-            }}<el-tag
-              :type="model.enumSource === 'GLOBAL' ? 'info' : 'primary'"
-              size="small"
-              >{{ model.enumSource === "GLOBAL" ? "全局" : "当前项目" }}</el-tag
-            ></span
-          >
-        </template>
-        <el-option-group
-          v-for="group in groups"
-          :key="group.source"
-          :label="group.label"
+        <el-option
+          v-for="item in filteredEnums"
+          :key="item.enumSource + ':' + item.enumType"
+          :label="item.enumName + ' ' + item.enumType"
+          :value="item.enumType"
         >
-          <el-option
-            v-for="item in group.options"
-            :key="group.source + ':' + item.enumType"
-            :label="item.enumName + ' ' + item.enumType"
-            :value="group.source + ':' + item.enumType"
-          >
-            <span class="enum-option"
-              ><span>{{ item.enumName }}</span
-              ><small>{{ item.enumType }}</small></span
-            >
-          </el-option>
-        </el-option-group>
+          <span class="enum-option"><span>{{ item.enumName }}</span><small>{{ item.enumType }}</small></span>
+        </el-option>
       </el-select>
-    </template>
-  </el-form-item>
+    </el-form-item>
+  </template>
 </template>
 
 <script setup>
+/* eslint vue/no-mutating-props: ["error", { "shallowOnly": true }] */
+// model 是父级表单草稿：只更新字段，不替换父级传入的对象。
 import { computed } from "vue";
 const props = defineProps({
   model: { type: Object, required: true },
@@ -101,36 +92,18 @@ const props = defineProps({
   enumOptions: { type: Array, default: () => [] },
   enumLoading: { type: Boolean, default: false },
 });
-const emit = defineEmits(["enum-open"]);
+const emit = defineEmits(["enumOpen"]);
 const typeCode = computed(() =>
   props.model.basicTypeCode == null
     ? undefined
     : Number(props.model.basicTypeCode)
 );
-const groups = computed(() =>
-  [
-    { source: "PROJECT", label: "当前项目" },
-    { source: "GLOBAL", label: "全局" },
-  ]
-    .map((group) => ({
-      ...group,
-      options: props.enumOptions.filter(
-        (item) => item.enumSource === group.source
-      ),
-    }))
-    .filter((group) => group.options.length)
+const filteredEnums = computed(() =>
+  props.enumOptions.filter((item) => item.enumSource === (props.model.enumSource || "PROJECT")),
 );
-const selectedEnum = computed({
-  get: () =>
-    props.model.enumType
-      ? `${props.model.enumSource || "PROJECT"}:${props.model.enumType}`
-      : undefined,
-  set: (value) => {
-    const at = (value || "").indexOf(":");
-    props.model.enumSource = at < 0 ? "PROJECT" : value.slice(0, at);
-    props.model.enumType = at < 0 ? undefined : value.slice(at + 1);
-  },
-});
+function handleEnumSourceChange() {
+  props.model.enumType = undefined;
+}
 const enumName = computed(
   () =>
     props.enumOptions.find(
@@ -140,13 +113,6 @@ const enumName = computed(
     )?.enumName ||
     props.model.enumType ||
     "-"
-);
-const enumDisplay = computed(() =>
-  props.model.enumType
-    ? `${enumName.value}（${
-        props.model.enumSource === "GLOBAL" ? "全局" : "当前项目"
-      }）`
-    : "-"
 );
 </script>
 

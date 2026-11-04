@@ -74,6 +74,9 @@ public class OmTermDO extends BaseEntity {
     /** 描述 */
     private String description;
 
+    /** 状态：0 禁用，1 启用 */
+    private Integer status;
+
     /** 是否有效：true 有效，false 无效 */
     private Boolean validFlag;
 

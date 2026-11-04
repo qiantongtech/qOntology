@@ -18,185 +18,140 @@
 
 <template>
   <div class="app-container" ref="app-container">
-    <GuideTip tip-id="om/target.list"/>
-    <div class="pagecont-top" v-show="showSearch">
-      <el-form class="btn-style" :model="queryParams" ref="queryRef" :inline="true" label-width="75px"
-               v-show="showSearch" @submit.prevent>
-        <el-form-item label="目标问题" prop="question">
-          <el-input
-              class="el-form-input-width"
-              v-model="queryParams.question"
-              placeholder="请输入目标问题"
-              clearable
-              @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="优先级" prop="priority">
-          <el-select
-              class="el-form-input-width"
-              v-model="queryParams.priority"
-              placeholder="请选择优先级"
-              clearable
-          >
-            <el-option v-for="item in om_target_priority" :key="item.value" :label="item.label" :value="item.value"/>
-          </el-select>
-        </el-form-item>
+    <GuideTip tip-id="om/target.list" />
 
-        <el-form-item label="验证状态" prop="acceptStatus">
-          <el-select
-              class="el-form-input-width"
-              v-model="queryParams.acceptStatus"
-              placeholder="请选择验证状态"
-              clearable
-          >
-            <el-option v-for="item in om_accept_status" :key="item.value" :label="item.label" :value="item.value"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button plain type="primary" @click="handleQuery" @mousedown="(e) => e.preventDefault()">
-            <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-          </el-button>
-          <el-button @click="resetQuery" @mousedown="(e) => e.preventDefault()">
-            <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+        />
+      </template>
 
-    <div class="pagecont-bottom">
-      <div class="justify-between mb15">
-        <el-row :gutter="15" class="btn-style">
-          <el-col :span="1.5">
-            <el-button type="primary" plain @click="handleAdd" v-hasPermi="['om:target:target:add']"
-                       @mousedown="(e) => e.preventDefault()">
-              <i class="iconfont-mini icon-xinzeng mr5"></i>新增
-            </el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button type="danger" plain :disabled="multiple" @click="handleDelete"
-                       v-hasPermi="['om:target:target:remove']"
-                       @mousedown="(e) => e.preventDefault()">
-              <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
-            </el-button>
-          </el-col>
-        </el-row>
-        <div class="justify-end top-right-btn">
-          <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
-        </div>
-      </div>
-      <el-table stripe v-loading="loading" :data="targetList" @selection-change="handleSelectionChange"
-                :default-sort="defaultSort" @sort-change="handleSortChange">
-        <el-table-column type="selection" width="55" align="center"/>
-        <el-table-column v-if="getColumnVisibility(0)" label="编号" align="center" prop="id" width="80"
-                         sortable="custom" :sort-orders="['descending', 'ascending']"/>
-        <el-table-column v-if="getColumnVisibility(1)" label="目标问题" align="left" prop="question"
-                         :show-overflow-tooltip="{ effect: 'light' }">
-          <template #default="scope">
-            {{ scope.row.question || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column v-if="getColumnVisibility(2)" label="问题来源" align="left" prop="questionSource" width="250"
-                         :show-overflow-tooltip="{ effect: 'light' }">
-          <template #default="scope">
-            {{ scope.row.questionSource || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column v-if="getColumnVisibility(3)" label="业务场景" align="left" prop="businessScenarios" width="250"
-                         :show-overflow-tooltip="{ effect: 'light' }">
-          <template #default="scope">
-            {{ scope.row.businessScenarios || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column v-if="getColumnVisibility(4)" label="优先级" align="center" prop="priority" width="100">
-          <template #default="scope">
-            <dict-tag :options="om_target_priority" :value="scope.row.priority"/>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="getColumnVisibility(5)" label="验证状态" align="center" prop="acceptStatus" width="100">
-          <template #default="scope">
-            <dict-tag :options="om_accept_status" :value="scope.row.acceptStatus"/>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="getColumnVisibility(6)" label="关联元素" align="center" prop="objectTypeNum" width="100">
-          <template #default="scope">
-            {{ scope.row.relatedElementCount || '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column v-if="getColumnVisibility(7)" label="操作" align="center"
-                         class-name="small-padding fixed-width" fixed="right" width="240">
-          <template #default="scope">
-            <el-button link type="primary" icon="view" @click="routeTo('/om/'+versionId+'/target/detail',scope.row)"
-                       v-hasPermi="['om:target:target:query']">详情
-            </el-button>
-            <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
-                       v-hasPermi="['om:target:target:edit']">修改
-            </el-button>
-            <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)"
-                       v-hasPermi="['om:target:target:remove']">删除
-            </el-button>
-          </template>
-        </el-table-column>
+      <template #actions-data>
+        <el-button type="primary"
+                   plain
+                   @click="handleAdd"
+                   v-hasPermi="['om:target:target:add']"
+                   @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button type="danger"
+                   plain
+                   :disabled="multiple"
+                   @click="handleDelete()"
+                   v-hasPermi="['om:target:target:remove']"
+                   @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
 
-        <template #empty>
-          <div class="emptyBg">
-            <img src="@/assets/system/images/no_data/noData.png" alt=""/>
-            <p>暂无记录</p>
-          </div>
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <template #priority="{ row }">
+          <dict-tag :options="om_target_priority" :value="row.priority" />
         </template>
-      </el-table>
-
-      <pagination
-          v-show="total>0"
-          :total="total"
-          v-model:page="queryParams.pageNum"
-          v-model:limit="queryParams.pageSize"
-          @pagination="getList"
-      />
-    </div>
+        <template #acceptStatus="{ row }">
+          <dict-tag :options="om_accept_status" :value="row.acceptStatus" />
+        </template>
+        <template #relatedElementCount="{ row }">
+          <qt-tag-group
+            :items="row.relatedElementTags || []"
+            type="none"
+            :max-count="2"
+          />
+        </template>
+        <template #action="{ row }">
+          <el-button link
+                     type="primary"
+                     icon="View"
+                     @click="routeTo('/om/'+versionId+'/target/detail', row)"
+                     v-hasPermi="['om:target:target:query']"
+          >详情</el-button>
+          <el-button link
+                     type="primary"
+                     icon="Edit"
+                     @click="handleUpdate(row)"
+                     v-hasPermi="['om:target:target:edit']"
+          >修改</el-button>
+          <el-button link
+                     type="danger"
+                     icon="Delete"
+                     @click="handleDelete(row)"
+                     v-hasPermi="['om:target:target:remove']"
+          >删除</el-button>
+        </template>
+      </qt-table>
+    </qt-wrap>
 
     <!-- 添加或修改建模目标对话框 -->
-    <el-dialog :title="title" v-model="open" width="800px" :append-to="$refs['app-container']" draggable>
-      <template #header="{ close, titleId, titleClass }">
+    <el-dialog v-model="open"
+               width="800px"
+               :append-to="$refs['app-container']"
+               draggable
+    >
+      <template #header>
         <span role="heading" aria-level="2" class="el-dialog__title">
           {{ title }}
         </span>
       </template>
-      <el-form ref="targetRef" :model="form" :rules="rules" label-width="80px" @submit.prevent>
+      <el-form ref="targetRef"
+               :model="form"
+               :rules="rules"
+               label-width="80px"
+               @submit.prevent
+      >
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="目标问题" prop="question">
-              <el-input v-model="form.question" type="textarea" placeholder="请输入目标问题"
-                        maxlength="200 个字符" show-word-limit/>
+              <el-input v-model="form.question"
+                        placeholder="请输入目标问题"
+                        maxlength="200"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="问题来源" prop="questionSource">
-              <el-input v-model="form.questionSource" type="textarea" placeholder="请输入问题来源"
-                        maxlength="200 个字符" show-word-limit/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="业务场景" prop="businessScenarios">
-              <el-input v-model="form.businessScenarios" type="textarea" placeholder="请输入业务场景"
-                        maxlength="200 个字符" show-word-limit/>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="验收标准" prop="acceptCriterion">
-              <el-input v-model="form.acceptCriterion" type="textarea" placeholder="请输入验收标准"
-                        maxlength="200 个字符" show-word-limit/>
+              <el-input v-model="form.questionSource"
+                        placeholder="请输入问题来源"
+                        maxlength="200"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="优先级" prop="priority">
               <el-radio-group v-model="form.priority">
                 <el-radio
-                    v-for="dict in om_target_priority"
-                    :key="dict.value"
-                    :value="dict.value"
+                  v-for="dict in om_target_priority"
+                  :key="dict.value"
+                  :value="dict.value"
                 >{{ dict.label }}
                 </el-radio>
               </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="业务场景" prop="businessScenarios">
+              <el-input v-model="form.businessScenarios"
+                        class="target-textarea"
+                        type="textarea"
+                        placeholder="请输入业务场景"
+                        maxlength="200"
+                        show-word-limit
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="验收标准" prop="acceptCriterion">
+              <el-input v-model="form.acceptCriterion"
+                        class="target-textarea"
+                        type="textarea"
+                        placeholder="请输入验收标准"
+                        maxlength="200"
+                        show-word-limit
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -212,95 +167,149 @@
 </template>
 
 <script setup name="Target">
-import {addTarget, delTarget, getTarget, listTarget, updateTarget} from "@/api/om/omtarget/target";
-import {useRoute, useRouter} from 'vue-router';
+import {
+  addTarget,
+  delTarget,
+  getTarget,
+  listTarget,
+  updateTarget,
+} from "@/api/om/omtarget/target";
+import { useRoute, useRouter } from "vue-router";
+import { listType as listObjectTypes } from "@/api/om/object/type";
+import { listRelations } from "@/api/om/object/relation";
 
-const {proxy} = getCurrentInstance();
-const {om_accept_status, om_target_priority} = proxy.useDict('om_accept_status', 'om_target_priority');
+const { proxy } = getCurrentInstance();
+const { om_accept_status, om_target_priority } = proxy.useDict(
+  "om_accept_status",
+  "om_target_priority",
+);
 const route = useRoute();
 const router = useRouter();
 
-// 列显隐信息
-const columns = ref([
-  {key: 0, label: "编号", visible: true},
-  {key: 1, label: "目标问题", visible: true},
-  {key: 2, label: "问题来源", visible: true},
-  {key: 3, label: "业务场景", visible: true},
-  {key: 4, label: "优先级", visible: true},
-  {key: 5, label: "验证状态", visible: true},
-  {key: 6, label: "关联元素", visible: true},
-  {key: 7, label: "操作", visible: true}
-]);
-
-const getColumnVisibility = (key) => {
-  const column = columns.value.find(col => col.key === key);
-  // 如果没有找到对应列配置，默认显示
-  if (!column) return true;
-  // 如果找到对应列配置，根据visible属性来控制显示
-  return column.visible;
-};
+const tableRef = ref();
+const versionId = ref(route.params.versionId || null);
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "id", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    { type: "selection", width: 55 },
+    { label: "编号", prop: "id", width: 80, sortable: true },
+    {
+      label: "目标问题",
+      prop: "question",
+      minWidth: 300,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "问题来源",
+      prop: "questionSource",
+      width: 250,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "业务场景",
+      prop: "businessScenarios",
+      width: 250,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    { label: "关联元素", slot: "relatedElementCount", minWidth: 220, align: "left" },
+    { label: "优先级", prop: "priority", slot: "priority", width: 100 },
+    { label: "验证状态", prop: "acceptStatus", slot: "acceptStatus", width: 100 },
+    { label: "操作", slot: "action", fixed: "right", width: 240 },
+  ],
+  func: loadTargets,
+  params: {
+    versionId: versionId.value,
+    question: null,
+    priority: null,
+    acceptStatus: null,
+  },
+});
+const searchStore = reactive({
+  items: [
+    { label: "目标问题", prop: "question", component: { is: "input" } },
+    {
+      label: "优先级",
+      prop: "priority",
+      component: { is: "select", options: om_target_priority },
+    },
+    {
+      label: "验证状态",
+      prop: "acceptStatus",
+      component: { is: "select", options: om_accept_status },
+    },
+  ],
+});
 
 const open = ref(false);
 const openDetail = ref(false);
-const loading = ref(true);
-const showSearch = ref(true);
 const ids = ref([]);
-const single = ref(true);
 const multiple = ref(true);
-const total = ref(0);
 const title = ref("");
-const defaultSort = ref({prop: "id", order: "descending"});
-const versionId = ref(route.params.versionId || null);
-const targetList = ref([]);
 
 const data = reactive({
   form: {},
-  queryParams: {
-    pageNum: 1,
-    pageSize: 10,
-    versionId: null,
-    question: null,
-    questionSource: null,
-    businessScenarios: null,
-    priority: null,
-    acceptCriterion: null,
-    acceptStatus: null,
-    objectTypeNum: null,
-    objectAttributeNum: null,
-    objectRelationshipNum: null,
-    createTime: null,
-    orderByColumn: defaultSort.value.prop,
-    isAsc: defaultSort.value.order
-  },
   rules: {
-    question: [{required: true, message: "目标问题不能为空", trigger: "blur"}],
-    questionSource: [{required: true, message: "问题来源不能为空", trigger: "blur"}],
-    businessScenarios: [{required: true, message: "业务场景不能为空", trigger: "blur"}],
-    acceptCriterion: [{required: true, message: "验收标准不能为空", trigger: "blur"}],
-    priority: [{required: true, message: "优先级不能为空", trigger: "blur"}],
-  }
+    question: [{ required: true, message: "目标问题不能为空", trigger: "blur" }],
+    questionSource: [{ required: true, message: "问题来源不能为空", trigger: "blur" }],
+    businessScenarios: [{ required: true, message: "业务场景不能为空", trigger: "blur" }],
+    acceptCriterion: [{ required: true, message: "验收标准不能为空", trigger: "blur" }],
+    priority: [{ required: true, message: "优先级不能为空", trigger: "blur" }],
+  },
 });
 
-const {queryParams, form, rules} = toRefs(data);
+const { form, rules } = toRefs(data);
 
 watch(
-    () => route.params.versionId,
-    () => {
-      versionId.value = route.params.versionId || null;
-      getList();
-    },
-    { immediate: true }
+  () => route.params.versionId,
+  () => {
+    versionId.value = route.params.versionId || null;
+    tableStore.params.versionId = versionId.value;
+    ids.value = [];
+    multiple.value = true;
+    tableRef.value?.resetQuery();
+  },
 );
+
+// 复用详情页的关联查询口径；每类仅查询一条，通过 total 取得数量。
+async function loadTargets(params) {
+  const response = await listTarget(params);
+  response.data.rows = await Promise.all(response.data.rows.map(async (row) => {
+    const query = {
+      versionId: params.versionId,
+      targetIdList: [row.id],
+      pageNum: 1,
+      pageSize: 1,
+    };
+    const results = await Promise.allSettled([
+      listObjectTypes(query),
+      listRelations(query),
+    ]);
+    const labels = ["对象类型", "对象关系"];
+    return {
+      ...row,
+      relatedElementTags: results.map((result, index) => {
+        const count = result.status === "fulfilled" ? result.value.data?.total : null;
+        return `${labels[index]}${count ?? "-"}`;
+      }),
+    };
+  }));
+  return response;
+}
 
 /** 查询建模目标列表 */
 function getList() {
-  loading.value = true;
-  queryParams.value.versionId = versionId.value;
-  listTarget(queryParams.value).then(response => {
-    targetList.value = response.data.rows;
-    total.value = response.data.total;
-    loading.value = false;
-  });
+  tableRef.value?.getList();
 }
 
 // 取消按钮
@@ -314,7 +323,7 @@ function cancel() {
 function reset() {
   form.value = {
     id: null,
-    versionId: 1,
+    versionId: versionId.value,
     question: null,
     questionSource: null,
     businessScenarios: null,
@@ -332,36 +341,15 @@ function reset() {
     updateBy: null,
     updaterId: null,
     updateTime: null,
-    remark: null
+    remark: null,
   };
   proxy.resetForm("targetRef");
 }
 
-/** 搜索按钮操作 */
-function handleQuery() {
-  queryParams.value.pageNum = 1;
-  getList();
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  proxy.resetForm("queryRef");
-  handleQuery();
-}
-
 // 多选框选中数据
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.id);
-  single.value = selection.length !== 1;
+  ids.value = selection.map((item) => item.id);
   multiple.value = !selection.length;
-}
-
-
-/** 排序触发事件 */
-function handleSortChange(column, prop, order) {
-  queryParams.value.orderByColumn = column.prop;
-  queryParams.value.isAsc = column.order;
-  getList();
 }
 
 /** 新增按钮操作 */
@@ -374,8 +362,8 @@ function handleAdd() {
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset();
-  const _id = row.id || ids.value
-  getTarget(_id).then(response => {
+  const _id = row.id || ids.value;
+  getTarget(_id).then((response) => {
     form.value = response.data;
     open.value = true;
     title.value = "修改建模目标";
@@ -384,21 +372,21 @@ function handleUpdate(row) {
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["targetRef"].validate(valid => {
+  proxy.$refs["targetRef"].validate((valid) => {
     if (valid) {
       if (form.value.id != null) {
-        updateTarget(form.value).then(response => {
+        updateTarget(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
-        }).catch(error => {
+        }).catch(() => {
         });
       } else {
-        addTarget(form.value).then(response => {
+        addTarget(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
-        }).catch(error => {
+        }).catch(() => {
         });
       }
     }
@@ -407,7 +395,7 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _ids = row.id || ids.value;
+  const _ids = row?.id || ids.value;
   proxy.$modal.confirm('是否确认删除建模目标编号为"' + _ids + '"的数据项？').then(function () {
     return delTarget(_ids);
   }).then(() => {
@@ -420,7 +408,7 @@ function handleDelete(row) {
 function routeTo(link, row) {
   if (link !== "" && link.indexOf("http") !== -1) {
     window.location.href = link;
-    return
+    return;
   }
   if (link !== "") {
     if (link === router.currentRoute.value.path) {
@@ -429,10 +417,16 @@ function routeTo(link, row) {
       router.push({
         path: link,
         query: {
-          id: row.id
-        }
+          id: row.id,
+        },
       });
     }
   }
 }
 </script>
+
+<style scoped>
+.target-textarea :deep(.el-input__count)::after {
+  content: " 个字符";
+}
+</style>

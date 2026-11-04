@@ -18,13 +18,17 @@
 
 package tech.qiantong.qontology.module.om.controller.admin.dataType.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.Data;
 import tech.qiantong.qontology.core.domain.BaseEntity;
 import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
@@ -82,6 +86,54 @@ public class OmDataTypeSaveReqVO extends BaseEntity {
     @Schema(description = "枚举来源：PROJECT 当前项目版本，GLOBAL 全局；与 enumType 配合使用")
     @Pattern(regexp = "PROJECT|GLOBAL", message = "枚举来源只能为当前项目或全局")
     private String enumSource = "PROJECT";
+
+    /** 文本最大长度 */
+    @Min(value = 0, message = "文本最大长度不能小于0")
+    private Integer maxLength;
+
+    /** 文本最小长度 */
+    @Min(value = 0, message = "文本最小长度不能小于0")
+    private Integer minLength;
+
+    /** 最早日期 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime earliestTime;
+
+    /** 最晚日期 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime latestTime;
+
+    /** true 对应文案 */
+    @Size(max = 64, message = "true 对应文案长度超出限制")
+    private String trueValue;
+
+    /** false 对应文案 */
+    @Size(max = 64, message = "false 对应文案长度超出限制")
+    private String falseValue;
+
+    /** 总位数 */
+    @Positive(message = "总位数必须为正整数")
+    private Integer allPlaces;
+
+    /** 文本格式校验编码 */
+    @Size(max = 16, message = "文本格式校验编码长度超出限制")
+    private String validationType;
+
+    /** 自定义正则表达式 */
+    @Size(max = 512, message = "自定义正则表达式长度超出限制")
+    private String validationPattern;
+
+    /** 示例值 */
+    @Size(max = 256, message = "示例值长度超出限制")
+    private String exampleValue;
+
+    /** 数值最小值 */
+    @Digits(integer = 45, fraction = 20, message = "数值范围最多45位整数、20位小数")
+    private BigDecimal minValue;
+
+    /** 数值最大值 */
+    @Digits(integer = 45, fraction = 20, message = "数值范围最多45位整数、20位小数")
+    private BigDecimal maxValue;
 
     @Schema(description = "备注信息", example = "")
     @Size(max = 512, message = "备注长度不能超过512个字符")

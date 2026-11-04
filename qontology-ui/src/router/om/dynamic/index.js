@@ -68,6 +68,20 @@ export default [
         }
     },
     {
+        path: '/om/:versionId/semantic/enum/detail',
+        component: Layout,
+        hidden: true,
+        permissions: ['om:enumeration:type:query'],
+        children: [
+            {
+                path: ':enumId(\\d+)',
+                component: () => import('@/views/om/semantic/enum/detail/index.vue'),
+                name: 'OmEnumDetail',
+                meta: { title: '枚举详情', activeMenu: '/om/:versionId/semantic/omEnum', noCache: true }
+            }
+        ]
+    },
+    {
         path: '/om/:versionId/semantic/enum/data',
         component: Layout,
         hidden: true,
@@ -77,7 +91,7 @@ export default [
                 path: ':enumId(\\d+)',
                 component: () => import('@/views/om/semantic/enum/data/index.vue'),
                 name: 'OmEnumData',
-                meta: { title: '枚举数据', activeMenu: '/om/:versionId/semantic/enum' }
+                meta: { title: '枚举数据', activeMenu: '/om/:versionId/semantic/omEnum' }
             }
         ]
     }
