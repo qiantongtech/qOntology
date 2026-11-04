@@ -112,12 +112,11 @@
             placement="bottom"
             :width="120"
             trigger="click"
-            popper-class="handle-popover"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <div class="datasource-action-list">
+            <div class="butgdlist">
               <el-button
                 v-hasPermi="['basic:datasource:datasource:edit']"
                 link
@@ -523,7 +522,7 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       width: 80,
-      align: "left",
+      align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending"],
     },
@@ -563,7 +562,7 @@ const tableStore = reactive({
       prop: "createTime",
       date: true,
       width: 160,
-      align: "left",
+      align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending"],
     },
@@ -875,16 +874,6 @@ function handleDelete(row) {
 }
 </script>
 <style scoped lang="scss">
-// 浮层中的操作纵向排列，清除相邻按钮默认的左间距。
-.datasource-action-list {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  .el-button + .el-button {
-    margin-left: 0;
-  }
-}
 
 .prefix-icon {
   width: 20px;
