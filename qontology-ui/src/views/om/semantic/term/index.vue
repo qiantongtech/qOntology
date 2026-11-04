@@ -17,232 +17,89 @@
 -->
 
 <template>
-  <div ref="pageRef" class="app-container term-page">
+  <div class="app-container term-page" ref="app-container">
     <GuideTip tip-id="om/semantic/term.list" />
-    <div v-show="showSearch" class="pagecont-top">
-      <el-form
-        ref="queryRef"
-        class="btn-style"
-        :model="queryParams"
-        :inline="true"
-        @submit.prevent="handleQuery"
-      >
-        <el-form-item label="名称" prop="stdName">
-          <el-input
-            v-model="queryParams.stdName"
-            class="el-form-input-width"
-            placeholder="请输入名称"
-            clearable
-            @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="英文名称" prop="enName">
-          <el-input
-            v-model="queryParams.enName"
-            class="el-form-input-width"
-            placeholder="请输入英文名称"
-            clearable
-            @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" plain @click="handleQuery"
-            ><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-          </el-button>
-          <el-button @click="resetQuery"
-            ><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef" />
+      </template>
+
+      <template #actions-data>
+        <el-button
+          v-hasPermi="['om:term:term:add']"
+          type="primary"
+          plain
+          @click="handleAdd"
+          @mousedown="(e) => e.preventDefault()"
+          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button
+          v-hasPermi="['om:term:term:remove']"
+          type="danger"
+          plain
+          :disabled="!selectedIds.length || deleting"
+          @click="handleDelete()"
+          @mousedown="(e) => e.preventDefault()"
+          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+        <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+          </div>
+        </template>
+        <template #handle="{ row }">
+          <el-button
+            v-hasPermi="['om:term:term:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情</el-button
           >
-        </el-form-item>
-      </el-form>
-    </div>
-    <div class="pagecont-bottom">
-      <div class="justify-between mb15">
-        <el-row :gutter="15" class="btn-style">
-          <el-col :span="1.5">
+          <el-popover
+            v-if="auth.hasPermiOr(['om:term:term:edit', 'om:term:term:remove'])"
+            placement="bottom"
+            :width="107"
+            popper-class="handle-popover"
+            trigger="click"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
             <el-button
-              v-hasPermi="['om:term:term:add']"
-              type="primary"
-              plain
-              @click="handleAdd"
-              ><i class="iconfont-mini icon-xinzeng mr5"></i>新增
-            </el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              v-hasPermi="['om:term:term:remove']"
-              type="danger"
-              plain
-              :disabled="!selectedIds.length || deleting"
-              @click="handleDelete()"
-              ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
-            </el-button>
-          </el-col>
-        </el-row>
-        <right-toolbar
-          v-model:showSearch="showSearch"
-          :columns="columns"
-          @queryTable="getList"
-        />
-      </div>
-      <el-table
-        ref="tableRef"
-        v-loading="loading"
-        :data="termList"
-        row-key="id"
-        stripe
-        :default-sort="defaultSort"
-        @selection-change="handleSelectionChange"
-        @sort-change="handleSortChange"
-      >
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column
-          v-if="isColumnVisible('id')"
-          prop="id"
-          label="编号"
-          width="80"
-          align="center"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending', null]"
-        />
-        <el-table-column
-          v-if="isColumnVisible('stdName')"
-          prop="stdName"
-          label="名称"
-          min-width="140"
-          align="left"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="{ row }">{{ row.stdName || "-" }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="isColumnVisible('description')"
-          prop="description"
-          label="描述"
-          min-width="240"
-          align="left"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="{ row }">{{ row.description || "-" }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="isColumnVisible('enName')"
-          prop="enName"
-          label="英文名称"
-          min-width="150"
-          align="left"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="{ row }">{{ row.enName || "-" }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="isColumnVisible('alias')"
-          prop="alias"
-          label="别名"
-          min-width="160"
-          align="left"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="{ row }">{{ row.alias || "-" }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="isColumnVisible('abbr')"
-          prop="abbr"
-          label="缩写"
-          min-width="120"
-          align="left"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="{ row }">{{ row.abbr || "-" }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="isColumnVisible('source')"
-          prop="source"
-          label="来源"
-          min-width="180"
-          align="left"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="{ row }">{{ row.source || "-" }}</template>
-        </el-table-column>
-        <el-table-column
-          label="创建人"
-          prop="createBy"
-          width="120"
-          align="center"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        />
-        <el-table-column
-          label="创建时间"
-          prop="createTime"
-          width="150"
-          align="center"
-          sortable="custom"
-        >
-          <template #default="scope">{{
-            parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") || "—"
-          }}</template>
-        </el-table-column>
-        <el-table-column
-          v-if="isColumnVisible('operation')"
-          label="操作"
-          align="center"
-          fixed="right"
-          width="240"
-          class-name="small-padding fixed-width"
-        >
-          <template #default="{ row }">
-            <el-button
-              v-hasPermi="['om:term:term:query']"
-              link
-              type="primary"
-              icon="View"
-              @click="handleDetail(row)"
-            >
-              详情
-            </el-button>
-            <el-button
-              v-hasPermi="['om:term:term:edit']"
+              v-if="auth.hasPermi('om:term:term:edit')"
               link
               type="primary"
               icon="Edit"
+              :disabled="saving"
               @click="handleUpdate(row)"
+              >修改</el-button
             >
-              修改
-            </el-button>
             <el-button
-              v-hasPermi="['om:term:term:remove']"
+              v-if="auth.hasPermi('om:term:term:remove')"
               link
               type="danger"
               icon="Delete"
               :disabled="deleting"
               @click="handleDelete(row)"
-              >删除
-            </el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <div class="emptyBg">
-            <img
-              src="@/assets/system/images/no_data/noData.png"
-              alt="暂无记录"
-            />
-            <p>暂无记录</p>
-          </div>
+              >删除</el-button
+            >
+          </el-popover>
         </template>
-      </el-table>
-      <pagination
-        v-show="total > 0"
-        :total="total"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-      />
-    </div>
+      </qt-table>
+    </qt-wrap>
     <el-dialog
       v-model="open"
       :title="dialogTitle"
       width="800px"
-      :append-to="pageRef"
+      :append-to="$refs['app-container']"
       :close-on-press-escape="!saving"
       :before-close="handleBeforeClose"
       draggable
@@ -350,8 +207,8 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm"
+          <el-button :disabled="saving" @click="cancel">取 消</el-button>
+          <el-button type="primary" :loading="saving" @click="submitForm"
             >确 定</el-button
           >
         </div>
@@ -362,7 +219,7 @@
       class="term-detail-dialog"
       title="术语详情"
       width="800px"
-      :append-to="pageRef"
+      :append-to="$refs['app-container']"
       draggable
     >
       <el-form
@@ -423,44 +280,68 @@ import {
   updateTerm,
   delTerm,
 } from "@/api/om/term/term";
+import auth from "@/plugins/auth";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 defineOptions({ name: "OmTerm" });
 const { versionId, requireVersion } = useOntologyVersion();
-const pageRef = ref();
-const queryRef = ref();
 const termRef = ref();
 const tableRef = ref();
-const showSearch = ref(true);
-const loading = ref(false);
 const saving = ref(false);
 const deleting = ref(false);
 const open = ref(false);
 const detailOpen = ref(false);
 const dialogTitle = ref("新增术语");
-const termList = ref([]);
-const total = ref(0);
 const selectedIds = ref([]);
 const detail = ref({});
-const defaultSort = ref({ prop: "createTime", order: "descending" });
-const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
-  stdName: "",
-  enName: "",
-  orderByColumn: defaultSort.value.prop,
-  isAsc: defaultSort.value.order,
+const { creatorPhones } = useCreatorPhones();
+
+/** 版本号缺失时直接返回空列表，避免无版本上下文发起无效查询。 */
+function fetchTerms(params) {
+  if (!versionId.value) {
+    return Promise.resolve({ data: { rows: [], total: 0 } });
+  }
+  return listTerm({ ...params, versionId: versionId.value });
+}
+
+// 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    { type: "selection", width: 55, minWidth: 55 },
+    { label: "编号", prop: "id", slot: "text", width: 80, minWidth: 80, align: "left", sortable: true },
+    { label: "名称", prop: "stdName", slot: "text", minWidth: 140, align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "描述", prop: "description", slot: "text", minWidth: 240, align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "英文名称", prop: "enName", slot: "text", minWidth: 150, align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "别名", prop: "alias", slot: "text", minWidth: 160, align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "缩写", prop: "abbr", slot: "text", minWidth: 120, align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "来源", prop: "source", slot: "text", minWidth: 180, align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "创建人", prop: "createBy", slot: "creator", width: 130, minWidth: 130, align: "left", headerAlign: "left" },
+    { label: "创建时间", prop: "createTime", date: true, width: 160, minWidth: 160, align: "left", sortable: true },
+    { label: "操作", slot: "handle", width: 170, minWidth: 170, fixed: "right" },
+  ],
+  func: fetchTerms,
+  params: {
+    stdName: null,
+    enName: null,
+  },
 });
-const appliedFilters = reactive({ stdName: "", enName: "" });
-const columns = ref([
-  { key: 0, prop: "id", label: "编号", visible: true },
-  { key: 1, prop: "stdName", label: "名称", visible: true },
-  { key: 2, prop: "description", label: "描述", visible: true },
-  { key: 3, prop: "enName", label: "英文名称", visible: true },
-  { key: 4, prop: "alias", label: "别名", visible: true },
-  { key: 5, prop: "abbr", label: "缩写", visible: true },
-  { key: 6, prop: "source", label: "来源", visible: true },
-  { key: 7, prop: "operation", label: "操作", visible: true },
-]);
+
+// 搜索项配置
+const searchStore = reactive({
+  items: [
+    { label: "名称", prop: "stdName", component: { is: "input" } },
+    { label: "英文名称", prop: "enName", component: { is: "input" } },
+  ],
+});
 const detailFields = [
   { prop: "id", label: "编号" },
   { prop: "stdName", label: "名称" },
@@ -472,10 +353,6 @@ const detailFields = [
   { prop: "createBy", label: "创建人" },
   { prop: "createTime", label: "创建时间" },
 ];
-
-function isColumnVisible(prop) {
-  return columns.value.find((column) => column.prop === prop)?.visible === true;
-}
 
 const emptyForm = () => ({
   id: undefined,
@@ -543,10 +420,14 @@ const rules = {
     { max: 500, message: "描述长度不能超过500个字符", trigger: "blur" },
   ],
 };
-let listRequest = 0;
 let contextRequest = 0;
 let detailRequest = 0;
 
+/**
+ * 将别名字符串按中英文逗号拆分为去重后的数组。
+ * @param {string} [value] 别名原文
+ * @returns {Array<string>} 去重后的别名列表
+ */
 function parseAliases(value) {
   return [
     ...new Set(
@@ -558,17 +439,24 @@ function parseAliases(value) {
   ];
 }
 
+/** 收起别名内联输入框并清空草稿。 */
 function resetAliasInput() {
   aliasInputVisible.value = false;
   aliasInputValue.value = "";
 }
 
+/** 展示别名输入框并聚焦。 */
 async function showAliasInput() {
   aliasInputVisible.value = true;
   await nextTick();
   aliasInputRef.value?.focus();
 }
 
+/**
+ * 确认新增别名，超长按提示拦截。
+ * @param {KeyboardEvent} [event] 回车事件，输入法组字中时不提交
+ * @returns {boolean} 是否成功写入别名
+ */
 function confirmAlias(event) {
   if (event?.isComposing || saving.value) return false;
   const aliases = [
@@ -585,6 +473,10 @@ function confirmAlias(event) {
   return true;
 }
 
+/**
+ * 移除指定别名。
+ * @param {string} alias 待移除的别名
+ */
 function removeAlias(alias) {
   if (saving.value) return;
   form.value.alias = aliasTags.value
@@ -593,59 +485,26 @@ function removeAlias(alias) {
   termRef.value?.validateField("alias").catch(() => {});
 }
 
-async function getList() {
-  const requestId = ++listRequest;
-  if (!versionId.value) {
-    termList.value = [];
-    total.value = 0;
-    loading.value = false;
-    return;
-  }
-  loading.value = true;
-  try {
-    const response = await listTerm({
-      ...queryParams,
-      ...appliedFilters,
-      versionId: versionId.value,
-    });
-    if (requestId !== listRequest) return;
-    termList.value = response.data.rows;
-    total.value = response.data.total;
-    selectedIds.value = [];
-    tableRef.value?.clearSelection();
-  } finally {
-    if (requestId === listRequest) loading.value = false;
-  }
+/** 刷新当前页列表。 */
+function refreshList() {
+  tableRef.value?.getList();
 }
 
-function handleSortChange({ prop, order }) {
-  queryParams.orderByColumn = order ? prop : defaultSort.value.prop;
-  queryParams.isAsc = order || defaultSort.value.order;
-  queryParams.pageNum = 1;
-  getList();
-}
-
-function handleQuery() {
-  appliedFilters.stdName = queryParams.stdName.trim();
-  appliedFilters.enName = queryParams.enName.trim();
-  queryParams.pageNum = 1;
-  getList();
-}
-
-function resetQuery() {
-  queryRef.value?.resetFields();
-  handleQuery();
-}
-
+/**
+ * 多选框选中数据，供顶部批量删除使用。
+ * @param {Array} selection 当前选中的行数据
+ */
 function handleSelectionChange(selection) {
   selectedIds.value = selection.map((row) => row.id);
 }
 
+/** 清除表单校验提示与别名输入态。 */
 function clearValidation() {
   termRef.value?.clearValidate();
   resetAliasInput();
 }
 
+/** 新增按钮操作。 */
 async function handleAdd() {
   if (!requireVersion()) return;
   ++detailRequest;
@@ -656,6 +515,11 @@ async function handleAdd() {
   clearValidation();
 }
 
+/**
+ * 拉取术语详情并打开对应弹窗。
+ * @param {Object} row 当前行数据
+ * @param {boolean} isDetail true 打开详情弹窗，false 打开修改弹窗
+ */
 async function loadTerm(row, isDetail) {
   const requestId = ++detailRequest;
   const response = await getTerm(row.id);
@@ -672,22 +536,36 @@ async function loadTerm(row, isDetail) {
   }
 }
 
+/**
+ * 修改按钮操作。
+ * @param {Object} row 当前行数据
+ */
 function handleUpdate(row) {
   return loadTerm(row, false);
 }
 
+/**
+ * 详情按钮操作。
+ * @param {Object} row 当前行数据
+ */
 function handleDetail(row) {
   return loadTerm(row, true);
 }
 
+/**
+ * 保存期间拦截弹窗关闭回调。
+ * @param {Function} done el-dialog 的 before-close 完成回调
+ */
 function handleBeforeClose(done) {
   if (!saving.value) done();
 }
 
+/** 关闭新增/修改弹窗；保存中禁止关闭。 */
 function cancel() {
   if (!saving.value) open.value = false;
 }
 
+/** 提交新增/修改表单，提交期间锁定确定按钮避免重复入库。 */
 async function submitForm() {
   if (!requireVersion()) return;
   const submittingVersion = versionId.value;
@@ -721,12 +599,16 @@ async function submitForm() {
     if (submittingVersion !== versionId.value) return;
     ElMessage.success(form.value.id != null ? "修改成功" : "新增成功");
     open.value = false;
-    await getList();
+    refreshList();
   } finally {
     saving.value = false;
   }
 }
 
+/**
+ * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
+ * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+ */
 async function handleDelete(row) {
   const context = contextRequest;
   const deletingVersion = versionId.value;
@@ -760,28 +642,24 @@ async function handleDelete(row) {
     if (context !== contextRequest || deletingVersion !== versionId.value)
       return;
     ElMessage.success("删除成功");
-    if (queryParams.pageNum > 1 && termList.value.length <= ids.length)
-      queryParams.pageNum -= 1;
-    await getList();
+    refreshList();
   } finally {
     deleting.value = false;
   }
 }
 
-watch(
-  versionId,
-  () => {
-    ++contextRequest;
-    ++detailRequest;
-    open.value = false;
-    detailOpen.value = false;
-    selectedIds.value = [];
-    termList.value = [];
-    queryParams.pageNum = 1;
-    getList();
-  },
-  { immediate: true }
-);
+// 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
+watch(versionId, async () => {
+  ++contextRequest;
+  ++detailRequest;
+  open.value = false;
+  detailOpen.value = false;
+  selectedIds.value = [];
+  tableStore.params.stdName = null;
+  tableStore.params.enName = null;
+  await nextTick();
+  tableRef.value?.resetQuery();
+});
 onBeforeUnmount(() => {
   ++contextRequest;
 });

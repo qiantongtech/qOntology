@@ -17,182 +17,93 @@
 -->
 
 <template>
-    <div ref="pageRef" class="app-container model-axiom-page">
+    <div class="app-container model-axiom-page" ref="app-container">
         <GuideTip tip-id="om/constraint/model.list" />
-        <div v-show="showSearch" class="pagecont-top">
-            <el-form ref="queryRef" class="btn-style" :model="query" :inline="true" @submit.prevent="search">
-                <el-form-item label="公理名称" prop="name">
-                    <el-input
-                        v-model="query.name"
-                        class="el-form-input-width"
-                        placeholder="请输入公理名称"
-                        maxlength="128"
-                        clearable
-                        @keyup.enter="search"
-                    />
-                </el-form-item>
-                <el-form-item label="公理类型" prop="type">
-                  <el-select v-model="query.type" class="el-form-input-width" placeholder="请选择公理类型" clearable>
-                    <el-option v-for="item in om_axiom_type" :key="item.value" :label="item.label" :value="item.value"/>
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="级别" prop="level">
-                  <el-select v-model="query.level" class="el-form-input-width" placeholder="请选择级别" clearable>
-                    <el-option v-for="item in om_rule_level" :key="item.value" :label="item.label" :value="item.value"/>
-                  </el-select>
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" plain @click="search">
-                        <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-                    </el-button>
-                    <el-button @click="resetSearch"> <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置 </el-button>
-                </el-form-item>
-            </el-form>
-        </div>
-        <div class="pagecont-bottom">
-            <div class="justify-between mb15">
-                <el-row :gutter="15" class="btn-style">
-                    <el-col :span="1.5">
-                        <el-button
-                            v-hasPermi="['om:constraint:modelaxi:add']"
-                            type="primary"
-                            plain
-                            :disabled="saving"
-                            @click="handleAdd"
-                        >
-                            <i class="iconfont-mini icon-xinzeng mr5"></i>新增
-                        </el-button>
-                    </el-col>
-                    <el-col :span="1.5">
-                        <el-button
-                            v-hasPermi="['om:constraint:modelaxi:remove']"
-                            type="danger"
-                            plain
-                            :disabled="!selectedIds.length || deleting || loading"
-                            @click="handleDelete()"
-                        >
-                            <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
-                        </el-button>
-                    </el-col>
-                </el-row>
-                <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
-            </div>
-            <el-table
-                ref="tableRef"
-                v-loading="loading"
-                :data="rows"
-                row-key="id"
-                stripe
-                :default-sort="{prop: 'createTime', order: 'descending'}"
-                @sort-change="handleSortChange"
-                @selection-change="handleSelectionChange"
-            >
-                <el-table-column type="selection" width="55" align="center" />
-                <el-table-column
-                    v-if="visible('id')"
-                    prop="id" sortable="custom"
-                    label="编号"
-                    width="80"
-                    align="center"
-                />
-                <el-table-column
-                    v-if="visible('name')"
-                    prop="name"
-                    label="名称"
-                    min-width="200"
-                    :show-overflow-tooltip="{ effect: 'light' }"
-                />
-                <el-table-column
-                    v-if="visible('description')"
-                    prop="description"
-                    label="描述"
-                    min-width="240"
-                    :show-overflow-tooltip="{ effect: 'light' }"
+
+        <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+            <template #search>
+                <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef" />
+            </template>
+
+            <template #actions-data>
+                <el-button
+                    v-hasPermi="['om:constraint:modelaxi:add']"
+                    type="primary"
+                    plain
+                    :disabled="saving"
+                    @click="handleAdd"
+                    @mousedown="(e) => e.preventDefault()"
                 >
-                    <template #default="{ row }">{{ row.description || '-' }}</template>
-                </el-table-column>
-                <el-table-column v-if="visible('type')" label="公理类型" width="150" align="center">
-                    <template #default="{ row }">
-                        <dict-tag :options="om_axiom_type" :value="row.type" />
-                    </template>
-                </el-table-column>
-                <el-table-column v-if="visible('level')" label="级别" width="90" align="center">
-                    <template #default="{ row }">
-                        <dict-tag :options="om_rule_level" :value="row.level" />
-                    </template>
-                </el-table-column>
-                <el-table-column
-                    v-if="visible('createBy')"
-                    prop="createBy"
-                    label="创建人"
-                    width="120"
-                    align="center"
-                    :show-overflow-tooltip="{ effect: 'light' }"
+                    <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+                </el-button>
+                <el-button
+                    v-hasPermi="['om:constraint:modelaxi:remove']"
+                    type="danger"
+                    plain
+                    :disabled="!selectedIds.length || deleting"
+                    @click="handleDelete()"
+                    @mousedown="(e) => e.preventDefault()"
                 >
-                    <template #default="{ row }">{{ row.createBy || '-' }}</template>
-                </el-table-column>
-                <el-table-column v-if="visible('createTime')" prop="createTime" sortable="custom" label="创建时间" width="180" align="center">
-                    <template #default="{ row }">{{
-                        proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-'
-                    }}</template>
-                </el-table-column>
-                <el-table-column
-                    v-if="visible('operation')"
-                    label="操作"
-                    width="240"
-                    align="center"
-                    fixed="right"
-                    class-name="small-padding fixed-width"
-                >
-                    <template #default="{ row }">
+                    <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+                </el-button>
+            </template>
+
+            <qt-table v-bind="tableStore" ref="tableRef">
+                <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+                <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+                <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+                <template #creator="{ row }">
+                    <div class="flex-column overflow-hidden">
+                        <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+                        <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+                    </div>
+                </template>
+                <template #handle="{ row }">
+                    <el-button
+                        v-hasPermi="['om:constraint:modelaxi:query']"
+                        link
+                        type="primary"
+                        icon="View"
+                        @click="handleDetail(row)"
+                        >详情</el-button
+                    >
+                    <el-popover
+                        v-if="auth.hasPermiOr(['om:constraint:modelaxi:edit', 'om:constraint:modelaxi:remove'])"
+                        placement="bottom"
+                        :width="107"
+                        popper-class="handle-popover"
+                        trigger="click"
+                    >
+                        <template #reference>
+                            <el-button link type="primary" icon="ArrowDown">更多</el-button>
+                        </template>
                         <el-button
-                            v-hasPermi="['om:constraint:modelaxi:query']"
-                            link
-                            type="primary"
-                            icon="View"
-                            @click="handleDetail(row)"
-                            >详情
-                        </el-button>
-                        <el-button
-                            v-hasPermi="['om:constraint:modelaxi:edit']"
+                            v-if="auth.hasPermi('om:constraint:modelaxi:edit')"
                             link
                             type="primary"
                             icon="Edit"
                             :disabled="saving"
                             @click="handleUpdate(row)"
-                            >修改
-                        </el-button>
+                            >修改</el-button
+                        >
                         <el-button
-                            v-hasPermi="['om:constraint:modelaxi:remove']"
+                            v-if="auth.hasPermi('om:constraint:modelaxi:remove')"
                             link
                             type="danger"
                             icon="Delete"
                             :disabled="deleting"
                             @click="handleDelete(row)"
-                            >删除
-                        </el-button>
-                    </template>
-                </el-table-column>
-                <template #empty>
-                    <div class="emptyBg">
-                        <img src="@/assets/system/images/no_data/noData.png" alt="暂无模型公理" />
-                        <p>{{ versionId ? '暂无模型公理' : '请先选择项目版本' }}</p>
-                    </div>
+                            >删除</el-button
+                        >
+                    </el-popover>
                 </template>
-            </el-table>
-            <pagination
-                v-show="total > 0"
-                :total="total"
-                v-model:page="query.pageNum"
-                v-model:limit="query.pageSize"
-                @pagination="getList"
-            />
-        </div>
+            </qt-table>
+        </qt-wrap>
         <el-dialog
             v-model="open"
             :title="dialogTitle"
             width="860px"
-            :append-to="pageRef"
+            :append-to="$refs['app-container']"
             :close-on-press-escape="!saving"
             :before-close="beforeClose"
             draggable
@@ -408,8 +319,8 @@
             </el-form>
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button size="mini" :disabled="saving" @click="cancel">取 消</el-button>
-                    <el-button type="primary" size="mini" :loading="saving" :disabled="saveDisabled" @click="submitForm">确 定</el-button>
+                    <el-button :disabled="saving" @click="cancel">取 消</el-button>
+                    <el-button type="primary" :loading="saving" :disabled="saveDisabled" @click="submitForm">确 定</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -417,7 +328,7 @@
             v-model="detailOpen"
             title="模型公理详情"
             width="860px"
-            :append-to="pageRef"
+            :append-to="$refs['app-container']"
             draggable
             destroy-on-close
         >
@@ -435,7 +346,7 @@
 
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
+                    <el-button @click="detailOpen = false">关 闭</el-button>
                 </div>
             </template>
         </el-dialog>
@@ -450,6 +361,8 @@
     import { listRelationTypes } from '@/api/om/object/relation';
     import { listAttributes, listAttributeBusinessDataTypes, listAttributeEnums } from '@/api/om/object/attribute';
     import AttributeTypeConfig from '../../object/type/detail/AttributeTypeConfig.vue';
+    import auth from '@/plugins/auth';
+    import { useCreatorPhones } from '@/utils/useCreatorPhones';
 
     defineOptions({ name: 'OmModelAxiom' });
     const props = defineProps({ versionId: { type: [String, Number], default: undefined } });
@@ -461,26 +374,67 @@
         'om_rule_level',
         'om_attribute_data_type'
     );
-    const pageRef = ref();
     const tableRef = ref();
-    const queryRef = ref();
     const ruleRef = ref();
-    const rows = ref([]);
     const selectedIds = ref([]);
-    const total = ref(0);
-    const loading = ref(false);
     const saving = ref(false);
     const deleting = ref(false);
     const open = ref(false);
     const detailOpen = ref(false);
     const dialogTitle = ref('新增模型公理');
     const detail = ref({});
-    const showSearch = ref(true);
-    const query = reactive({ name: '', type: '', level: '', pageNum: 1, pageSize: 10, orderByColumn: 'createTime,id', isAsc: 'desc,desc' });
-    const appliedName = ref('');
-    // 查询条件在点击查询时生效，翻页和排序继续使用已提交的筛选条件。
-    const appliedType = ref('');
-    const appliedLevel = ref('');
+    const { creatorPhones } = useCreatorPhones();
+
+    /**
+     * 分页查询模型公理列表；版本号缺失时返回空列表，避免无版本上下文发起无效查询。
+     * @param {Object} params QtTable 传入的查询参数
+     * @returns {Promise<Object>} 列表接口返回体
+     */
+    function fetchModelAxioms(params) {
+        if (!versionId.value) {
+            return Promise.resolve({ data: { rows: [], total: 0 } });
+        }
+        return listModelAxiom({ ...params, versionId: versionId.value });
+    }
+
+    // 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
+    const tableStore = reactive({
+        config: {
+            sort: true,
+            table: {
+                stripe: true,
+                rowKey: 'id',
+                defaultSort: { prop: 'createTime', order: 'descending' },
+                onSelectionChange: handleSelectionChange
+            }
+        },
+        columns: [
+            { type: 'selection', width: 55, minWidth: 55 },
+            { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'left', sortable: true },
+            { label: '名称', prop: 'name', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '描述', prop: 'description', slot: 'text', minWidth: 240, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '公理类型', prop: 'type', dict: 'om_axiom_type', width: 150, minWidth: 150 },
+            { label: '级别', prop: 'level', dict: 'om_rule_level', width: 90, minWidth: 90 },
+            { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left' },
+            { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true },
+            { label: '操作', slot: 'handle', width: 170, minWidth: 170, fixed: 'right' }
+        ],
+        func: fetchModelAxioms,
+        params: {
+            name: null,
+            type: null,
+            level: null
+        }
+    });
+
+    // 搜索项配置
+    const searchStore = reactive({
+        items: [
+            { label: '公理名称', prop: 'name', component: { is: 'input' } },
+            { label: '公理类型', prop: 'type', component: { is: 'select', options: om_axiom_type } },
+            { label: '级别', prop: 'level', component: { is: 'select', options: om_rule_level } }
+        ]
+    });
     const objectTypeOptions = ref([]);
     const objectTypeTreeProps = { label: 'name', value: 'id', children: 'children' };
     const objectTypeTree = computed(() =>
@@ -507,17 +461,6 @@
     const attributeLoadingCount = ref(0);
     const enumOptions = ref([]);
     const enumsLoading = ref(false);
-    const columns = ref([
-        { key: 0, prop: 'id', label: '编号', visible: true },
-        { key: 1, prop: 'name', label: '名称', visible: true },
-        { key: 2, prop: 'description', label: '描述', visible: true },
-        { key: 3, prop: 'type', label: '公理类型', visible: true },
-        { key: 4, prop: 'level', label: '级别', visible: true },
-        { key: 5, prop: 'createBy', label: '创建人', visible: true },
-        { key: 6, prop: 'createTime', label: '创建时间', visible: true },
-        { key: 7, prop: 'operation', label: '操作', visible: true }
-    ]);
-    const visible = (prop) => columns.value.find((column) => column.prop === prop)?.visible;
     const typeLabel = (value) => proxy.selectDictLabel(om_axiom_type.value, value) || '-';
     const levelLabel = (value) => proxy.selectDictLabel(om_rule_level.value, value) || '-';
     const saveDisabled = computed(
@@ -598,7 +541,6 @@
             }
         ]
     };
-    let listRequest = 0;
     let dialogRequest = 0;
     let contextRequest = 0;
     let enumRequest = 0;
@@ -640,7 +582,11 @@
         { label: '创建时间', value: proxy.parseTime(detail.value.createTime, '{y}-{m}-{d} {h}:{i}') }
     ]);
 
-    // 下拉选项需要读取全部分页数据，避免只显示第一页属性或关系
+    /**
+     * 逐页读取下拉选项，避免只显示第一页属性或关系。
+     * @param {Function} loadPage 按页号拉取单页数据的回调
+     * @returns {Promise<Array>} 合并后的全量行数据
+     */
     async function loadAllPages(loadPage) {
         const rows = [];
         let pageNum = 1;
@@ -656,6 +602,11 @@
         return rows;
     }
 
+    /**
+     * 拉取指定版本的对象类型选项。
+     * @param {string|number} versionId 项目版本编号
+     * @returns {Promise<Array>} 对象类型列表
+     */
     async function listObjectTypeOptions(versionId) {
         const response = await listRelationTypes(versionId);
         return (response.data || []).map((item) => ({
@@ -665,12 +616,22 @@
         }));
     }
 
+    /**
+     * 拉取指定对象类型的全量属性选项。
+     * @param {string} objectTypeId 对象类型编号
+     * @param {string|number} versionId 项目版本编号
+     * @returns {Promise<Array>} 属性列表
+     */
     async function listObjectAttributeOptions(objectTypeId, versionId) {
         const rows = await loadAllPages((pageNum) => listAttributes({ objectTypeId, versionId, pageNum, pageSize: 100 }));
         return rows.map((item) => ({ ...item, id: String(item.id) }));
     }
 
-    // 业务数据类型按项目版本和全局范围加载，不依赖具体对象类型
+    /**
+     * 拉取业务数据类型选项，按项目版本和全局范围加载，不依赖具体对象类型。
+     * @param {string|number} versionId 项目版本编号
+     * @returns {Promise<Array>} 带来源标识的业务数据类型列表
+     */
     async function listBusinessTypeOptions(versionId) {
         const results = await Promise.allSettled([
             listAttributeBusinessDataTypes(undefined, 'PROJECT', versionId),
@@ -684,69 +645,23 @@
         ];
     }
 
-    async function getList() {
-        const request = ++listRequest;
-        if (!versionId.value) {
-            rows.value = [];
-            total.value = 0;
-            loading.value = false;
-            return;
-        }
-        loading.value = true;
-        try {
-            const response = await listModelAxiom({
-                versionId: versionId.value,
-                name: appliedName.value,
-                type: appliedType.value,
-                level: appliedLevel.value,
-                pageNum: query.pageNum,
-                pageSize: query.pageSize,
-                orderByColumn: query.orderByColumn,
-                isAsc: query.isAsc
-            });
-            if (request !== listRequest) return;
-            total.value = Number(response.data?.total || 0);
-            const maxPage = Math.max(1, Math.ceil(total.value / query.pageSize));
-            if (query.pageNum > maxPage) {
-                query.pageNum = maxPage;
-                return await getList();
-            }
-            rows.value = response.data?.rows || [];
-            selectedIds.value = [];
-            tableRef.value?.clearSelection();
-        } finally {
-            if (request === listRequest) loading.value = false;
-        }
+    /** 刷新当前模型公理列表。 */
+    function refreshList() {
+        tableRef.value?.getList();
     }
 
-    function search() {
-        appliedName.value = query.name.trim();
-        appliedType.value = query.type || '';
-        appliedLevel.value = query.level || '';
-        query.pageNum = 1;
-        return getList();
-    }
-
-    function resetSearch() {
-        queryRef.value?.resetFields();
-        return search();
-    }
-
-    // 使用后端排序，保证编号和创建时间在全部分页数据中排序一致。
-    function handleSortChange({prop, order}) {
-            const field = order && ['id', 'createTime'].includes(prop) ? prop : 'createTime';
-            const direction = order === 'ascending' ? 'asc' : 'desc';
-            // 创建时间相同时按编号降序，避免翻页时记录顺序不稳定。
-            query.orderByColumn = field === 'createTime' ? 'createTime,id' : 'id';
-            query.isAsc = field === 'createTime' ? direction + ',desc' : direction;
-            query.pageNum = 1;
-            return getList();
-    }
-
+    /**
+     * 多选框选中数据，供顶部批量删除使用。
+     * @param {Array} selection 当前选中的行数据
+     */
     function handleSelectionChange(selection) {
         selectedIds.value = selection.map((row) => row.id);
     }
 
+    /**
+     * 拉取并缓存指定对象类型的属性选项。
+     * @param {string} objectTypeId 对象类型编号
+     */
     async function loadObjectOptions(objectTypeId) {
         if (!objectTypeId) return;
         const request = dialogRequest;
@@ -762,6 +677,10 @@
         }
     }
 
+    /**
+     * 拉取指定对象类型的枚举选项（项目与全局）。
+     * @param {string} [objectTypeId] 对象类型编号，缺省取当前表单选中值
+     */
     async function loadEnums(objectTypeId = form.value.objectTypeId) {
         if (!objectTypeId) return;
         const request = ++enumRequest;
@@ -784,17 +703,28 @@
         }
     }
 
+    /**
+     * 按业务数据类型唯一键查找选项。
+     * @param {Object} record 含 businessTypeKey 的记录
+     * @returns {Object|undefined} 匹配的业务数据类型
+     */
     function findBusinessType(record) {
         return businessTypeOptions.value.find(
             (item) => item.businessTypeSource + ':' + item.id === record.businessTypeKey
         );
     }
 
+    /**
+     * 将业务数据类型的基础类型信息合并回记录，供只读展示与提交使用。
+     * @param {Object} record 当前表单或详情记录
+     * @returns {Object} 解析后的配置对象
+     */
     function resolvedConfig(record) {
         const selected = record.typeCategory === 2 ? findBusinessType(record) : undefined;
         return selected ? { ...selected, basicTypeCode: Number(selected.dataType) } : record;
     }
 
+    /** 加载弹窗所需的对象类型、业务数据类型与属性选项。 */
     async function loadOptions() {
         const request = dialogRequest;
         optionsLoading.value = true;
@@ -820,6 +750,7 @@
         }
     }
 
+    /** 新增按钮操作。 */
     function handleAdd() {
         if (!requireVersion()) return;
         ++dialogRequest;
@@ -833,6 +764,10 @@
         loadOptions();
     }
 
+    /**
+     * 修改按钮操作。
+     * @param {Object} row 当前行数据
+     */
     async function handleUpdate(row) {
         if (!requireVersion()) return;
         const request = ++dialogRequest;
@@ -848,6 +783,10 @@
         loadOptions();
     }
 
+    /**
+     * 详情按钮操作。
+     * @param {Object} row 当前行数据
+     */
     async function handleDetail(row) {
         if (!requireVersion()) return;
         const request = ++dialogRequest;
@@ -860,6 +799,7 @@
         if (request === dialogRequest) detailOpen.value = true;
     }
 
+    /** 详情弹窗打开前加载展示所需的选项数据。 */
     async function loadDetailOptions() {
         const request = dialogRequest;
         optionsLoadFailed.value = false;
@@ -878,6 +818,7 @@
         }
     }
 
+    /** 提交新增/修改表单，提交期间锁定确定按钮避免重复入库。 */
     async function submitForm() {
         if (!requireVersion() || saving.value || saveDisabled.value) return;
         const request = dialogRequest;
@@ -901,12 +842,16 @@
             if (context !== contextRequest) return;
             ElMessage.success(data.id ? '修改成功' : '新增成功');
             open.value = false;
-            await getList();
+            refreshList();
         } finally {
             saving.value = false;
         }
     }
 
+    /**
+     * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
+     * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+     */
     async function handleDelete(row) {
         if (!requireVersion() || deleting.value) return;
         const ids = row ? [row.id] : [...selectedIds.value];
@@ -926,38 +871,62 @@
             await delModelAxiom(ids);
             if (context !== contextRequest) return;
             ElMessage.success('删除成功');
-            await getList();
+            refreshList();
         } finally {
             deleting.value = false;
         }
     }
 
+    /** 关闭新增/修改弹窗；保存中禁止关闭。 */
     function cancel() {
+        if (saving.value) return;
         open.value = false;
     }
 
+    /**
+     * 保存期间拦截弹窗关闭回调。
+     * @param {Function} done el-dialog 的 before-close 完成回调
+     */
     function beforeClose(done) {
         if (!saving.value) done();
     }
 
+    /** 弹窗关闭后清除表单校验提示。 */
     function handleDialogClosed() {
         ruleRef.value?.clearValidate();
     }
 
+    /**
+     * 将对象类型编号转为名称，未加载时回显编号。
+     * @param {string} id 对象类型编号
+     * @returns {string} 对象类型名称
+     */
     function objectTypeLabel(id) {
         return objectTypeOptions.value.find((item) => item.id === id)?.name || id || '-';
     }
 
+    /**
+     * 将属性编号转为名称。
+     * @param {string} objectTypeId 对象类型编号
+     * @param {string} attributeId 属性编号
+     * @returns {string} 属性名称
+     */
     function attributeLabel(objectTypeId, attributeId) {
         return (
             (attributeOptions[objectTypeId] || []).find((item) => item.id === attributeId)?.name || attributeId || '-'
         );
     }
 
+    /**
+     * 取出记录需要加载属性选项的对象类型编号。
+     * @param {Object} record 当前表单或详情记录
+     * @returns {Array<string>} 对象类型编号列表
+     */
     function getRecordObjectIds(record) {
         return record.type === 'PROPERTY_RANGE' && record.objectTypeId ? [record.objectTypeId] : [];
     }
 
+    /** 切换公理类型时重置除基本信息外的字段。 */
     function handleTypeChange() {
         const { id, name, description, level, type, createBy, createTime } = form.value;
         // 通过表单重置表达字段，避免清空选值触发异步必填校验
@@ -981,10 +950,12 @@
         nextTick(() => ruleRef.value?.clearValidate());
     }
 
+    /** Domain 与 Range 重复时清空 Range。 */
     function handleDomainChange() {
         if (form.value.domainId && form.value.domainId === form.value.rangeId) form.value.rangeId = '';
     }
 
+    /** 切换对象类型时清空属性、值类型配置与枚举选项。 */
     function handleObjectTypeChange() {
         form.value.attributeId = '';
         clearTypeConfig();
@@ -995,6 +966,7 @@
         }
     }
 
+    /** 切换基础/业务数据类型时清空已选类型与值配置。 */
     function handleValueTypeChange() {
         form.value.basicTypeCode = undefined;
         form.value.businessTypeKey = '';
@@ -1002,6 +974,7 @@
         nextTick(() => ruleRef.value?.clearValidate(['basicTypeCode', 'businessTypeKey']));
     }
 
+    /** 清空单位、小数位、格式与枚举等值配置。 */
     function clearTypeConfig() {
         Object.assign(form.value, {
             unit: '',
@@ -1013,20 +986,27 @@
         nextTick(() => ruleRef.value?.clearValidate(['unit', 'decimalPlaces', 'format', 'enumType']));
     }
 
+    /** 切换基础数据类型时重置值配置。 */
     function handleBasicTypeChange() {
         clearTypeConfig();
     }
 
+    /** 切换业务数据类型时重置值配置。 */
     function handleBusinessTypeChange() {
         clearTypeConfig();
     }
 
+    /** 清空枚举选项并释放加载中状态。 */
     function resetEnums() {
         ++enumRequest;
         enumOptions.value = [];
         enumsLoading.value = false;
     }
 
+    /**
+     * 校验公理表达的业务约束（表单规则无法覆盖的部分）。
+     * @returns {string} 错误提示文案，校验通过时为空字符串
+     */
     function validateExpression() {
         const record = form.value;
         const typeExists = (id) => objectTypeOptions.value.some((item) => item.id === id);
@@ -1063,6 +1043,11 @@
         return '';
     }
 
+    /**
+     * 按公理类型组装详情弹窗的展示字段。
+     * @param {Object} record 详情记录
+     * @returns {Array<Object>} 展示字段列表
+     */
     function getDetailFields(record) {
         if (record.type === 'DOMAIN_RANGE') {
             return [
@@ -1101,34 +1086,25 @@
         ];
     }
 
-    watch(
-        versionId,
-        () => {
-            ++contextRequest;
-            ++dialogRequest;
-            open.value = false;
-            detailOpen.value = false;
-            optionsLoading.value = false;
-            attributeLoadingCount.value = 0;
-            optionsLoadFailed.value = false;
-            resetEnums();
-            objectTypeOptions.value = [];
-            Object.keys(attributeOptions).forEach((key) => delete attributeOptions[key]);
-            businessTypeOptions.value = [];
-            query.name = '';
-            query.type = '';
-            query.level = '';
-            query.pageNum = 1;
-            appliedName.value = '';
-            appliedType.value = '';
-            appliedLevel.value = '';
-            rows.value = [];
-            selectedIds.value = [];
-            total.value = 0;
-            getList();
-        },
-        { immediate: true }
-    );
+    // 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
+    watch(versionId, async () => {
+        ++contextRequest;
+        ++dialogRequest;
+        open.value = false;
+        detailOpen.value = false;
+        optionsLoading.value = false;
+        attributeLoadingCount.value = 0;
+        optionsLoadFailed.value = false;
+        resetEnums();
+        objectTypeOptions.value = [];
+        Object.keys(attributeOptions).forEach((key) => delete attributeOptions[key]);
+        businessTypeOptions.value = [];
+        tableStore.params.name = null;
+        tableStore.params.type = null;
+        tableStore.params.level = null;
+        await nextTick();
+        tableRef.value?.resetQuery();
+    });
 
     watch(open, (value) => {
         if (value) return;
@@ -1142,7 +1118,6 @@
     onBeforeUnmount(() => {
         ++contextRequest;
         ++dialogRequest;
-        ++listRequest;
         ++enumRequest;
     });
 </script>

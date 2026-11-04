@@ -17,162 +17,99 @@
 -->
 
 <template>
-    <div ref="pageRef" class="app-container object-type-page">
+    <div class="app-container object-type-page" ref="app-container">
         <GuideTip tip-id="om/object/type.list" />
-        <div v-show="showSearch" class="pagecont-top">
-            <el-form ref="queryRef" class="btn-style" :model="queryParams" :inline="true" @submit.prevent="handleQuery">
-                <el-form-item label="对象名称" prop="name">
-                    <el-input
-                        v-model="queryParams.name"
-                        class="el-form-input-width"
-                        placeholder="请输入名称"
-                        clearable
-                    />
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" plain native-type="submit"><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-                    </el-button>
-                    <el-button @click="resetQuery"><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button>
-                </el-form-item>
-            </el-form>
-        </div>
-        <div class="pagecont-bottom">
-            <div class="justify-between mb15">
-                <el-row :gutter="15" class="btn-style">
-                    <el-col :span="1.5">
-                        <el-button v-hasPermi="['om:object:type:add']" type="primary" plain @click="handleAdd()"><i class="iconfont-mini icon-xinzeng mr5"></i>新增
-                        </el-button>
-                    </el-col>
-                    <el-col :span="1.5">
-                        <el-button class="toggle-expand-all" type="primary" plain @click="toggleExpandAll">
-                            <svg-icon v-if="isExpandAll" icon-class="toggle" />
-                            <svg-icon v-else icon-class="expand" />
-                            <span>{{ isExpandAll ? '折叠' : '展开' }}</span>
-                        </el-button>
-                    </el-col>
-                </el-row>
-                <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList" />
-            </div>
-            <el-table
-                v-if="refreshTable"
-                v-loading="loading"
-                :data="filteredTree"
-                row-key="id"
-                stripe
-                :default-expand-all="isExpandAll"
-                :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-            >
-                <el-table-column
-                    v-if="visible('name')"
-                    prop="name"
-                    label="对象类型名称"
-                    width="250"
-                    align="left"
-                    :show-overflow-tooltip="{ effect: 'light' }"
-                />
-                <el-table-column
-                    v-if="visible('description')"
-                    prop="description"
-                    label="描述"
-                    min-width="260"
-                    align="left"
-                    :show-overflow-tooltip="{ effect: 'light' }"
+        <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+            <template #search>
+                <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef" />
+            </template>
+
+            <template #actions-data>
+                <el-button
+                    v-hasPermi="['om:object:type:add']"
+                    type="primary"
+                    plain
+                    @click="handleAdd()"
+                    @mousedown="(e) => e.preventDefault()"
                 >
-                    <template #default="{ row }">{{ row.description?.trim() || '-' }}</template>
-                </el-table-column>
-                <el-table-column v-if="visible('orderNum')" prop="orderNum" label="显示顺序" width="100" align="center">
-                    <template #default="{ row }">{{ row.orderNum ?? '-' }}</template>
-                </el-table-column>
-                <el-table-column v-if="visible('attributeCount')" label="属性数量" width="90" align="center">
-                    <template #default="{ row }">{{ row.attributeCount ?? '-' }}</template>
-                </el-table-column>
-                <el-table-column v-if="visible('relationCount')" label="关系数量" width="90" align="center">
-                    <template #default="{ row }">{{ row.relationCount ?? '-' }}</template>
-                </el-table-column>
-                <el-table-column
-                    v-if="visible('createBy')"
-                    prop="createBy"
-                    label="创建人"
-                    width="120"
-                    align="center"
-                    :show-overflow-tooltip="{ effect: 'light' }"
-                />
-                <el-table-column v-if="visible('createTime')" label="创建时间" width="180" align="center">
-                    <template #default="{ row }">{{
-                        proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-'
-                    }}</template>
-                </el-table-column>
-                <el-table-column
-                    v-if="visible('operation')"
-                    label="操作"
-                    width="240"
-                    align="center"
-                    fixed="right"
-                    class-name="small-padding fixed-width"
+                    <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+                </el-button>
+                <el-button
+                    class="toggle-expand-all"
+                    type="primary"
+                    plain
+                    @click="toggleExpandAll"
+                    @mousedown="(e) => e.preventDefault()"
                 >
-                    <template #default="{ row }">
-                        <el-button
-                            v-hasPermi="['om:object:type:query']"
-                            link
-                            type="primary"
-                            icon="View"
-                            @click="handleDetail(row)"
-                        >
-                            详情
-                        </el-button>
-                        <el-button
-                            v-hasPermi="['om:object:type:add']"
-                            link
-                            type="primary"
-                            icon="Plus"
-                            @click="handleAdd(row)"
-                        >
-                            新增
-                        </el-button>
-                        <el-popover
-                            v-if="auth.hasPermiOr(['om:object:type:edit', 'om:object:type:remove'])"
-                            placement="bottom"
-                            :width="150"
-                            trigger="click"
-                        >
-                            <template #reference>
-                                <el-button link type="primary" icon="ArrowDown">更多</el-button>
-                            </template>
-                            <div class="butgdlist">
-                                <el-button
-                                    v-if="auth.hasPermi('om:object:type:edit')"
-                                    link
-                                    type="primary"
-                                    icon="Edit"
-                                    @click="handleMoreCommand('edit', row)"
-                                    >修改
-                                </el-button>
-                                <el-button
-                                    v-if="auth.hasPermi('om:object:type:remove')"
-                                    link
-                                    type="danger"
-                                    icon="Delete"
-                                    :disabled="deleting"
-                                    @click="handleMoreCommand('delete', row)"
-                                    >删除
-                                </el-button>
-                            </div>
-                        </el-popover>
-                    </template>
-                </el-table-column>
-                <template #empty>
-                    <div class="emptyBg">
-                        <img src="@/assets/system/images/no_data/noData.png" alt="暂无记录" />
-                        <p>暂无记录</p>
+                    <svg-icon v-if="tableStore.config.table.defaultExpandAll" icon-class="toggle" />
+                    <svg-icon v-else icon-class="expand" />
+                    <span>{{ tableStore.config.table.defaultExpandAll ? '折叠' : '展开' }}</span>
+                </el-button>
+            </template>
+
+            <qt-table v-bind="tableStore" ref="tableRef">
+                <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+                <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+                <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+                <template #creator="{ row }">
+                    <div class="flex-column overflow-hidden">
+                        <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+                        <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
                     </div>
                 </template>
-            </el-table>
-        </div>
+                <template #handle="{ row }">
+                    <el-button
+                        v-hasPermi="['om:object:type:query']"
+                        link
+                        type="primary"
+                        icon="View"
+                        @click="handleDetail(row)"
+                        >详情</el-button
+                    >
+                    <el-button
+                        v-hasPermi="['om:object:type:add']"
+                        link
+                        type="primary"
+                        icon="Plus"
+                        @click="handleAdd(row)"
+                        >新增</el-button
+                    >
+                    <el-popover
+                        v-if="auth.hasPermiOr(['om:object:type:edit', 'om:object:type:remove'])"
+                        placement="bottom"
+                        :width="107"
+                        popper-class="handle-popover"
+                        trigger="click"
+                    >
+                        <template #reference>
+                            <el-button link type="primary" icon="ArrowDown">更多</el-button>
+                        </template>
+                        <el-button
+                            v-if="auth.hasPermi('om:object:type:edit')"
+                            link
+                            type="primary"
+                            icon="Edit"
+                            @click="handleMoreCommand('edit', row)"
+                            >修改</el-button
+                        >
+                        <el-button
+                            v-if="auth.hasPermi('om:object:type:remove')"
+                            link
+                            type="danger"
+                            icon="Delete"
+                            :disabled="deleting"
+                            @click="handleMoreCommand('delete', row)"
+                            >删除</el-button
+                        >
+                    </el-popover>
+                </template>
+            </qt-table>
+        </qt-wrap>
         <el-dialog
             v-model="open"
             :title="dialogTitle"
             width="1100px"
-            :append-to="pageRef"
+            :append-to="$refs['app-container']"
             :close-on-press-escape="!saving"
             :before-close="beforeClose"
             draggable
@@ -213,7 +150,7 @@
                                 :max="2147483647"
                                 :precision="0"
                                 controls-position="right"
-                                style="width: 100%"
+                                class="form-control-full"
                             />
                         </el-form-item>
                     </el-col>
@@ -249,10 +186,9 @@
             </el-form>
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
+                    <el-button :disabled="saving" @click="open = false">取 消</el-button>
                     <el-button
                         type="primary"
-                        size="mini"
                         :loading="saving"
                         :disabled="parentOptionsLoading"
                         @click="submitForm"
@@ -264,14 +200,14 @@
             v-model="targetPickerOpen"
             :selected-targets="selectedTargets"
             :version-id="versionId"
-            :append-to="pageRef"
+            :append-to="$refs['app-container']"
             @confirm="addTargets"
         />
         <el-dialog
             v-model="termOpen"
             title="从术语表中选择"
             width="1000px"
-            :append-to="pageRef"
+            :append-to="$refs['app-container']"
             draggable
         >
             <el-form class="btn-style" :inline="true" :model="termQuery" @submit.prevent="searchTerms">
@@ -320,8 +256,8 @@
             />
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button size="mini" @click="termOpen = false">取 消</el-button>
-                    <el-button type="primary" size="mini" :disabled="!selectedTerm || termLoading" @click="applyTerm">确 定
+                    <el-button @click="termOpen = false">取 消</el-button>
+                    <el-button type="primary" :disabled="!selectedTerm || termLoading" @click="applyTerm">确 定
                     </el-button>
                 </div>
             </template>
@@ -330,7 +266,7 @@
 </template>
 
 <script setup>
-    import { onBeforeUnmount, computed, getCurrentInstance, nextTick, reactive, ref, watch, onMounted } from 'vue';
+    import { getCurrentInstance, nextTick, reactive, ref, watch, onBeforeUnmount } from 'vue';
     import { useRouter } from 'vue-router';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
     import { ElMessage, ElMessageBox } from 'element-plus';
@@ -345,6 +281,7 @@
     } from '@/api/om/object/type';
     import { listTerm } from '@/api/om/term/term';
     import auth from '@/plugins/auth';
+    import { useCreatorPhones } from '@/utils/useCreatorPhones';
     import TargetPicker from './TargetPicker.vue';
     import TargetTable from './TargetTable.vue';
 
@@ -354,37 +291,64 @@
     const router = useRouter();
     const { proxy } = getCurrentInstance();
     const { versionId, requireVersion } = useOntologyVersion(() => props.versionId);
-    const pageRef = ref();
+    const tableRef = ref();
     const typeRef = ref();
     const termTableRef = ref();
-    const loading = ref(false);
     const saving = ref(false);
     const deleting = ref(false);
     const open = ref(false);
     const termOpen = ref(false);
     const targetPickerOpen = ref(false);
     const selectedTargets = ref([]);
-    const showSearch = ref(true);
-    const isExpandAll = ref(true);
-    const refreshTable = ref(true);
     const dialogTitle = ref('新增对象类型');
-    const rows = ref([]);
-    const queryParams = reactive({ name: '' });
-    // 输入内容仅在提交查询时生效
-    const appliedName = ref('');
-    const columns = ref(
-        [
-            ['name', '对象类型名称'],
-            ['orderNum', '显示顺序'],
-            ['description', '描述'],
-            ['attributeCount', '属性数量'],
-            ['relationCount', '关系数量'],
-            ['createBy', '创建人'],
-            ['createTime', '创建时间'],
-            ['operation', '操作']
-        ].map(([prop, label], key) => ({ prop, label, key, visible: true }))
-    );
-    const visible = (prop) => columns.value.find((column) => column.prop === prop)?.visible;
+    const { creatorPhones } = useCreatorPhones();
+
+    /**
+     * 查询对象类型列表；版本号缺失时返回空列表，避免无版本上下文发起无效查询。
+     * @returns {Promise<Object>} 列表接口返回体
+     */
+    function fetchObjectTypes() {
+        if (!versionId.value) {
+            return Promise.resolve({ data: [] });
+        }
+        return listType({ workspaceId: 1001, versionId: versionId.value, pageNum: 1, pageSize: -1 });
+    }
+
+    // 树表配置：不分页、行键与展开属性统一交给 QtTable 透传给 el-table。
+    const tableStore = reactive({
+        config: {
+            notPagination: true,
+            table: {
+                stripe: true,
+                rowKey: 'id',
+                defaultExpandAll: true,
+                treeProps: { children: 'children', hasChildren: 'hasChildren' }
+            }
+        },
+        columns: [
+            { label: '对象类型名称', prop: 'name', slot: 'text', minWidth: 250, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '描述', prop: 'description', slot: 'text', minWidth: 260, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '显示顺序', prop: 'orderNum', slot: 'text', width: 100, minWidth: 100 },
+            { label: '属性数量', prop: 'attributeCount', slot: 'text', width: 90, minWidth: 90 },
+            { label: '关系数量', prop: 'relationCount', slot: 'text', width: 90, minWidth: 90 },
+            { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left' },
+            { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left' },
+            { label: '操作', slot: 'handle', width: 170, minWidth: 170, fixed: 'right' }
+        ],
+        func: fetchObjectTypes,
+        events: {
+            // 平铺数据先构树，再按名称关键字前端过滤（保留父链）。
+            formatData: (data, params) => filterTree(buildTree(data || []), (params.name || '').trim())
+        },
+        params: {
+            name: null
+        }
+    });
+
+    // 搜索项配置
+    const searchStore = reactive({
+        items: [{ label: '对象名称', prop: 'name', component: { is: 'input' } }]
+    });
     const emptyForm = () => ({
         id: undefined,
         workspaceId: 1001,
@@ -418,6 +382,11 @@
         ]
     };
 
+    /**
+     * 将平铺数据构造成树结构。
+     * @param {Array} items 平铺的对象类型列表
+     * @returns {Array} 根节点列表
+     */
     function buildTree(items) {
         const nodes = new Map(items.map((item) => [String(item.id), { ...item, children: [] }]));
         const roots = [];
@@ -429,63 +398,44 @@
         return roots;
     }
 
-    const tree = computed(() => buildTree(rows.value));
-    const filteredTree = computed(() => {
-        const keyword = appliedName.value.trim().toLowerCase();
-        const filter = (nodes) =>
-            nodes.flatMap((node) => {
-                if (!keyword || node.name?.toLowerCase().includes(keyword)) return [node];
-                const children = filter(node.children);
-                return children.length ? [{ ...node, children }] : [];
-            });
-        return filter(tree.value);
-    });
+    /**
+     * 按名称关键字过滤树节点，命中节点的子树不再下钻，未命中节点保留父链。
+     * @param {Array} nodes 待过滤的树节点
+     * @param {string} keyword 名称关键字
+     * @returns {Array} 过滤后的树节点
+     */
+    function filterTree(nodes, keyword) {
+        if (!keyword) return nodes;
+        return nodes.flatMap((node) => {
+            if (node.name?.toLowerCase().includes(keyword)) return [node];
+            const children = filterTree(node.children, keyword);
+            return children.length ? [{ ...node, children }] : [];
+        });
+    }
+
     const parentOptions = ref([]);
     const parentOptionsLoading = ref(false);
-    let listRequest = 0;
     let contextRequest = 0;
     let editRequest = 0;
 
-    async function getList() {
-        const request = ++listRequest;
-        if (!versionId.value) {
-            rows.value = [];
-            loading.value = false;
-            return;
-        }
-        loading.value = true;
-        try {
-            const response = await listType({
-                workspaceId: 1001,
-                versionId: versionId.value,
-                pageNum: 1,
-                pageSize: -1
-            });
-            if (request !== listRequest) return;
-            rows.value = response.data.rows || [];
-        } finally {
-            if (request === listRequest) loading.value = false;
-        }
+    /**
+     * 展开或折叠全部树节点。
+     * 依赖 QtTable 重建表格，让 el-table 重新读取 defaultExpandAll。
+     */
+    function toggleExpandAll() {
+        tableStore.config.table.defaultExpandAll = !tableStore.config.table.defaultExpandAll;
+        tableRef.value?.reload();
     }
 
-    async function toggleExpandAll() {
-        if (!refreshTable.value) return;
-        refreshTable.value = false;
-        isExpandAll.value = !isExpandAll.value;
-        await nextTick();
-        refreshTable.value = true;
+    /** 刷新当前页列表。 */
+    function refreshList() {
+        tableRef.value?.getList();
     }
 
-    function handleQuery() {
-        appliedName.value = queryParams.name.trim();
-        return getList();
-    }
-
-    function resetQuery() {
-        queryParams.name = '';
-        return handleQuery();
-    }
-
+    /**
+     * 新增按钮操作。
+     * @param {Object} [parent] 当前行数据，传入时作为上级对象类型
+     */
     async function handleAdd(parent) {
         if (!requireVersion()) return;
         const request = ++editRequest;
@@ -510,6 +460,10 @@
         }
     }
 
+    /**
+     * 修改按钮操作。
+     * @param {Object} row 当前行数据
+     */
     async function handleUpdate(row) {
         const request = ++editRequest;
         form.value = emptyForm();
@@ -536,6 +490,10 @@
         nextTick(() => typeRef.value?.clearValidate());
     }
 
+    /**
+     * 详情按钮操作。
+     * @param {Object} row 当前行数据
+     */
     function handleDetail(row) {
         router.push({
             name: 'OmObjectTypeDetail',
@@ -543,6 +501,7 @@
         });
     }
 
+    /** 提交新增/修改表单，提交期间锁定确定按钮避免重复入库。 */
     async function submitForm() {
         if (!requireVersion()) return;
         const submittingVersion = versionId.value;
@@ -574,12 +533,16 @@
             if (submittingVersion !== versionId.value) return;
             ElMessage.success(data.id ? '修改成功' : '新增成功');
             open.value = false;
-            await getList();
+            refreshList();
         } finally {
             saving.value = false;
         }
     }
 
+    /**
+     * 合并选入的建模目标，按编号去重。
+     * @param {Array} targets 本次选入的目标列表
+     */
     function addTargets(targets) {
         if (saving.value) return;
         const merged = new Map(selectedTargets.value.map((target) => [String(target.id), target]));
@@ -589,6 +552,10 @@
         nextTick(() => typeRef.value?.validateField('targetIds'));
     }
 
+    /**
+     * 移除已选建模目标。
+     * @param {Object} target 待移除的目标
+     */
     function removeTarget(target) {
         if (saving.value) return;
         selectedTargets.value = selectedTargets.value.filter((item) => String(item.id) !== String(target.id));
@@ -596,15 +563,28 @@
         nextTick(() => typeRef.value?.validateField('targetIds').catch(() => {}));
     }
 
+    /**
+     * 保存期间拦截弹窗关闭回调。
+     * @param {Function} done el-dialog 的 before-close 完成回调
+     */
     function beforeClose(done) {
         if (!saving.value) done();
     }
 
+    /**
+     * 行内「更多」下拉操作。
+     * @param {string} command 操作类型：edit 修改，delete 删除
+     * @param {Object} row 当前行数据
+     */
     function handleMoreCommand(command, row) {
         if (command === 'edit' && auth.hasPermi('om:object:type:edit')) return handleUpdate(row);
         if (command === 'delete' && !deleting.value && auth.hasPermi('om:object:type:remove')) return handleDelete(row);
     }
 
+    /**
+     * 删除对象类型。
+     * @param {Object} row 当前行数据
+     */
     async function handleDelete(row) {
         const context = contextRequest;
         const deletingVersion = versionId.value;
@@ -620,7 +600,7 @@
             await delType(row.id);
             if (context !== contextRequest || deletingVersion !== versionId.value) return;
             ElMessage.success('删除成功');
-            await getList();
+            refreshList();
         } finally {
             deleting.value = false;
         }
@@ -649,11 +629,13 @@
     ];
     let termRequest = 0;
 
+    /** 打开术语选择弹窗并加载首页术语。 */
     async function openTermPicker() {
         termOpen.value = true;
         resetTerms();
     }
 
+    /** 分页查询术语列表。 */
     async function getTerms() {
         const request = ++termRequest;
         termLoading.value = true;
@@ -670,21 +652,28 @@
         }
     }
 
+    /**
+     * 高亮选中的术语行。
+     * @param {Object} row 当前行数据
+     */
     function selectTerm(row) {
         selectedTerm.value = row;
         termTableRef.value?.setCurrentRow(row);
     }
 
+    /** 术语查询回到首页。 */
     function searchTerms() {
         termQuery.pageNum = 1;
         getTerms();
     }
 
+    /** 清空术语查询条件。 */
     function resetTerms() {
         termQuery.stdName = '';
         searchTerms();
     }
 
+    /** 将选中术语的名称回填到对象类型名称，超长时提示手输。 */
     function applyTerm() {
         if (!selectedTerm.value) return;
         if ((selectedTerm.value.stdName || '').length > 128) {
@@ -696,15 +685,17 @@
         nextTick(() => typeRef.value?.clearValidate());
     }
 
-    watch(versionId, () => {
+    // 版本切换后清空筛选并重置列表；首查由 QtTable 挂载时自动执行。
+    watch(versionId, async () => {
         ++contextRequest;
-        rows.value = [];
         ++editRequest;
         parentOptionsLoading.value = false;
         open.value = false;
         termOpen.value = false;
         targetPickerOpen.value = false;
-        getList();
+        tableStore.params.name = null;
+        await nextTick();
+        tableRef.value?.resetQuery();
     });
     watch(open, (value) => {
         if (!value) {
@@ -713,7 +704,6 @@
             targetPickerOpen.value = false;
         }
     });
-    onMounted(getList);
     onBeforeUnmount(() => {
         ++contextRequest;
         ++editRequest;
@@ -721,6 +711,11 @@
 </script>
 
 <style scoped lang="scss">
+    /* 表单控件撑满所在列宽，避免行内 style。 */
+    .form-control-full {
+        width: 100%;
+    }
+
     .toggle-expand-all {
         min-width: 60px;
         height: 30px;
@@ -751,23 +746,6 @@
         span {
             line-height: 1;
         }
-    }
-
-    /* 复用qKnow非结构化抽取页面的“更多”弹层按钮样式。 */
-    .butgdlist {
-        width: 100px;
-        margin: 0 auto;
-        display: flex !important;
-        flex-direction: column;
-        align-items: center !important;
-    }
-
-    .butgdlist .el-button {
-        width: 100%;
-        justify-content: center;
-        margin-left: 0 !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
     }
 
     .name-input {

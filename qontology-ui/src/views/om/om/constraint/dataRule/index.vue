@@ -17,118 +17,63 @@
 -->
 
 <template>
-  <div ref="pageRef" class="app-container data-rule-page">
+  <div class="app-container data-rule-page" ref="app-container">
     <GuideTip tip-id="om/constraint/data.list"/>
-    <div v-show="showSearch" class="pagecont-top">
-      <el-form ref="queryRef" class="btn-style" :model="query" :inline="true" @submit.prevent="search">
-        <el-form-item label="规则名称" prop="name">
-          <el-input v-model="query.name" class="el-form-input-width" placeholder="请输入规则名称" maxlength="128"
-                    clearable @keyup.enter="search"
-          />
-        </el-form-item>
-        <el-form-item label="规则类型" prop="type">
-          <el-select v-model="query.type" class="el-form-input-width" placeholder="请选择规则类型" clearable>
-            <el-option v-for="item in om_data_rule_type" :key="item.value" :label="item.label" :value="item.value"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="级别" prop="level">
-          <el-select v-model="query.level" class="el-form-input-width" placeholder="请选择级别" clearable>
-            <el-option v-for="item in om_rule_level" :key="item.value" :label="item.label" :value="item.value"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" plain @click="search">
-            <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
+
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef"/>
+      </template>
+
+      <template #actions-data>
+        <el-button v-hasPermi="['om:constraint:datarule:add']" type="primary" plain :disabled="saving"
+                   @click="handleAdd" @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button v-hasPermi="['om:constraint:datarule:remove']" type="danger" plain
+                   :disabled="!selectedIds.length || deleting" @click="handleDelete()"
+                   @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <template #text="{row, column_data}">{{ row[column_data.prop] }}</template>
+        <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+        <template #creator="{row}">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+          </div>
+        </template>
+        <template #handle="{row}">
+          <el-button v-hasPermi="['om:constraint:datarule:query']" link type="primary" icon="View"
+                     @click="handleDetail(row)"
+          >详情
           </el-button>
-          <el-button @click="resetSearch">
-            <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-    <div class="pagecont-bottom">
-      <div class="justify-between mb15">
-        <el-row :gutter="15" class="btn-style">
-          <el-col :span="1.5">
-            <el-button v-hasPermi="['om:constraint:datarule:add']" type="primary" plain :disabled="saving"
-                       @click="handleAdd"
-            >
-              <i class="iconfont-mini icon-xinzeng mr5"></i>新增
-            </el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button v-hasPermi="['om:constraint:datarule:remove']" type="danger" plain
-                       :disabled="!selectedIds.length || deleting || loading" @click="handleDelete()"
-            >
-              <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
-            </el-button>
-          </el-col>
-        </el-row>
-        <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
-      </div>
-      <el-table ref="tableRef" v-loading="loading" :data="rows" row-key="id" stripe
-                :default-sort="{prop: 'createTime', order: 'descending'}"
-                @sort-change="handleSortChange"
-                @selection-change="handleSelectionChange"
-      >
-        <el-table-column type="selection" width="55" align="center"/>
-        <el-table-column v-if="visible('id')" prop="id" sortable="custom" label="编号" width="80" align="center"/>
-        <el-table-column v-if="visible('name')" prop="name" label="名称" min-width="200"
-                         :show-overflow-tooltip="{effect: 'light'}"
-        />
-        <el-table-column v-if="visible('description')" prop="description" label="描述" min-width="240"
-                         :show-overflow-tooltip="{effect: 'light'}"
-        >
-          <template #default="{row}">{{ row.description || '-' }}</template>
-        </el-table-column>
-        <el-table-column v-if="visible('type')" label="规则类型" width="150" align="center">
-          <template #default="{row}">
-            <dict-tag :options="om_data_rule_type" :value="row.type"/>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="visible('level')" label="级别" width="90" align="center">
-          <template #default="{row}">
-            <dict-tag :options="om_rule_level" :value="row.level"/>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="visible('createBy')" prop="createBy" label="创建人" width="120" align="center"
-                         :show-overflow-tooltip="{effect: 'light'}"
-        >
-          <template #default="{row}">{{ row.createBy || '-' }}</template>
-        </el-table-column>
-        <el-table-column v-if="visible('createTime')" prop="createTime" sortable="custom" label="创建时间" width="180" align="center">
-          <template #default="{row}">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
-        </el-table-column>
-        <el-table-column v-if="visible('operation')" label="操作" width="240" align="center" fixed="right"
-                         class-name="small-padding fixed-width"
-        >
-          <template #default="{row}">
-            <el-button v-hasPermi="['om:constraint:datarule:query']" link type="primary" icon="View"
-                       @click="handleDetail(row)"
-            >详情
-            </el-button>
-            <el-button v-hasPermi="['om:constraint:datarule:edit']" link type="primary" icon="Edit"
+          <el-popover
+            v-if="auth.hasPermiOr(['om:constraint:datarule:edit', 'om:constraint:datarule:remove'])"
+            placement="bottom" :width="107" popper-class="handle-popover" trigger="click"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
+            <el-button v-if="auth.hasPermi('om:constraint:datarule:edit')" link type="primary" icon="Edit"
                        :disabled="saving" @click="handleUpdate(row)"
             >修改
             </el-button>
-            <el-button v-hasPermi="['om:constraint:datarule:remove']" link type="danger" icon="Delete"
+            <el-button v-if="auth.hasPermi('om:constraint:datarule:remove')" link type="danger" icon="Delete"
                        :disabled="deleting" @click="handleDelete(row)"
             >删除
             </el-button>
-          </template>
-        </el-table-column>
-        <template #empty>
-          <div class="emptyBg">
-            <img src="@/assets/system/images/no_data/noData.png" alt="暂无数据规则"/>
-            <p>{{ versionId ? '暂无数据规则' : '请先选择项目版本' }}</p>
-          </div>
+          </el-popover>
         </template>
-      </el-table>
-      <pagination v-show="total > 0" :total="total" v-model:page="query.pageNum" v-model:limit="query.pageSize"
-                  @pagination="getList"
-      />
-    </div>
-    <el-dialog v-model="open" :title="dialogTitle" width="860px" :append-to="pageRef"
+      </qt-table>
+    </qt-wrap>
+    <el-dialog v-model="open" :title="dialogTitle" width="860px" :append-to="$refs['app-container']"
                :close-on-press-escape="!saving" :before-close="beforeClose" draggable destroy-on-close
                @closed="handleDialogClosed"
     >
@@ -235,12 +180,12 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" :disabled="saving" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" :loading="saving" :disabled="saveDisabled" @click="submitForm">确 定</el-button>
+          <el-button :disabled="saving" @click="cancel">取 消</el-button>
+          <el-button type="primary" :loading="saving" :disabled="saveDisabled" @click="submitForm">确 定</el-button>
         </div>
       </template>
     </el-dialog>
-    <el-dialog v-model="detailOpen" title="数据规则详情" width="860px" :append-to="pageRef" draggable destroy-on-close>
+    <el-dialog v-model="detailOpen" title="数据规则详情" width="860px" :append-to="$refs['app-container']" draggable destroy-on-close>
       <el-form :model="detail" disabled label-width="120px" class="rule-form">
         <div class="h2-title">基本信息</div>
         <el-form-item label="名称" prop="name">
@@ -333,7 +278,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
+          <el-button @click="detailOpen = false">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -348,6 +293,8 @@ import {useOntologyVersion} from '@/views/om/useOntologyVersion';
 import { listDataRule, getDataRule, addDataRule, updateDataRule, delDataRule } from '@/api/om/constraint/dataRule';
 import {listRelationTypes} from '@/api/om/object/relation';
 import {listAttributes, listAttributeBusinessDataTypes} from '@/api/om/object/attribute';
+import auth from "@/plugins/auth";
+import {useCreatorPhones} from "@/utils/useCreatorPhones";
 
 defineOptions({name: 'OmDataRule'});
 const props = defineProps({versionId: {type: [String, Number], default: undefined}});
@@ -357,26 +304,67 @@ const {om_data_rule_type, om_rule_level, om_rule_operator} = proxy.useDict(
   'om_data_rule_type', 'om_rule_level', 'om_rule_operator'
 );
 
-const pageRef = ref();
 const tableRef = ref();
-const queryRef = ref();
 const ruleRef = ref();
-const rows = ref([]);
 const selectedIds = ref([]);
-const total = ref(0);
-const loading = ref(false);
 const saving = ref(false);
 const deleting = ref(false);
 const open = ref(false);
 const detailOpen = ref(false);
 const dialogTitle = ref('新增数据规则');
 const detail = ref({});
-const showSearch = ref(true);
-const query = reactive({name: '', type: '', level: '', pageNum: 1, pageSize: 10, orderByColumn: 'createTime,id', isAsc: 'desc,desc'});
-const appliedName = ref('');
-// 查询条件在点击查询时生效，翻页和排序继续使用已提交的筛选条件。
-const appliedType = ref('');
-const appliedLevel = ref('');
+const {creatorPhones} = useCreatorPhones();
+
+/**
+ * 分页查询数据规则列表；版本号缺失时返回空列表，避免无版本上下文发起无效查询。
+ * @param {Object} params QtTable 传入的查询参数
+ * @returns {Promise<Object>} 列表接口返回体
+ */
+function fetchDataRules(params) {
+  if (!versionId.value) {
+    return Promise.resolve({data: {rows: [], total: 0}});
+  }
+  return listDataRule({...params, versionId: versionId.value});
+}
+
+// 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: 'id',
+      defaultSort: {prop: 'createTime', order: 'descending'},
+      onSelectionChange: handleSelectionChange
+    }
+  },
+  columns: [
+    {type: 'selection', width: 55, minWidth: 55},
+    {label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'left', sortable: true},
+    {label: '名称', prop: 'name', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: {effect: 'light'}},
+    {label: '描述', prop: 'description', slot: 'text', minWidth: 240, align: 'left', showOverflowTooltip: {effect: 'light'}},
+    {label: '规则类型', prop: 'type', dict: 'om_data_rule_type', width: 150, minWidth: 150},
+    {label: '级别', prop: 'level', dict: 'om_rule_level', width: 90, minWidth: 90},
+    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left'},
+    {label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true},
+    {label: '操作', slot: 'handle', width: 170, minWidth: 170, fixed: 'right'}
+  ],
+  func: fetchDataRules,
+  params: {
+    name: null,
+    type: null,
+    level: null
+  }
+});
+
+// 搜索项配置
+const searchStore = reactive({
+  items: [
+    {label: '规则名称', prop: 'name', component: {is: 'input'}},
+    {label: '规则类型', prop: 'type', component: {is: 'select', options: om_data_rule_type}},
+    {label: '级别', prop: 'level', component: {is: 'select', options: om_rule_level}}
+  ]
+});
 const objectTypeOptions = ref([]);
 const objectTypeTreeProps = {label: 'name', value: 'id', children: 'children'};
 const objectTypeTree = computed(() =>
@@ -388,17 +376,6 @@ const optionsLoading = ref(false);
 const optionsLoadFailed = ref(false);
 const attributeLoadingCount = ref(0);
 const conditionSelectRefs = new Map();
-const columns = ref([
-  {key: 0, prop: 'id', label: '编号', visible: true},
-  {key: 1, prop: 'name', label: '名称', visible: true},
-  {key: 2, prop: 'description', label: '描述', visible: true},
-  {key: 3, prop: 'type', label: '规则类型', visible: true},
-  {key: 4, prop: 'level', label: '级别', visible: true},
-  {key: 5, prop: 'createBy', label: '创建人', visible: true},
-  {key: 6, prop: 'createTime', label: '创建时间', visible: true},
-  {key: 7, prop: 'operation', label: '操作', visible: true}
-]);
-const visible = prop => columns.value.find(column => column.prop === prop)?.visible;
 const saveDisabled = computed(() => optionsLoading.value || attributeLoadingCount.value > 0 || optionsLoadFailed.value);
 const emptyForm = () => ({
   id: undefined,
@@ -428,7 +405,6 @@ const rules = {
     {max: 512, message: '失败提示不能超过512个字符', trigger: 'blur'}
   ]
 };
-let listRequest = 0;
 let dialogRequest = 0;
 let contextRequest = 0;
 const attributePlaceholder = computed(() => {
@@ -452,7 +428,11 @@ const conditionValuePlaceholder = computed(() => {
   return form.value.type === 'RANGE' ? '请输入数值' : '请输入内容';
 });
 
-// 下拉选项需要读取全部分页数据，避免只显示第一页属性或关系。
+/**
+ * 逐页读取下拉选项，避免只显示第一页属性或关系。
+ * @param {Function} loadPage 按页号拉取单页数据的回调
+ * @returns {Promise<Array>} 合并后的全量行数据
+ */
 async function loadAllPages(loadPage) {
   const rows = [];
   let pageNum = 1;
@@ -468,6 +448,11 @@ async function loadAllPages(loadPage) {
   return rows;
 }
 
+/**
+ * 拉取指定版本的对象类型选项。
+ * @param {string|number} versionId 项目版本编号
+ * @returns {Promise<Array>} 对象类型列表
+ */
 async function listObjectTypeOptions(versionId) {
   const response = await listRelationTypes(versionId);
   return (response.data || []).map(item => ({
@@ -477,6 +462,12 @@ async function listObjectTypeOptions(versionId) {
   }));
 }
 
+/**
+ * 拉取指定对象类型的属性与业务数据类型选项。
+ * @param {string} objectTypeId 对象类型编号
+ * @param {string|number} versionId 项目版本编号
+ * @returns {Promise<Object>} 含 attributes 与 businessTypes 的选项集
+ */
 async function listObjectAttributeOptions(objectTypeId, versionId) {
   const results = await Promise.allSettled([
     loadAllPages(pageNum => listAttributes({objectTypeId, versionId, pageNum, pageSize: 100})),
@@ -494,10 +485,20 @@ async function listObjectAttributeOptions(objectTypeId, versionId) {
   };
 }
 
+/**
+ * 新建一条空的失败条件。
+ * @returns {Object} 条件对象
+ */
 function createCondition() {
   return {key: createRowKey(), objectTypeId: '', attributeId: '', operator: 'LT', value: ''};
 }
 
+/**
+ * 取出属性对应的基础数据类型编号，业务数据类型向下查找。
+ * @param {Object} attribute 属性记录
+ * @param {Array} businessTypes 当前对象类型的业务数据类型列表
+ * @returns {number|undefined} 基础数据类型编号
+ */
 function getBasicTypeCode(attribute, businessTypes) {
   if (Number(attribute.typeCategory) !== 2) return Number(attribute.basicTypeCode);
   const businessType = businessTypes.find(item => String(item.id) === String(attribute.businessTypeId)
@@ -505,93 +506,54 @@ function getBasicTypeCode(attribute, businessTypes) {
   return businessType ? Number(businessType.dataType) : undefined;
 }
 
-function validateConditions(form, attributes, businessTypes) {
-  if (!form.conditions.length) return '请至少添加一条失败条件';
-  for (const [index, condition] of form.conditions.entries()) {
+/**
+ * 逐条校验失败条件，保留父级选项与类型匹配规则。
+ * @param {Object} ruleForm 当前表单数据
+ * @param {Object} attributes 按对象类型缓存的属性选项
+ * @param {Object} businessTypes 按对象类型缓存的业务数据类型
+ * @returns {string} 错误提示文案，校验通过时为空字符串
+ */
+function validateConditions(ruleForm, attributes, businessTypes) {
+  if (!ruleForm.conditions.length) return '请至少添加一条失败条件';
+  for (const [index, condition] of ruleForm.conditions.entries()) {
     const prefix = `第 ${index + 1} 条失败条件：`;
     if (!condition.objectTypeId || !condition.attributeId) return `${prefix}请选择对象类型和属性`;
     const attribute = (attributes[condition.objectTypeId] || []).find(item => item.id === condition.attributeId);
     if (!attribute) return `${prefix}属性已失效，请重新选择`;
-    if (form.type === 'RANGE') {
+    if (ruleForm.type === 'RANGE') {
       const code = getBasicTypeCode(attribute, businessTypes[condition.objectTypeId] || []);
       if (![1, 2].includes(code)) return `${prefix}只能选择整数或小数属性`;
       if (!om_rule_operator.value.some(item => item.value === condition.operator)) return `${prefix}请选择比较符`;
       const value = String(condition.value).trim();
       if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return `${prefix}请输入有效数值`;
       if (code === 1 && !/^[+-]?\d+$/.test(value)) return `${prefix}请输入整数`;
-    } else if (form.type === 'FORMAT') {
+    } else if (ruleForm.type === 'FORMAT') {
       if (getBasicTypeCode(attribute, businessTypes[condition.objectTypeId] || []) !== 4) return `${prefix}只能选择日期属性`;
       if (!dateFormatOptions.includes(condition.value)) return `${prefix}请选择日期格式`;
-    } else if (form.type === 'ENUM' && !String(condition.value).trim()) {
+    } else if (ruleForm.type === 'ENUM' && !String(condition.value).trim()) {
       return `${prefix}请输入枚举值`;
     }
   }
   return '';
 }
 
-async function getList() {
-  const request = ++listRequest;
-  if (!versionId.value) {
-    rows.value = [];
-    total.value = 0;
-    loading.value = false;
-    return;
-  }
-  loading.value = true;
-  try {
-    const response = await listDataRule({
-      versionId: versionId.value,
-      name: appliedName.value,
-      type: appliedType.value,
-      level: appliedLevel.value,
-      pageNum: query.pageNum,
-      pageSize: query.pageSize,
-      orderByColumn: query.orderByColumn,
-      isAsc: query.isAsc
-    });
-    if (request !== listRequest) return;
-    total.value = Number(response.data?.total || 0);
-    const maxPage = Math.max(1, Math.ceil(total.value / query.pageSize));
-    if (query.pageNum > maxPage) {
-      query.pageNum = maxPage;
-      return await getList();
-    }
-    rows.value = response.data?.rows || [];
-    selectedIds.value = [];
-    tableRef.value?.clearSelection();
-  } finally {
-    if (request === listRequest) loading.value = false;
-  }
+/** 刷新当前数据规则列表。 */
+function refreshList() {
+  tableRef.value?.getList();
 }
 
-function search() {
-  appliedName.value = query.name.trim();
-  appliedType.value = query.type || '';
-  appliedLevel.value = query.level || '';
-  query.pageNum = 1;
-  return getList();
-}
-
-function resetSearch() {
-  queryRef.value?.resetFields();
-  return search();
-}
-
-// 使用后端排序，保证编号和创建时间在全部分页数据中排序一致。
-function handleSortChange({prop, order}) {
-  const field = order && ['id', 'createTime'].includes(prop) ? prop : 'createTime';
-  const direction = order === 'ascending' ? 'asc' : 'desc';
-  // 创建时间相同时按编号降序，避免翻页时记录顺序不稳定。
-  query.orderByColumn = field === 'createTime' ? 'createTime,id' : 'id';
-  query.isAsc = field === 'createTime' ? direction + ',desc' : direction;
-  query.pageNum = 1;
-  return getList();
-}
-
+/**
+ * 多选框选中数据，供顶部批量删除使用。
+ * @param {Array} selection 当前选中的行数据
+ */
 function handleSelectionChange(selection) {
   selectedIds.value = selection.map(row => row.id);
 }
 
+/**
+ * 拉取并缓存指定对象类型的属性与业务数据类型选项。
+ * @param {string} objectTypeId 对象类型编号
+ */
 async function loadObjectOptions(objectTypeId) {
   if (!objectTypeId) return;
   const request = dialogRequest;
@@ -608,6 +570,7 @@ async function loadObjectOptions(objectTypeId) {
   }
 }
 
+/** 加载弹窗所需的对象类型与条件属性选项。 */
 async function loadOptions() {
   const request = dialogRequest;
   optionsLoading.value = true;
@@ -626,6 +589,7 @@ async function loadOptions() {
   }
 }
 
+/** 新增按钮操作。 */
 function handleAdd() {
   if (!requireVersion()) return;
   ++dialogRequest;
@@ -638,6 +602,10 @@ function handleAdd() {
   loadOptions();
 }
 
+/**
+ * 修改按钮操作。
+ * @param {Object} row 当前行数据
+ */
 async function handleUpdate(row) {
   if (!requireVersion()) return;
   const request = ++dialogRequest;
@@ -658,6 +626,10 @@ async function handleUpdate(row) {
   loadOptions();
 }
 
+/**
+ * 详情按钮操作。
+ * @param {Object} row 当前行数据
+ */
 async function handleDetail(row) {
   if (!requireVersion()) return;
   const request = ++dialogRequest;
@@ -669,7 +641,9 @@ async function handleDetail(row) {
   if (request === dialogRequest) detailOpen.value = true;
 }
 
-// 详情沿用新增的控件布局，加载对象和属性选项后回显名称。
+/**
+ * 详情沿用新增的控件布局，加载对象和属性选项后回显名称。
+ */
 async function loadDetailOptions() {
   const request = dialogRequest;
   optionsLoadFailed.value = false;
@@ -684,6 +658,7 @@ async function loadDetailOptions() {
   }
 }
 
+/** 提交新增/修改表单，提交期间锁定确定按钮避免重复入库。 */
 async function submitForm() {
   if (!requireVersion() || saving.value || saveDisabled.value) return;
   const request = dialogRequest;
@@ -707,12 +682,16 @@ async function submitForm() {
     if (context !== contextRequest) return;
     ElMessage.success(data.id ? '修改成功' : '新增成功');
     open.value = false;
-    await getList();
+    refreshList();
   } finally {
     saving.value = false;
   }
 }
 
+/**
+ * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
+ * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+ */
 async function handleDelete(row) {
   if (!requireVersion() || deleting.value) return;
   const ids = row ? [row.id] : [...selectedIds.value];
@@ -730,40 +709,61 @@ async function handleDelete(row) {
     await delDataRule(ids);
     if (context !== contextRequest) return;
     ElMessage.success('删除成功');
-    await getList();
+    refreshList();
   } finally {
     deleting.value = false;
   }
 }
 
+/** 关闭新增/修改弹窗；保存中禁止关闭。 */
 function cancel() {
+  if (saving.value) return;
   open.value = false;
 }
 
+/**
+ * 保存期间拦截弹窗关闭回调。
+ * @param {Function} done el-dialog 的 before-close 完成回调
+ */
 function beforeClose(done) {
   if (!saving.value) done();
 }
 
+/** 弹窗关闭后清除表单校验提示。 */
 function handleDialogClosed() {
   ruleRef.value?.clearValidate();
 }
 
+/**
+ * 取出失败条件里需要加载属性选项的对象类型编号。
+ * @param {Object} record 当前表单或详情记录
+ * @returns {Array<string>} 去重后的对象类型编号列表
+ */
 function getRecordObjectIds(record) {
   return [...new Set((record.conditions || []).map(item => item.objectTypeId).filter(Boolean))];
 }
 
+/** 切换规则类型时重置全部失败条件。 */
 function handleTypeChange() {
   form.value.conditions = [createCondition()];
   nextTick(() => ruleRef.value?.clearValidate());
 }
 
+/**
+ * 切换条件的对象类型，清空已选属性与条件值并拉取属性选项。
+ * @param {Object} condition 当前条件对象
+ */
 function handleConditionObjectChange(condition) {
   condition.attributeId = '';
   condition.value = '';
   loadObjectOptions(condition.objectTypeId);
 }
 
-// 取值范围只允许一个数值，输入或粘贴时移除文字及多余的符号
+/**
+ * 条件值输入过滤：取值范围只允许一个数值，移除文字及多余的符号。
+ * @param {Object} condition 当前条件对象
+ * @param {string} value 原始输入值
+ */
 function handleConditionValueInput(condition, value) {
   if (form.value.type !== 'RANGE') {
     condition.value = value;
@@ -781,10 +781,20 @@ function handleConditionValueInput(condition, value) {
   condition.value = numeric;
 }
 
+/**
+ * 切换条件属性时清空条件值。
+ * @param {Object} condition 当前条件对象
+ */
 function handleConditionAttributeChange(condition) {
   condition.value = '';
 }
 
+/**
+ * 按规则类型过滤可选属性，取值范围只给数值属性，格式校验只给日期属性。
+ * @param {Object} condition 当前条件对象
+ * @param {string} [type] 规则类型，缺省取当前表单选中值
+ * @returns {Array} 可选属性列表
+ */
 function getConditionAttributes(condition, type = form.value.type) {
   const attributes = attributeOptions[condition.objectTypeId] || [];
   if (!['RANGE', 'FORMAT'].includes(type)) return attributes;
@@ -793,11 +803,17 @@ function getConditionAttributes(condition, type = form.value.type) {
   return attributes.filter(item => typeCodes.includes(getBasicTypeCode(item, businessTypes)));
 }
 
+/**
+ * 收集条件行属性下拉的组件实例，供新增条件后自动聚焦。
+ * @param {string} key 条件行唯一键
+ * @param {Object|null} element 组件实例，卸载时为 null
+ */
 function setConditionSelectRef(key, element) {
   if (element) conditionSelectRefs.set(key, element);
   else conditionSelectRefs.delete(key);
 }
 
+/** 追加一条失败条件并聚焦其属性下拉。 */
 async function addCondition() {
   const condition = createCondition();
   form.value.conditions.push(condition);
@@ -805,14 +821,28 @@ async function addCondition() {
   conditionSelectRefs.get(condition.key)?.focus();
 }
 
+/**
+ * 删除指定失败条件，至少保留一条。
+ * @param {number} index 条件行下标
+ */
 function removeCondition(index) {
   if (form.value.conditions.length > 1) form.value.conditions.splice(index, 1);
 }
 
+/**
+ * 校验失败条件配置。
+ * @returns {string} 错误提示文案，校验通过时为空字符串
+ */
 function validateExpression() {
   return validateConditions(form.value, attributeOptions, businessTypeOptions);
 }
 
+/**
+ * 按规则类型返回条件比较符文案。
+ * @param {string} type 规则类型
+ * @param {string} operator 比较符字典值
+ * @returns {string} 比较符展示文案
+ */
 function conditionOperator(type, operator) {
   if (type === 'REQUIRED') return '为空';
   if (type === 'ENUM') return '不属于';
@@ -820,7 +850,8 @@ function conditionOperator(type, operator) {
   return proxy.selectDictLabel(om_rule_operator.value, operator);
 }
 
-watch(versionId, () => {
+// 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
+watch(versionId, async () => {
   ++contextRequest;
   ++dialogRequest;
   open.value = false;
@@ -831,18 +862,12 @@ watch(versionId, () => {
   objectTypeOptions.value = [];
   Object.keys(attributeOptions).forEach(key => delete attributeOptions[key]);
   Object.keys(businessTypeOptions).forEach(key => delete businessTypeOptions[key]);
-  query.name = '';
-  query.type = '';
-  query.level = '';
-  query.pageNum = 1;
-  appliedName.value = '';
-  appliedType.value = '';
-  appliedLevel.value = '';
-  rows.value = [];
-  selectedIds.value = [];
-  total.value = 0;
-  getList();
-}, {immediate: true});
+  tableStore.params.name = null;
+  tableStore.params.type = null;
+  tableStore.params.level = null;
+  await nextTick();
+  tableRef.value?.resetQuery();
+});
 
 watch(open, value => {
   if (value) return;
@@ -854,7 +879,6 @@ watch(open, value => {
 onBeforeUnmount(() => {
   ++contextRequest;
   ++dialogRequest;
-  ++listRequest;
 });
 </script>
 

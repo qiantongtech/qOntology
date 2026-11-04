@@ -19,217 +19,82 @@
 <template>
   <div class="app-container" ref="app-container">
     <GuideTip tip-id="om/semantic/dataType.list" />
-    <div class="pagecont-top" v-show="showSearch">
-      <el-form
-        class="btn-style"
-        :model="queryParams"
-        ref="queryRef"
-        :inline="true"
-        v-show="showSearch"
-        @submit.prevent
-      >
-        <el-form-item label="名称" prop="name">
-          <el-input
-            class="el-form-input-width"
-            v-model="queryParams.name"
-            placeholder="请输入名称"
-            clearable
-            @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="数据类型" prop="dataType">
-          <el-select
-            class="el-form-input-width"
-            v-model="queryParams.dataType"
-            placeholder="请选择数据类型"
-          >
-            <el-option
-              v-for="item in basic_data_type"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef" />
+      </template>
 
-        <el-form-item>
+      <template #actions-data>
+        <el-button
+          type="primary"
+          plain
+          @click="handleAdd"
+          v-hasPermi="['om:dataType:datatype:add']"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['om:dataType:datatype:remove']"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+        <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+          </div>
+        </template>
+        <template #handle="{ row }">
           <el-button
-            plain
+            v-hasPermi="['om:dataType:datatype:query']"
+            link
             type="primary"
-            @click="handleQuery"
-            @mousedown="(e) => e.preventDefault()"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情</el-button
           >
-            <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-          </el-button>
-          <el-button @click="resetQuery" @mousedown="(e) => e.preventDefault()">
-            <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <div class="pagecont-bottom">
-      <div class="justify-between mb15">
-        <el-row :gutter="15" class="btn-style">
-          <el-col :span="1.5">
+          <el-popover
+            v-if="auth.hasPermiOr(['om:dataType:datatype:edit', 'om:dataType:datatype:remove'])"
+            placement="bottom"
+            :width="107"
+            popper-class="handle-popover"
+            trigger="click"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
             <el-button
-              type="primary"
-              plain
-              @click="handleAdd"
-              v-hasPermi="['om:dataType:datatype:add']"
-              @mousedown="(e) => e.preventDefault()"
-            >
-              <i class="iconfont-mini icon-xinzeng mr5"></i>新增
-            </el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button
-              type="danger"
-              plain
-              :disabled="multiple"
-              @click="handleDelete"
-              v-hasPermi="['om:dataType:datatype:remove']"
-              @mousedown="(e) => e.preventDefault()"
-            >
-              <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
-            </el-button>
-          </el-col>
-        </el-row>
-        <div class="justify-end top-right-btn">
-          <right-toolbar
-            v-model:showSearch="showSearch"
-            @queryTable="getList"
-            :columns="columns"
-          ></right-toolbar>
-        </div>
-      </div>
-      <el-table
-        stripe
-        v-loading="loading"
-        :data="dataTypeList"
-        @selection-change="handleSelectionChange"
-        :default-sort="defaultSort"
-        @sort-change="handleSortChange"
-      >
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column
-          v-if="getColumnVisibility(0)"
-          label="编号"
-          align="center"
-          prop="id"
-          width="80px"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-        />
-        <el-table-column
-          v-if="getColumnVisibility(1)"
-          label="名称"
-          align="left"
-          prop="name"
-        >
-          <template #default="scope">
-            {{ scope.row.name || "-" }}
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(2)"
-          label="描述"
-          align="left"
-          prop="description"
-        >
-          <template #default="scope">
-            {{ scope.row.description || "-" }}
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(3)"
-          label="数据类型"
-          align="center"
-          prop="dataType"
-          width="120px"
-        >
-          <template #default="scope">
-            <dict-tag :options="basic_data_type" :value="scope.row.dataType" />
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(4)"
-          label="创建人"
-          align="center"
-          prop="createBy"
-          width="180px"
-        >
-          <template #default="scope">
-            {{ scope.row.createBy || "-" }}
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(5)"
-          label="创建时间"
-          align="center"
-          prop="createTime"
-          width="180"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-        >
-          <template #default="scope">
-            <span>{{
-              parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}")
-            }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          v-if="getColumnVisibility(6)"
-          label="操作"
-          align="center"
-          fixed="right"
-          width="240"
-          class-name="small-padding fixed-width"
-        >
-          <template #default="scope">
-            <el-button
-              link
-              type="primary"
-              icon="view"
-              @click="handleDetail(scope.row)"
-              v-hasPermi="['om:dataType:datatype:query']"
-              >详情
-            </el-button>
-            <el-button
+              v-if="auth.hasPermi('om:dataType:datatype:edit')"
               link
               type="primary"
               icon="Edit"
-              @click="handleUpdate(scope.row)"
-              v-hasPermi="['om:dataType:datatype:edit']"
-              >修改
-            </el-button>
+              @click="handleUpdate(row)"
+              >修改</el-button
+            >
             <el-button
+              v-if="auth.hasPermi('om:dataType:datatype:remove')"
               link
               type="danger"
               icon="Delete"
-              @click="handleDelete(scope.row)"
-              v-hasPermi="['om:dataType:datatype:remove']"
-              >删除
-            </el-button>
-          </template>
-        </el-table-column>
-
-        <template #empty>
-          <div class="emptyBg">
-            <img src="@/assets/system/images/no_data/noData.png" alt="" />
-            <p>暂无记录</p>
-          </div>
+              @click="handleDelete(row)"
+              >删除</el-button
+            >
+          </el-popover>
         </template>
-      </el-table>
-
-      <pagination
-        v-show="total > 0"
-        :total="total"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-      />
-    </div>
+      </qt-table>
+    </qt-wrap>
 
     <!-- 添加或修改数据类型对话框 -->
     <el-dialog
@@ -239,11 +104,6 @@
       :append-to="$refs['app-container']"
       draggable
     >
-      <template #header="{ close, titleId, titleClass }">
-        <span role="heading" aria-level="2" class="el-dialog__title">
-          {{ title }}
-        </span>
-      </template>
       <el-form
         ref="dataTypeRef"
         :model="form"
@@ -302,7 +162,7 @@
                 :max="2147483647"
                 :precision="0"
                 controls-position="right"
-                style="width: 100%"
+                class="form-control-full"
               />
             </el-form-item>
           </el-col>
@@ -376,8 +236,8 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm"
+          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" :loading="saving" @click="submitForm"
             >确 定</el-button
           >
         </div>
@@ -392,11 +252,6 @@
       :append-to="$refs['app-container']"
       draggable
     >
-      <template #header="{ close, titleId, titleClass }">
-        <span role="heading" aria-level="2" class="el-dialog__title">
-          {{ title }}
-        </span>
-      </template>
       <el-form ref="dataTypeRef" :model="form" label-width="80px">
         <el-row :gutter="20">
           <el-col :span="24">
@@ -484,7 +339,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">关 闭</el-button>
+          <el-button @click="cancel">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -501,45 +356,70 @@ import {
 } from "@/api/om/dataType/dataType";
 import { getEnumTypeDict } from "@/api/om/dataType/dataType";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
+import auth from "@/plugins/auth";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+
 const { versionId, requireVersion } = useOntologyVersion();
 
 const { proxy } = getCurrentInstance();
 const { basic_data_type } = proxy.useDict("basic_data_type");
 
-const dataTypeList = ref([]);
-
-// 列显隐信息
-const columns = ref([
-  { key: 0, label: "编号", visible: true },
-  { key: 1, label: "名称", visible: true },
-  { key: 2, label: "描述", visible: true },
-  { key: 3, label: "数据类型", visible: true },
-  { key: 4, label: "创建人", visible: true },
-  { key: 5, label: "创建时间", visible: true },
-  { key: 6, label: "操作", visible: true },
-]);
-
-const getColumnVisibility = (key) => {
-  const column = columns.value.find((col) => col.key === key);
-  // 如果没有找到对应列配置，默认显示
-  if (!column) return true;
-  // 如果找到对应列配置，根据visible属性来控制显示
-  return column.visible;
-};
-
+const tableRef = ref();
+const dataTypeRef = ref();
 const open = ref(false);
 const openDetail = ref(false);
-const loading = ref(true);
-const showSearch = ref(true);
+const saving = ref(false);
 const ids = ref([]);
-const single = ref(true);
 const multiple = ref(true);
-const total = ref(0);
 const title = ref("");
-const defaultSort = ref({ prop: "createTime", order: "descending" });
 const enumTypeDict = ref([]);
 const enumSearch = ref("");
 const enumLoading = ref(false);
+const { creatorPhones } = useCreatorPhones();
+
+/** 版本号缺失时直接返回空列表，避免无版本上下文发起无效查询。 */
+function fetchDataTypes(params) {
+  if (!versionId.value) {
+    return Promise.resolve({ data: { rows: [], total: 0 } });
+  }
+  return listDataType({ ...params, versionId: versionId.value });
+}
+
+// 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    { type: "selection", width: 55, minWidth: 55 },
+    { label: "编号", prop: "id", slot: "text", width: 80, minWidth: 80, align: "left", sortable: true },
+    { label: "名称", prop: "name", slot: "text", minWidth: 160, align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "描述", prop: "description", slot: "text", minWidth: 240, align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "数据类型", prop: "dataType", dict: "basic_data_type", width: 120, minWidth: 120 },
+    { label: "创建人", prop: "createBy", slot: "creator", width: 130, minWidth: 130, align: "left", headerAlign: "left" },
+    { label: "创建时间", prop: "createTime", date: true, width: 160, minWidth: 160, align: "left", sortable: true },
+    { label: "操作", slot: "handle", width: 170, minWidth: 170, fixed: "right" },
+  ],
+  func: fetchDataTypes,
+  params: {
+    name: null,
+    dataType: null,
+  },
+});
+
+// 搜索项配置
+const searchStore = reactive({
+  items: [
+    { label: "名称", prop: "name", component: { is: "input" } },
+    { label: "数据类型", prop: "dataType", component: { is: "select", options: basic_data_type } },
+  ],
+});
 
 // 数据类型 0-文本、1-整数、2-小数、3-布尔、4-日期、5-枚举
 const dataTypeConstant = {
@@ -553,19 +433,6 @@ const dataTypeConstant = {
 
 const data = reactive({
   form: {},
-  queryParams: {
-    pageNum: 1,
-    pageSize: 10,
-    name: null,
-    dataType: null,
-    description: null,
-    unit: null,
-    decimalPlaces: null,
-    format: null,
-    createTime: null,
-    orderByColumn: defaultSort.value.prop,
-    isAsc: defaultSort.value.order,
-  },
   rules: {
     name: [{ required: true, message: "名称不能为空", trigger: "blur" }],
     dataType: [
@@ -606,7 +473,7 @@ const data = reactive({
   },
 });
 
-const { queryParams, form, rules } = toRefs(data);
+const { form, rules } = toRefs(data);
 
 const selectedEnum = computed({
   get: () =>
@@ -656,49 +523,23 @@ function handleEnumVisible(visible) {
   if (visible) queryEnumTypeDict();
 }
 
-let listRequest = 0;
 let enumRequest = 0;
 let detailRequest = 0;
-watch(
-  versionId,
-  () => {
-    ++detailRequest;
-    open.value = false;
-    openDetail.value = false;
-    dataTypeList.value = [];
-    enumTypeDict.value = [];
-    enumSearch.value = "";
-    handleSelectionChange([]);
-    queryParams.value.pageNum = 1;
-    getList();
-    queryEnumTypeDict();
-  },
-  { immediate: true }
-);
 
-/** 查询数据类型列表 */
-async function getList() {
-  const request = ++listRequest;
-  if (!versionId.value) {
-    dataTypeList.value = [];
-    total.value = 0;
-    loading.value = false;
-    return;
-  }
-  loading.value = true;
-  try {
-    const response = await listDataType({
-      ...queryParams.value,
-      versionId: versionId.value,
-    });
-    if (request !== listRequest) return;
-    dataTypeList.value = response.data.rows;
-    total.value = response.data.total;
-    handleSelectionChange([]);
-  } finally {
-    if (request === listRequest) loading.value = false;
-  }
-}
+// 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
+watch(versionId, async () => {
+  ++detailRequest;
+  open.value = false;
+  openDetail.value = false;
+  enumTypeDict.value = [];
+  enumSearch.value = "";
+  handleSelectionChange([]);
+  tableStore.params.name = null;
+  tableStore.params.dataType = null;
+  await nextTick();
+  tableRef.value?.resetQuery();
+  queryEnumTypeDict();
+});
 
 async function queryEnumTypeDict() {
   const request = ++enumRequest;
@@ -733,7 +574,7 @@ async function queryEnumTypeDict() {
   }
 }
 
-// 取消按钮
+/** 关闭新增/修改与详情弹窗并重置表单。 */
 function cancel() {
   ++detailRequest;
   open.value = false;
@@ -741,7 +582,7 @@ function cancel() {
   reset();
 }
 
-// 表单重置
+/** 重置数据类型表单字段。 */
 function reset() {
   form.value = {
     id: null,
@@ -764,33 +605,21 @@ function reset() {
     updateTime: null,
     remark: null,
   };
-  proxy.resetForm("dataTypeRef");
+  dataTypeRef.value?.resetFields();
 }
 
-/** 搜索按钮操作 */
-function handleQuery() {
-  queryParams.value.pageNum = 1;
-  getList();
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  proxy.resetForm("queryRef");
-  handleQuery();
-}
-
-// 多选框选中数据
+/**
+ * 多选框选中数据，同步批量删除按钮的禁用状态。
+ * @param {Array} selection 当前选中的行数据
+ */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.id);
-  single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
 
-/** 排序触发事件 */
-function handleSortChange(column) {
-  queryParams.value.orderByColumn = column.prop;
-  queryParams.value.isAsc = column.order;
-  getList();
+/** 刷新当前页列表。 */
+function refreshList() {
+  tableRef.value?.getList();
 }
 
 /** 新增按钮操作 */
@@ -802,12 +631,15 @@ function handleAdd() {
   title.value = "添加数据类型";
 }
 
-/** 修改按钮操作 */
+/**
+ * 修改按钮操作。
+ * @param {Object} row 当前行数据
+ */
 function handleUpdate(row) {
   const request = ++detailRequest;
   reset();
-  const _id = row.id || ids.value;
-  getDataType(_id, versionId.value).then((response) => {
+  const targetId = row.id || ids.value[0];
+  getDataType(targetId, versionId.value).then((response) => {
     if (request !== detailRequest) return;
     form.value = response.data;
     open.value = true;
@@ -815,12 +647,15 @@ function handleUpdate(row) {
   });
 }
 
-/** 详情按钮操作 */
+/**
+ * 详情按钮操作。
+ * @param {Object} row 当前行数据
+ */
 function handleDetail(row) {
   const request = ++detailRequest;
   reset();
-  const _id = row.id || ids.value;
-  getDataType(_id, versionId.value).then((response) => {
+  const targetId = row.id || ids.value[0];
+  getDataType(targetId, versionId.value).then((response) => {
     if (request !== detailRequest) return;
     form.value = response.data;
     openDetail.value = true;
@@ -828,48 +663,51 @@ function handleDetail(row) {
   });
 }
 
-/** 提交按钮 */
-function submitForm() {
-  if (!requireVersion()) return;
+/** 提交新增/修改表单，提交期间锁定确定按钮避免重复入库。 */
+async function submitForm() {
+  if (saving.value || !requireVersion()) return;
   const submittingVersion = versionId.value;
-  proxy.$refs["dataTypeRef"].validate((valid) => {
-    if (valid && submittingVersion === versionId.value && open.value) {
-      if (form.value.id != null) {
-        updateDataType({ ...form.value, versionId: submittingVersion })
-          .then((response) => {
-            if (submittingVersion !== versionId.value) return;
-            proxy.$modal.msgSuccess("修改成功");
-            open.value = false;
-            getList();
-          })
-          .catch((error) => {});
-      } else {
-        addDataType({ ...form.value, versionId: submittingVersion })
-          .then((response) => {
-            if (submittingVersion !== versionId.value) return;
-            proxy.$modal.msgSuccess("新增成功");
-            open.value = false;
-            getList();
-          })
-          .catch((error) => {});
-      }
-    }
-  });
+  const valid = await dataTypeRef.value.validate().catch(() => false);
+  if (
+    !valid ||
+    saving.value ||
+    submittingVersion !== versionId.value ||
+    !open.value
+  )
+    return;
+  const isEdit = form.value.id != null;
+  saving.value = true;
+  try {
+    await (isEdit
+      ? updateDataType({ ...form.value, versionId: submittingVersion })
+      : addDataType({ ...form.value, versionId: submittingVersion }));
+    if (submittingVersion !== versionId.value) return;
+    proxy.$modal.msgSuccess(isEdit ? "修改成功" : "新增成功");
+    open.value = false;
+    refreshList();
+  } catch {
+    // 接口错误由全局请求层提示；保留弹窗草稿，允许用户修改后重新提交。
+  } finally {
+    saving.value = false;
+  }
 }
 
-/** 删除按钮操作 */
+/**
+ * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
+ * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+ */
 function handleDelete(row) {
   const deletingVersion = versionId.value;
-  const _ids = row?.id || [...ids.value];
+  const deleteIds = row?.id ?? [...ids.value];
   proxy.$modal
-    .confirm('是否确认删除数据类型编号为"' + _ids + '"的数据项？')
+    .confirm('是否确认删除数据类型编号为"' + deleteIds + '"的数据项？')
     .then(function () {
       if (deletingVersion !== versionId.value) return;
-      return delDataType(_ids, deletingVersion);
+      return delDataType(deleteIds, deletingVersion);
     })
     .then(() => {
       if (deletingVersion !== versionId.value) return;
-      getList();
+      refreshList();
       proxy.$modal.msgSuccess("删除成功");
     })
     .catch(() => {});
@@ -877,6 +715,11 @@ function handleDelete(row) {
 </script>
 
 <style scoped lang="scss">
+// 数字输入框占满表单项宽度，不使用行内样式。
+.form-control-full {
+  width: 100%;
+}
+
 .enum-selected-label {
   display: inline-flex;
   align-items: center;
