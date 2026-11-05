@@ -50,6 +50,23 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+        <!-- 关系信息列：上方 起点类型→关系名称→终点类型，下方描述，布局对齐项目管理信息列。 -->
+        <template #relationInfo="{ row }">
+          <div class="qt-table-info relation-info">
+            <div class="qt-table-info__main relation-info__main">
+              <span class="relation-node text-ellipsis" :title="row.startTypeName || ''">{{ row.startTypeName || '-' }}</span>
+              <span class="relation-arrow" aria-hidden="true">→</span>
+              <span class="relation-name text-ellipsis" :title="row.name || ''">{{ row.name || '-' }}</span>
+              <span class="relation-arrow" aria-hidden="true">→</span>
+              <span class="relation-node text-ellipsis" :title="row.endTypeName || ''">{{ row.endTypeName || '-' }}</span>
+            </div>
+            <div
+              v-if="row.description"
+              class="info-desc"
+              :title="row.description"
+            >{{ row.description }}</div>
+          </div>
+        </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -324,10 +341,7 @@
         columns: [
             { type: 'selection', width: 55, minWidth: 55 },
             { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true },
-            { label: '对象类型关系名称', prop: 'name', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '起点类型', prop: 'startTypeName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '终点类型', prop: 'endTypeName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '描述', prop: 'description', slot: 'text', minWidth: 240, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '对象类型关系信息（起点类型→关系名称→终点类型）', prop: 'name', slot: 'relationInfo', minWidth: 360, align: 'left' },
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 100 },
             { label: '反向名称', prop: 'reverseName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left' },
@@ -593,6 +607,28 @@
 </script>
 
 <style scoped lang="scss">
+    /* 关系信息列：起点→关系名称→终点 单行排列，中间关系名称高亮，箭头与文字间留白避免拥挤。 */
+    .relation-info__main {
+        flex-wrap: nowrap;
+        gap: 6px;
+    }
+    .relation-node {
+        flex: 0 1 auto;
+        min-width: 0;
+        color: var(--el-text-color-primary);
+    }
+    .relation-name {
+        flex: 0 1 auto;
+        min-width: 0;
+        color: var(--el-color-primary);
+        font-weight: 500;
+    }
+    .relation-arrow {
+        flex-shrink: 0;
+        color: var(--el-text-color-secondary);
+        font-weight: 600;
+        line-height: 22px;
+    }
     /* 表单控件撑满所在列宽，避免行内 style。 */
     .form-control-full {
         width: 100%;
