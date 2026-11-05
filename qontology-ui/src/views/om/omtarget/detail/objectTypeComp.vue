@@ -17,144 +17,228 @@
 -->
 
 <template>
-  <div>
-    <div class="justify-between mb15">
-      <el-row :gutter="15" class="btn-style">
-        <el-col :span="1.5">
-          <el-button v-hasPermi="['om:object:type:add']" type="primary" plain @click="handleAdd()"><i
-              class="iconfont-mini icon-xinzeng mr5"
-          ></i>新增
-          </el-button>
-        </el-col>
-        <el-col :span="1.5">
-          <el-button class="toggle-expand-all" type="primary" plain @click="toggleExpandAll">
-            <svg-icon v-if="isExpandAll" icon-class="toggle"/>
-            <svg-icon v-else icon-class="expand"/>
-            <span>{{ isExpandAll ? '折叠' : '展开' }}</span>
-          </el-button>
-        </el-col>
-      </el-row>
-      <right-toolbar v-model:showSearch="showSearch" :columns="columns" @queryTable="getList"/>
-    </div>
-    <el-table v-if="refreshTable" v-loading="loading" :data="filteredTree" row-key="id"
-              :default-expand-all="isExpandAll"
-              :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-    >
-      <el-table-column v-if="visible('name')" prop="name" label="对象类型名称" width="250" align="left"
-                       :show-overflow-tooltip="{ effect: 'light' }"
-      />
-      <el-table-column v-if="visible('description')" prop="description" label="描述" min-width="260" align="left"
-                       :show-overflow-tooltip="{ effect: 'light' }"
-      />
-      <el-table-column v-if="visible('orderNum')" prop="orderNum" label="显示顺序" width="100" align="center">
-        <template #default="{ row }">{{ row.orderNum ?? '-' }}</template>
-      </el-table-column>
-      <el-table-column v-if="visible('attributeCount')" label="属性数量" width="90" align="center">
-        <template #default="{ row }">{{ row.attributeCount ?? '-' }}</template>
-      </el-table-column>
-      <el-table-column v-if="visible('relationCount')" label="关系数量" width="90" align="center">
-        <template #default="{ row }">{{ row.relationCount ?? '-' }}</template>
-      </el-table-column>
-      <el-table-column v-if="visible('createBy')" prop="createBy" label="创建人" width="120" align="center"
-                       :show-overflow-tooltip="{ effect: 'light' }"
-      />
-      <el-table-column v-if="visible('createTime')" label="创建时间" width="180" align="center">
-        <template #default="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
-      </el-table-column>
-      <el-table-column v-if="visible('operation')" label="操作" width="240" align="center" fixed="right"
-                       class-name="small-padding fixed-width"
-      >
-        <template #default="{ row }">
-          <el-button v-hasPermi="['om:object:type:query']" link type="primary" icon="View" @click="handleDetail(row)">
-            详情
-          </el-button>
-          <el-button v-hasPermi="['om:object:type:add']" link type="primary" icon="Plus" @click="handleAdd(row)">
-            新增
-          </el-button>
-          <el-popover v-if="auth.hasPermiOr(['om:object:type:edit', 'om:object:type:remove'])"
-                      placement="bottom" :width="150" trigger="click"
-          >
-            <template #reference>
-              <el-button link type="primary" icon="ArrowDown">更多</el-button>
-            </template>
-            <div class="butgdlist">
-              <el-button v-if="auth.hasPermi('om:object:type:edit')" link type="primary" icon="Edit"
-                         @click="handleMoreCommand('edit', row)"
-              >修改
-              </el-button>
-              <el-button v-if="auth.hasPermi('om:object:type:remove')" link type="danger" icon="Delete"
-                         :disabled="deleting" @click="handleMoreCommand('delete', row)"
-              >删除
-              </el-button>
-            </div>
-          </el-popover>
-        </template>
-      </el-table-column>
-      <template #empty>
-        <div class="emptyBg"><img src="@/assets/system/images/no_data/noData.png" alt="暂无记录"/>
-          <p>暂无记录</p></div>
+  <div ref="pageRef" class="target-object-types">
+    <qt-wrap :columns="columns" :table-ref="listActions" :config="{ fullContent: false, searchShadow: false }">
+      <template #search>
+        <qt-search-bar
+          :items="searchItems"
+          :params="queryParams"
+          @query="handleQuery"
+          @reset="handleQuery"
+        />
       </template>
-    </el-table>
-  </div>
-  <el-dialog v-model="open" :title="dialogTitle" width="800px" :append-to="pageRef" :close-on-click-modal="false"
-             :close-on-press-escape="!saving" :before-close="beforeClose" draggable destroy-on-close
-             @closed="typeRef?.clearValidate()"
-  >
-    <el-form ref="typeRef" :model="form" :rules="rules" label-width="120px" @submit.prevent="submitForm">
-      <el-row :gutter="20">
-        <el-col v-if="!editingRoot" :span="24">
-          <el-form-item label="上级对象类型" prop="parentId">
-            <el-tree-select
-                v-model="form.parentId"
-                :data="parentOptions"
-                :props="{ label: 'name', value: 'id', children: 'children' }"
-                value-key="id"
-                placeholder="请选择上级对象类型，留空则为顶级对象类型"
-                check-strictly
-                clearable
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item label="对象类型名称" prop="name">
-            <div class="name-input">
-              <el-input v-model="form.name" placeholder="请输入对象类型名称" maxlength="128"/>
-              <el-button v-hasPermi="['om:term:term:list']" type="primary" @click="openTermPicker">
-                从术语表中选择
-              </el-button>
+      <template #actions-data>
+        <el-button
+          v-hasPermi="['om:object:type:add']"
+          type="primary"
+          plain
+          @click="handleAdd()"
+        >
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button
+          class="toggle-expand-all"
+          type="primary"
+          plain
+          @click="toggleExpandAll"
+        >
+          <svg-icon :icon-class="isExpandAll ? 'toggle' : 'expand'" />
+          <span>{{ isExpandAll ? ' 折叠' : ' 展开' }}</span>
+        </el-button>
+      </template>
+      <div v-loading="loading">
+        <qt-table
+          v-if="refreshTable"
+          ref="tableRef"
+          :columns="columns"
+          :config="tableConfig"
+          :events="tableEvents"
+          :func="readTree"
+        >
+          <template #text="{ row, column_data }">{{ row[column_data.prop] ?? '-' }}</template>
+          <template #description="{ row }">{{ row.description?.trim() || '-' }}</template>
+          <template #creator="{ row }">
+            <div class="flex-column overflow-hidden">
+              <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+              <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
             </div>
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item label="显示顺序" prop="orderNum">
-            <el-input-number v-model="form.orderNum" :min="0" :max="2147483647" :precision="0"
-                             controls-position="right" style="width: 100%"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item label="描述" prop="description">
-            <el-input v-model="form.description" class="character-count" type="textarea" :rows="4" maxlength="512"
-                      show-word-limit placeholder="请输入对象类型描述"
-            />
-          </el-form-item>
-        </el-col>
-      </el-row>
+          </template>
+          <template #createTime="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
+          <template #operation="{ row }">
+            <el-button
+              v-hasPermi="['om:object:type:query']"
+              link
+              type="primary"
+              icon="View"
+              @click="handleDetail(row)"
+            >详情</el-button>
+            <el-button
+              v-hasPermi="['om:object:type:edit']"
+              link
+              type="primary"
+              icon="Edit"
+              @click="handleUpdate(row)"
+            >修改</el-button>
+            <el-popover
+              v-if="auth.hasPermiOr(['om:object:type:add', 'om:object:type:remove'])"
+              placement="bottom"
+              :width="110"
+              trigger="click"
+              popper-class="table-action-popover handle-popover"
+            >
+              <template #reference><el-button link type="primary" icon="ArrowDown">更多</el-button></template>
+              <div class="object-type-actions">
+                <el-button
+                  v-hasPermi="['om:object:type:add']"
+                  link
+                  type="primary"
+                  icon="Plus"
+                  @click="handleAdd(row)"
+                >新增子级</el-button>
+                <el-button
+                  v-hasPermi="['om:object:type:remove']"
+                  link
+                  type="danger"
+                  icon="Delete"
+                  :disabled="deleting"
+                  @click="handleDelete(row)"
+                >删除</el-button>
+              </div>
+            </el-popover>
+          </template>
+          <template #empty>
+            <div class="emptyBg"><img src="@/assets/system/images/no_data/noData.png" alt="暂无记录" /><p>暂无记录</p></div>
+          </template>
+        </qt-table>
+      </div>
+    </qt-wrap>
+  </div>
+  <el-dialog
+    v-model="open"
+    :title="dialogTitle"
+    width="800px"
+    :append-to="pageRef"
+    :close-on-click-modal="!saving"
+    :close-on-press-escape="!saving"
+    :before-close="beforeClose"
+    draggable
+    destroy-on-close
+    @closed="typeRef?.clearValidate()"
+  >
+    <guide-tip-panel
+      type="hint"
+      class="mb15"
+      allow-wrap
+      title="定义业务对象及其层级结构，维护对象类型名称、描述和关联建模目标，为后续属性与关系建模提供基础。"
+    />
+    <el-form
+      ref="typeRef"
+      :model="form"
+      :rules="rules"
+      label-width="120px"
+      class="column-form"
+      @submit.prevent="submitForm"
+    >
+
+      <qt-form-item
+        class="row-full"
+        tip="选择该类型所属的父级对象类型，留空时创建顶级类型。"
+        v-if="!editingRoot"
+        label="上级对象类型"
+        prop="parentId"
+      >
+        <el-tree-select
+          v-model="form.parentId"
+          :data="parentOptions"
+          :props="{ label: 'name', value: 'id', children: 'children' }"
+          value-key="id"
+          placeholder="请选择上级对象类型，留空则为顶级对象类型"
+          check-strictly
+          clearable
+        />
+      </qt-form-item>
+
+      <qt-form-item
+        class="row-full"
+        tip="填写业务对象的标准名称，也可从术语表选择，保持业务概念命名一致。"
+        label="对象类型名称"
+        prop="name"
+      >
+        <div class="name-input">
+          <el-input v-model="form.name" placeholder="请输入对象类型名称" maxlength="128"/>
+          <el-button v-hasPermi="['om:term:term:list']" type="primary" @click="openTermPicker">
+            从术语表中选择
+          </el-button>
+        </div>
+      </qt-form-item>
+
+      <qt-form-item
+        class="row-full"
+        tip="用于控制同一父级下的展示顺序，数值越小越靠前。"
+        label="显示顺序"
+        prop="orderNum"
+      >
+        <el-input-number
+          v-model="form.orderNum"
+          :min="0"
+          :max="2147483647"
+          :precision="0"
+          controls-position="right"
+          style="width: 100%"
+        />
+      </qt-form-item>
+
+      <qt-form-item
+        class="row-full"
+        tip="说明该对象类型代表的业务概念、职责及适用范围，最多256个字符。"
+        label="描述"
+        prop="description"
+      >
+        <el-input
+          v-model="form.description"
+          class="character-count"
+          type="textarea"
+          :rows="4"
+          maxlength="256"
+          show-word-limit
+          placeholder="请输入对象类型描述，说明业务含义、职责和适用范围"
+        />
+      </qt-form-item>
+
     </el-form>
     <template #footer>
       <div class="dialog-footer">
         <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
-        <el-button type="primary" size="mini" :loading="saving" @click="submitForm">确 定</el-button>
+        <el-button
+          type="primary"
+          size="mini"
+          :loading="saving"
+          @click="submitForm"
+        >确 定</el-button>
       </div>
     </template>
   </el-dialog>
-  <el-dialog v-model="termOpen" title="从术语表中选择" width="1000px" :append-to="pageRef"
-             :close-on-click-modal="false" draggable
+  <el-dialog
+    v-model="termOpen"
+    title="从术语表中选择"
+    width="1000px"
+    :append-to="pageRef"
+    :close-on-click-modal="!saving"
+    draggable
   >
-    <el-form class="btn-style" :inline="true" :model="termQuery" @submit.prevent="searchTerms">
+    <el-form
+      class="btn-style"
+      :inline="true"
+      :model="termQuery"
+      @submit.prevent="searchTerms"
+    >
       <el-form-item label="标准名称">
-        <el-input v-model="termQuery.stdName" class="el-form-input-width" placeholder="请输入标准名称" clearable
-                  @keyup.enter="searchTerms"
+        <el-input
+          v-model="termQuery.stdName"
+          class="el-form-input-width"
+          placeholder="请输入标准名称"
+          clearable
+          @keyup.enter="searchTerms"
         />
       </el-form-item>
       <el-form-item>
@@ -163,21 +247,48 @@
         <el-button @click="resetTerms"><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button>
       </el-form-item>
     </el-form>
-    <el-table ref="termTableRef" v-loading="termLoading" :data="terms" row-key="id" highlight-current-row stripe
-              @current-change="selectedTerm = $event" @row-click="selectTerm"
+    <el-table
+      ref="termTableRef"
+      v-loading="termLoading"
+      :data="terms"
+      row-key="id"
+      highlight-current-row
+      stripe
+      @current-change="selectedTerm = $event"
+      @row-click="selectTerm"
     >
-      <el-table-column type="index" label="序号" width="65" align="center"/>
-      <el-table-column v-for="field in termFields" :key="field.prop" :prop="field.prop" :label="field.label"
-                       :min-width="field.width" align="left" :show-overflow-tooltip="{ effect: 'light' }"
+      <el-table-column
+        type="index"
+        label="序号"
+        width="65"
+        align="center"
+      />
+      <el-table-column
+        v-for="field in termFields"
+        :key="field.prop"
+        :prop="field.prop"
+        :label="field.label"
+        :min-width="field.width"
+        align="left"
+        :show-overflow-tooltip="{ effect: 'light' }"
       />
     </el-table>
-    <pagination v-show="termTotal > 0" :total="termTotal" v-model:page="termQuery.pageNum"
-                v-model:limit="termQuery.pageSize" @pagination="getTerms"
+    <pagination
+      v-show="termTotal > 0"
+      :total="termTotal"
+      v-model:page="termQuery.pageNum"
+      v-model:limit="termQuery.pageSize"
+      @pagination="getTerms"
     />
     <template #footer>
       <div class="dialog-footer">
         <el-button size="mini" @click="termOpen = false">取 消</el-button>
-        <el-button type="primary" size="mini" :disabled="!selectedTerm || termLoading" @click="applyTerm">确 定
+        <el-button
+          type="primary"
+          size="mini"
+          :disabled="!selectedTerm || termLoading"
+          @click="applyTerm"
+        >确 定
         </el-button>
       </div>
     </template>
@@ -192,6 +303,7 @@ import {ElMessage, ElMessageBox} from 'element-plus';
 import {listType, listTypeExcludeChild, getType, addType, updateType, delType, listTypeTargets} from '@/api/om/object/type';
 import {listTerm} from '@/api/om/term/term';
 import auth from '@/plugins/auth';
+import { useCreatorPhones } from '@/utils/useCreatorPhones';
 
 defineOptions({name: 'OmObjectType'});
 // 项目版本优先从 URL 获取，嵌入使用时兼容上层传入。
@@ -212,18 +324,45 @@ const open = ref(false);
 const termOpen = ref(false);
 const targetPickerOpen = ref(false);
 const selectedTargets = ref([]);
-const showSearch = ref(true);
+const tableRef = ref();
+const { creatorPhones } = useCreatorPhones();
 const isExpandAll = ref(true);
 const refreshTable = ref(true);
 const dialogTitle = ref('新增对象类型');
 const rows = ref([]);
-const queryParams = reactive({name: ''});
+const queryParams = reactive({ name: '', parentId: undefined });
+const appliedParentId = ref();
+const sort = reactive({ prop: 'orderNum', order: 'ascending' });
 // 输入内容仅在提交查询时生效。
 const appliedName = ref('');
-const columns = ref([
-  ['name', '对象类型名称'], ['orderNum', '显示顺序'], ['description', '描述'], ['attributeCount', '属性数量'], ['relationCount', '关系数量'], ['createBy', '创建人'], ['createTime', '创建时间'], ['operation', '操作']
-].map(([prop, label], key) => ({prop, label, key, visible: true})));
-const visible = prop => columns.value.find(column => column.prop === prop)?.visible;
+const columns = reactive([
+    { prop: 'name', label: '对象类型名称', slot: 'text', minWidth: 250, align: 'left', showOverflowTooltip: { effect: 'light' } },
+    { prop: 'description', label: '描述', slot: 'description', minWidth: 260, align: 'left', showOverflowTooltip: { effect: 'light' } },
+    { prop: 'orderNum', label: '显示顺序', slot: 'text', width: 100, sortable: 'custom' },
+    { prop: 'attributeCount', label: '属性数量', slot: 'text', width: 90 },
+    { prop: 'relationCount', label: '关系数量', slot: 'text', width: 90 },
+    { prop: 'createBy', label: '创建人', slot: 'creator', width: 130, align: 'left', headerAlign: 'left' },
+    { prop: 'createTime', label: '创建时间', slot: 'createTime', width: 160, sortable: 'custom' },
+    { label: '操作', slot: 'operation', width: 240, fixed: 'right' },
+]);
+const tableConfig = computed(() => ({
+    notPagination: true,
+    sort: true,
+    table: {
+        rowKey: 'id', height: '60vh', stripe: true,
+        defaultExpandAll: isExpandAll.value,
+        treeProps: { children: 'children', hasChildren: 'hasChildren' },
+        defaultSort: { prop: sort.prop, order: sort.order },
+    },
+}));
+const tableEvents = {
+    onSortChange({ orderByColumn, isAsc }) {
+        sort.prop = isAsc ? orderByColumn : 'orderNum';
+        sort.order = isAsc || 'ascending';
+    },
+};
+const listActions = { getList };
+function readTree() { return Promise.resolve({ data: filteredTree.value }); }
 const emptyForm = () => ({
   id: undefined,
   workspaceId: 1001,
@@ -245,8 +384,8 @@ const rules = {
     trigger: 'blur'
   }],
   description: [{
-    max: 512,
-    message: '描述不能超过512个字符',
+    max: 256,
+    message: '描述不能超过256个字符',
     trigger: 'blur'
   }]
 };
@@ -263,21 +402,41 @@ function buildTree(items) {
 
 const tree = computed(() => buildTree(rows.value));
 const filteredTree = computed(() => {
-  const keyword = appliedName.value.trim().toLowerCase();
-  const filter = nodes => nodes.flatMap(node => {
-    if (!keyword || node.name?.toLowerCase().includes(keyword)) return [node];
-    const children = filter(node.children);
-    return children.length ? [{...node, children}] : [];
-  });
-  return filter(tree.value);
+    const keyword = appliedName.value.trim().toLowerCase();
+    const parentId = appliedParentId.value;
+    function filter(nodes, inherited = false, matchedParent = false) {
+        return nodes.flatMap((node) => {
+            const inScope = inherited || parentId == null || parentId === '' || String(node.parentId) === String(parentId);
+            const matches = matchedParent || !keyword || node.name?.toLowerCase().includes(keyword);
+            const children = filter(node.children, inScope, inScope && matches);
+            if (inScope && matches) return [{ ...node, children }];
+            return children.length ? [{ ...node, children }] : [];
+        }).sort((a, b) => {
+            const direction = sort.order === 'descending' ? -1 : 1;
+            const comparison = sort.prop === 'orderNum'
+                ? Number(a.orderNum ?? 0) - Number(b.orderNum ?? 0)
+                : String(a.createTime || '').localeCompare(String(b.createTime || ''));
+            return comparison * direction;
+        });
+    }
+    return filter(tree.value);
 });
+const searchItems = computed(() => [
+    { label: '对象类型名称', prop: 'name', component: { is: 'input' } },
+    { label: '上级对象类型', prop: 'parentId', component: {
+        is: 'tree-select', data: tree.value,
+        props: { value: 'id', label: 'name', children: 'children' },
+        valueKey: 'id', checkStrictly: true, clearable: true,
+    } },
+]);
+watch(filteredTree, () => tableRef.value?.getList());
 const parentOptions = ref([]);
 let listRequest = 0;
 let editRequest = 0;
 
 async function getList() {
   const request = ++listRequest;
-  if (!versionId.value) { rows.value = []; loading.value = false; return; }
+  if (!versionId.value || !props.targetDetail?.id) { rows.value = []; loading.value = false; return; }
   loading.value = true;
   try {
     const response = await listType({workspaceId: 1001, versionId: versionId.value, pageNum: 1, pageSize: -1,
@@ -298,13 +457,9 @@ async function toggleExpandAll() {
 }
 
 function handleQuery() {
-  appliedName.value = queryParams.name.trim();
+  appliedName.value = (queryParams.name || "").trim();
+  appliedParentId.value = queryParams.parentId;
   return getList();
-}
-
-function resetQuery() {
-  queryParams.name = '';
-  return handleQuery();
 }
 
 async function handleAdd(parent) {
@@ -387,11 +542,6 @@ async function submitForm() {
 
 function beforeClose(done) {
   if (!saving.value) done();
-}
-
-function handleMoreCommand(command, row) {
-  if (command === 'edit' && auth.hasPermi('om:object:type:edit')) return handleUpdate(row);
-  if (command === 'delete' && !deleting.value && auth.hasPermi('om:object:type:remove')) return handleDelete(row);
 }
 
 async function handleDelete(row) {
@@ -483,58 +633,33 @@ watch(versionId, () => {
   getList();
 });
 watch(open, value => { if (!value) targetPickerOpen.value = false; });
+watch(() => props.targetDetail?.id, () => {
+  ++editRequest;
+  open.value = false;
+  rows.value = [];
+  queryParams.name = '';
+  queryParams.parentId = undefined;
+  appliedName.value = '';
+  appliedParentId.value = undefined;
+  getList();
+});
 onMounted(getList);
 </script>
 
 <style scoped lang="scss">
-.toggle-expand-all {
-  min-width: 60px;
-  height: 30px;
-  padding: 0 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  line-height: 1;
-  --el-button-text-color: #2666fb;
-  --el-button-border-color: #7aa7ff;
-
-  :deep(.svg-icon) {
-    width: 12px;
-    height: 12px;
+.toggle-expand-all .svg-icon {
+    font-size: 12px;
     margin-right: 6px;
-    color: currentColor;
-    fill: currentColor;
-    vertical-align: middle;
-  }
-
-  :deep(> span) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  span {
-    line-height: 1;
-  }
+}
+.object-type-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    .el-button + .el-button { margin-left: 0; }
 }
 
-/* 复用qKnow非结构化抽取页面的“更多”弹层按钮样式。 */
-.butgdlist {
-  width: 100px;
-  margin: 0 auto;
-  display: flex !important;
-  flex-direction: column;
-  align-items: center !important;
-}
-
-.butgdlist .el-button {
-  width: 100%;
-  justify-content: center;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
+.target-object-types :deep(.qt-wrap--search) { padding: 0; }
 
 .name-input {
   display: flex;

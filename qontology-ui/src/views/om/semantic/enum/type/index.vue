@@ -150,12 +150,18 @@
       :title="title"
       width="800px"
       :append-to="pageRef"
-      :close-on-click-modal="false"
+      :close-on-click-modal="!saving"
       :close-on-press-escape="!saving"
       :before-close="handleBeforeClose"
       draggable
       @closed="clearValidation"
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="定义业务字段的可选值范围，填写枚举名称、唯一编码和使用说明，为业务数据类型提供统一的取值依据。"
+      />
       <el-form
         ref="typeRef"
         :model="form"
@@ -164,21 +170,36 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <el-form-item label="枚举名称" prop="enumName" class="row-full">
+        <qt-form-item
+          label="枚举名称"
+          prop="enumName"
+          class="row-full"
+          tip="填写枚举定义的业务名称，例如“供应商类别”。"
+        >
           <el-input
             v-model="form.enumName"
             placeholder="请输入枚举名称"
             :maxlength="128"
           />
-        </el-form-item>
-        <el-form-item label="枚举类型" prop="enumType" class="row-full">
+        </qt-form-item>
+        <qt-form-item
+          label="枚举类型"
+          prop="enumType"
+          class="row-full"
+          tip="填写唯一的英文编码，以字母开头，仅支持字母、数字和下划线。"
+        >
           <el-input
             v-model="form.enumType"
             placeholder="请输入枚举类型"
             :maxlength="128"
           />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
+        </qt-form-item>
+        <qt-form-item
+          label="状态"
+          prop="status"
+          class="row-full"
+          tip="启用后可用于业务取值，禁用后保留已有定义。"
+        >
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in enumStatusOptions"
@@ -187,18 +208,23 @@
             >{{ dict.label }}
             </el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark" class="row-full">
+        </qt-form-item>
+        <qt-form-item
+          label="备注"
+          prop="remark"
+          class="row-full"
+          tip="补充取值含义、适用场景或使用约定，最多256个字符。"
+        >
           <el-input
             v-model="form.remark"
             class="character-count"
             type="textarea"
             :rows="3"
-            maxlength="256个字符"
+            :maxlength="256"
             show-word-limit
             placeholder="请输入备注"
           />
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -374,7 +400,7 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
-    remark: [{ max: 512, message: "备注不能超过512个字符", trigger: "blur" }],
+    remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });
 const { form, rules } = toRefs(data);

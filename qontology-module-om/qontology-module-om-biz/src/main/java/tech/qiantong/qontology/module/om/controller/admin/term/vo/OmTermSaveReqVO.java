@@ -69,7 +69,7 @@ public class OmTermSaveReqVO extends BaseEntity {
 
     @Schema(description = "术语来源", example = "")
     @NotBlank(message = "来源不能为空")
-    @Size(max = 200, message = "来源长度不能超过200个字符")
+    @Size(max = 256, message = "来源长度不能超过256个字符")
     private String source;
 
     @Schema(description = "状态：0 禁用，1 启用")
@@ -78,7 +78,7 @@ public class OmTermSaveReqVO extends BaseEntity {
     private Integer status;
 
     @Schema(description = "描述", example = "")
-    @Size(max = 500, message = "描述长度不能超过500个字符")
+    @Size(max = 256, message = "描述长度不能超过256个字符")
     private String description;
 
     @Schema(description = "备注信息", example = "")

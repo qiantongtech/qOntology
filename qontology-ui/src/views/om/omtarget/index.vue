@@ -30,20 +30,22 @@
       </template>
 
       <template #actions-data>
-        <el-button type="primary"
-                   plain
-                   @click="handleAdd"
-                   v-hasPermi="['om:target:target:add']"
-                   @mousedown="(e) => e.preventDefault()"
+        <el-button
+          type="primary"
+          plain
+          @click="handleAdd"
+          v-hasPermi="['om:target:target:add']"
+          @mousedown="(e) => e.preventDefault()"
         >
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
-        <el-button type="danger"
-                   plain
-                   :disabled="multiple"
-                   @click="handleDelete()"
-                   v-hasPermi="['om:target:target:remove']"
-                   @mousedown="(e) => e.preventDefault()"
+        <el-button
+          type="danger"
+          plain
+          :disabled="multiple"
+          @click="handleDelete()"
+          v-hasPermi="['om:target:target:remove']"
+          @mousedown="(e) => e.preventDefault()"
         >
           <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
         </el-button>
@@ -63,98 +65,118 @@
             :max-count="2"
           />
         </template>
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden"><span class="text-ellipsis">{{ row.createBy || '-' }}</span><span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span></div>
+        </template>
+        <template #createTime="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
         <template #action="{ row }">
-          <el-button link
-                     type="primary"
-                     icon="View"
-                     @click="routeTo('/om/'+versionId+'/target/detail', row)"
-                     v-hasPermi="['om:target:target:query']"
+          <el-button
+            link
+            type="primary"
+            icon="View"
+            @click="routeTo('/om/'+versionId+'/target/detail', row)"
+            v-hasPermi="['om:target:target:query']"
           >详情</el-button>
-          <el-button link
-                     type="primary"
-                     icon="Edit"
-                     @click="handleUpdate(row)"
-                     v-hasPermi="['om:target:target:edit']"
+          <el-button
+            link
+            type="primary"
+            icon="Edit"
+            @click="handleUpdate(row)"
+            v-hasPermi="['om:target:target:edit']"
           >修改</el-button>
-          <el-button link
-                     type="danger"
-                     icon="Delete"
-                     @click="handleDelete(row)"
-                     v-hasPermi="['om:target:target:remove']"
+          <el-button
+            link
+            type="danger"
+            icon="Delete"
+            @click="handleDelete(row)"
+            v-hasPermi="['om:target:target:remove']"
           >删除</el-button>
         </template>
       </qt-table>
     </qt-wrap>
 
     <!-- 添加或修改建模目标对话框 -->
-    <el-dialog v-model="open"
-               width="800px"
-               :append-to="$refs['app-container']"
-               draggable
+    <el-dialog
+      v-model="open"
+      width="800px"
+      :append-to="$refs['app-container']"
+      draggable
     >
       <template #header>
         <span role="heading" aria-level="2" class="el-dialog__title">
           {{ title }}
         </span>
       </template>
-      <el-form ref="targetRef"
-               :model="form"
-               :rules="rules"
-               label-width="80px"
-               @submit.prevent
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="围绕需要解决的业务问题定义建模目标，明确问题来源、业务场景、优先级和验收标准，为后续对象与关系建模及目标验证提供依据。"
+      />
+      <el-form
+        ref="targetRef"
+        :model="form"
+        :rules="rules"
+        label-width="90px"
+        class="column-form"
+        @submit.prevent="submitForm"
       >
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="目标问题" prop="question">
-              <el-input v-model="form.question"
-                        placeholder="请输入目标问题"
-                        maxlength="200"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="问题来源" prop="questionSource">
-              <el-input v-model="form.questionSource"
-                        placeholder="请输入问题来源"
-                        maxlength="200"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="优先级" prop="priority">
-              <el-radio-group v-model="form.priority">
-                <el-radio
-                  v-for="dict in om_target_priority"
-                  :key="dict.value"
-                  :value="dict.value"
-                >{{ dict.label }}
-                </el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="业务场景" prop="businessScenarios">
-              <el-input v-model="form.businessScenarios"
-                        class="target-textarea"
-                        type="textarea"
-                        placeholder="请输入业务场景"
-                        maxlength="200"
-                        show-word-limit
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="验收标准" prop="acceptCriterion">
-              <el-input v-model="form.acceptCriterion"
-                        class="target-textarea"
-                        type="textarea"
-                        placeholder="请输入验收标准"
-                        maxlength="200"
-                        show-word-limit
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <qt-form-item
+          label="目标问题"
+          prop="question"
+          class="row-full"
+          tip="填写本次建模需要回答的具体业务问题，建议使用清晰、可验证的问句。"
+        >
+          <el-input v-model="form.question" placeholder="请输入目标问题，例如：哪些采购订单尚未完成入库？" :maxlength="256" />
+        </qt-form-item>
+        <qt-form-item
+          label="问题来源"
+          prop="questionSource"
+          class="row-full"
+          tip="说明问题由哪个部门、业务角色或需求材料提出，便于后续沟通和追溯。"
+        >
+          <el-input v-model="form.questionSource" placeholder="请输入问题来源，例如：采购管理部门提出" :maxlength="256" />
+        </qt-form-item>
+        <qt-form-item
+          label="优先级"
+          prop="priority"
+          class="row-full"
+          tip="根据业务价值、紧急程度及实施顺序选择高、中或低优先级。"
+        >
+          <el-radio-group v-model="form.priority"><el-radio v-for="dict in om_target_priority" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio></el-radio-group>
+        </qt-form-item>
+        <qt-form-item
+          label="业务场景"
+          prop="businessScenarios"
+          class="row-full"
+          tip="描述问题发生的业务流程、参与角色和使用情境，明确本次建模服务的范围。"
+        >
+          <el-input
+            v-model="form.businessScenarios"
+            class="target-textarea"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入业务场景，例如：采购人员在订单到货后核对订单与入库记录"
+            :maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
+        <qt-form-item
+          label="验收标准"
+          prop="acceptCriterion"
+          class="row-full"
+          tip="填写可用于判断目标是否达成的明确条件，作为验证任务的判断依据。"
+        >
+          <el-input
+            v-model="form.acceptCriterion"
+            class="target-textarea"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入验收标准，例如：能够按采购订单查询全部关联入库记录"
+            :maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -175,8 +197,8 @@ import {
   updateTarget,
 } from "@/api/om/omtarget/target";
 import { useRoute, useRouter } from "vue-router";
-import { listType as listObjectTypes } from "@/api/om/object/type";
-import { listRelations } from "@/api/om/object/relation";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+import { withTargetRelatedElements } from "@/utils/targetRelatedElements";
 
 const { proxy } = getCurrentInstance();
 const { om_accept_status, om_target_priority } = proxy.useDict(
@@ -187,6 +209,7 @@ const route = useRoute();
 const router = useRouter();
 
 const tableRef = ref();
+const { creatorPhones } = useCreatorPhones();
 const versionId = ref(route.params.versionId || null);
 const tableStore = reactive({
   config: {
@@ -225,6 +248,8 @@ const tableStore = reactive({
     { label: "关联元素", slot: "relatedElementCount", minWidth: 240, align: "left" },
     { label: "优先级", prop: "priority", slot: "priority", width: 100 },
     { label: "验证状态", prop: "acceptStatus", slot: "acceptStatus", width: 100 },
+    { label: "创建人", prop: "createBy", slot: "creator", width: 130, align: "left", headerAlign: "left" },
+    { label: "创建时间", prop: "createTime", slot: "createTime", width: 160, sortable: "custom" },
     { label: "操作", slot: "action", fixed: "right", width: 240 },
   ],
   func: loadTargets,
@@ -260,10 +285,10 @@ const title = ref("");
 const data = reactive({
   form: {},
   rules: {
-    question: [{ required: true, message: "目标问题不能为空", trigger: "blur" }],
-    questionSource: [{ required: true, message: "问题来源不能为空", trigger: "blur" }],
-    businessScenarios: [{ required: true, message: "业务场景不能为空", trigger: "blur" }],
-    acceptCriterion: [{ required: true, message: "验收标准不能为空", trigger: "blur" }],
+    question: [{ required: true, whitespace: true, message: "目标问题不能为空", trigger: "blur" }, { max: 256, message: "目标问题不能超过256个字符", trigger: "blur" }],
+    questionSource: [{ required: true, whitespace: true, message: "问题来源不能为空", trigger: "blur" }, { max: 256, message: "问题来源不能超过256个字符", trigger: "blur" }],
+    businessScenarios: [{ required: true, whitespace: true, message: "业务场景不能为空", trigger: "blur" }, { max: 256, message: "业务场景不能超过256个字符", trigger: "blur" }],
+    acceptCriterion: [{ required: true, whitespace: true, message: "验收标准不能为空", trigger: "blur" }, { max: 256, message: "验收标准不能超过256个字符", trigger: "blur" }],
     priority: [{ required: true, message: "优先级不能为空", trigger: "blur" }],
   },
 });
@@ -284,26 +309,7 @@ watch(
 // 复用详情页的关联查询口径；每类仅查询一条，通过 total 取得数量。
 async function loadTargets(params) {
   const response = await listTarget(params);
-  response.data.rows = await Promise.all(response.data.rows.map(async (row) => {
-    const query = {
-      versionId: params.versionId,
-      targetIdList: [row.id],
-      pageNum: 1,
-      pageSize: 1,
-    };
-    const results = await Promise.allSettled([
-      listObjectTypes(query),
-      listRelations(query),
-    ]);
-    const labels = ["对象类型", "对象类型关系"];
-    return {
-      ...row,
-      relatedElementTags: results.map((result, index) => {
-        const count = result.status === "fulfilled" ? result.value.data?.total : null;
-        return `${labels[index]}${count ?? "-"}`;
-      }),
-    };
-  }));
+  response.data.rows = await withTargetRelatedElements(response.data.rows || [], params.versionId);
   return response;
 }
 

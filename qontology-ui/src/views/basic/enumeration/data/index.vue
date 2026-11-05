@@ -118,12 +118,18 @@
       :title="title"
       width="800px"
       :append-to="pageRef"
-      :close-on-click-modal="false"
+      :close-on-click-modal="!saving"
       :close-on-press-escape="!saving"
       :before-close="handleBeforeClose"
       draggable
       @closed="clearValidation"
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护当前枚举类型下的业务取值，明确标签、键值、顺序和状态，保证业务字段取值一致。"
+      />
       <el-form
         ref="dataRef"
         :model="form"
@@ -132,24 +138,39 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <el-form-item class="row-full" label="枚举类型">
+        <qt-form-item class="row-full" label="枚举类型" tip="填写唯一的英文编码，以字母开头，仅支持字母、数字和下划线。">
           <el-input v-model="form.enumType" disabled />
-        </el-form-item>
-        <el-form-item class="row-full" label="枚举标签" prop="enumLabel">
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="枚举标签"
+          prop="enumLabel"
+          tip="填写界面中显示的业务名称，例如“集团总部”。"
+        >
           <el-input
             v-model="form.enumLabel"
             placeholder="请输入枚举标签"
             :maxlength="128"
           />
-        </el-form-item>
-        <el-form-item class="row-full" label="枚举键值" prop="enumValue">
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="枚举键值"
+          prop="enumValue"
+          tip="填写实际存储和引用的枚举值，例如 GROUP；同一枚举类型下应保持唯一。"
+        >
           <el-input
             v-model="form.enumValue"
             placeholder="请输入枚举键值"
             :maxlength="128"
           />
-        </el-form-item>
-        <el-form-item class="row-full" label="排序" prop="enumSort">
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="排序"
+          prop="enumSort"
+          tip="控制同一枚举类型内的展示顺序，数值越小越靠前。"
+        >
           <el-input-number
             v-model="form.enumSort"
             :min="0"
@@ -157,8 +178,13 @@
             :precision="0"
             controls-position="right"
           />
-        </el-form-item>
-        <el-form-item class="row-full" label="状态" prop="status">
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="状态"
+          prop="status"
+          tip="启用后可用于业务取值，禁用后保留已有定义。"
+        >
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in enumStatusOptions"
@@ -167,18 +193,23 @@
             >{{ dict.label }}
             </el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item class="row-full" label="备注" prop="remark">
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="备注"
+          prop="remark"
+          tip="补充取值含义、适用场景或使用约定，最多256个字符。"
+        >
           <el-input
             v-model="form.remark"
             class="character-count"
             type="textarea"
             :rows="3"
-            :maxlength="512"
+            :maxlength="256"
             show-word-limit
             placeholder="请输入备注"
           />
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -205,9 +236,6 @@
         label-position="right"
         class="enum-detail-form column-form"
       >
-        <el-form-item class="row-full" label="编号">
-          <div class="form-readonly">{{ detail.enumCode }}</div>
-        </el-form-item>
         <el-form-item class="row-full" label="枚举类型">
           <div class="form-readonly">{{ detail.enumType }}</div>
         </el-form-item>
@@ -410,7 +438,7 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
-    remark: [{ max: 512, message: "备注不能超过512个字符", trigger: "blur" }],
+    remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });
 const { form, rules } = toRefs(data);
@@ -662,68 +690,10 @@ onBeforeUnmount(() => {
   padding: 0;
 }
 
-.form-readonly {
-  box-sizing: border-box;
-  width: 100%;
-  border: 1px solid #f1f1f1;
-  padding: 0 10px;
-  min-height: 34px;
-  background-color: #fcfcfc;
-  border-radius: 2px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  word-break: break-all;
-}
-
-.form-readonly.textarea {
-  min-height: 85px;
-  display: block;
-}
-
 /* 内嵌到枚举详情页时，搜索区沿用外层卡片，不再保留独立的宫格间距。 */
-
-.enum-page :deep(.enum-detail-dialog .el-form-item) {
-  margin-bottom: 16px;
-}
-
-.enum-page :deep(.enum-detail-dialog .el-dialog__header) {
-  padding: 9px 20px;
-  background: #f8f8f8;
-}
-
-.enum-page :deep(.enum-detail-dialog .el-dialog__body) {
-  padding: 20px 40px !important;
-}
-
-.enum-page :deep(.enum-detail-dialog .el-dialog__footer) {
-  padding: 10px 20px 20px;
-  border-top: 1px solid #f1f1f1;
-}
-
-.enum-page :deep(.enum-detail-dialog .el-dialog__footer .el-button) {
-  min-width: 56px;
-  height: 32px;
-  padding: 8px 12px;
-  font-size: 12px;
-}
-
-@media (max-width: 768px) {
-  .enum-page :deep(.enum-detail-dialog .el-dialog__body) {
-    padding: 20px 16px !important;
-  }
-}
 
 .enum-page :deep(.el-dialog) {
   max-width: calc(100vw - 32px);
-}
-
-.enum-page :deep(.el-dialog__footer .el-button) {
-  min-width: 56px;
-  height: 32px;
-  padding: 8px 12px;
 }
 
 .character-count :deep(.el-input__count)::after {

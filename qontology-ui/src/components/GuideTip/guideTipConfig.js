@@ -69,12 +69,9 @@
  * 5. 内容长度：内容过长时可分段或换行，保证显示效果。
  */
 
-// 定义文档基础路径
-const DOCS_BASE_URL = 'https://qontology.qiantong.tech';
-
 export const guideTipConfig = {
     'om/overview': {
-        title: '项目概览',
+        title: '项目概览<span class="tip-unbold"> —— 总览项目资产与建模进展</span>',
         content: '汇总当前项目版本的建模目标、语义资产和本体模型，查看资产规模、建模进展与质量情况。',
         type: 'remind',
         version: '1.0'
@@ -110,7 +107,7 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'om/object/type.list': {
-        title: '对象类型',
+        title: '对象类型<span class="tip-unbold"> —— 定义业务对象与层级结构</span>',
         content: '定义业务对象及其层级结构，维护对象属性和数据类型配置，并关联建模目标，形成可复用的业务概念模型。',
         type: 'remind',
         version: '1.0'

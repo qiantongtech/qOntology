@@ -71,6 +71,8 @@ public class OmTargetTaskServiceImpl extends ServiceImpl<OmTargetTaskMapper, OmT
      */
     @Override
     public Long createOmTargetTask(OmTargetTaskSaveReqVO createReqVO) {
+        createReqVO.setTaskName(createReqVO.getTaskName().trim());
+        createReqVO.setTaskExplain(createReqVO.getTaskExplain().trim());
         OmTargetTaskDO dictType = BeanUtils.toBean(createReqVO, OmTargetTaskDO.class);
         baseMapper.insert(dictType);
         // 同时修改目标表

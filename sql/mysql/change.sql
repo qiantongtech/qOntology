@@ -217,3 +217,44 @@ WHERE `workspace_id` = 1001
         OR (`enum_id` = 10 AND `enum_type` = 'supplier_category')
         OR (`enum_id` = 11 AND `enum_type` = 'organization_category')
   );
+
+-- ============================================================================
+-- 建模目标验证任务：新增任务名称
+-- ============================================================================
+
+-- 添加时间：2026-11-04 19:34:52（北京时间）
+ALTER TABLE `om_target_task`
+    ADD COLUMN `task_name` VARCHAR(256) NULL COMMENT '任务名称' AFTER `target_id`;
+
+-- 添加时间：2026-11-04 19:34:52（北京时间）
+-- 补齐历史任务名称，保留已有名称和验证结论。
+UPDATE `om_target_task`
+SET `task_name` = CONCAT('建模目标验证任务-', `id`)
+WHERE `task_name` IS NULL
+   OR TRIM(`task_name`) = '';
+
+-- ============================================================================
+-- 恢复业务数据类型启用状态；已存在字段时保留原有状态及配置。
+-- ============================================================================
+
+-- 添加时间：2026-11-05 09:11:05（北京时间）
+SET @om_data_type_status_ddl = IF(
+    EXISTS (
+        SELECT 1
+        FROM `information_schema`.`COLUMNS`
+        WHERE `TABLE_SCHEMA` = DATABASE()
+          AND `TABLE_NAME` = 'om_data_type'
+          AND `COLUMN_NAME` = 'status'
+    ),
+    'SELECT 1',
+    'ALTER TABLE `om_data_type` ADD COLUMN `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT ''状态;0：禁用，1：启用'' AFTER `enum_source`'
+);
+
+-- 添加时间：2026-11-05 09:11:05（北京时间）
+PREPARE om_data_type_status_stmt FROM @om_data_type_status_ddl;
+
+-- 添加时间：2026-11-05 09:11:05（北京时间）
+EXECUTE om_data_type_status_stmt;
+
+-- 添加时间：2026-11-05 09:11:05（北京时间）
+DEALLOCATE PREPARE om_data_type_status_stmt;

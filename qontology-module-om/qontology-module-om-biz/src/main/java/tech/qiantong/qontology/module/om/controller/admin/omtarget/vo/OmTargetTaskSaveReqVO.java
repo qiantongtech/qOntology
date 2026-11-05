@@ -45,6 +45,11 @@ public class OmTargetTaskSaveReqVO extends BaseEntity {
     @NotNull(message = "目标id不能为空")
     private Long targetId;
 
+    @Schema(description = "任务名称：概括本次建模目标验证的范围或目的")
+    @NotBlank(message = "任务名称不能为空")
+    @Size(max = 256, message = "任务名称长度不能超过256个字符")
+    private String taskName;
+
     @Schema(description = "验证结果", example = "")
     @NotNull(message = "验证结果不能为空")
     private AcceptStatusEnum acceptResult;

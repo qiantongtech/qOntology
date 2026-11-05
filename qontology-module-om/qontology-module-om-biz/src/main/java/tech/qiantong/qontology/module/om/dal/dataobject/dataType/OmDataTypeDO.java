@@ -41,6 +41,10 @@ import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
 @EqualsAndHashCode(callSuper = true)
 public class OmDataTypeDO extends BaseEntity {
 
+    /** 状态：0 禁用，1 启用。 */
+    private Integer status;
+
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 

@@ -66,6 +66,7 @@ public interface OmDataTypeMapper extends BaseMapperX<OmDataTypeDO> {
                 .eq(OmDataTypeDO::getVersionId, reqVO.getVersionId())
                 .likeIfPresent(OmDataTypeDO::getName, reqVO.getName())
                 .eqIfPresent(OmDataTypeDO::getDataType, reqVO.getDataType())
+                .eqIfPresent(OmDataTypeDO::getStatus, reqVO.getStatus())
                 .eqIfPresent(OmDataTypeDO::getDescription, reqVO.getDescription())
                 .eqIfPresent(OmDataTypeDO::getUnit, reqVO.getUnit())
                 .eqIfPresent(OmDataTypeDO::getDecimalPlaces, reqVO.getDecimalPlaces())

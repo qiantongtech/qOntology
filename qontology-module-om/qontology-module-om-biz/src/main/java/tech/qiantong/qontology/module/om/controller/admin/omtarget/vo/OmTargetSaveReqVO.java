@@ -45,17 +45,17 @@ public class OmTargetSaveReqVO extends BaseEntity {
     @Schema(description = "项目版本id", example = "")
     private Long versionId;
 
-    @Schema(description = "目标问题", example = "")
+    @Schema(description = "目标问题：本次建模需要回答的具体业务问题", example = "")
     @NotBlank(message = "目标问题不能为空")
     @Size(max = 256, message = "目标问题长度不能超过256个字符")
     private String question;
 
-    @Schema(description = "问题来源", example = "")
+    @Schema(description = "问题来源：提出问题的部门、业务角色或需求材料", example = "")
     @NotBlank(message = "问题来源不能为空")
     @Size(max = 256, message = "问题来源长度不能超过256个字符")
     private String questionSource;
 
-    @Schema(description = "业务场景", example = "")
+    @Schema(description = "业务场景：问题发生的业务流程、参与角色和使用情境", example = "")
     @NotBlank(message = "业务场景不能为空")
     @Size(max = 256, message = "业务场景长度不能超过256个字符")
     private String businessScenarios;
@@ -64,7 +64,7 @@ public class OmTargetSaveReqVO extends BaseEntity {
     @NotNull(message = "优先级不能为空")
     private TargetPriorityEnum priority;
 
-    @Schema(description = "验收标准", example = "")
+    @Schema(description = "验收标准：用于判断建模目标是否达成的明确条件", example = "")
     @NotBlank(message = "验收标准不能为空")
     @Size(max = 256, message = "验收标准长度不能超过256个字符")
     private String acceptCriterion;

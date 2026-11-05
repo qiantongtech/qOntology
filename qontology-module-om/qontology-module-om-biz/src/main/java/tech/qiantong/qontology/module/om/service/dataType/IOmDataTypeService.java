@@ -36,6 +36,9 @@ import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
  * @date 2026-10-16
  */
 public interface IOmDataTypeService extends IService<OmDataTypeDO> {
+
+    /** 仅更新指定版本下业务数据类型的启用状态。 */
+    int updateOmDataTypeStatus(Long id, Long versionId, Integer status);
     /**
      * 获得数据类型分页列表
      *

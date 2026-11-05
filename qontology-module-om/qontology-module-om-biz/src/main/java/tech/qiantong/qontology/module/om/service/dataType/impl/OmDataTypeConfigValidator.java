@@ -11,6 +11,8 @@ final class OmDataTypeConfigValidator {
     private OmDataTypeConfigValidator() {}
 
     static void normalize(OmDataTypeSaveReqVO r) {
+        if (r.getStatus() == null) r.setStatus(1);
+        require(r.getStatus() == 0 || r.getStatus() == 1, "状态只能为启用或禁用");
         DataTypeEnum type = r.getDataType();
         require(type != null, "请选择业务数据类型");
         if (type == DataTypeEnum.TEXT) {

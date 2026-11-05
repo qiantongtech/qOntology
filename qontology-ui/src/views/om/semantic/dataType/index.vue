@@ -76,6 +76,16 @@
               >{{ line }}</div>
             </div>
           </template>
+          <template #status="{ row }">
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
+              :inactive-value="0"
+              :loading="statusSaving[row.id] === true"
+              :disabled="!auth.hasPermi('om:dataType:datatype:edit') || statusSaving[row.id] === true"
+              @change="value => handleStatusChange(row, value)"
+            />
+          </template>
           <template #createBy="scope">
             <div class="flex-column overflow-hidden">
               <span class="text-ellipsis" :title="scope.row.createBy || ''">{{ scope.row.createBy || "-" }}</span>
@@ -132,12 +142,22 @@
       :data-type-options="basic_data_type"
       :fixed-enum-type="props.enumType"
       :saving="saving"
-      :show-hint="false"
-      :description-max-length="200"
+      :show-hint="true"
+      :description-max-length="256"
       :append-to="$refs['app-container']"
       @cancel="cancel"
       @submit="submitForm"
     >
+      <template #before-description="{ form: draft }">
+        <qt-form-item
+          label="状态"
+          prop="status"
+          class="row-full"
+          tip="启用后可作为业务数据类型使用，禁用后保留已有配置。"
+        >
+          <el-radio-group v-model="draft.status"><el-radio v-for="item in project_status" :key="item.value" :value="Number(item.value)">{{ item.label }}</el-radio></el-radio-group>
+        </qt-form-item>
+      </template>
       <template #enum-source="{ form: draft }">
         <qt-form-item label="枚举来源" prop="enumSource" class="row-full">
           <el-radio-group
@@ -190,6 +210,7 @@
         label-width="110px"
         class="data-type-detail-form"
       >
+
         <el-row :gutter="20">
           <el-col :span="24">
             <qt-form-item label="业务数据名称" prop="name">
@@ -326,6 +347,13 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="24">
+            <qt-form-item label="状态" prop="status">
+              <dict-tag :options="project_status" :value="form.status" class="con-value access-tag" />
+            </qt-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24">
             <qt-form-item label="描述" prop="description">
               <div class="form-readonly textarea">
                 {{ form.description || "-" }}
@@ -354,11 +382,13 @@
 </template>
 
 <script setup name="OmDataType">
+import auth from "@/plugins/auth";
 import {
   addDataType,
   delDataType,
   getDataType,
   listDataType,
+  updateDataTypeStatus,
   updateDataType,
 } from "@/api/om/dataType/dataType";
 import { getEnumTypeDict } from "@/api/om/dataType/dataType";
@@ -376,7 +406,8 @@ const tableRef = ref();
 const { creatorPhones } = useCreatorPhones();
 const saving = ref(false);
 const { proxy } = getCurrentInstance();
-const { basic_data_type } = proxy.useDict("basic_data_type");
+const { basic_data_type, project_status } = proxy.useDict("basic_data_type", "project_status");
+const statusSaving = reactive({});
 
 const dataTypeList = ref([]);
 
@@ -409,17 +440,19 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     name: null,
+    status: null,
     dataType: null,
     createTime: null,
     orderByColumn: defaultSort.value.prop,
     isAsc: defaultSort.value.order,
   },
   rules: {
+    status: [{ required: true, type: "number", message: "请选择状态", trigger: "change" }],
     name: [
       { required: true, message: "名称不能为空", trigger: "blur" },
       { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
     ],
-    description: [{ max: 200, message: "描述不能超过200个字符", trigger: "blur" }],
+    description: [{ max: 256, message: "描述不能超过256个字符", trigger: "blur" }],
     enumSource: [{ required: true, message: "请选择枚举来源", trigger: "change" }],
     enumType: [{ required: true, message: "请选择枚举类型", trigger: "change" }],
     dataType: [
@@ -570,6 +603,7 @@ const tableColumns = reactive([
     minWidth: 220,
     align: "left",
   },
+  { label: "状态", prop: "status", slot: "status", width: 90, align: "center" },
   {
     label: "创建人",
     prop: "createBy",
@@ -599,6 +633,7 @@ const tableColumns = reactive([
 const searchItems = computed(() => [
   { label: "业务数据名称", prop: "name", component: { is: "input" } },
   { label: "业务数据类型", prop: "dataType", component: { is: "select", options: basic_data_type.value } },
+  { label: "状态", prop: "status", component: { is: "select", options: project_status.value } },
 ]);
 const listActions = { getList };
 const tableConfig = {
@@ -644,6 +679,21 @@ watch(
   { immediate: true },
 );
 
+async function handleStatusChange(row, value) {
+  const previous = value === 1 ? 0 : 1;
+  const submittingVersion = versionId.value;
+  statusSaving[row.id] = true;
+  try {
+    await proxy.$modal.confirm(`确认要${value === 1 ? '启用' : '禁用'}业务数据类型“${row.name}”吗？`);
+    if (submittingVersion !== versionId.value) { row.status = previous; return; }
+    await updateDataTypeStatus({ id: row.id, versionId: submittingVersion, status: value });
+    if (submittingVersion !== versionId.value) return;
+    proxy.$modal.msgSuccess('操作成功');
+    await getList();
+  } catch { row.status = previous; }
+  finally { delete statusSaving[row.id]; }
+}
+
 /** 查询数据类型列表 */
 async function getList() {
   const request = ++listRequest;
@@ -667,7 +717,7 @@ async function getList() {
         } : {}),
       });
     if (request !== listRequest) return;
-    dataTypeList.value = response.data.rows;
+    dataTypeList.value = (response.data.rows || []).map(row => ({ ...row, status: Number(row.status ?? 1) }));
     total.value = response.data.total;
     handleSelectionChange([]);
   } finally {
@@ -736,6 +786,7 @@ function cancel() {
 function reset() {
   form.value = {
     id: null,
+    status: 1,
     versionId: versionId.value,
     enumType: props.enumType ?? null,
     enumSource: "PROJECT",
@@ -806,7 +857,7 @@ function handleUpdate(row) {
   const _id = row.id || ids.value;
   getDataType(_id, versionId.value).then((response) => {
     if (request !== detailRequest) return;
-    form.value = response.data;
+    form.value = { ...response.data, status: Number(response.data.status ?? 1) };
     open.value = true;
     title.value = "修改业务数据类型";
   });
@@ -819,7 +870,7 @@ function handleDetail(row) {
   const _id = row.id || ids.value;
   getDataType(_id, versionId.value).then((response) => {
     if (request !== detailRequest) return;
-    form.value = response.data;
+    form.value = { ...response.data, status: Number(response.data.status ?? 1) };
     openDetail.value = true;
     title.value = "业务数据类型详情";
   });

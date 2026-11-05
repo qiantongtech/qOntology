@@ -38,6 +38,10 @@ import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
 @Data
 public class OmDataTypeRespVO implements Serializable {
 
+    /** 状态：0 禁用，1 启用。 */
+    private Integer status;
+
+
     /** 序列化版本号 */
     private static final long serialVersionUID = 1L;
 

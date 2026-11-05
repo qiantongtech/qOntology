@@ -47,6 +47,10 @@ public class OmTargetTaskRespVO implements Serializable {
     @Schema(description = "目标id", example = "")
     private Long targetId;
 
+    @Excel(name = "任务名称")
+    @Schema(description = "任务名称")
+    private String taskName;
+
     @Excel(name = "验证结果")
     @Schema(description = "验证结果", example = "")
     private AcceptStatusEnum acceptResult;

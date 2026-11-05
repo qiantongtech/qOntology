@@ -52,6 +52,9 @@ public class OmTargetTaskDO extends BaseEntity {
      */
     private Long targetId;
 
+    /** 任务名称：概括本次建模目标验证的范围或目的 */
+    private String taskName;
+
     /**
      * 验证结果
      */

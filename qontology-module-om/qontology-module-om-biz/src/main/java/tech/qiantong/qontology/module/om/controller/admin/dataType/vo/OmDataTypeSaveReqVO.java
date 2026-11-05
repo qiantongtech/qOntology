@@ -20,6 +20,7 @@ package tech.qiantong.qontology.module.om.controller.admin.dataType.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -43,6 +44,12 @@ import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
 @Data
 public class OmDataTypeSaveReqVO extends BaseEntity {
 
+    /** 状态：0 禁用，1 启用。 */
+    @Min(value = 0, message = "状态只能为启用或禁用")
+    @Max(value = 1, message = "状态只能为启用或禁用")
+    private Integer status;
+
+
     /** 序列化版本号 */
     private static final long serialVersionUID = 1L;
 
@@ -64,7 +71,7 @@ public class OmDataTypeSaveReqVO extends BaseEntity {
     private DataTypeEnum dataType;
 
     @Schema(description = "描述", example = "")
-    @Size(max = 200, message = "描述长度不能超过200个字符")
+    @Size(max = 256, message = "描述长度不能超过256个字符")
     private String description;
 
     @Schema(description = "整数、小数类型的计量单位，例如个、元；其他类型不使用", example = "")

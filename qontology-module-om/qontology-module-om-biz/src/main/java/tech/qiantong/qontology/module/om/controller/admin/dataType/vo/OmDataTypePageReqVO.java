@@ -19,6 +19,8 @@
 package tech.qiantong.qontology.module.om.controller.admin.dataType.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
@@ -33,6 +35,12 @@ import tech.qiantong.qontology.core.page.PageParam;
 @Schema(description = "数据类型 Request VO")
 @Data
 public class OmDataTypePageReqVO extends PageParam {
+
+    /** 状态：0 禁用，1 启用。 */
+    @Min(value = 0, message = "状态只能为启用或禁用")
+    @Max(value = 1, message = "状态只能为启用或禁用")
+    private Integer status;
+
 
     /** 序列化版本号 */
     private static final long serialVersionUID = 1L;

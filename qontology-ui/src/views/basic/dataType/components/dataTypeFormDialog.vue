@@ -22,7 +22,7 @@
     :title="title"
     width="800px"
     :append-to="appendTo"
-    :close-on-click-modal="false"
+    :close-on-click-modal="!saving"
     :close-on-press-escape="!saving"
     :show-close="!saving"
     :before-close="handleBeforeClose"
@@ -49,10 +49,20 @@
       class="column-form"
       @submit.prevent="submitForm"
     >
-      <qt-form-item label="业务数据名称" prop="name" class="row-full">
-        <el-input v-model="localForm.name" :maxlength="128" placeholder="请输入名称" />
+      <qt-form-item
+        label="业务数据名称"
+        prop="name"
+        class="row-full"
+        tip="填写可复用的业务字段名称，例如订单金额、供应商类别。"
+      >
+        <el-input v-model="localForm.name" :maxlength="128" placeholder="请输入业务数据名称，例如：订单金额" />
       </qt-form-item>
-      <qt-form-item label="业务数据类型" prop="dataType" class="row-full">
+      <qt-form-item
+        label="业务数据类型"
+        prop="dataType"
+        class="row-full"
+        tip="选择基础取值类型，并配置其对应的长度、数值、日期或枚举约束。"
+      >
         <!-- 类型选择只切换配置区，不触发选择框校验；点击确定时统一校验。 -->
         <el-select
           v-model="localForm.dataType"
@@ -70,7 +80,12 @@
       </qt-form-item>
 
       <template v-if="localForm.dataType === DATA_TYPE.TEXT">
-        <qt-form-item label="格式校验" prop="validationType" class="row-full">
+        <qt-form-item
+          label="格式校验"
+          prop="validationType"
+          class="row-full"
+          tip="选择文本需要满足的格式规则，选择无校验时只检查长度约束。"
+        >
           <el-select v-model="localForm.validationType" placeholder="请选择格式校验">
             <el-option
               v-for="item in validationOptions"
@@ -80,7 +95,12 @@
             />
           </el-select>
         </qt-form-item>
-        <qt-form-item label="最小长度" prop="minLength" class="row-full">
+        <qt-form-item
+          label="最小长度"
+          prop="minLength"
+          class="row-full"
+          tip="指定允许输入的最少字符数，留空表示不限制。"
+        >
           <el-input-number
             v-model="localForm.minLength"
             :min="0"
@@ -172,6 +192,7 @@
         label="单位"
         prop="unit"
         class="row-full"
+        tip="填写数值的业务计量单位，例如元、件或千克。"
       >
         <el-input v-model="localForm.unit" :maxlength="32" placeholder="请输入单位" />
       </qt-form-item>
@@ -253,14 +274,19 @@
         </slot>
       </qt-form-item>
       <slot name="before-description" :form="localForm" />
-      <qt-form-item label="描述" prop="description" class="row-full">
+      <qt-form-item
+        label="描述"
+        prop="description"
+        class="row-full"
+        tip="说明该数据类型的业务含义、取值口径和适用场景，最多256个字符。"
+      >
         <el-input
           v-model="localForm.description"
           type="textarea"
           :rows="3"
           :maxlength="descriptionMaxLength"
           show-word-limit
-          placeholder="请输入描述"
+          placeholder="请输入描述，说明业务含义、取值口径和适用场景"
         />
       </qt-form-item>
     </el-form>

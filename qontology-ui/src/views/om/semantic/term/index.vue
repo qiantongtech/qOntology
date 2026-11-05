@@ -136,112 +136,146 @@
       draggable
       @closed="clearValidation"
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护标准术语、英文名称和业务释义，统一业务概念的表达，为本体对象与属性提供一致的命名依据。"
+      />
       <el-form
         ref="termRef"
         :model="form"
         :rules="rules"
         label-width="90px"
+        class="column-form"
         @submit.prevent="submitForm"
       >
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="术语名称" prop="stdName">
+
+        <qt-form-item
+          class="row-full"
+          tip="填写业务中使用的标准概念名称，作为对象类型和属性命名的依据。"
+          label="术语名称"
+          prop="stdName"
+        >
+          <el-input
+            v-model="form.stdName"
+            placeholder="请输入术语名称"
+            :maxlength="256"
+          />
+        </qt-form-item>
+
+        <qt-form-item
+          class="row-full"
+          tip="使用英文字母开头，后续仅支持英文字母、数字和下划线，用于统一英文标识。"
+          label="英文名称"
+          prop="enName"
+        >
+          <el-input
+            v-model="form.enName"
+            :formatter="formatEnglishName"
+            :parser="formatEnglishName"
+            placeholder="请输入英文名称，以英文字母开头，后续支持英文字母、数字和下划线"
+            :maxlength="256"
+          />
+        </qt-form-item>
+
+        <qt-form-item
+          class="row-full"
+          tip="填写同一业务概念的其他叫法；可逐条新增，避免重复别名。"
+          label="术语别名"
+          prop="alias"
+        >
+          <div class="alias-list">
+            <div v-for="(item, index) in aliasRows" :key="item.id" class="alias-row">
               <el-input
-                v-model="form.stdName"
-                placeholder="请输入术语名称"
-                maxlength="256个字符"
+                v-model="item.value"
+                placeholder="请输入术语别名"
+                :maxlength="1024"
+                :disabled="saving"
+                @input="syncAliases"
+                @keydown.enter.stop.prevent="addAliasRow"
               />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="英文名称" prop="enName">
-              <el-input
-                v-model="form.enName"
-                :formatter="formatEnglishName"
-                :parser="formatEnglishName"
-                placeholder="请输入英文名称，以英文字母开头，后续支持英文字母、数字和下划线"
-                :maxlength="256"
+              <el-button
+                v-if="aliasRows.length > 1"
+                size="small"
+                type="danger"
+                icon="Delete"
+                :disabled="saving"
+                :aria-label="`删除第${index + 1}个术语别名`"
+                @click="removeAliasRow(index)"
               />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="术语别名" prop="alias">
-              <div class="alias-list">
-                <div v-for="(item, index) in aliasRows" :key="item.id" class="alias-row">
-                  <el-input
-                    v-model="item.value"
-                    placeholder="请输入术语别名"
-                    :maxlength="1024"
-                    :disabled="saving"
-                    @input="syncAliases"
-                    @keydown.enter.stop.prevent="addAliasRow"
-                  />
-                  <el-button
-                    v-if="aliasRows.length > 1"
-                    size="small"
-                    type="danger"
-                    icon="Delete"
-                    :disabled="saving"
-                    :aria-label="`删除第${index + 1}个术语别名`"
-                    @click="removeAliasRow(index)"
-                  />
-                  <el-button
-                    v-if="index === aliasRows.length - 1"
-                    size="small"
-                    type="primary"
-                    :disabled="saving"
-                    aria-label="新增术语别名"
-                    @click="addAliasRow"
-                  >+</el-button>
-                </div>
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="业务缩写" prop="abbr">
-              <el-input
-                v-model="form.abbr"
-                placeholder="请输入业务缩写"
-                maxlength="256个字符"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="状态" prop="status">
-              <el-radio-group v-model="form.status" :disabled="saving">
-                <el-radio v-for="dict in project_status" :key="Number(dict.value)" :value="Number(dict.value)">
-                  {{ dict.label }}
-                </el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="来源" prop="source">
-              <el-input
-                v-model="form.source"
-                class="term-character-count"
-                type="textarea"
-                :rows="3"
-                placeholder="请输入来源"
-                :maxlength="200"
-                show-word-limit
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="描述" prop="description">
-              <el-input
-                v-model="form.description"
-                class="term-character-count"
-                type="textarea"
-                :rows="4"
-                placeholder="请输入描述"
-                :maxlength="500"
-                show-word-limit
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+              <el-button
+                v-if="index === aliasRows.length - 1"
+                size="small"
+                type="primary"
+                :disabled="saving"
+                aria-label="新增术语别名"
+                @click="addAliasRow"
+              >+</el-button>
+            </div>
+          </div>
+        </qt-form-item>
+
+        <qt-form-item
+          class="row-full"
+          tip="填写常用的简短业务标识，例如采购订单的业务缩写 PO。"
+          label="业务缩写"
+          prop="abbr"
+        >
+          <el-input
+            v-model="form.abbr"
+            placeholder="请输入业务缩写"
+            :maxlength="256"
+          />
+        </qt-form-item>
+
+        <qt-form-item
+          class="row-full"
+          tip="启用后可用于业务建模，禁用后保留历史定义。"
+          label="状态"
+          prop="status"
+        >
+          <el-radio-group v-model="form.status" :disabled="saving">
+            <el-radio v-for="dict in project_status" :key="Number(dict.value)" :value="Number(dict.value)">
+              {{ dict.label }}
+            </el-radio>
+          </el-radio-group>
+        </qt-form-item>
+
+        <qt-form-item
+          class="row-full"
+          tip="说明该术语的业务出处，例如制度规范、需求材料或提出部门。"
+          label="来源"
+          prop="source"
+        >
+          <el-input
+            v-model="form.source"
+            class="term-character-count"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入来源"
+            :maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
+
+        <qt-form-item
+          class="row-full"
+          tip="解释术语的业务含义、适用范围与概念边界，最多256个字符。"
+          label="描述"
+          prop="description"
+        >
+          <el-input
+            v-model="form.description"
+            class="term-character-count"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入描述"
+            :maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
+
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -438,10 +472,10 @@ const rules = {
       message: "来源不能为空",
       trigger: "blur",
     },
-    { max: 200, message: "来源长度不能超过200个字符", trigger: "blur" },
+    { max: 256, message: "来源长度不能超过256个字符", trigger: "blur" },
   ],
   description: [
-    { max: 500, message: "描述长度不能超过500个字符", trigger: "blur" },
+    { max: 256, message: "描述长度不能超过256个字符", trigger: "blur" },
   ],
 };
 // 列表数据由原有请求逻辑管理，保留版本隔离、请求顺序及删除后的分页处理。
@@ -766,17 +800,7 @@ async function handleDelete(row) {
   const ids = row ? [row.id] : [...selectedIds.value];
   if (!ids.length) return;
   try {
-    await ElMessageBox.confirm(
-      row
-        ? `确认删除术语“${row.stdName}”吗？`
-        : `确认删除选中的 ${ids.length} 条术语吗？`,
-      "删除确认",
-      {
-        type: "warning",
-        confirmButtonText: "删除",
-        cancelButtonText: "取消",
-      },
-    );
+    await proxy.$modal.confirm('是否确认删除术语编号为"' + ids.join(',') + '"的数据项？');
   } catch {
     return;
   }
@@ -847,58 +871,6 @@ onBeforeUnmount(() => {
 
 .term-detail-form {
   padding: 0;
-}
-
-.form-readonly {
-  box-sizing: border-box;
-  width: 100%;
-  border: 1px solid #f1f1f1;
-  padding: 0 10px;
-  min-height: 34px;
-  background-color: #fcfcfc;
-  border-radius: 2px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  word-break: break-all;
-}
-
-.form-readonly.textarea {
-  min-height: 85px;
-  display: block;
-}
-
-.term-page :deep(.term-detail-dialog .el-form-item) {
-  margin-bottom: 16px;
-}
-
-.term-page :deep(.term-detail-dialog .el-dialog__header) {
-  padding: 9px 20px;
-  background: #f8f8f8;
-}
-
-.term-page :deep(.term-detail-dialog .el-dialog__body) {
-  padding: 20px 40px !important;
-}
-
-.term-page :deep(.term-detail-dialog .el-dialog__footer) {
-  padding: 10px 20px 20px;
-  border-top: 1px solid #f1f1f1;
-}
-
-.term-page :deep(.term-detail-dialog .el-dialog__footer .el-button) {
-  min-width: 56px;
-  height: 32px;
-  padding: 8px 12px;
-  font-size: 12px;
-}
-
-@media (max-width: 768px) {
-  .term-page :deep(.term-detail-dialog .el-dialog__body) {
-    padding: 20px 16px !important;
-  }
 }
 
 .term-page :deep(.el-dialog) {

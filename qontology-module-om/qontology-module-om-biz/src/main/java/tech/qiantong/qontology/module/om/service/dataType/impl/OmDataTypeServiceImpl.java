@@ -20,6 +20,7 @@ package tech.qiantong.qontology.module.om.service.dataType.impl;
 
 import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
@@ -114,11 +115,24 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
     @Override
     public int updateOmDataType(OmDataTypeSaveReqVO updateReqVO) {
         if (updateReqVO.getId() == null) throw new ServiceException("数据类型编号不能为空", 601);
-        getOmDataTypeById(updateReqVO.getId(), updateReqVO.getVersionId());
+        OmDataTypeDO existing = getOmDataTypeById(updateReqVO.getId(), updateReqVO.getVersionId());
+        if (updateReqVO.getStatus() == null) updateReqVO.setStatus(existing.getStatus());
         validateDataType(updateReqVO);
         // 更新数据类型
         OmDataTypeDO updateObj = BeanUtils.toBean(updateReqVO, OmDataTypeDO.class);
         return omDataTypeMapper.updateById(updateObj);
+    }
+
+    @Override
+    public int updateOmDataTypeStatus(Long id, Long versionId, Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new ServiceException("状态只能为启用或禁用", 601);
+        }
+        getOmDataTypeById(id, versionId);
+        // 仅更新状态，避免配置字段的 ALWAYS 更新策略清空已有取值配置。
+        return omDataTypeMapper.update(null,
+            new UpdateWrapper<OmDataTypeDO>()
+                .eq("id", id).eq("version_id", versionId).set("status", status));
     }
 
     @Override

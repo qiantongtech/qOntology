@@ -66,3 +66,8 @@ export function delDataType(id, versionId) {
 export function getEnumTypeDict(versionId, enumSource) {
     return request({ url: '/om/dataType/enumOptions', method: 'get', params: { versionId, enumSource } });
 }
+
+// 单独保存状态，避免覆盖其他业务配置。
+export function updateDataTypeStatus(data) {
+    return request({ url: '/om/dataType/status', method: 'put', data });
+}

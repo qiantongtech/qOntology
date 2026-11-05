@@ -37,6 +37,7 @@ import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataType
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypePageReqVO;
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeSaveReqVO;
+import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeStatusReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
 import tech.qiantong.qontology.module.om.service.dataType.IOmDataTypeService;
 
@@ -130,6 +131,17 @@ public class OmDataTypeController extends BaseController {
     @PutMapping
     public CommonResult<Integer> edit(@Valid @RequestBody OmDataTypeSaveReqVO omDataType) {
         return CommonResult.toAjax(omDataTypeService.updateOmDataType(omDataType));
+    }
+
+    @Operation(summary = "修改业务数据类型状态")
+    @PreAuthorize("@ss.hasPermi('om:dataType:datatype:edit')")
+    @Log(title = "业务数据类型状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/status")
+    public CommonResult<Integer> updateStatus(
+        @Valid @RequestBody OmDataTypeStatusReqVO request
+    ) {
+        return CommonResult.toAjax(omDataTypeService.updateOmDataTypeStatus(
+            request.getId(), request.getVersionId(), request.getStatus()));
     }
 
     /**
