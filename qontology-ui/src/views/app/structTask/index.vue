@@ -54,18 +54,23 @@
 
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 负责人沿用姓名、灰色电话的双行样式，联系电话复用公共用户关联方法。 -->
-        <template #responsiblePerson="{row}">
+        <template #responsibleUser="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '—' }}</span>
-            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+            <span class="text-ellipsis" :title="row.responsiblePersonName || ''">{{
+                row.responsiblePersonName || "-"
+              }}</span>
+            <span v-if="creatorPhones[row.responsibleUserId]" class="desc-text">{{
+                creatorPhones[row.responsibleUserId]
+              }}</span>
           </div>
         </template>
+<!--     运行控制   -->
         <template #runControl="{ row }">
           <div class="flex-column fz12 run-control">
             <div class="flex-center mb2">
-              <span class="black-label mr5">任务状态:</span>
+              <span class="black-label mr5">发布状态:</span>
               <el-switch
-                v-model="row.enableStatus"
+                v-model="row.publishStatus"
                 :active-value="1"
                 :inactive-value="0"
                 @change="(value) => handleEnableChange(row, value)"
@@ -73,22 +78,16 @@
             </div>
             <div class="flex-center">
               <span class="black-label mr5">调度状态:</span>
-              <!-- 禁用开关由外层元素承接悬浮事件，确保任务关闭时仍可显示提示。 -->
-              <el-tooltip content="请先开启任务状态" placement="top" :disabled="row.enableStatus === 1">
-                <span class="schedule-switch-wrapper">
                   <el-switch
-                    v-model="row.updateStatus"
+                    v-model="row.schedulingStatus"
                     :active-value="0"
                     :inactive-value="1"
-                    :disabled="row.enableStatus !== 1"
                     @change="(value) => handleStatusChange(row, value)"
                   />
-                </span>
-              </el-tooltip>
             </div>
           </div>
         </template>
-
+<!--最近执行信息-->
         <template #lastExecute="{ row }">
           <div class="flex-column">
             <dict-tag
@@ -127,23 +126,23 @@
         </template>
 
         <template #action="{ row }">
+<!--          <el-button-->
+<!--              class="btn-icon-offset"-->
+<!--              link-->
+<!--              type="primary"-->
+<!--              icon="view"-->
+<!--              @click="handleDetail"-->
+<!--          >详情</el-button>-->
           <el-button
-              class="btn-icon-offset"
               link
               type="primary"
-              icon="view"
-              @click="handleDetail"
-          >详情</el-button
+              icon="VideoPlay"
+              :disabled="
+                  row.publishStatus == 1 || row.status != 2 || isRunning(row)
+                "
+              @click="handleRun(row)"
+          >执行一次</el-button
           >
-<!--          <el-button
-            link
-            type="primary"
-            icon="VideoPlay"
-            :disabled="row.publishStatus == 1 || isRunning(row)"
-            @click="extraction(row)"
-            v-hasPermi="['app:appStructTask:struct:edit']"
-            >执行</el-button
-          >-->
           <el-button
             link
             type="primary"
@@ -164,16 +163,7 @@
               >
             </template>
             <div class="task-action-list">
-              <el-button
-                link
-                type="primary"
-                icon="VideoPlay"
-                :disabled="
-                  row.publishStatus == 1 || row.status != 2 || isRunning(row)
-                "
-                @click="handleRun(row)"
-                >执行一次</el-button
-              >
+
               <el-button
                 class="btn-icon-offset"
                 link
@@ -197,6 +187,17 @@
             </div>
           </el-popover>
         </template>
+
+        <template #publishBy="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+                row.publishBy || "-"
+              }}</span>
+            <span v-if="creatorPhones[row.publisherId]" class="desc-text">{{
+                creatorPhones[row.publisherId]
+              }}</span>
+          </div>
+        </template>
       </qt-table>
     </qt-wrap>
 
@@ -209,13 +210,14 @@ import {
   listExtStruct,
   delExtStruct,
   extExecuteExtraction,
-  runStructTask,
+  runStructTask, strutCancelReleaseByTaskId, strutReleaseByTaskId,
 } from "@/api/app/structTask";
 import {useCreatorPhones} from '@/utils/useCreatorPhones';
 import { cronToZh } from "@/utils/cronUtils";
 import { timeAgo } from "@/utils/time";
 import { Clock } from "@element-plus/icons-vue";
 import TaskLogDialog from "@/views/app/taskLog/taskLogDialog.vue";
+import {cancelReleaseUnstructTask, releaseUnstructTask} from "@/api/app/unstructTask.js";
 
 const { proxy } = getCurrentInstance();
 const {creatorPhones} = useCreatorPhones();
@@ -254,7 +256,7 @@ const tableStore = reactive({
     table: {
       stripe: true,
       rowKey: "id",
-      defaultSort: { prop: "create_time", order: "descending" },
+      defaultSort: { prop: "createTime", order: "descending" },
       onSelectionChange: handleSelectionChange,
     },
   },
@@ -270,7 +272,7 @@ const tableStore = reactive({
     },
     {
       label: "任务信息",
-      minWidth: 260,
+      minWidth: 220,
       align: "left",
       info: {
         title: "name",
@@ -280,37 +282,36 @@ const tableStore = reactive({
     },
     {
       label: "最近执行信息",
-      width: 180,
+      width: 170,
       slot: "lastExecute",
       align: "left",
     },
     {
       label: "更新策略",
-      width: 250,
+      width: 210,
       slot: "updateStrategy",
       align: "left",
     },
-    { label: "运行控制", slot: "runControl", width: 150 },
-    {
-      label: "发布人",
-      width: 120,
-      align: "left",
-      list: [{ prop: "publishBy" }, { prop: "publishPhone" }],
-    },
+    { label: "运行控制", slot: "runControl", width: 140 },
     {
       label: "负责人",
-      prop: "createBy",
-      slot: "responsiblePerson",
-      width: 130,
+      slot: "responsibleUser",
+      width: 120,
       align: "left",
       headerAlign: "left",
       showOverflowTooltip: {effect: "light"},
     },
     {
+      label: "发布人",
+      width: 110,
+      align: "left",
+      slot: "publishBy"
+    },
+    {
       label: "发布时间",
       prop: "publishTime",
       date: true,
-      width: 160,
+      width: 165,
       sortable: "custom",
       sortableKey: "publish_time",
       sortOrders: ["descending", "ascending"],
@@ -319,7 +320,7 @@ const tableStore = reactive({
       label: "创建时间",
       prop: "createTime",
       date: true,
-      width: 160,
+      width: 165,
       sortable: "custom",
       sortableKey: "create_time",
       sortOrders: ["descending", "ascending"],
@@ -392,12 +393,12 @@ function formatDuration(value) {
   return `${Math.floor(seconds / 60)}分${seconds % 60}秒`;
 }
 
-/** 任务开关映射已有 validFlag，调度沿用 0 开启、1 关闭的接口约定。 */
+/** 发布状态以后端 publishStatus 为准并归一为数字，供 el-switch 按数字回显；调度沿用 0 开启、1 关闭的接口约定。 */
 function formatData(rows) {
   return rows.map((row) => ({
     ...row,
-    enableStatus: Number(row.validFlag ?? 1),
-    updateStatus: Number(row.updateStatus ?? 1),
+    publishStatus: Number(row.publishStatus ?? 0),
+    schedulingStatus: Number(row.schedulingStatus ?? 1),
   }));
 }
 
@@ -409,18 +410,40 @@ function handleSelectionChange(selection) {
 
 /** 任务关闭时拦截调度操作，并恢复开关变更前的状态。 */
 function handleStatusChange(row, value) {
-  if (row.enableStatus !== 1) {
-    row.updateStatus = value === 0 ? 1 : 0;
+  if (row.publishStatus !== 1) {
+    row.schedulingStatus = value === 0 ? 1 : 0;
     proxy.$modal.msgWarning('请先开启任务状态');
   }
 }
 
 /** 调度上线期间禁止关闭任务，需先下线调度后再关闭。 */
 function handleEnableChange(row, value) {
-  if (value === 0 && row.updateStatus === 0) {
-    // v-model 已更新开关值，拦截关闭时需恢复任务的开启状态。
-    row.enableStatus = 1;
-    proxy.$modal.msgWarning('调度上线中，请先下线调度！');
+  if (value === 0){
+    proxy.$modal.confirm("是否确认取消发布？").then(() => {
+      const request = strutCancelReleaseByTaskId({taskId:row.id});
+      request.then((response) => {
+        if (response && response.code === 200) {
+          proxy.$modal.msgSuccess("取消发布成功");
+          tableRef.value.getList();
+        }
+      }).catch(() => {
+        row.publishStatus = !value;
+        proxy.$modal.msgError("取消发布失败");
+      });
+    });
+  }else {
+    proxy.$modal.confirm("是否确认发布？").then(() => {
+      const request = strutReleaseByTaskId({taskId:row.id});
+      request.then((response) => {
+        if (response && response.code === 200) {
+          proxy.$modal.msgSuccess("发布成功");
+          tableRef.value.getList();
+        }
+      }).catch(() => {
+        row.publishStatus = !value;
+        proxy.$modal.msgError("发布失败");
+      });
+    });
   }
 }
 

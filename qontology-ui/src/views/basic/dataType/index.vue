@@ -160,7 +160,7 @@
           {{ title }}
         </span>
       </template>
-      <el-form ref="dataTypeRef" :model="form" label-width="80px">
+      <el-form ref="dataTypeRef" :model="form" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="名称" prop="name">

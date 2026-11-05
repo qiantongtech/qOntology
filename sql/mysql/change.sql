@@ -26,3 +26,15 @@ ALTER TABLE qontology_dev.app_unstruct_task ADD responsible_user_id BIGINT NULL 
 ALTER TABLE qontology_dev.app_unstruct_task CHANGE responsible_user_id responsible_user_id BIGINT NULL COMMENT '负责人id' AFTER publisher_phone;
 ALTER TABLE qontology_dev.app_unstruct_task ADD responsible_person_name varchar(128) NULL COMMENT '负责人姓名';
 ALTER TABLE qontology_dev.app_unstruct_task CHANGE responsible_person_name responsible_person_name varchar(128) NULL COMMENT '负责人姓名' AFTER responsible_user_id;
+
+
+ALTER TABLE qontology_dev.app_struct_task ADD last_execute_time DATETIME NULL COMMENT '最后执行时间';
+ALTER TABLE qontology_dev.app_struct_task CHANGE last_execute_time last_execute_time DATETIME NULL COMMENT '最后执行时间' AFTER datasource_id;
+ALTER TABLE qontology_dev.app_struct_task ADD execute_duration int NULL COMMENT '执行时长';
+ALTER TABLE qontology_dev.app_struct_task CHANGE execute_duration execute_duration int NULL COMMENT '执行时长' AFTER last_execute_time;
+ALTER TABLE qontology_dev.app_struct_task ADD scheduling_status tinyint NULL COMMENT '调度状态';
+ALTER TABLE qontology_dev.app_struct_task CHANGE scheduling_status scheduling_status tinyint NULL COMMENT '调度状态' AFTER execute_duration;
+ALTER TABLE qontology_dev.app_struct_task ADD responsible_user_id bigint NULL COMMENT '负责人id';
+ALTER TABLE qontology_dev.app_struct_task CHANGE responsible_user_id responsible_user_id bigint NULL COMMENT '负责人id' AFTER description;
+ALTER TABLE qontology_dev.app_struct_task ADD responsible_person_name varchar(128) NULL COMMENT '负责人姓名';
+ALTER TABLE qontology_dev.app_struct_task CHANGE responsible_person_name responsible_person_name varchar(128) NULL COMMENT '负责人姓名' AFTER responsible_user_id;

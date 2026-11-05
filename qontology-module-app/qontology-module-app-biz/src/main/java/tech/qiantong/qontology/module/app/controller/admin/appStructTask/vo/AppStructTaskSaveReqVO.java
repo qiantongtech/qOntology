@@ -20,13 +20,12 @@ package tech.qiantong.qontology.module.app.controller.admin.appStructTask.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import tech.qiantong.qontology.core.annotation.Excel;
-import tech.qiantong.qontology.core.domain.BaseEntity;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
+import tech.qiantong.qontology.core.domain.BaseEntity;
+
 import java.util.Date;
 
 /**
@@ -115,6 +114,22 @@ public class AppStructTaskSaveReqVO extends BaseEntity {
     @Size(max = 256, message = "备注长度不能超过256个字符")
     private String remark;
 
+    @Schema(description = "最后执行时间", example = "")
+    private Date lastExecuteTime;
+    @Schema(description = "执行时长", example = "")
+    private Integer executeDuration;
+    @Schema(description = "调度状态", example = "")
+    private Integer schedulingStatus;
+
+    /**
+     * 责任人用户编号；允许显式更新为空，以支持清除责任人。
+     */
+    private Long responsibleUserId;
+
+    /**
+     * 保存项目时从用户资料读取的责任人姓名快照。
+     */
+    private String responsiblePersonName;
 
 }
 

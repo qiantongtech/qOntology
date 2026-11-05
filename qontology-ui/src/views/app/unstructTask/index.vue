@@ -134,7 +134,7 @@
                 icon="Document"
                 link
                 type="primary"
-                @click="handleDetail">
+                @click="handleDetail(row)">
                 详情
               </el-button>
             </div>
@@ -272,6 +272,124 @@
       >
     </el-dialog>
 
+    <!-- 非结构化抽取任务详情对话框 -->
+    <el-dialog
+      v-model="openDetail"
+      :append-to="appContainer"
+      draggable
+      width="800px"
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          {{ detailTitle }}
+        </span>
+      </template>
+      <el-form
+        :model="detailForm"
+        label-width="80px"
+        class="column-form"
+      >
+        <el-form-item label="任务名称" prop="name" class="row-full">
+          <div class="form-readonly">
+            {{ detailForm.name || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="任务状态" prop="status">
+          <dict-tag
+            class="con-value"
+            :options="app_task_status"
+            :value="detailForm.status"
+          />
+        </el-form-item>
+        <el-form-item label="发布状态">
+          <div class="form-readonly">
+            {{ detailForm.publishStatus === 1 ? "已发布" : "未发布" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="责任人">
+          <div class="form-readonly">
+            {{ detailForm.responsiblePersonName || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="联系电话">
+          <div class="form-readonly">
+            {{ detailForm.responsiblePhone || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="最后执行">
+          <div class="form-readonly">
+            {{ detailForm.lastExecuteTime || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="执行时长">
+          <div class="form-readonly">
+            {{ formatDuration(detailForm.executeDuration) }}
+          </div>
+        </el-form-item>
+        <el-form-item label="本体文件" prop="ttlFileName" class="row-full">
+          <div class="form-readonly">
+            {{ detailForm.ttlFileName || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="导入文件" class="row-full">
+          <div class="form-readonly detail-file-list">
+            <template v-if="detailForm.sourceFiles && detailForm.sourceFiles.length">
+              <el-tag
+                v-for="file in detailForm.sourceFiles"
+                :key="file.docId"
+                type="info"
+                class="detail-file-tag"
+                :title="file.docName"
+              >
+                {{ file.docName || "—" }}
+              </el-tag>
+            </template>
+            <span v-else>—</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="描述" prop="remark" class="row-full">
+          <div class="form-readonly textarea">
+            {{ detailForm.remark || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="发布人">
+          <div class="form-readonly">
+            {{ detailForm.publishBy || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="发布时间">
+          <div class="form-readonly">
+            {{ detailForm.publishTime || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="修改人" prop="updateBy">
+          <div class="form-readonly">
+            {{ detailForm.updateBy || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="修改时间" prop="updateTime">
+          <div class="form-readonly">
+            {{ detailForm.updateTime || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="创建人" prop="createBy">
+          <div class="form-readonly">
+            {{ detailForm.createBy || "—" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="创建时间" prop="createTime">
+          <div class="form-readonly">
+            {{ detailForm.createTime || "—" }}
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button size="mini" @click="openDetail = false">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
     <FileMultiple
       ref="fileMultipleRef"
       :append-to="appContainer"
@@ -313,6 +431,9 @@ const taskLogDialogRef = ref();
 const submitting = ref(false);
 const open = ref(false);
 const title = ref("");
+const openDetail = ref(false);
+const detailTitle = ref("");
+const detailForm = ref({});
 const selectedRows = ref([]);
 const multiple = ref(true);
 const form = ref({});
@@ -689,9 +810,25 @@ function showLogs(row) {
   taskLogDialogRef.value.show(row.id, 1);
 }
 
-/** 任务详情页面待开发。 */
-function handleDetail() {
-  proxy.$modal.msg("功能开发中");
+/** 打开非结构化抽取任务详情弹窗。 */
+function handleDetail(row) {
+  getUnstructTask(row.id).then(({ data }) => {
+    // 详情未返回电话时，从用户选项中按责任人id兜底获取
+    const matchedUser = userOptions.value.find(
+        (user) => String(user.value) === String(data.responsibleUserId)
+    );
+    detailForm.value = {
+      ...data,
+      publishStatus: data.publishStatus ?? 0,
+      responsiblePhone: data.responsiblePhone || matchedUser?.phone || "",
+      sourceFiles: (data.relPageReqVOS || []).map((item) => ({
+        docId: item.docId,
+        docName: item.docName,
+      })),
+    };
+    detailTitle.value = "非结构化抽取任务详情";
+    openDetail.value = true;
+  });
 }
 
 /** 查看非结构化抽取结果。 */
@@ -758,5 +895,18 @@ function handleDelete(row) {
 .execute-tag {
   align-self: flex-start;
   cursor: pointer;
+}
+
+// 详情弹窗内的导入文件标签，允许换行展示。
+.detail-file-list {
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px;
+}
+.detail-file-tag {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
