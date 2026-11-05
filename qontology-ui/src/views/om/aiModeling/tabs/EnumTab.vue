@@ -489,7 +489,8 @@ const typeTableStore = reactive({
       slot: "creator",
       width: 120,
       minWidth: 120,
-      align: "center",
+      align: "left",
+      headerAlign: "left",
     },
     {
       label: "创建时间",
@@ -613,7 +614,8 @@ const valueTableStore = reactive({
       slot: "creator",
       width: 120,
       minWidth: 120,
-      align: "center",
+      align: "left",
+      headerAlign: "left",
     },
     {
       label: "创建时间",

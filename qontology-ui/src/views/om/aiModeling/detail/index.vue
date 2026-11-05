@@ -1,162 +1,59 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
  You may use qOntology for commercial purposes, but you may not remove, hide,
  modify, or replace the qOntology logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
 <template>
   <div class="app-container">
-    <div class="pagecont-top" style="padding-bottom: 15px">
-      <div class="infotop">
-        <div class="infotop-title mb15">
-          <div class="task-item">
-            <span class="task-id">{{ task.id }}</span>
-            <span class="task-name">{{ task.taskName }}</span>
-            <dict-tag :options="om_ai_task_status" :value="task.status" />
-          </div>
-          <el-row :gutter="10" class="btn-style task-actions">
-            <el-col :span="1.5">
-              <el-button
-                v-hasPermi="['om:aiModeling:adopt']"
-                type="primary"
-                size="small"
-                :disabled="!canAdopt"
-                @click="adoptEverything"
-                >一键采纳</el-button
-              >
-            </el-col>
-
-            <el-col :span="1.5">
-              <el-button
-                type="primary"
-                size="small"
-                class="fhbtn"
-                plain
-                @click="goBack"
-                @mousedown="(event) => event.preventDefault()"
-              >
-                <svg-icon
-                  icon-class="fhs"
-                  style="width: 12px; height: 12px; margin-right: 3px"
-                />
-                返回
-              </el-button>
-            </el-col>
-          </el-row>
+    <detail-info
+      :data="task"
+      :header="{ className: 'clearfixs', idKey: 'id', nameKey: 'taskName', statusKey: 'status', statusOptions: om_ai_task_status, routerBack: false }"
+      :items="detailItems"
+      mode="free"
+      @back="goBack"
+    >
+      <template #btn-right>
+        <el-button
+          v-hasPermi="['om:aiModeling:adopt']"
+          type="primary"
+          class="mr10"
+          :disabled="!canAdopt"
+          @click="adoptEverything"
+        >一键采纳</el-button>
+      </template>
+      <template #documents>
+        <div v-if="files.length" class="document-list">
+          <div
+            v-for="file in files"
+            :key="file.id || file.fileName"
+            class="document-name"
+            :title="file.fileName"
+          >{{ file.fileName || "-" }}</div>
         </div>
-        <el-row :gutter="3" class="info-row">
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">任务名称</div>
-              <div class="infotop-row-value">{{ task.taskName || "-" }}</div>
-            </div></el-col
-          >
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">开始时间</div>
-              <div class="infotop-row-value">
-                {{ proxy.parseTime(task.startedTime) || "-" }}
-              </div>
-            </div></el-col
-          >
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">完成时间</div>
-              <div class="infotop-row-value">
-                {{ proxy.parseTime(task.finishedTime) || "-" }}
-              </div>
-            </div></el-col
-          >
-        </el-row>
-        <el-row :gutter="3" class="info-row">
-          <el-col :span="24"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">任务描述</div>
-              <div class="infotop-row-value">{{ task.description || "-" }}</div>
-            </div></el-col
-          >
-        </el-row>
-        <el-row :gutter="3" class="info-row">
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">失败原因</div>
-              <div class="infotop-row-value">
-                {{ task.failureReason || "-" }}
-              </div>
-            </div></el-col
-          >
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">候选数量</div>
-              <div class="infotop-row-value">
-                {{ task.candidateCount ?? 0 }}
-              </div>
-            </div></el-col
-          >
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">文档名称</div>
-              <div class="infotop-row-value document-list">
-                <template v-if="files.length">
-                  <div
-                    v-for="file in files"
-                    :key="file.id || file.fileName"
-                    class="document-name"
-                    :title="file.fileName"
-                  >
-                    {{ file.fileName || "-" }}
-                  </div>
-                </template>
-                <template v-else>-</template>
-              </div>
-            </div></el-col
-          >
-        </el-row>
-        <el-row :gutter="3" class="info-row">
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">创建人</div>
-              <div class="infotop-row-value">{{ formatCreator(task) }}</div>
-            </div></el-col
-          >
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">创建时间</div>
-              <div class="infotop-row-value">
-                {{ proxy.parseTime(task.createTime) || "-" }}
-              </div>
-            </div></el-col
-          >
-          <el-col :span="8"
-            ><div class="infotop-row border-top">
-              <div class="infotop-row-lable">更新时间</div>
-              <div class="infotop-row-value">
-                {{ proxy.parseTime(task.updateTime) || "-" }}
-              </div>
-            </div></el-col
-          >
-        </el-row>
-        <el-alert
-          v-if="task.status === 3 && task.failureReason"
-          class="mt15"
-          type="error"
-          :closable="false"
-          show-icon
-          :title="task.failureReason"
-        />
-      </div>
-    </div>
+        <span v-else>-</span>
+      </template>
+    </detail-info>
+
+    <el-alert
+      v-if="task.status === 3 && task.failureReason"
+      class="mb15"
+      type="error"
+      :closable="false"
+      show-icon
+      :title="task.failureReason"
+    />
 
     <div class="pagecont-bottom">
       <el-tabs v-model="activeTab">
@@ -224,6 +121,19 @@ const currentTab = computed(
 const canAdopt = computed(
   () => task.value.status === 2 && Number(task.value.candidateCount || 0) > 0
 );
+/** 顶部信息表字段，复用 DetailInfo 自由模式与建模目标详情一致；行间距通过 mt2/mb2 与建模目标保持同样的上下节奏。 */
+const detailItems = [
+  { label: "任务名称", key: "taskName" },
+  { label: "开始时间", key: "startedTime", type: "time" },
+  { label: "完成时间", key: "finishedTime", type: "time" },
+  { label: "任务描述", key: "description", span: 24, className: "mt2 mb2" },
+  { label: "失败原因", key: "failureReason", className: "mb2" },
+  { label: "候选数量", key: "candidateCount", className: "mb2", formatter: (val) => val ?? 0 },
+  { label: "文档名称", slot: "documents", className: "mb2" },
+  { label: "创建人", key: "createBy", formatter: (_name, record) => formatCreator(record) },
+  { label: "创建时间", key: "createTime", type: "time" },
+  { label: "更新时间", key: "updateTime", type: "time" },
+];
 /** 加载任务详情。 */
 async function loadDetail() {
   const [taskResponse, fileResponse] = await Promise.all([
@@ -264,55 +174,7 @@ onUnmounted(() => clearInterval(refreshTimer));
 </script>
 
 <style scoped lang="scss">
-.task-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.task-id {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  color: #fff;
-  background: #2f6bff;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.task-name {
-  font-size: 18px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.task-actions {
-  margin-left: auto;
-}
-
-.info-row {
-  margin-bottom: 3px;
-}
-
-.infotop-row {
-  align-items: stretch;
-}
-
-.infotop-row-lable,
-.infotop-row-value {
-  height: auto;
-  min-height: 40px;
-}
-
-.infotop-row-lable {
-  flex-shrink: 0;
-}
-
+/* 文档名称在信息单元格内多行堆叠，长文件名自动换行；顶部信息表其余样式由 DetailInfo 组件统一提供。 */
 .document-list {
   display: flex;
   flex-direction: column;

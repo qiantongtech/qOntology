@@ -238,47 +238,20 @@
                                 />
                             </el-select>
                         </qt-form-item>
-                        <qt-form-item v-else label="业务数据类型" prop="businessTypeKey" tip="选择属性关联的业务数据类型。">
-                            <el-select
+                        <qt-form-item v-else label="业务数据类型" prop="businessTypeKey" tip="按当前项目与全局两个分类展开，选择属性关联的业务数据类型。">
+                            <el-tree-select
                                 v-model="form.businessTypeKey"
+                                :data="businessTypeTree"
+                                :props="businessTypeTreeProps"
+                                value-key="id"
                                 :loading="optionsLoading"
+                                check-strictly
                                 filterable
-                                placeholder="请选择业务数据类型"
                                 clearable
+                                default-expand-all
+                                placeholder="请选择业务数据类型"
                                 @change="handleBusinessTypeChange"
-                            >
-                                <template #label>
-                                    <span class="business-type-label">
-                                        {{ selectedBusinessType?.name || form.businessTypeKey }}
-                                        <el-tag
-                                            :type="
-                                                selectedBusinessType?.businessTypeSource === 'PROJECT'
-                                                    ? 'primary'
-                                                    : 'info'
-                                            "
-                                            size="small"
-                                        >
-                                            {{
-                                                selectedBusinessType?.businessTypeSource === 'PROJECT'
-                                                    ? '当前项目'
-                                                    : '全局'
-                                            }}
-                                        </el-tag>
-                                    </span>
-                                </template>
-                                <el-option-group
-                                    v-for="group in businessTypeGroups"
-                                    :key="group.source"
-                                    :label="group.label"
-                                >
-                                    <el-option
-                                        v-for="item in group.options"
-                                        :key="item.key"
-                                        :label="item.name"
-                                        :value="item.key"
-                                    />
-                                </el-option-group>
-                            </el-select>
+                            />
                         </qt-form-item>
                         <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
                             <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
@@ -556,16 +529,25 @@
     const effectiveConfig = computed(() => resolvedConfig(form.value));
     const detailConfig = computed(() => resolvedConfig(detail.value));
     const basicTypeLabel = (value) => proxy.selectDictLabel(basic_data_type.value, value) || '未设置';
-    const businessTypeGroups = computed(() =>
+    const businessTypeTreeProps = { label: 'name', value: 'id', children: 'children', disabled: 'disabled' };
+    const businessTypeTree = computed(() =>
         [
             { source: 'PROJECT', label: '当前项目' },
             { source: 'GLOBAL', label: '全局' }
         ]
             .map((group) => ({
-                ...group,
-                options: currentBusinessTypes.value.filter((item) => item.businessTypeSource === group.source)
+                id: group.source,
+                name: group.label,
+                disabled: true,
+                children: currentBusinessTypes.value
+                    .filter((item) => item.businessTypeSource === group.source)
+                    .map((item) => ({
+                        id: item.key,
+                        name: item.name,
+                        businessTypeSource: item.businessTypeSource
+                    }))
             }))
-            .filter((group) => group.options.length)
+            .filter((group) => group.children.length)
     );
 
     const detailFields = computed(() => [
@@ -1165,10 +1147,5 @@
 
     .character-count :deep(.el-textarea__inner) {
         padding-bottom: 24px;
-    }
-    .business-type-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
     }
 </style>
