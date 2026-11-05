@@ -55,6 +55,10 @@
             row.enumType || "-"
           }}</el-button>
         </template>
+        <!-- 创建时间与外部枚举管理一致，格式到分钟。 -->
+        <template #createTime="{ row }">{{
+          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+        }}</template>
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
             <span class="text-ellipsis" :title="row.createBy || ''">{{
@@ -217,45 +221,63 @@
       width="800px"
       :append-to="pageRef"
       draggable
-      ><el-form
+    >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="定义业务字段的可选值范围，填写枚举名称、唯一编码和使用说明，为业务数据类型提供统一的取值依据。"
+      />
+      <el-form
         ref="typeFormRef"
         :model="typeForm"
         :rules="typeRules"
         label-width="90px"
-        ><el-form-item label="枚举名称" prop="enumName"
-          ><el-input
-            v-model="typeForm.enumName"
-            placeholder="请输入枚举名称"
-            :maxlength="128" /></el-form-item
-        ><el-form-item label="枚举类型" prop="enumType"
-          ><el-input
-            v-model="typeForm.enumType"
-            placeholder="请输入枚举类型"
-            :maxlength="100" /></el-form-item
-        ><el-form-item label="状态" prop="status"
-          ><el-radio-group v-model="typeForm.status"
-            ><el-radio
-              v-for="dict in sys_normal_disable"
-              :key="dict.value"
-              :value="dict.value"
-              >{{ dict.label }}</el-radio
-            ></el-radio-group
-          ></el-form-item
-        ><el-form-item label="备注" prop="remark"
-          ><el-input
-            v-model="typeForm.remark"
-            type="textarea"
-            :rows="3"
-            :maxlength="512"
-            show-word-limit
-            placeholder="请输入备注" /></el-form-item></el-form
-      ><template #footer
-        ><div class="dialog-footer">
-          <el-button @click="typeOpen = false">取 消</el-button
-          ><el-button type="primary" @click="saveType">确 定</el-button>
-        </div></template
-      ></el-dialog
-    >
+        class="column-form"
+        @submit.prevent="saveType"
+      >
+        <qt-form-item
+          label="枚举名称"
+          prop="enumName"
+          class="row-full"
+          tip="填写枚举定义的业务名称，例如“供应商类别”。"
+        >
+          <el-input v-model="typeForm.enumName" placeholder="请输入枚举名称" :maxlength="128" />
+        </qt-form-item>
+        <qt-form-item
+          label="枚举类型"
+          prop="enumType"
+          class="row-full"
+          tip="填写唯一的英文编码，以字母开头，仅支持字母、数字和下划线。"
+        >
+          <el-input v-model="typeForm.enumType" placeholder="请输入枚举类型" :maxlength="128" />
+        </qt-form-item>
+        <qt-form-item
+          label="状态"
+          prop="status"
+          class="row-full"
+          tip="启用后可用于业务取值，禁用后保留已有定义。"
+        >
+          <el-radio-group v-model="typeForm.status">
+            <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item
+          label="备注"
+          prop="remark"
+          class="row-full"
+          tip="补充取值含义、适用场景或使用约定，最多256个字符。"
+        >
+          <el-input v-model="typeForm.remark" type="textarea" :rows="3" :maxlength="256" show-word-limit placeholder="请输入备注" />
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="typeOpen = false">取 消</el-button>
+          <el-button type="primary" @click="saveType">确 定</el-button>
+        </div>
+      </template>
+    </el-dialog>
     <el-dialog
       v-model="typeDetailOpen"
       title="枚举类型详情"
@@ -463,7 +485,15 @@ const typeTableStore = reactive({
       label: "枚举类型",
       prop: "enumType",
       slot: "enumType",
-      minWidth: 160,
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "备注",
+      prop: "remark",
+      slot: "text",
+      minWidth: 200,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -487,17 +517,17 @@ const typeTableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 120,
-      minWidth: 120,
+      width: 130,
+      minWidth: 130,
       align: "left",
       headerAlign: "left",
     },
     {
       label: "创建时间",
       prop: "createTime",
-      date: true,
-      width: 170,
-      minWidth: 170,
+      slot: "createTime",
+      width: 160,
+      minWidth: 160,
       align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],

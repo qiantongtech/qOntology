@@ -34,14 +34,7 @@ export default [
                 name: 'BasicEnumDetail',
                 meta: { title: '枚举详情', activeMenu: '/basic/basicEnum', noCache: true }
             },
-            // 一级文件管理下的隐藏详情路由，与数据库菜单保持相同父路径。
-            {
-                path: '/basic/fileManager/detail/:fileId(\\d+)',
-                component: () => import('@/views/basic/file/manager/detail/index.vue'),
-                permissions: ['basic:file:manager:query'],
-                name: 'BasicFileDetail',
-                meta: {title: '文件详情', activeMenu: '/basic/file/fileManager', noCache: true}
-            },
+            // 文件详情已改为列表页弹窗只读态，不再占用独立路由。
             {
                 path: 'basicEnum/enum/data/:enumId(\\d+)',
                 component: () => import('@/views/basic/enumeration/data/index.vue'),

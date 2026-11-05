@@ -46,7 +46,7 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{
-          row[column_data.prop]
+          row[column_data.prop] ?? "-"
         }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -129,6 +129,12 @@
       draggable
       destroy-on-close
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="面向属性取值维护数据校验规则，配置校验类型、约束级别与失败条件，保障业务数据符合预期格式与范围。"
+      />
       <el-form
         ref="formRef"
         :model="form"
@@ -138,14 +144,14 @@
         class="rule-form"
       >
         <div class="h2-title">基本信息</div>
-        <el-form-item label="名称" prop="name" required>
+        <qt-form-item label="规则名称" prop="name" required tip="填写数据规则的业务名称，便于在列表中识别与检索。">
           <el-input
             v-model="form.name"
-            placeholder="请输入数据规则名称"
+            placeholder="请输入规则名称"
             maxlength="128"
           />
-        </el-form-item>
-        <el-form-item label="类型" prop="type" required>
+        </qt-form-item>
+        <qt-form-item label="类型" prop="type" required tip="选择规则的校验类型，决定下方条件的配置方式。">
           <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
             <el-option
               v-for="i in om_data_rule_type"
@@ -154,15 +160,15 @@
               :value="i.value"
             />
           </el-select>
-        </el-form-item>
-        <el-form-item label="级别" prop="level" required>
+        </qt-form-item>
+        <qt-form-item label="级别" prop="level" required tip="设置规则的约束强度，决定校验失败时的处理方式。">
           <el-radio-group v-model="form.level">
             <el-radio v-for="i in om_rule_level" :key="i.value" :value="i.value">{{
               i.label
             }}</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
+        </qt-form-item>
+        <qt-form-item label="描述" prop="description" tip="补充该规则的业务含义与适用场景，最多512个字符。">
           <el-input
             v-model="form.description"
             class="character-count"
@@ -172,15 +178,15 @@
             :maxlength="512"
             show-word-limit
           />
-        </el-form-item>
+        </qt-form-item>
         <div class="h2-title">执行条件</div>
-        <el-form-item label="条件关系" prop="conditionRelation" required>
+        <qt-form-item label="条件关系" prop="conditionRelation" required tip="设置多条失败条件之间的逻辑组合方式。">
           <el-radio-group v-model="form.conditionRelation">
             <el-radio value="OR">任一满足（OR）</el-radio>
             <el-radio value="AND">全部满足（AND）</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="失败条件" required>
+        </qt-form-item>
+        <qt-form-item label="失败条件" required tip="逐条配置触发校验失败的对象类型、属性与取值条件。">
           <div class="conditions">
             <div v-for="(condition, index) in form.conditionItems" :key="condition.key" class="condition-row">
               <div class="condition-label">条件 {{ index + 1 }}：</div>
@@ -225,14 +231,14 @@
               </div>
             </div>
           </div>
-        </el-form-item>
-        <el-form-item label="失败提示" prop="failureMessage">
+        </qt-form-item>
+        <qt-form-item label="失败提示" prop="failureMessage" tip="校验失败时向用户展示的提示文案。">
           <el-input
             v-model="form.failureMessage"
             placeholder="请输入失败提示"
             :maxlength="512"
           />
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -346,7 +352,7 @@ const tableStore = reactive({
       sortOrders: ["descending", "ascending", null],
     },
     {
-      label: "名称",
+      label: "规则名称",
       prop: "name",
       slot: "text",
       minWidth: 200,
@@ -389,25 +395,26 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 120,
-      minWidth: 120,
+      width: 130,
+      minWidth: 130,
       align: "left",
+      headerAlign: "left",
     },
     {
       label: "创建时间",
       prop: "createTime",
       date: true,
-      width: 180,
-      minWidth: 180,
-      align: "center",
+      width: 160,
+      minWidth: 160,
+      align: "left",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
     {
       label: "操作",
       slot: "handle",
-      width: 240,
-      minWidth: 240,
+      width: 250,
+      minWidth: 250,
       align: "center",
       fixed: "right",
     },

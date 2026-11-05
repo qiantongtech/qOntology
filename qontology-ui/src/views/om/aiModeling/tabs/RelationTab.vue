@@ -46,15 +46,29 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{
-          row[column_data.prop]
+          row[column_data.prop] ?? "-"
         }}</template>
-        <!-- 起止类型存的是候选编号，需要换成对象类型名称展示。 -->
-        <template #objectName="{ row, column_data }">{{
-          objectName(row[column_data.prop])
-        }}</template>
-        <template #reversibleFlag="{ row }">{{
-          reversibleLabel(row.reversibleFlag)
-        }}</template>
+        <!-- 关系信息列：起点类型→关系名称→终点类型，下方描述，对齐外部关系管理。 -->
+        <template #relationInfo="{ row }">
+          <div class="qt-table-info relation-info">
+            <div class="qt-table-info__main relation-info__main">
+              <span class="relation-node text-ellipsis" :title="objectName(row.startObjectCandidateId)">{{ objectName(row.startObjectCandidateId) }}</span>
+              <span class="relation-arrow" aria-hidden="true">→</span>
+              <span class="relation-name text-ellipsis" :title="row.name || ''">{{ row.name || '-' }}</span>
+              <span class="relation-arrow" aria-hidden="true">→</span>
+              <span class="relation-node text-ellipsis" :title="objectName(row.endObjectCandidateId)">{{ objectName(row.endObjectCandidateId) }}</span>
+            </div>
+            <div
+              v-if="row.description"
+              class="info-desc"
+              :title="row.description"
+            >{{ row.description }}</div>
+          </div>
+        </template>
+        <!-- 是否可逆用 dict-tag 渲染。 -->
+        <template #reversible="{ row }">
+          <dict-tag :options="sys_yes_no" :value="row.reversibleFlag === 1 ? 'Y' : 'N'" />
+        </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -134,103 +148,137 @@
       destroy-on-close
       @closed="formRef?.clearValidate()"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="起点类型" prop="startObjectCandidateId">
-              <el-select
-                v-model="form.startObjectCandidateId"
-                placeholder="请选择起点类型"
-                clearable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in objects"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="关系名称" prop="name">
-              <el-input
-                v-model="form.name"
-                placeholder="请输入关系名称"
-                :maxlength="128"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="终点类型" prop="endObjectCandidateId">
-              <el-select
-                v-model="form.endObjectCandidateId"
-                placeholder="请选择终点类型"
-                clearable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in objects"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="是否可逆" prop="reversibleFlag">
-              <el-radio-group
-                v-model="form.reversibleFlag"
-                @change="(value) => value !== 1 && (form.reverseName = '')"
-              >
-                <el-radio
-                  v-for="dict in sys_yes_no"
-                  :key="dict.value"
-                  :value="dict.value === 'Y' ? 1 : 0"
-                  >{{ dict.label }}</el-radio
-                >
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col v-if="form.reversibleFlag === 1" :span="24">
-            <el-form-item label="反向名称" prop="reverseName" required>
-              <el-input
-                v-model="form.reverseName"
-                placeholder="请输入反向名称"
-                :maxlength="128"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="描述" prop="description">
-              <el-input
-                v-model="form.description"
-                class="character-count"
-                type="textarea"
-                :rows="4"
-                placeholder="请输入描述"
-                :maxlength="512"
-                show-word-limit
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="关联建模目标" prop="targetIds">
-              <el-button type="primary" plain @click="targetPickerOpen = true"
-                >导入建模目标</el-button
-              >
-            </el-form-item>
-            <div class="target-table">
-              <TargetTable
-                :targets="selectedTargets"
-                editable
-                @remove="removeTarget"
-              />
-            </div>
-          </el-col>
-        </el-row>
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="定义对象类型之间的业务联系，配置起点、终点、可逆性和关联建模目标，为业务对象建立清晰的语义关系。"
+      />
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="120px"
+        class="column-form"
+        @submit.prevent="save"
+      >
+        <qt-form-item
+          class="row-full"
+          label="起点类型"
+          prop="startObjectCandidateId"
+          tip="选择关系的发起对象，例如“供应商提供物料”中的供应商。"
+        >
+          <el-select
+            v-model="form.startObjectCandidateId"
+            placeholder="请选择起点类型"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in objects"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="关系名称"
+          prop="name"
+          tip="填写表达业务联系的动词或动宾短语，例如“提供”“采购物料”。"
+        >
+          <el-input
+            v-model="form.name"
+            placeholder="请输入关系名称，例如：提供、采购物料"
+            :maxlength="128"
+          />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="终点类型"
+          prop="endObjectCandidateId"
+          tip="选择关系指向的业务对象，例如“供应商提供物料”中的物料。"
+        >
+          <el-select
+            v-model="form.endObjectCandidateId"
+            placeholder="请选择终点类型"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in objects"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="是否可逆"
+          prop="reversibleFlag"
+          tip="选择“是”时，需填写从终点指向起点的反向关系名称。"
+        >
+          <el-radio-group
+            v-model="form.reversibleFlag"
+            @change="(value) => value !== 1 && (form.reverseName = '')"
+          >
+            <el-radio
+              v-for="dict in sys_yes_no"
+              :key="dict.value"
+              :value="dict.value === 'Y' ? 1 : 0"
+              >{{ dict.label }}</el-radio
+            >
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item
+          v-if="form.reversibleFlag === 1"
+          class="row-full"
+          label="反向名称"
+          prop="reverseName"
+          required
+          tip="填写反向查看该关系时的名称，例如“由供应商提供”。"
+        >
+          <el-input
+            v-model="form.reverseName"
+            placeholder="请输入反向名称"
+            :maxlength="128"
+          />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="描述"
+          prop="description"
+          tip="描述关系适用的业务场景、职责或关联规则，最多256个字符。"
+        >
+          <el-input
+            v-model="form.description"
+            class="character-count"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入关系描述，说明业务联系和适用场景"
+            :maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="关联建模目标"
+          prop="targetIds"
+          tip="选择该对象关系支撑的建模目标，便于核对业务需求覆盖情况。"
+        >
+          <el-button type="primary" plain @click="targetPickerOpen = true"
+            >导入建模目标</el-button
+          >
+        </qt-form-item>
+        <div class="target-table">
+          <TargetTable
+            :targets="selectedTargets"
+            editable
+            @remove="removeTarget"
+          />
+        </div>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -405,44 +453,16 @@ const tableStore = reactive({
       sortOrders: ["descending", "ascending", null],
     },
     {
-      label: "起点类型",
-      prop: "startObjectCandidateId",
-      slot: "objectName",
-      width: 160,
-      minWidth: 160,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "关系名称",
+      label: "对象类型关系信息（起点类型→关系名称→终点类型）",
       prop: "name",
-      slot: "text",
-      width: 160,
-      minWidth: 160,
+      slot: "relationInfo",
+      minWidth: 360,
       align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "终点类型",
-      prop: "endObjectCandidateId",
-      slot: "objectName",
-      width: 160,
-      minWidth: 160,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "描述",
-      prop: "description",
-      slot: "text",
-      minWidth: 240,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
     },
     {
       label: "是否可逆",
       prop: "reversibleFlag",
-      slot: "reversibleFlag",
+      slot: "reversible",
       width: 100,
       minWidth: 100,
       align: "center",
@@ -451,7 +471,6 @@ const tableStore = reactive({
       label: "反向名称",
       prop: "reverseName",
       slot: "text",
-      width: 150,
       minWidth: 150,
       align: "left",
       showOverflowTooltip: { effect: "light" },
@@ -468,8 +487,8 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 120,
-      minWidth: 120,
+      width: 130,
+      minWidth: 130,
       align: "left",
       headerAlign: "left",
     },
@@ -477,17 +496,17 @@ const tableStore = reactive({
       label: "创建时间",
       prop: "createTime",
       date: true,
-      width: 180,
-      minWidth: 180,
-      align: "center",
+      width: 160,
+      minWidth: 160,
+      align: "left",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
     {
       label: "操作",
       slot: "handle",
-      width: 240,
-      minWidth: 240,
+      width: 250,
+      minWidth: 250,
       align: "center",
       fixed: "right",
     },
@@ -526,7 +545,7 @@ const rules = {
     },
   ],
   description: [
-    { max: 512, message: "关系描述不能超过512个字符", trigger: "blur" },
+    { max: 256, message: "关系描述不能超过256个字符", trigger: "blur" },
   ],
   targetIds: [
     {
@@ -644,6 +663,32 @@ loadObjects();
 </script>
 
 <style scoped lang="scss">
+/* 关系信息列：起点→关系名称→终点 单行排列，中间关系名称高亮。 */
+.relation-info__main {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.relation-node {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--el-text-color-primary);
+}
+
+.relation-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--el-color-primary);
+  font-weight: 500;
+}
+
+.relation-arrow {
+  flex-shrink: 0;
+  color: var(--el-text-color-secondary);
+  font-weight: 600;
+  line-height: 22px;
+}
+
 .target-table {
   margin: 0 0 10px 120px;
 }

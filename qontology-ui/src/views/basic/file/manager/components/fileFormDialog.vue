@@ -30,6 +30,7 @@
     :before-close="handleBeforeClose"
   >
     <guide-tip-panel
+      v-if="!readonly"
       type="hint"
       class="mb15"
       allow-wrap
@@ -38,14 +39,18 @@
     <el-form
       ref="formRef"
       :model="form"
-      :rules="rules"
+      :rules="readonly ? undefined : rules"
       :disabled="saving"
       label-width="110px"
       class="column-form"
       @submit.prevent="submitForm"
     >
       <qt-form-item class="row-full" label="文件分类" prop="categoryId" tip="选择文件归属的分类目录。">
+        <div v-if="readonly" class="form-readonly">
+          {{ categoryName }}
+        </div>
         <el-tree-select
+          v-else
           v-model="form.categoryId"
           :data="categoryOptions"
           :props="{ value: 'id', label: 'name', children: 'children' }"
@@ -56,7 +61,8 @@
           style="width: 100%"
         />
       </qt-form-item>
-      <qt-form-item class="row-full" label="上传文件" prop="filePath" tip="上传模型相关文档，支持 txt、pdf、excel、word、markdown 等格式。">
+      <!-- 详情态不展示上传控件，文件信息统一在名称与描述字段中只读呈现。 -->
+      <qt-form-item v-if="!readonly" class="row-full" label="上传文件" prop="filePath" tip="上传模型相关文档，支持 txt、pdf、excel、word、markdown 等格式。">
         <FileUpload2
           v-model="form.filePath"
           :file-name="form.fileName"
@@ -86,10 +92,21 @@
         prop="fileName"
         tip="文件展示名称，默认取上传文件名，可手动修改。"
       >
-        <el-input v-model="form.fileName" placeholder="请输入文件名称" />
+        <div v-if="readonly" class="form-readonly">
+          {{ form.fileName || "—" }}
+        </div>
+        <el-input
+          v-else
+          v-model="form.fileName"
+          placeholder="请输入文件名称"
+        />
       </qt-form-item>
       <qt-form-item class="row-full" label="描述" prop="description" tip="补充文件的内容说明或用途。">
+        <div v-if="readonly" class="form-readonly textarea">
+          {{ form.description || "—" }}
+        </div>
         <el-input
+          v-else
           v-model="form.description"
           class="character-count"
           type="textarea"
@@ -99,11 +116,24 @@
           placeholder="请输入描述"
         />
       </qt-form-item>
+      <!-- 详情态补齐审计信息，创建人展示规则与枚举详情一致。 -->
+      <el-form-item v-if="readonly" class="row-full" label="创建人">
+        <div class="form-readonly">{{ formatCreator(form) }}</div>
+      </el-form-item>
+      <el-form-item v-if="readonly" class="row-full" label="创建时间">
+        <div class="form-readonly">{{ form.createTime || "—" }}</div>
+      </el-form-item>
+      <el-form-item v-if="readonly" class="row-full" label="更新时间">
+        <div class="form-readonly">{{ form.updateTime || "—" }}</div>
+      </el-form-item>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button :disabled="saving" @click="visible = false">取 消</el-button>
+        <el-button :disabled="saving" @click="visible = false">{{
+          readonly ? "关 闭" : "取 消"
+        }}</el-button>
         <el-button
+          v-if="!readonly"
           type="primary"
           :loading="saving"
           :disabled="validating"
@@ -116,19 +146,24 @@
 </template>
 
 <script setup name="FileFormDialog">
-import { getCurrentInstance, nextTick, ref } from "vue";
+import { computed, getCurrentInstance, nextTick, ref } from "vue";
 import {
   addModelDataFile,
   getModelDataFile,
   updateModelDataFile,
 } from "@/api/basic/file/basicFile.js";
 import FileUpload2 from "@/components/FileUpload2";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
-defineProps({ categoryOptions: { type: Array, default: () => [] } });
+const props = defineProps({
+  categoryOptions: { type: Array, default: () => [] },
+});
 const emit = defineEmits(["success"]);
 const { proxy } = getCurrentInstance();
+const { creatorPhones } = useCreatorPhones();
 const visible = ref(false);
 const title = ref("");
+const readonly = ref(false);
 const saving = ref(false);
 const validating = ref(false);
 const formRef = ref();
@@ -145,6 +180,25 @@ const rules = {
     { required: true, message: "文件路径不能为空", trigger: "change" },
   ],
 };
+
+/** 详情态优先用接口返回的分类名称，缺失时递归分类选项按 categoryId 查找。 */
+const categoryName = computed(() => {
+  const findName = (nodes) => {
+    for (const node of nodes || []) {
+      if (String(node.id) === String(form.value.categoryId)) return node.name;
+      const name = findName(node.children);
+      if (name) return name;
+    }
+    return "";
+  };
+  return form.value.categoryName || findName(props.categoryOptions) || "—";
+});
+
+/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
+function formatCreator(record) {
+  const phone = creatorPhones.value[record.creatorId];
+  return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
+}
 
 /** 打开时加载最新详情或创建空白草稿，忽略快速切换记录后返回的旧请求。 */
 async function openDialog(options = {}) {
@@ -170,7 +224,9 @@ async function openDialog(options = {}) {
   form.value.fileName = Array.isArray(form.value.fileName)
     ? form.value.fileName.join(",")
     : form.value.fileName || "";
-  title.value = options.id != null ? "修改文件" : "新增文件";
+  title.value =
+    options.title || (options.id != null ? "修改文件" : "新增文件");
+  readonly.value = Boolean(options.readonly);
   visible.value = true;
   await nextTick();
   formRef.value?.clearValidate();
@@ -187,9 +243,10 @@ function handleBeforeClose(done) {
   if (!saving.value) done();
 }
 
-/** 校验并保存草稿，成功后刷新文件列表及分类统计。 */
+/** 校验并保存草稿，成功后刷新文件列表及分类统计；只读详情不提交。 */
 async function submitForm() {
-  if (validating.value || saving.value || !visible.value) return;
+  if (readonly.value || validating.value || saving.value || !visible.value)
+    return;
   validating.value = true;
   const draft = form.value;
   try {

@@ -161,7 +161,6 @@
 
 <script setup name="BasicFile">
 import { getCurrentInstance, reactive, ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import csvIcon from "@/assets/images/file-types/CSV.svg";
 import docxIcon from "@/assets/images/file-types/DOCX.svg";
 import htmlIcon from "@/assets/images/file-types/HTML.svg";
@@ -226,7 +225,6 @@ function getFileIcon(file) {
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 const { proxy } = getCurrentInstance();
-const router = useRouter();
 const tableRef = ref();
 const { creatorPhones } = useCreatorPhones();
 
@@ -396,9 +394,13 @@ function handleUpdate(row) {
   fileDialogRef.value.openDialog({ id: row.id });
 }
 
-/** 详情使用独立页面承载元数据，路由参数支持从其他引用入口直接访问。 */
+/** 详情复用表单弹窗的只读态，与文件分类的详情模式一致。 */
 function handleDetail(row) {
-  router.push({ name: "BasicFileDetail", params: { fileId: row.id } });
+  fileDialogRef.value.openDialog({
+    id: row.id,
+    readonly: true,
+    title: "文件详情",
+  });
 }
 
 /** 删除确认后刷新文件列表及分类统计。 */

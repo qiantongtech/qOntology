@@ -51,7 +51,15 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{
-          row[column_data.prop]
+          row[column_data.prop] ?? "-"
+        }}</template>
+        <!-- 描述与外部对象类型一致，空值统一展示为短横线。 -->
+        <template #description="{ row }">{{
+          row.description?.trim() || "-"
+        }}</template>
+        <!-- 创建时间与外部对象类型一致，格式到分钟。 -->
+        <template #createTime="{ row }">{{
+          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
         }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -129,66 +137,102 @@
       draggable
       destroy-on-close
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
-        <el-row :gutter="20">
-          <el-col v-if="!editingRoot" :span="24"
-            ><el-form-item label="上级对象类型"
-              ><el-tree-select
-                v-model="form.parentCandidateId"
-                :data="parentOptions"
-                :props="{ label: 'name', value: 'id', children: 'children' }"
-                value-key="id"
-                placeholder="请选择上级对象类型，留空则为顶级对象类型"
-                check-strictly
-                clearable
-                style="width: 100%" /></el-form-item
-          ></el-col>
-          <el-col :span="24"
-            ><el-form-item label="对象类型名称" prop="name"
-              ><div class="name-input">
-                <el-input
-                  v-model="form.name"
-                  :maxlength="128"
-                  placeholder="请输入对象类型名称"
-                /><el-button type="primary" @click="termPickerOpen = true"
-                  >从术语表中选择</el-button
-                >
-              </div></el-form-item
-            ></el-col
-          >
-          <el-col :span="24"
-            ><el-form-item label="显示顺序"
-              ><el-input-number
-                v-model="form.orderNum"
-                :min="0"
-                :precision="0"
-                controls-position="right"
-                style="width: 100%" /></el-form-item
-          ></el-col>
-          <el-col :span="24"
-            ><el-form-item label="描述"
-              ><el-input
-                v-model="form.description"
-                type="textarea"
-                :rows="4"
-                :maxlength="512"
-                show-word-limit
-                placeholder="请输入对象类型描述" /></el-form-item
-          ></el-col>
-          <el-col :span="24"
-            ><el-form-item label="关联建模目标" prop="targetIds"
-              ><el-button type="primary" plain @click="targetPickerOpen = true"
-                >导入建模目标</el-button
-              ></el-form-item
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="定义业务对象及其层级结构，维护对象类型名称、描述和关联建模目标，为后续属性与关系建模提供基础。"
+      />
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="120px"
+        class="column-form"
+        @submit.prevent="save"
+      >
+        <qt-form-item
+        v-if="!editingRoot"
+        class="row-full"
+        label="上级对象类型"
+        prop="parentCandidateId"
+        tip="选择该类型所属的父级对象类型，留空则为顶级对象类型。"
+        >
+          <el-tree-select
+            v-model="form.parentCandidateId"
+            :data="parentOptions"
+            :props="{ label: 'name', value: 'id', children: 'children' }"
+            value-key="id"
+            placeholder="请选择上级对象类型，留空则为顶级对象类型"
+            check-strictly
+            clearable
+            style="width: 100%"
+          />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="对象类型名称"
+          prop="name"
+          tip="填写业务对象的标准名称，也可从术语表选择，保持业务概念命名一致。"
+        >
+          <div class="name-input">
+            <el-input
+              v-model="form.name"
+              :maxlength="128"
+              placeholder="请输入对象类型名称"
+            />
+            <el-button type="primary" @click="termPickerOpen = true"
+              >从术语表中选择</el-button
             >
-            <div class="target-table">
-              <TargetTable
-                :targets="selectedTargets"
-                editable
-                @remove="removeTarget"
-              /></div
-          ></el-col>
-        </el-row>
+          </div>
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="显示顺序"
+          prop="orderNum"
+          tip="用于控制同一父级下的展示顺序，数值越小越靠前。"
+        >
+          <el-input-number
+            v-model="form.orderNum"
+            :min="0"
+            :precision="0"
+            controls-position="right"
+            style="width: 100%"
+          />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="描述"
+          prop="description"
+          tip="说明该对象类型代表的业务概念、职责及适用范围，最多256个字符。"
+        >
+          <el-input
+            v-model="form.description"
+            class="character-count"
+            type="textarea"
+            :rows="4"
+            :maxlength="256"
+            show-word-limit
+            placeholder="请输入对象类型描述，说明业务含义、职责和适用范围"
+          />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="关联建模目标"
+          prop="targetIds"
+          tip="选择该对象类型需要支撑的建模目标，便于检查设计对业务问题的覆盖情况。"
+        >
+          <el-button type="primary" plain @click="targetPickerOpen = true"
+            >导入建模目标</el-button
+          >
+        </qt-form-item>
+        <div class="target-table">
+          <TargetTable
+            :targets="selectedTargets"
+            editable
+            @remove="removeTarget"
+          />
+        </div>
       </el-form>
       <template #footer
         ><div class="dialog-footer">
@@ -383,7 +427,7 @@ const tableStore = reactive({
     {
       label: "描述",
       prop: "description",
-      slot: "text",
+      slot: "description",
       minWidth: 260,
       align: "left",
       showOverflowTooltip: { effect: "light" },
@@ -408,17 +452,17 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 120,
-      minWidth: 120,
+      width: 130,
+      minWidth: 130,
       align: "left",
       headerAlign: "left",
     },
     {
       label: "创建时间",
       prop: "createTime",
-      date: true,
-      width: 180,
-      minWidth: 180,
+      slot: "createTime",
+      width: 160,
+      minWidth: 160,
       align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
@@ -439,7 +483,14 @@ const parentOptions = computed(() =>
   buildTree(objectRows.value.filter((item) => item.id !== form.value.id))
 );
 const rules = {
-  name: [{ required: true, message: "对象类型名称不能为空" }],
+  name: [
+    { required: true, whitespace: true, message: "对象类型名称不能为空", trigger: "blur" },
+    { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
+  ],
+  orderNum: [{ required: true, message: "显示顺序不能为空", trigger: "blur" }],
+  description: [
+    { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
+  ],
   targetIds: [
     {
       type: "array",
@@ -492,8 +543,8 @@ async function save() {
   await updateCandidate("object", {
     id: form.value.id,
     taskId: props.taskId,
-    name: form.value.name,
-    description: form.value.description,
+    name: form.value.name.trim(),
+    description: (form.value.description ?? "").trim(),
     parentCandidateId: form.value.parentCandidateId,
     orderNum: form.value.orderNum,
   });
@@ -509,6 +560,10 @@ async function save() {
   display: flex;
   gap: 12px;
   width: 100%;
+}
+
+.character-count :deep(.el-textarea__inner) {
+  padding-bottom: 24px;
 }
 
 .target-table {

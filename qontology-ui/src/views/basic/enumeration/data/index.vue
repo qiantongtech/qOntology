@@ -267,8 +267,9 @@
         <el-form-item class="row-full" label="状态">
           <dict-tag :options="sys_normal_disable" :value="detail.status" />
         </el-form-item>
+        <!-- 与列表一致：创建人姓名后拼接联系电话，未维护电话时只显示姓名。 -->
         <el-form-item class="row-full" label="创建人">
-          <div class="form-readonly">{{ detail.createBy || "—" }}</div>
+          <div class="form-readonly">{{ formatCreator(detail) }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
@@ -318,7 +319,7 @@ const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
-const { creatorPhones } = useCreatorPhones();
+const { creatorPhones, formatCreator } = useCreatorPhones();
 const route = useRoute();
 const pageRef = ref();
 const tableRef = ref();

@@ -46,7 +46,7 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{
-          row[column_data.prop]
+          row[column_data.prop] ?? "-"
         }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -129,6 +129,12 @@
       draggable
       destroy-on-close
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="为对象类型及其属性、关系设定逻辑约束，选择公理类型并配置适用范围与约束强度，保证模型的一致性与可校验性。"
+      />
       <el-form
         ref="formRef"
         :model="form"
@@ -138,14 +144,14 @@
         class="rule-form"
       >
         <div class="h2-title">基本信息</div>
-        <el-form-item label="名称" prop="name" required>
+        <qt-form-item label="公理名称" prop="name" required tip="填写公理的业务名称，便于在列表中识别与检索。">
           <el-input
             v-model="form.name"
-            placeholder="请输入模型公理名称"
+            placeholder="请输入公理名称"
             maxlength="128"
           />
-        </el-form-item>
-        <el-form-item label="类型" prop="type" required>
+        </qt-form-item>
+        <qt-form-item label="类型" prop="type" required tip="选择公理的约束类型，不同类型对应不同的表达配置。">
           <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
             <el-option
               v-for="i in om_axiom_type"
@@ -154,15 +160,15 @@
               :value="i.value"
             />
           </el-select>
-        </el-form-item>
-        <el-form-item label="级别" prop="level" required>
+        </qt-form-item>
+        <qt-form-item label="级别" prop="level" required tip="设置公理的约束强度，决定校验失败时的处理方式。">
           <el-radio-group v-model="form.level">
             <el-radio v-for="i in om_rule_level" :key="i.value" :value="i.value">{{
               i.label
             }}</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
+        </qt-form-item>
+        <qt-form-item label="描述" prop="description" tip="补充该公理的业务含义与适用场景，最多512个字符。">
           <el-input
             v-model="form.description"
             class="character-count"
@@ -172,18 +178,18 @@
             :maxlength="512"
             show-word-limit
           />
-        </el-form-item>
+        </qt-form-item>
         <div class="h2-title">公理表达</div>
         <template v-if="form.type === 'DOMAIN_RANGE'">
-          <el-form-item label="关系" prop="relationName" required>
+          <qt-form-item label="关系" prop="relationName" required tip="填写该约束作用的关系名称。">
             <el-input
               v-model="form.relationName"
               placeholder="请输入关系名称"
               maxlength="128"
               clearable
             />
-          </el-form-item>
-          <el-form-item label="Domain" prop="domainCandidateId" required>
+          </qt-form-item>
+          <qt-form-item label="Domain" prop="domainCandidateId" required tip="选择关系起点（定义域）对应的对象类型。">
             <el-tree-select
               v-model="form.domainCandidateId"
               :data="objectTree"
@@ -195,8 +201,8 @@
               placeholder="请选择对象类型"
               @change="form.rangeCandidateId = undefined"
             />
-          </el-form-item>
-          <el-form-item label="Range" prop="rangeCandidateId" required>
+          </qt-form-item>
+          <qt-form-item label="Range" prop="rangeCandidateId" required tip="选择关系终点（值域）对应的对象类型。">
             <el-tree-select
               v-model="form.rangeCandidateId"
               :data="rangeObjectTree"
@@ -207,10 +213,10 @@
               clearable
               placeholder="请选择对象类型"
             />
-          </el-form-item>
+          </qt-form-item>
         </template>
         <template v-else>
-          <el-form-item :label="firstTypeLabel" prop="objectCandidateId" required>
+          <qt-form-item :label="firstTypeLabel" prop="objectCandidateId" required tip="选择该公理作用的主体对象类型。">
             <el-tree-select
               v-model="form.objectCandidateId"
               :data="objectTree"
@@ -222,12 +228,13 @@
               placeholder="请选择对象类型"
               @change="handleObjectChange"
             />
-          </el-form-item>
-          <el-form-item
+          </qt-form-item>
+          <qt-form-item
             v-if="form.type !== 'PROPERTY_RANGE'"
             :label="secondTypeLabel"
             prop="otherObjectCandidateId"
             required
+            tip="选择参与公理表达的另一对象类型。"
           >
             <el-tree-select
               v-model="form.otherObjectCandidateId"
@@ -239,9 +246,9 @@
               clearable
               placeholder="请选择对象类型"
             />
-          </el-form-item>
+          </qt-form-item>
           <template v-else>
-          <el-form-item label="对象类型属性" prop="attributeCandidateId" required>
+          <qt-form-item label="对象类型属性" prop="attributeCandidateId" required tip="选择当前对象类型下需要约束的属性。">
             <el-select
               v-model="form.attributeCandidateId"
               filterable
@@ -255,18 +262,18 @@
                 :value="i.id"
               />
             </el-select>
-          </el-form-item>
-          <el-form-item label="数据类型" prop="typeCategory" required>
+          </qt-form-item>
+          <qt-form-item label="数据类型" prop="typeCategory" required tip="选择属性取值的基础数据类型或业务数据类型。">
             <el-radio-group v-model="form.typeCategory" @change="handleTypeCategoryChange">
               <el-radio v-for="item in om_attribute_data_type" :key="item.value" :value="Number(item.value)">{{ item.label }}</el-radio>
             </el-radio-group>
-          </el-form-item>
-          <el-form-item v-if="form.typeCategory === 1" label="基础数据类型" prop="basicTypeCode" required>
+          </qt-form-item>
+          <qt-form-item v-if="form.typeCategory === 1" label="基础数据类型" prop="basicTypeCode" required tip="选择属性对应的基础数据类型。">
             <el-select v-model="form.basicTypeCode" placeholder="请选择基础数据类型" clearable>
               <el-option v-for="item in basic_data_type" :key="item.value" :label="item.label" :value="Number(item.value)" />
             </el-select>
-          </el-form-item>
-          <el-form-item v-else label="业务数据类型" prop="businessTypeId" required>
+          </qt-form-item>
+          <qt-form-item v-else label="业务数据类型" prop="businessTypeId" required tip="按当前项目与全局两个分类展开，选择属性关联的业务数据类型。">
             <el-select v-model="businessKey" filterable clearable placeholder="请选择业务数据类型">
               <template #label>
                 <span class="business-type-label">{{ selectedBusinessType?.name }}
@@ -277,7 +284,7 @@
                 <el-option v-for="item in group.options" :key="group.source + ':' + item.id" :label="item.name" :value="group.source + ':' + item.id" />
               </el-option-group>
             </el-select>
-          </el-form-item>
+          </qt-form-item>
           <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
             <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
           </el-form-item>
@@ -412,7 +419,7 @@ const tableStore = reactive({
       sortOrders: ["descending", "ascending", null],
     },
     {
-      label: "名称",
+      label: "公理名称",
       prop: "name",
       slot: "text",
       minWidth: 200,
@@ -455,25 +462,25 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 120,
-      minWidth: 120,
+      width: 130,
+      minWidth: 130,
       align: "left",
     },
     {
       label: "创建时间",
       prop: "createTime",
       date: true,
-      width: 180,
-      minWidth: 180,
-      align: "center",
+      width: 160,
+      minWidth: 160,
+      align: "left",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
     {
       label: "操作",
       slot: "handle",
-      width: 240,
-      minWidth: 240,
+      width: 250,
+      minWidth: 250,
       align: "center",
       fixed: "right",
     },
