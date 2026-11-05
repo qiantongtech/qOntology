@@ -61,6 +61,12 @@ public class OmAiTargetDO extends BaseEntity {
     private String acceptStatus;
     /** 关联元素数量。 */
     private Integer relatedElementCount;
+    /** 关联对象候选数量（非落库字段，列表查询时回填，用于与外部一致地拆分标签）。 */
+    @TableField(exist = false)
+    private Integer objectElementCount;
+    /** 关联关系候选数量（非落库字段，列表查询时回填）。 */
+    @TableField(exist = false)
+    private Integer relationElementCount;
     /** 采纳状态：0待采纳 1已采纳 2采纳失败。 */
     private Integer adoptStatus;
     /** 已采纳正式数据ID。 */

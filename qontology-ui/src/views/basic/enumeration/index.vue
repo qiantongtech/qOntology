@@ -157,6 +157,12 @@
       draggable
       @closed="clearValidation"
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护可复用的枚举字典，定义枚举名称与类型编码，为业务数据类型和属性取值提供标准化的候选项。"
+      />
       <el-form
         ref="typeRef"
         :model="form"
@@ -165,21 +171,21 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <el-form-item label="枚举名称" prop="enumName" class="row-full">
+        <qt-form-item label="枚举名称" prop="enumName" class="row-full" tip="填写枚举的业务名称，例如订单状态，用于展示与检索。">
           <el-input
             v-model="form.enumName"
             placeholder="请输入枚举名称"
             :maxlength="128"
           />
-        </el-form-item>
-        <el-form-item label="枚举类型" prop="enumType" class="row-full">
+        </qt-form-item>
+        <qt-form-item label="枚举类型" prop="enumType" class="row-full" tip="填写枚举的程序标识，须以字母开头，仅允许字母、数字和下划线，供业务数据类型等引用。">
           <el-input
             v-model="form.enumType"
             placeholder="请输入枚举类型"
             :maxlength="128"
           />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
+        </qt-form-item>
+        <qt-form-item label="状态" prop="status" tip="启用后枚举可用于业务建模，停用后保留历史定义。">
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in sys_normal_disable"
@@ -188,8 +194,8 @@
               >{{ dict.label }}
             </el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark" class="row-full">
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark" class="row-full" tip="补充该枚举的业务背景或维护说明。">
           <el-input
             v-model="form.remark"
             class="character-count"
@@ -199,7 +205,7 @@
             show-word-limit
             placeholder="请输入备注"
           />
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -314,7 +320,7 @@ const tableStore = reactive({
       width: 160,
       sortable: true,
     },
-    { label: "操作", slot: "handle", width: 200, fixed: "right" },
+    { label: "操作", slot: "handle", width: 240, minWidth: 240, align: "center", fixed: "right" },
   ],
   func: listType,
   params: { enumName: "", enumType: "", status: "" },

@@ -52,6 +52,10 @@ public class OmAiTargetRespVO implements Serializable {
     private String acceptStatus;
     @Schema(description = "关联元素数量")
     private Integer relatedElementCount;
+    @Schema(description = "关联对象候选数量")
+    private Integer objectElementCount;
+    @Schema(description = "关联关系候选数量")
+    private Integer relationElementCount;
     @Schema(description = "采纳状态：0待采纳 1已采纳 2采纳失败")
     private Integer adoptStatus;
     @Schema(description = "已采纳正式数据ID")

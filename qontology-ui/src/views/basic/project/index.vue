@@ -145,31 +145,29 @@
               ])
             "
             placement="bottom"
-            :width="150"
+            :width="107"
+            popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
-              <el-button link  type="primary" icon="ArrowDown">更多</el-button>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <div class="butgdlist">
-              <el-button
-                  v-if="auth.hasPermi('basic:project:project:edit')"
-                  link
-                  type="primary"
-                  icon="Edit"
-                  @click="handleUpdate(row)"
+            <el-button
+              v-if="auth.hasPermi('basic:project:project:edit')"
+              link
+              type="primary"
+              icon="Edit"
+              @click="handleUpdate(row)"
               >修改</el-button
-              >
-              <el-button
-                  v-if="auth.hasPermi('basic:project:project:remove')"
-                  link
-                  type="danger"
-                  icon="Delete"
-                  @click="handleDelete(row)"
+            >
+            <el-button
+              v-if="auth.hasPermi('basic:project:project:remove')"
+              link
+              type="danger"
+              icon="Delete"
+              @click="handleDelete(row)"
               >删除</el-button
-              >
-            </div>
-
+            >
           </el-popover>
         </template>
       </qt-table>
@@ -335,19 +333,19 @@
             {{ form.description }}
           </div>
         </el-form-item>
-        <el-form-item label="修改人" prop="updateBy">
-          <div class="form-readonly">
-            {{ form.updateBy }}
-          </div>
-        </el-form-item>
-        <el-form-item label="修改时间" prop="updateTime">
-          <div class="form-readonly">
-            {{ form.updateTime }}
-          </div>
-        </el-form-item>
+<!--        <el-form-item label="修改人" prop="updateBy">-->
+<!--          <div class="form-readonly">-->
+<!--            {{ form.updateBy }}-->
+<!--          </div>-->
+<!--        </el-form-item>-->
+<!--        <el-form-item label="修改时间" prop="updateTime">-->
+<!--          <div class="form-readonly">-->
+<!--            {{ form.updateTime }}-->
+<!--          </div>-->
+<!--        </el-form-item>-->
         <el-form-item label="创建人" prop="createBy">
           <div class="form-readonly">
-            {{ form.createBy }}
+            {{ formatCreator(form) }}
           </div>
         </el-form-item>
         <el-form-item label="创建时间" prop="createTime">
@@ -506,7 +504,7 @@ const tableStore = reactive({
   },
   columns: [
     { type: "selection", width: 55 },
-    { label: "编号", prop: "id", width: 80, align: "left", sortable: true },
+    { label: "编号", prop: "id", width: 80, align: "center", sortable: true },
     {
       label: "项目名称",
       prop: "name",
@@ -567,6 +565,8 @@ const tableStore = reactive({
       label: "操作",
       slot: "handle",
       width: 240,
+      minWidth: 240,
+      align: "center",
       fixed: "right",
     },
   ],
@@ -734,6 +734,12 @@ function handleDetail(row) {
     dialogMode.value = "detail";
     title.value = "项目详情";
   });
+}
+
+/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
+function formatCreator(record) {
+  const phone = creatorPhones.value[record.creatorId];
+  return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
 }
 
 /** 接收组件校验后的表单快照，保存成功后关闭弹窗并刷新当前项目列表。 */

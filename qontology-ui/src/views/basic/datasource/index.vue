@@ -110,30 +110,29 @@
           <!-- 修改与删除收起到更多菜单，沿用各自权限与处理方法。 -->
           <el-popover
             placement="bottom"
-            :width="120"
+            :width="107"
+            popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <div class="butgdlist">
-              <el-button
-                v-hasPermi="['basic:datasource:datasource:edit']"
-                link
-                type="primary"
-                icon="Edit"
-                @click="handleUpdate(row)"
-                >修改</el-button
-              >
-              <el-button
-                v-hasPermi="['basic:datasource:datasource:remove']"
-                link
-                type="danger"
-                icon="Delete"
-                @click="handleDelete(row)"
-                >删除</el-button
-              >
-            </div>
+            <el-button
+              v-hasPermi="['basic:datasource:datasource:edit']"
+              link
+              type="primary"
+              icon="Edit"
+              @click="handleUpdate(row)"
+              >修改</el-button
+            >
+            <el-button
+              v-hasPermi="['basic:datasource:datasource:remove']"
+              link
+              type="danger"
+              icon="Delete"
+              @click="handleDelete(row)"
+              >删除</el-button
+            >
           </el-popover>
         </template>
       </qt-table>
@@ -152,25 +151,32 @@
           title
         }}</span>
       </template>
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="配置外部数据库连接，填写地址、账号与库名并测试连通性，为本体数据接入提供数据源。"
+      />
       <el-form
         ref="daDatasourceRef"
         :model="form"
         :rules="rules"
         label-width="110px"
+        class="datasource-form"
         @submit.prevent
       >
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="数据源名称" prop="datasourceName">
+            <qt-form-item label="数据源名称" prop="datasourceName" tip="填写数据源的展示名称，便于在列表中识别不同的数据库连接。">
               <el-input
                 v-model="form.datasourceName"
                 placeholder="请输入数据源名称"
                 :maxlength="256"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="数据源类型" prop="datasourceType">
+            <qt-form-item label="数据源类型" prop="datasourceType" tip="选择数据库类型，保存后不可修改，不同连接的库名与模式互不通用。">
               <!-- 已保存连接固定类型，避免修改类型后沿用不匹配的库名和模式。 -->
               <el-select
                 v-model="form.datasourceType"
@@ -207,75 +213,75 @@
                   </div>
                 </el-option>
               </el-select>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="地址" prop="ip">
+            <qt-form-item label="地址" prop="ip" tip="填写数据库服务器的 IP 地址或域名。">
               <el-input v-model="form.ip" placeholder="请输入地址" />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="端口号" prop="port">
+            <qt-form-item label="端口号" prop="port" tip="填写数据库服务端口，例如 MySQL 默认 3306。">
               <el-input
                 v-model="form.port"
                 placeholder="请输入端口号"
                 @input="handlePortInput"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="账号" prop="username">
+            <qt-form-item label="账号" prop="username" tip="填写连接数据库的登录账号。">
               <el-input v-model="form.username" placeholder="请输入账号" />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="密码" prop="password">
+            <qt-form-item label="密码" prop="password" tip="填写连接数据库的登录密码。">
               <el-input
                 v-model="form.password"
                 type="password"
                 show-password
                 placeholder="请输入密码"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row v-if="form.datasourceType" :gutter="20">
           <el-col :span="12">
-            <el-form-item label="数据库名称" prop="dbname">
+            <qt-form-item label="数据库名称" prop="dbname" tip="填写要连接的目标数据库名称。">
               <el-input
                 v-model="form.dbname"
                 :disabled="form.id != null"
                 placeholder="请输入数据库名称"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col v-if="showSchema" :span="12">
-            <el-form-item label="模式" prop="sid">
+            <qt-form-item label="模式" prop="sid" tip="填写数据库的模式（Schema），部分类型（如 Oracle）需要指定。">
               <el-input
                 v-model="form.sid"
                 :disabled="form.id != null"
                 placeholder="请输入模式"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="状态" prop="validFlag">
+            <qt-form-item label="状态" prop="validFlag" tip="启用后该数据源可正常使用，停用后保留配置但不参与连接。">
               <el-radio-group v-model="form.validFlag">
                 <el-radio :value="true">启用</el-radio>
                 <el-radio :value="false">禁用</el-radio>
               </el-radio-group>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="24">
-            <el-form-item label="描述" prop="description">
+            <qt-form-item label="描述" prop="description" tip="补充该数据源的用途与说明信息。">
               <el-input
                 v-model="form.description"
                 type="textarea"
@@ -284,12 +290,12 @@
                 show-word-limit
                 placeholder="请输入描述"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
+            <qt-form-item label="备注" prop="remark" tip="填写其他备注信息。">
               <el-input
                 v-model="form.remark"
                 type="textarea"
@@ -298,7 +304,7 @@
                 show-word-limit
                 placeholder="请输入备注"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
       </el-form>
@@ -439,6 +445,19 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <!-- 详情补齐审计信息，创建人展示规则与枚举详情一致。 -->
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="创建人" prop="createBy">
+              <div class="form-readonly">{{ formatCreator(form) }}</div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="创建时间" prop="createTime">
+              <div class="form-readonly">{{ form.createTime || "-" }}</div>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -468,6 +487,12 @@ const { datasource_type } = proxy.useDict("datasource_type");
 const route = useRoute();
 const tableRef = ref(null);
 const { creatorPhones } = useCreatorPhones();
+
+/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
+function formatCreator(record) {
+  const phone = creatorPhones.value[record.creatorId];
+  return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
+}
 
 const datasourceTypeMap = computed(() =>
   (datasource_type.value || []).reduce((map, dict) => {
@@ -566,7 +591,7 @@ const tableStore = reactive({
       sortable: "custom",
       sortOrders: ["descending", "ascending"],
     },
-    { label: "操作", slot: "handle", width: 280, fixed: "right" },
+    { label: "操作", slot: "handle", width: 240, minWidth: 240, align: "center", fixed: "right" },
   ],
 });
 
@@ -899,5 +924,10 @@ function handleDelete(row) {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+/* 对齐对象类型新增页的间隔：新增/修改弹窗中带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
+.datasource-form :deep(.el-form-item.has-tip) {
+  margin-bottom: 25px;
 }
 </style>

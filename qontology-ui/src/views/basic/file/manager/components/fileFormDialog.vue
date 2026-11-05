@@ -29,6 +29,12 @@
     :show-close="!saving"
     :before-close="handleBeforeClose"
   >
+    <guide-tip-panel
+      type="hint"
+      class="mb15"
+      allow-wrap
+      title="上传并维护模型数据文件，选择归属分类并填写名称与描述，支持后续解析与引用。"
+    />
     <el-form
       ref="formRef"
       :model="form"
@@ -38,7 +44,7 @@
       class="column-form"
       @submit.prevent="submitForm"
     >
-      <qt-form-item class="row-full" label="文件分类" prop="categoryId">
+      <qt-form-item class="row-full" label="文件分类" prop="categoryId" tip="选择文件归属的分类目录。">
         <el-tree-select
           v-model="form.categoryId"
           :data="categoryOptions"
@@ -50,7 +56,7 @@
           style="width: 100%"
         />
       </qt-form-item>
-      <qt-form-item class="row-full" label="上传文件" prop="filePath">
+      <qt-form-item class="row-full" label="上传文件" prop="filePath" tip="上传模型相关文档，支持 txt、pdf、excel、word、markdown 等格式。">
         <FileUpload2
           v-model="form.filePath"
           :file-name="form.fileName"
@@ -75,13 +81,14 @@
         />
       </qt-form-item>
       <qt-form-item
-        class="row-full file-name-item"
+        class="row-full"
         label="文件名称"
         prop="fileName"
+        tip="文件展示名称，默认取上传文件名，可手动修改。"
       >
         <el-input v-model="form.fileName" placeholder="请输入文件名称" />
       </qt-form-item>
-      <qt-form-item class="row-full" label="描述" prop="description">
+      <qt-form-item class="row-full" label="描述" prop="description" tip="补充文件的内容说明或用途。">
         <el-input
           v-model="form.description"
           class="character-count"
@@ -206,10 +213,6 @@ defineExpose({ openDialog });
 </script>
 
 <style scoped lang="scss">
-.file-name-item {
-  margin-top: -20px;
-}
-
 .char-count :deep(.el-input__count)::after {
   content: "个字符";
 }

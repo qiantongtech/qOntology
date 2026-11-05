@@ -48,10 +48,10 @@
         class="column-form"
         @submit.prevent="submitForm"
     >
-      <qt-form-item label="业务数据名称" prop="name" class="row-full">
+      <qt-form-item label="业务数据名称" prop="name" class="row-full" tip="填写业务数据类型的名称，例如采购金额、订单编号，便于属性建模时引用。">
         <el-input v-model="localForm.name" :maxlength="128" placeholder="请输入名称"/>
       </qt-form-item>
-      <qt-form-item label="业务数据类型" prop="dataType" class="row-full">
+      <qt-form-item label="业务数据类型" prop="dataType" class="row-full" tip="选择该数据类型的基础类别（文本、整数、小数、布尔、日期、枚举），下方配置项随类型变化。">
         <!-- 类型选择只切换配置区，不触发选择框校验；点击确定时统一校验。 -->
         <el-select v-model="localForm.dataType" :validate-event="false" :disabled="fixedEnumType !== undefined" placeholder="请选择数据类型">
           <el-option v-for="item in dataTypeOptions" :key="item.value" :label="item.label" :value="item.value"/>
@@ -59,12 +59,12 @@
       </qt-form-item>
 
       <template v-if="localForm.dataType === DATA_TYPE.TEXT">
-        <qt-form-item label="格式校验" prop="validationType" class="row-full">
+        <qt-form-item label="格式校验" prop="validationType" class="row-full" tip="为文本类型选择内置校验规则或自定义正则，控制取值格式。">
           <el-select v-model="localForm.validationType" placeholder="请选择格式校验">
             <el-option v-for="item in validationOptions" :key="item.value" :label="item.label" :value="item.value"/>
           </el-select>
         </qt-form-item>
-        <qt-form-item label="最小长度" prop="minLength" class="row-full">
+        <qt-form-item label="最小长度" prop="minLength" class="row-full" tip="不填写最小长度时，表示不设置字符长度下限。">
           <el-input-number v-model="localForm.minLength" :min="0" :max="2147483647" :precision="0" placeholder="不限制"
                            controls-position="right"
           />
@@ -86,14 +86,14 @@
       </template>
 
       <qt-form-item v-if="localForm.dataType === DATA_TYPE.DECIMAL" label="总精度" prop="allPlaces"
-                    class="row-full"
+                    class="row-full" tip="数值类型的总位数，需为正整数且不小于小数位数。"
       >
         <el-input-number v-model="localForm.allPlaces" :min="1" :max="2147483647" :precision="0"
                          controls-position="right"
         />
       </qt-form-item>
       <qt-form-item v-if="localForm.dataType === DATA_TYPE.DECIMAL" label="小数位数" prop="decimalPlaces"
-                    class="row-full"
+                    class="row-full" tip="数值类型保留的小数位数，不能超过总精度。"
       >
         <el-input-number v-model="localForm.decimalPlaces" :min="0" :max="2147483647" :precision="0"
                          controls-position="right"
@@ -101,25 +101,25 @@
       </qt-form-item>
       <!-- 整数与小数共用数值范围；整数只允许整数边界，小数保留输入的小数边界。 -->
       <template v-if="isNumeric">
-        <qt-form-item label="最小值" prop="minLength" class="row-full">
+        <qt-form-item label="最小值" prop="minLength" class="row-full" tip="不填写表示不限制取值下限。">
           <el-input-number v-model="localForm.minLength"
                            :precision="localForm.dataType === DATA_TYPE.INTEGER ? 0 : undefined"
                            controls-position="right" placeholder="不限制"
           />
         </qt-form-item>
-        <qt-form-item label="最大值" prop="maxLength" class="row-full">
+        <qt-form-item label="最大值" prop="maxLength" class="row-full" tip="不填写表示不限制取值上限。">
           <el-input-number v-model="localForm.maxLength"
                            :precision="localForm.dataType === DATA_TYPE.INTEGER ? 0 : undefined"
                            controls-position="right" placeholder="不限制"
           />
         </qt-form-item>
       </template>
-      <qt-form-item v-if="isNumeric" label="单位" prop="unit" class="row-full">
+      <qt-form-item v-if="isNumeric" label="单位" prop="unit" class="row-full" tip="填写数值的计量单位，例如元、千克，用于展示与说明。">
         <el-input v-model="localForm.unit" :maxlength="32" placeholder="请输入单位"/>
       </qt-form-item>
       <!-- 布尔文案默认“是／否”，允许按业务语义修改，并随表单快照提交。 -->
       <template v-if="localForm.dataType === DATA_TYPE.BOOLEAN">
-        <qt-form-item label="true 对应文案" class="row-full">
+        <qt-form-item label="true 对应文案" class="row-full" tip="布尔类型 true 值展示的业务文案，默认为“是”。">
           <el-input v-model="localForm.trueLabel" placeholder="请输入 true 对应文案"/>
         </qt-form-item>
         <qt-form-item label="false 对应文案" class="row-full" tip="请为两种状态提供明确且相互区分的业务名称。">
@@ -127,12 +127,12 @@
         </qt-form-item>
       </template>
       <template v-if="localForm.dataType === DATA_TYPE.DATE">
-        <qt-form-item label="展示格式" prop="format" class="row-full">
+        <qt-form-item label="展示格式" prop="format" class="row-full" tip="日期类型在前端展示时使用的格式，存储仍为标准日期。">
           <el-select v-model="localForm.format" placeholder="请选择展示格式">
             <el-option v-for="format in dateFormats" :key="format" :label="format" :value="format"/>
           </el-select>
         </qt-form-item>
-        <qt-form-item label="最早日期" prop="earliestTime" class="row-full">
+        <qt-form-item label="最早日期" prop="earliestTime" class="row-full" tip="选填；用于约束允许录入的最早日期。">
           <el-date-picker v-model="localForm.earliestTime" type="date" :format="localForm.format" value-format="YYYY-MM-DD"
                           :disabled-date="disableEarliestTime" clearable placeholder="不限制"
           />
@@ -152,7 +152,7 @@
           <el-option v-for="item in enumOptions" :key="item.enumType" :label="item.enumName" :value="item.enumType"/>
         </el-select>
       </qt-form-item>
-      <qt-form-item label="描述" prop="description" class="row-full">
+      <qt-form-item label="描述" prop="description" class="row-full" tip="说明该业务数据类型的用途与适用场景。">
         <el-input v-model="localForm.description" type="textarea" :rows="3" maxlength="256个字符" show-word-limit
                   placeholder="请输入描述"
         />

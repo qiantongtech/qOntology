@@ -33,6 +33,9 @@ public interface OmAiTargetMapper extends BaseMapperX<OmAiTargetDO> {
     /** 统计建模目标关联的对象和关系候选数量。 */
     Integer selectRelatedElementCount(Long targetId);
 
+    /** 分别统计建模目标关联的对象候选与关系候选数量（objectCount / relationCount）。 */
+    Map<String, Object> selectRelatedElementCounts(@Param("targetId") Long targetId);
+
     /** 查询任务下的候选建模目标索引。 */
     List<Map<String, Object>> selectCandidateIndex(Long taskId);
 

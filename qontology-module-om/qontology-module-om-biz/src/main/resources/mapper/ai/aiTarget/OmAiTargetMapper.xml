@@ -49,4 +49,14 @@
                 WHERE link.target_candidate_id=#{targetId} AND candidate.del_flag=0)
     </select>
 
+    <!-- 分别统计建模目标关联的对象候选与关系候选数量，供前端拼成与外部一致的两类标签。 -->
+    <select id="selectRelatedElementCounts" resultType="java.util.LinkedHashMap">
+        SELECT (SELECT COUNT(*) FROM om_ai_object_target link
+                JOIN om_ai_object candidate ON candidate.id=link.object_candidate_id
+                WHERE link.target_candidate_id=#{targetId} AND candidate.del_flag=0) AS objectCount,
+               (SELECT COUNT(*) FROM om_ai_relation_target link
+                JOIN om_ai_relation candidate ON candidate.id=link.relation_candidate_id
+                WHERE link.target_candidate_id=#{targetId} AND candidate.del_flag=0) AS relationCount
+    </select>
+
 </mapper>

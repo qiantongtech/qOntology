@@ -17,7 +17,12 @@
 -->
 
 <template>
-  <el-form-item v-if="[1, 2].includes(typeCode)" label="单位" prop="unit">
+  <qt-form-item
+    v-if="[1, 2].includes(typeCode)"
+    :tip="readonly ? undefined : '填写该属性的计量单位，例如 元、千克、件。'"
+    label="单位"
+    prop="unit"
+  >
     <div v-if="readonly" class="form-readonly">{{ model.unit || "-" }}</div>
     <el-input
       v-else
@@ -25,8 +30,13 @@
       placeholder="请输入单位"
       :maxlength="32"
     />
-  </el-form-item>
-  <el-form-item v-if="typeCode === 2" label="小数位数" prop="decimalPlaces">
+  </qt-form-item>
+  <qt-form-item
+    v-if="typeCode === 2"
+    :tip="readonly ? undefined : '设置数值保留的小数位数，用于展示与校验。'"
+    label="小数位数"
+    prop="decimalPlaces"
+  >
     <div v-if="readonly" class="form-readonly">
       {{ model.decimalPlaces == null ? "-" : String(model.decimalPlaces) }}
     </div>
@@ -39,8 +49,13 @@
       controls-position="right"
       style="width: 100%"
     />
-  </el-form-item>
-  <el-form-item v-if="typeCode === 4" label="格式" prop="format">
+  </qt-form-item>
+  <qt-form-item
+    v-if="typeCode === 4"
+    :tip="readonly ? undefined : '填写日期或时间的展示格式，例如 yyyy-MM-dd HH:mm:ss。'"
+    label="格式"
+    prop="format"
+  >
     <div v-if="readonly" class="form-readonly">{{ model.format || "-" }}</div>
     <el-input
       v-else
@@ -48,16 +63,24 @@
       placeholder="请输入格式，如 yyyy-MM-dd HH:mm:ss"
       :maxlength="128"
     />
-  </el-form-item>
+  </qt-form-item>
   <template v-if="typeCode === 5">
-    <el-form-item label="枚举来源" prop="enumSource">
+    <qt-form-item
+      :tip="readonly ? undefined : '选择枚举类型来自当前项目还是全局，切换后会重新筛选可选类型。'"
+      label="枚举来源"
+      prop="enumSource"
+    >
       <div v-if="readonly" class="form-readonly">{{ model.enumSource === "GLOBAL" ? "全局" : "当前项目" }}</div>
       <el-radio-group v-else v-model="model.enumSource" @change="handleEnumSourceChange">
         <el-radio value="PROJECT">当前项目</el-radio>
         <el-radio value="GLOBAL">全局</el-radio>
       </el-radio-group>
-    </el-form-item>
-    <el-form-item label="枚举类型" prop="enumType">
+    </qt-form-item>
+    <qt-form-item
+      :tip="readonly ? undefined : '选择该属性取值所引用的枚举类型。'"
+      label="枚举类型"
+      prop="enumType"
+    >
       <div v-if="readonly" class="form-readonly">{{ enumName }}</div>
       <el-select
         v-else
@@ -78,7 +101,7 @@
           <span class="enum-option"><span>{{ item.enumName }}</span><small>{{ item.enumType }}</small></span>
         </el-option>
       </el-select>
-    </el-form-item>
+    </qt-form-item>
   </template>
 </template>
 

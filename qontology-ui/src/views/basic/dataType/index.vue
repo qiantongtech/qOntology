@@ -296,7 +296,7 @@
           <el-col :span="24">
             <el-form-item label="创建人" prop="createBy">
               <div class="form-readonly">
-                {{ form.createBy }}
+                {{ formatCreator(form) }}
               </div>
             </el-form-item>
           </el-col>
@@ -382,6 +382,12 @@ const textValidationLabels = {
 const tableRef = ref();
 const { creatorPhones } = useCreatorPhones();
 
+/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
+function formatCreator(record) {
+  const phone = creatorPhones.value[record.creatorId];
+  return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
+}
+
 // 将已提交名称与输入草稿分开，保证翻页、排序和刷新沿用最近一次查询的条件。
 const appliedFilters = reactive({ name: "", dataType: "" });
 
@@ -452,7 +458,7 @@ const tableStore = reactive({
       sortable: true,
     },
     ...(!props.readOnly
-      ? [{ label: "操作", slot: "handle", width: 240, fixed: "right" }]
+      ? [{ label: "操作", slot: "handle", width: 240, minWidth: 240, align: "center", fixed: "right" }]
       : []),
   ]),
   func: loadDataTypes,

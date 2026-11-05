@@ -21,6 +21,7 @@ package tech.qiantong.qontology.module.om.service.ai.aiTarget.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import java.util.Collection;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiTarget.vo.*;
@@ -44,10 +45,20 @@ public class OmAiTargetServiceImpl extends ServiceImpl<OmAiTargetMapper, OmAiTar
     public PageResult<OmAiTargetDO> getOmAiTargetPage(OmAiTargetPageReqVO reqVO) {
         PageResult<OmAiTargetDO> result = mapper.selectPage(reqVO);
         for (OmAiTargetDO target : result.getList()) {
-            Integer count = mapper.selectRelatedElementCount(target.getId());
-            target.setRelatedElementCount(count == null ? 0 : count);
+            Map<String, Object> counts = mapper.selectRelatedElementCounts(target.getId());
+            int objectCount = toCount(counts, "objectCount");
+            int relationCount = toCount(counts, "relationCount");
+            target.setObjectElementCount(objectCount);
+            target.setRelationElementCount(relationCount);
+            target.setRelatedElementCount(objectCount + relationCount);
         }
         return result;
+    }
+
+    /** 从分类计数结果中安全取出指定列的整型值。 */
+    private int toCount(Map<String, Object> counts, String key) {
+        Object value = counts == null ? null : counts.get(key);
+        return value instanceof Number ? ((Number) value).intValue() : 0;
     }
 
     /** 创建AI候选建模目标。 */

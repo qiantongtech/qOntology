@@ -73,22 +73,32 @@
           >修改
           </el-button>
           <!-- 低频操作收起到更多菜单，启用中的分类与参考页一致禁止删除。 -->
-          <el-popover placement="bottom" :width="100" trigger="click"
-                      popper-class="table-action-popover handle-popover"
+          <el-popover
+            placement="bottom"
+            :width="107"
+            popper-class="handle-popover"
+            trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <div class="category-action-list">
-              <el-button v-hasPermi="['basic:file:category:add']" link type="primary" icon="Plus"
-                         @click="handleAdd(row)"
-              >新增子级
-              </el-button>
-              <el-button v-hasPermi="['basic:file:category:remove']" link type="danger" icon="Delete"
-                         :disabled="row.validFlag === true" @click="handleDelete(row)"
-              >删除
-              </el-button>
-            </div>
+            <el-button
+              v-hasPermi="['basic:file:category:add']"
+              link
+              type="primary"
+              icon="Plus"
+              @click="handleAdd(row)"
+              >新增子级</el-button
+            >
+            <el-button
+              v-hasPermi="['basic:file:category:remove']"
+              link
+              type="danger"
+              icon="Delete"
+              :disabled="row.validFlag === true"
+              @click="handleDelete(row)"
+              >删除</el-button
+            >
           </el-popover>
         </template>
         <template #empty>
@@ -166,7 +176,7 @@ const tableStore = reactive({
     {label: '排序', prop: 'orderNum', slot: 'text', width: 150, sortable: true},
     {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: {effect: 'light'}},
     {label: '创建时间', prop: 'createTime', slot: 'createTime', width: 160, sortable: true},
-    {label: '操作', slot: 'handle', width: 240, fixed: 'right'}
+    {label: '操作', slot: 'handle', width: 240, minWidth: 240, align: 'center', fixed: 'right'}
   ],
   func: listModelDataCategory,
   params: {name: '', parentId: undefined},
@@ -309,18 +319,6 @@ onMounted(loadCategoryOptions);
   .svg-icon {
     font-size: 12px;
     margin-right: 6px;
-  }
-}
-
-// 菜单通过 Teleport 挂载，使用当前组件的作用域类保持按钮纵向排列。
-.category-action-list {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-
-  .el-button + .el-button {
-    margin-left: 0;
   }
 }
 

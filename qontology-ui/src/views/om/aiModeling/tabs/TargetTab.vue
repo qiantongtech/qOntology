@@ -48,8 +48,16 @@
         <template #text="{ row, column_data }">{{
           row[column_data.prop]
         }}</template>
-        <!-- 关联元素为 0 时也要展示 0，不能落进空值占位。 -->
-        <template #count="{ row }">{{ row.relatedElementCount ?? 0 }}</template>
+        <!-- 关联元素与 index 列表口径一致：有标签数据用标签组，候选暂无标签时回退展示数量。 -->
+        <template #relatedElementCount="{ row }">
+          <qt-tag-group
+            v-if="row.relatedElementTags?.length"
+            :items="row.relatedElementTags"
+            type="none"
+            :max-count="2"
+          />
+          <span v-else>{{ row.relatedElementCount ?? 0 }}</span>
+        </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -286,6 +294,24 @@ const {
 } = tab;
 
 /**
+ * 关联元素口径与外部 omtarget/index 一致：后端已分别返回对象候选数与关系候选数，
+ * 这里拼成「对象类型N / 对象类型关系N」两个标签，交给 qt-tag-group 渲染。
+ * @param {Object} params QtTable 合并分页、排序后的查询参数
+ * @returns {Promise<Object>} 补全标签后的候选列表响应
+ */
+async function loadTargets(params) {
+  const response = await fetchRows(params);
+  response.data.rows = (response.data.rows || []).map((row) => ({
+    ...row,
+    relatedElementTags: [
+      `对象类型${row.objectElementCount ?? "-"}`,
+      `对象类型关系${row.relationElementCount ?? "-"}`,
+    ],
+  }));
+  return response;
+}
+
+/**
  * 页签嵌在宿主容器内：详情页的外层卡片已带白底与内边距，开启 full 会重复一层间距和阴影并把内容强撑高；
  * 页签内又没有搜索区，所以同时关闭操作栏的“隐藏搜索”按钮。
  */
@@ -325,7 +351,7 @@ const tableStore = reactive({
       label: "目标问题",
       prop: "question",
       slot: "text",
-      minWidth: 260,
+      minWidth: 300,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -333,8 +359,8 @@ const tableStore = reactive({
       label: "问题来源",
       prop: "questionSource",
       slot: "text",
-      width: 220,
-      minWidth: 220,
+      width: 250,
+      minWidth: 250,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -342,10 +368,18 @@ const tableStore = reactive({
       label: "业务场景",
       prop: "businessScenarios",
       slot: "text",
-      width: 220,
-      minWidth: 220,
+      width: 250,
+      minWidth: 250,
       align: "left",
       showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "关联元素",
+      prop: "relatedElementCount",
+      slot: "relatedElementCount",
+      minWidth: 240,
+      align: "left",
+      headerAlign: "left",
     },
     {
       label: "优先级",
@@ -364,14 +398,6 @@ const tableStore = reactive({
       align: "center",
     },
     {
-      label: "关联元素",
-      prop: "relatedElementCount",
-      slot: "count",
-      width: 100,
-      minWidth: 100,
-      align: "center",
-    },
-    {
       label: "采纳状态",
       prop: "adoptStatus",
       slot: "adoptStatus",
@@ -383,8 +409,8 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 120,
-      minWidth: 120,
+      width: 130,
+      minWidth: 130,
       align: "left",
       headerAlign: "left",
     },
@@ -407,7 +433,7 @@ const tableStore = reactive({
       fixed: "right",
     },
   ],
-  func: fetchRows,
+  func: loadTargets,
 });
 
 const rules = {

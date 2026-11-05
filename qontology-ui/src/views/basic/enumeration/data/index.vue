@@ -75,6 +75,17 @@
         <template #text="{ row, column_data }">{{
           row[column_data.prop] || "-"
         }}</template>
+        <!-- 与枚举类型列表一致：创建人下方展示联系电话，未维护电话时只显示姓名。 -->
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "—"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
+        </template>
         <!-- 与枚举类型列表一致：正常/停用用开关表示，未取得的空状态仍显示占位符。 -->
         <template #status="{ row }">
           <el-switch
@@ -153,6 +164,12 @@
       draggable
       @closed="clearValidation"
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护当前枚举类型下的候选项，定义展示标签与存储键值，为业务数据类型和属性提供可选取值。"
+      />
       <el-form
         ref="dataRef"
         :model="form"
@@ -161,24 +178,24 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <el-form-item class="row-full" label="枚举类型">
+        <qt-form-item class="row-full" label="枚举类型" tip="自动沿用当前枚举类型，不可修改。">
           <el-input v-model="form.enumType" disabled />
-        </el-form-item>
-        <el-form-item class="row-full" label="枚举标签" prop="enumLabel">
+        </qt-form-item>
+        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel" tip="填写候选项的展示文案，例如“已支付”，供业务理解与展示。">
           <el-input
             v-model="form.enumLabel"
             placeholder="请输入枚举标签"
             :maxlength="128"
           />
-        </el-form-item>
-        <el-form-item class="row-full" label="枚举键值" prop="enumValue">
+        </qt-form-item>
+        <qt-form-item class="row-full" label="枚举键值" prop="enumValue" tip="填写候选项的实际存储值，例如“2”，供系统识别与落库。">
           <el-input
             v-model="form.enumValue"
             placeholder="请输入枚举键值"
             :maxlength="128"
           />
-        </el-form-item>
-        <el-form-item class="row-full" label="排序" prop="enumSort">
+        </qt-form-item>
+        <qt-form-item class="row-full" label="排序" prop="enumSort" tip="数值越小越靠前，控制候选项的展示顺序。">
           <el-input-number
             v-model="form.enumSort"
             :min="0"
@@ -186,8 +203,8 @@
             :precision="0"
             controls-position="right"
           />
-        </el-form-item>
-        <el-form-item class="row-full" label="状态" prop="status">
+        </qt-form-item>
+        <qt-form-item class="row-full" label="状态" prop="status" tip="启用后该数据可被业务选用，停用后保留历史定义。">
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in sys_normal_disable"
@@ -196,8 +213,8 @@
               >{{ dict.label }}
             </el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item class="row-full" label="备注" prop="remark">
+        </qt-form-item>
+        <qt-form-item class="row-full" label="备注" prop="remark" tip="补充该数据项的业务含义或维护说明。">
           <el-input
             v-model="form.remark"
             class="character-count"
@@ -207,7 +224,7 @@
             show-word-limit
             placeholder="请输入备注"
           />
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -290,6 +307,7 @@ import {
 } from "@/api/basic/enumeration/data";
 import { getType } from "@/api/basic/enumeration/type";
 import auth from "@/plugins/auth";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 // 传入 enumType 时作为详情页内嵌列表使用；未传入时沿用独立页面的路由加载逻辑。
 const props = defineProps({
@@ -300,6 +318,7 @@ const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
+const { creatorPhones } = useCreatorPhones();
 const route = useRoute();
 const pageRef = ref();
 const tableRef = ref();
@@ -370,8 +389,10 @@ const tableStore = reactive({
     {
       label: "创建人",
       prop: "createBy",
-      slot: "text",
-      width: 120,
+      slot: "creator",
+      width: 130,
+      align: "left",
+      headerAlign: "left",
       showOverflowTooltip: { effect: "light" },
     },
     {

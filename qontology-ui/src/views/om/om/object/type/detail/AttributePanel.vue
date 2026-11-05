@@ -18,212 +18,102 @@
 
 <template>
   <div ref="panelRef">
-    <el-form
-      v-show="showSearch"
-      class="btn-style"
-      :model="query"
-      :inline="true"
-      @submit.prevent="search"
+    <qt-wrap
+      :columns="columns"
+      :table-ref="listActions"
+      :config="{ fullContent: false }"
     >
-      <el-form-item label="属性名称">
-        <el-input
-          v-model="query.name"
-          class="el-form-input-width"
-          placeholder="请输入属性名称"
-          maxlength="128"
-          clearable
-          @keyup.enter="search"
+      <template #search>
+        <qt-search-bar
+          :items="searchItems"
+          :params="query"
+          :table-ref="tableRef"
+          @query="handleQuery"
+          @reset="handleQuery"
         />
-      </el-form-item>
-
-      <el-form-item>
-        <el-button type="primary" plain @click="search"><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询</el-button>
-
-        <el-button @click="resetSearch"><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <div class="justify-between mb15">
-      <el-row :gutter="15" class="btn-style">
-        <el-col :span="1.5">
-          <el-button
-            v-hasPermi="['om:object:type:edit']"
-            type="primary"
-            plain
-            :disabled="saving"
-            @click="handleAdd"
-          >
-            <i class="iconfont-mini icon-xinzeng mr5"></i>新增
-          </el-button>
-        </el-col>
-
-        <el-col :span="1.5">
-          <el-button
-            v-hasPermi="['om:object:type:edit']"
-            type="danger"
-            plain
-            :disabled="!selectedIds.length || deleting || loading"
-            @click="handleDelete()"
-          >
-            <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
-          </el-button>
-        </el-col>
-      </el-row>
-
-      <right-toolbar
-        v-model:showSearch="showSearch"
-        :columns="columns"
-        @queryTable="getList"
-      />
-    </div>
-
-    <el-table
-      ref="tableRef"
-      v-loading="loading"
-      :data="rows"
-      row-key="id"
-      stripe
-      :default-sort="{ prop: 'createTime', order: 'descending' }"
-      @selection-change="handleSelectionChange"
-      @sort-change="handleSortChange"
-    >
-      <el-table-column
-        type="selection"
-        width="55"
-        align="center"
-        fixed="left"
-      />
-
-      <el-table-column
-        v-if="visible('id')"
-        prop="id"
-        label="编号"
-        width="80"
-        align="center"
-        fixed="left"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending', null]"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      />
-
-      <el-table-column
-        v-if="visible('name')"
-        prop="name"
-        label="属性名称"
-        width="240"
-        fixed="left"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      />
-
-      <el-table-column
-        v-if="visible('code')"
-        prop="code"
-        label="属性代码"
-        width="190"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      />
-
-      <el-table-column
-        v-if="visible('description')"
-        prop="description"
-        label="描述"
-        min-width="320"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      >
-        <template #default="{ row }">{{ row.description || "-" }}</template>
-      </el-table-column>
-
-      <el-table-column
-        v-if="visible('typeCategory')"
-        prop="typeCategory"
-        label="数据类型"
-        width="150"
-        align="center"
-      >
-        <template #default="{ row }"><el-tag
-            :type="row.typeCategory === 2 ? 'success' : 'primary'"
-            effect="light"
-            >{{ dataTypeLabel(row.typeCategory) }}</el-tag></template>
-      </el-table-column>
-
-      <el-table-column
-        v-if="visible('createBy')"
-        prop="createBy"
-        label="创建人"
-        width="120"
-        align="center"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      >
-        <template #default="{ row }">{{ row.createBy || "-" }}</template>
-      </el-table-column>
-
-      <el-table-column
-        v-if="visible('createTime')"
-        prop="createTime"
-        label="创建时间"
-        width="170"
-        align="center"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending', null]"
-      >
-        <template #default="{ row }">{{
-          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-        }}</template>
-      </el-table-column>
-
-      <el-table-column
-        v-if="visible('operation')"
-        label="操作"
-        width="200"
-        align="center"
-        fixed="right"
-        class-name="small-padding fixed-width"
-      >
-        <template #default="{ row }">
-          <el-button
-            v-hasPermi="['om:object:type:query']"
-            link
-            type="primary"
-            icon="View"
-            @click="handleDetail(row)"
-            >详情</el-button>
-
-          <el-button
-            v-hasPermi="['om:object:type:edit']"
-            link
-            type="primary"
-            icon="Edit"
-            :disabled="saving"
-            @click="handleUpdate(row)"
-            >修改</el-button>
-
-          <el-button
-            v-hasPermi="['om:object:type:edit']"
-            link
-            type="danger"
-            icon="Delete"
-            :disabled="deleting"
-            @click="handleDelete(row)"
-            >删除</el-button>
-        </template>
-      </el-table-column>
-
-      <template #empty>
-        <div class="emptyBg">
-          <img src="@/assets/system/images/no_data/noData.png" alt="暂无属性" />
-
-          <p>暂无属性</p>
-        </div>
       </template>
-    </el-table>
+      <template #actions-data>
+        <el-button
+          v-hasPermi="['om:object:type:edit']"
+          type="primary"
+          plain
+          :disabled="saving"
+          @click="handleAdd"
+        >
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button
+          v-hasPermi="['om:object:type:edit']"
+          type="danger"
+          plain
+          :disabled="!selectedIds.length || deleting || loading"
+          @click="handleDelete()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+        </el-button>
+      </template>
 
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      v-model:page="query.pageNum"
-      v-model:limit="query.pageSize"
-      @pagination="getList"
-    />
+      <div v-loading="loading">
+        <qt-table
+          ref="tableRef"
+          :columns="columns"
+          :config="tableConfig"
+          :events="tableEvents"
+          :func="readTableRows"
+        >
+          <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+          <template #description="{ row }">{{ row.description?.trim() }}</template>
+          <template #typeCategory="{ row }">
+            <el-tag :type="row.typeCategory === 2 ? 'success' : 'primary'" effect="light">
+              {{ dataTypeLabel(row.typeCategory) }}
+            </el-tag>
+          </template>
+          <template #createTime="{ row }">{{
+            proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}")
+          }}</template>
+          <template #operation="{ row }">
+            <el-button
+              v-hasPermi="['om:object:type:query']"
+              link
+              type="primary"
+              icon="View"
+              @click="handleDetail(row)"
+              >详情</el-button>
+            <el-button
+              v-hasPermi="['om:object:type:edit']"
+              link
+              type="primary"
+              icon="Edit"
+              :disabled="saving"
+              @click="handleUpdate(row)"
+              >修改</el-button>
+            <el-button
+              v-hasPermi="['om:object:type:edit']"
+              link
+              type="danger"
+              icon="Delete"
+              :disabled="deleting"
+              @click="handleDelete(row)"
+              >删除</el-button>
+          </template>
+          <template #empty>
+            <div class="emptyBg">
+              <img src="@/assets/system/images/no_data/noData.png" alt="暂无属性" />
+              <p>暂无属性</p>
+            </div>
+          </template>
+        </qt-table>
+      </div>
+
+      <pagination
+        v-show="total > 0"
+        :total="total"
+        v-model:page="query.pageNum"
+        v-model:limit="query.pageSize"
+        :auto-scroll="false"
+        @pagination="getList"
+      />
+    </qt-wrap>
 
     <el-dialog
       v-model="open"
@@ -236,31 +126,46 @@
       destroy-on-close
       @closed="attributeRef?.clearValidate()"
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护对象类型的属性定义，统一属性名称、代码与取值规则，为后续关系建模和数据映射提供一致的字段依据。"
+      />
       <el-form
         ref="attributeRef"
-        class="attribute-dialog-form"
+        class="column-form attribute-dialog-form"
         :model="form"
         :rules="rules"
         label-width="110px"
         @submit.prevent="submitForm"
       >
-        <div class="h2-title">基础信息</div>
+        <div class="h2-title row-full">基础信息</div>
 
-        <el-row :gutter="20">
-          <el-col :span="24"><el-form-item label="属性名称" prop="name"><el-input
-                v-model="form.name"
-                placeholder="请输入属性名称"
-                maxlength="128"
-/></el-form-item></el-col>
+        <qt-form-item
+          class="row-full"
+          tip="填写业务中使用的标准属性名称，保持同一对象类型下命名一致。"
+          label="属性名称"
+          prop="name"
+        >
+          <el-input v-model="form.name" placeholder="请输入属性名称" maxlength="128" />
+        </qt-form-item>
 
-          <el-col :span="24"><el-form-item label="属性代码" prop="code"><el-input
-                v-model="form.code"
-                placeholder="例如 purchase_amount"
-                maxlength="128"
-/></el-form-item></el-col>
-        </el-row>
+        <qt-form-item
+          class="row-full"
+          tip="以英文字母开头，后续仅支持英文字母、数字和下划线，作为属性的英文标识。"
+          label="属性代码"
+          prop="code"
+        >
+          <el-input v-model="form.code" placeholder="例如 purchase_amount" maxlength="128" />
+        </qt-form-item>
 
-        <el-form-item label="描述" prop="description">
+        <qt-form-item
+          class="row-full"
+          tip="说明该属性的业务含义、取值范围与适用场景，最多500个字符。"
+          label="描述"
+          prop="description"
+        >
           <el-input
             v-model="form.description"
             class="character-count"
@@ -270,25 +175,29 @@
             :maxlength="500"
             show-word-limit
           />
-        </el-form-item>
+        </qt-form-item>
 
-        <div class="h2-title">数据定义</div>
+        <div class="h2-title row-full">数据定义</div>
 
-        <el-form-item label="数据类型" prop="typeCategory">
-          <el-radio-group
-            v-model="form.typeCategory"
-            @change="handleDataTypeChange"
-          >
+        <qt-form-item
+          class="row-full"
+          tip="直接配置基础数据类型的取值规则，或引用已定义的业务数据类型。"
+          label="数据类型"
+          prop="typeCategory"
+        >
+          <el-radio-group v-model="form.typeCategory" @change="handleDataTypeChange">
             <el-radio
               v-for="option in dataTypeOptions"
               :key="option.value"
               :label="option.value"
               >{{ option.label }}</el-radio>
           </el-radio-group>
-        </el-form-item>
+        </qt-form-item>
 
-        <el-form-item
+        <qt-form-item
           v-if="form.typeCategory === 1"
+          class="row-full"
+          tip="选择该属性取值所属的基础类型，不同类型会展示对应的补充配置项。"
           label="基础数据类型"
           prop="basicTypeCode"
           required
@@ -307,16 +216,28 @@
               :value="Number(item.value)"
             />
           </el-select>
-        </el-form-item>
+        </qt-form-item>
 
         <template v-else>
-          <el-form-item label="业务类型来源" prop="businessTypeSource" required>
+          <qt-form-item
+            class="row-full"
+            tip="选择业务数据类型来自当前项目还是全局，切换后会重新筛选可选类型。"
+            label="业务类型来源"
+            prop="businessTypeSource"
+            required
+          >
             <el-radio-group v-model="form.businessTypeSource" @change="handleBusinessSourceChange">
               <el-radio value="PROJECT">当前项目</el-radio>
               <el-radio value="GLOBAL">全局</el-radio>
             </el-radio-group>
-          </el-form-item>
-          <el-form-item label="业务数据类型" prop="businessTypeId" required>
+          </qt-form-item>
+          <qt-form-item
+            class="row-full"
+            tip="引用已定义的业务数据类型，其类型配置将作为该属性的取值规则。"
+            label="业务数据类型"
+            prop="businessTypeId"
+            required
+          >
             <el-select
               v-model="form.businessTypeId"
               placeholder="请选择业务数据类型"
@@ -335,32 +256,36 @@
                 :value="String(item.id)"
               />
             </el-select>
-          </el-form-item>
+          </qt-form-item>
         </template>
 
-        <template v-if="form.typeCategory === 2 && form.businessTypeId">
-          <el-form-item label="基础数据类型"><div class="form-readonly">
-              {{ basicTypeLabel(effectiveConfig.basicTypeCode) }}
-            </div></el-form-item>
-        </template>
+        <qt-form-item
+          v-if="form.typeCategory === 2 && form.businessTypeId"
+          class="row-full"
+          tip="由所选业务数据类型自动带出，不可修改。"
+          label="基础数据类型"
+        >
+          <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
+        </qt-form-item>
 
-        <AttributeTypeConfig
-          v-if="form.typeCategory === 1 || form.businessTypeId"
-          :model="effectiveConfig"
-          :readonly="form.typeCategory === 2"
-          :enum-options="enumOptions"
-          :enum-loading="enumsLoading"
-          @enum-open="loadEnums"
-        />
+        <div v-if="form.typeCategory === 1 || form.businessTypeId" class="row-full attribute-type-config">
+          <AttributeTypeConfig
+            :model="effectiveConfig"
+            :readonly="form.typeCategory === 2"
+            :enum-options="enumOptions"
+            :enum-loading="enumsLoading"
+            @enum-open="loadEnums"
+          />
+        </div>
 
-        <el-form-item
+        <qt-form-item
           v-if="form.typeCategory === 2 && selectedBusinessType?.description"
+          class="row-full"
+          tip="所选业务数据类型的说明，用于核对是否符合当前属性的业务语义。"
           label="类型描述"
         >
-          <div class="form-readonly textarea">
-            {{ selectedBusinessType.description }}
-          </div>
-        </el-form-item>
+          <div class="form-readonly textarea">{{ selectedBusinessType.description }}</div>
+        </qt-form-item>
       </el-form>
 
       <template #footer>
@@ -501,8 +426,6 @@ const saving = ref(false);
 
 const deleting = ref(false);
 
-const showSearch = ref(true);
-
 const open = ref(false);
 
 const detailOpen = ref(false);
@@ -542,28 +465,112 @@ const dataTypeOptions = computed(() =>
 const dataTypeLabel = (value) =>
   dataTypeOptions.value.find((option) => option.value === value)?.label || "-";
 
-const columns = ref(
-  [
-    { prop: "id", label: "编号" },
+const columns = reactive([
+  { type: "selection", width: 55, align: "center", fixed: "left" },
+  {
+    label: "编号",
+    prop: "id",
+    slot: "text",
+    width: 80,
+    minWidth: 80,
+    align: "center",
+    fixed: "left",
+    sortable: "custom",
+    sortOrders: ["descending", "ascending", null],
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    label: "属性名称",
+    prop: "name",
+    slot: "text",
+    width: 240,
+    minWidth: 240,
+    align: "left",
+    fixed: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    label: "属性代码",
+    prop: "code",
+    slot: "text",
+    width: 190,
+    minWidth: 190,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    label: "描述",
+    prop: "description",
+    slot: "description",
+    minWidth: 320,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    label: "数据类型",
+    prop: "typeCategory",
+    slot: "typeCategory",
+    width: 150,
+    minWidth: 150,
+    align: "center",
+  },
+  {
+    label: "创建人",
+    prop: "createBy",
+    slot: "text",
+    width: 130,
+    minWidth: 130,
+    align: "left",
+    headerAlign: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    label: "创建时间",
+    prop: "createTime",
+    slot: "createTime",
+    width: 170,
+    minWidth: 170,
+    align: "center",
+    sortable: "custom",
+    sortOrders: ["descending", "ascending", null],
+  },
+  {
+    label: "操作",
+    slot: "operation",
+    width: 200,
+    minWidth: 200,
+    align: "center",
+    fixed: "right",
+    className: "small-padding fixed-width",
+  },
+]);
 
-    { prop: "name", label: "属性名称" },
+const searchItems = [
+  { label: "属性名称", prop: "name", component: { is: "input" } },
+];
 
-    { prop: "code", label: "属性代码" },
+// 列表请求仍由本组件管理，qt-table 只负责读取已加载的数据。
+const listActions = { getList };
+const tableConfig = {
+  notPagination: true,
+  sort: true,
+  table: {
+    stripe: true,
+    rowKey: "id",
+    defaultSort: { prop: "createTime", order: "descending" },
+    onSelectionChange: handleSelectionChange,
+  },
+};
+const tableEvents = {
+  onSortChange(params) {
+    handleSortChange({ prop: params.orderByColumn, order: params.isAsc });
+  },
+};
 
-    { prop: "description", label: "描述" },
-
-    { prop: "typeCategory", label: "数据类型" },
-
-    { prop: "createBy", label: "创建人" },
-
-    { prop: "createTime", label: "创建时间" },
-
-    { prop: "operation", label: "操作" },
-  ].map((column, key) => ({ ...column, key, visible: true }))
-);
-
-const visible = (prop) =>
-  columns.value.find((column) => column.prop === prop)?.visible;
+function readTableRows() {
+  return Promise.resolve({ data: rows.value });
+}
+watch(rows, () => tableRef.value?.getList());
 
 const emptyForm = () => ({
   id: undefined,
@@ -955,30 +962,24 @@ async function getList() {
 
     selectedIds.value = [];
 
-    tableRef.value?.clearSelection();
+    tableRef.value?.elTableRef?.clearSelection();
   } finally {
     if (request === listRequest) loading.value = false;
   }
 }
 
-function search() {
-  appliedName.value = query.name.trim();
+function handleQuery() {
+  appliedName.value = (query.name || "").trim();
 
   query.pageNum = 1;
 
   getList();
 }
 
-function resetSearch() {
-  query.name = "";
-
-  search();
-}
-
 function handleSortChange({ prop, order }) {
-  query.orderByColumn = order ? prop : undefined;
+  query.orderByColumn = order ? prop : "createTime";
 
-  query.isAsc = order || undefined;
+  query.isAsc = order || "descending";
 
   query.pageNum = 1;
 
@@ -1256,6 +1257,15 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 
   flex-shrink: 0;
+}
+
+// column-form 会清掉表单项下边距，动态类型配置需要单独留出提示文案的空间。
+.attribute-dialog-form.column-form .attribute-type-config :deep(.el-form-item) {
+  margin-bottom: 20px !important;
+}
+
+.attribute-dialog-form.column-form .attribute-type-config :deep(.el-form-item:last-child) {
+  margin-bottom: 0 !important;
 }
 
 .character-count :deep(.el-input__count) {

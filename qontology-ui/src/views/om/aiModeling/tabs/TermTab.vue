@@ -48,6 +48,32 @@
         <template #text="{ row, column_data }">{{
           row[column_data.prop]
         }}</template>
+        <!-- 术语信息与外部 term/index 一致：主行“名称（英文名）”，副行描述。 -->
+        <template #termInfo="{ row }">
+          <div class="qt-table-info">
+            <div class="qt-table-info__main">
+              <span
+                class="info-title"
+                :title="
+                  row.enName
+                    ? `${row.stdName || '-'}（${row.enName}）`
+                    : row.stdName
+                "
+                >{{ row.stdName || "-"
+                }}<template v-if="row.enName">（{{ row.enName }}）</template></span
+              >
+            </div>
+            <div class="info-desc" :title="row.description">
+              {{ row.description || "-" }}
+            </div>
+          </div>
+        </template>
+        <template #alias="{ row }">{{ row.alias || "-" }}</template>
+        <template #abbr="{ row }">{{ row.abbr || "-" }}</template>
+        <template #source="{ row }">{{ row.source || "-" }}</template>
+        <template #createTime="{ row }">{{
+          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "—"
+        }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -115,134 +141,177 @@
       </qt-table>
     </qt-wrap>
 
-    <!-- 添加或修改术语对话框 -->
+    <!-- 修改术语对话框：字段、提示语与多行别名录入对齐外部 term/index。 -->
     <el-dialog
       v-model="open"
       title="修改术语"
       width="800px"
       :append-to="pageRef"
       :close-on-press-escape="!saving"
+      :before-close="handleBeforeClose"
       draggable
+      @closed="clearValidation"
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护标准术语、英文名称和业务释义，统一业务概念的表达，为本体对象与属性提供一致的命名依据。"
+      />
       <el-form
         ref="formRef"
         :model="form"
         :rules="rules"
         label-width="90px"
+        class="column-form"
+        @submit.prevent="save"
       >
-        <el-form-item label="名称" prop="stdName">
-          <el-input
-            v-model="form.stdName"
-            :maxlength="200"
-            placeholder="请输入名称"
-          />
-        </el-form-item>
-        <el-form-item label="英文名称" prop="enName">
+        <qt-form-item
+          class="row-full"
+          tip="填写业务中使用的标准概念名称，作为对象类型和属性命名的依据。"
+          label="术语名称"
+          prop="stdName"
+        >
+          <el-input v-model="form.stdName" placeholder="请输入术语名称" :maxlength="256" />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          tip="使用英文字母开头，后续仅支持英文字母、数字和下划线，用于统一英文标识。"
+          label="英文名称"
+          prop="enName"
+        >
           <el-input
             v-model="form.enName"
-            :maxlength="200"
-            placeholder="请输入英文名称"
+            :formatter="formatEnglishName"
+            :parser="formatEnglishName"
+            placeholder="请输入英文名称，以英文字母开头，后续支持英文字母、数字和下划线"
+            :maxlength="256"
           />
-        </el-form-item>
-        <el-form-item label="别名" prop="alias">
-          <div class="flex gap-2 alias-tags">
-            <el-tag
-              v-for="item in aliasTags"
-              :key="item"
-              closable
-              @close="removeAlias(item)"
-              >{{ item }}</el-tag
-            ><el-input
-              v-if="aliasInputVisible"
-              ref="aliasInputRef"
-              v-model="aliasInputValue"
-              class="w-20 alias-input"
-              size="small"
-              placeholder="请输入别名"
-              @keydown.enter.stop.prevent="confirmAlias"
-              @blur="confirmAlias"
-            /><el-button
-              v-else
-              class="button-new-tag"
-              size="small"
-              @click="showAliasInput"
-              >+ 添加别名</el-button
-            >
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          tip="填写同一业务概念的其他叫法；可逐条新增，避免重复别名。"
+          label="术语别名"
+          prop="alias"
+        >
+          <div class="alias-list">
+            <div v-for="(item, index) in aliasRows" :key="item.id" class="alias-row">
+              <el-input
+                v-model="item.value"
+                placeholder="请输入术语别名"
+                :maxlength="1024"
+                :disabled="saving"
+                @input="syncAliases"
+                @keydown.enter.stop.prevent="addAliasRow"
+              />
+              <el-button
+                v-if="aliasRows.length > 1"
+                size="small"
+                type="danger"
+                icon="Delete"
+                :disabled="saving"
+                :aria-label="`删除第${index + 1}个术语别名`"
+                @click="removeAliasRow(index)"
+              />
+              <el-button
+                v-if="index === aliasRows.length - 1"
+                size="small"
+                type="primary"
+                :disabled="saving"
+                aria-label="新增术语别名"
+                @click="addAliasRow"
+              >+</el-button>
+            </div>
           </div>
-        </el-form-item>
-        <el-form-item label="缩写" prop="abbr">
-          <el-input
-            v-model="form.abbr"
-            :maxlength="200"
-            placeholder="请输入缩写"
-          />
-        </el-form-item>
-        <el-form-item label="来源" prop="source">
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          tip="填写常用的简短业务标识，例如采购订单的业务缩写 PO。"
+          label="业务缩写"
+          prop="abbr"
+        >
+          <el-input v-model="form.abbr" placeholder="请输入业务缩写" :maxlength="256" />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          tip="说明该术语的业务出处，例如制度规范、需求材料或提出部门。"
+          label="来源"
+          prop="source"
+        >
           <el-input
             v-model="form.source"
+            class="term-character-count"
             type="textarea"
             :rows="3"
-            :maxlength="200"
-            show-word-limit
             placeholder="请输入来源"
+            :maxlength="256"
+            show-word-limit
           />
-        </el-form-item>
-        <el-form-item label="描述">
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          tip="解释术语的业务含义、适用范围与概念边界，最多256个字符。"
+          label="描述"
+          prop="description"
+        >
           <el-input
             v-model="form.description"
+            class="term-character-count"
             type="textarea"
             :rows="4"
-            :maxlength="500"
-            show-word-limit
             placeholder="请输入描述"
+            :maxlength="256"
+            show-word-limit
           />
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button :disabled="saving" @click="open = false">取 消</el-button>
-          <el-button type="primary" :loading="saving" @click="save"
-            >确 定</el-button
-          >
+          <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
+          <el-button type="primary" size="mini" :loading="saving" @click="save">确 定</el-button>
         </div>
       </template>
     </el-dialog>
 
-    <!-- 术语详情对话框 -->
+    <!-- 术语详情对话框：字段顺序与标签对齐外部 term/index（候选无状态项）。 -->
     <el-dialog
       v-model="detailOpen"
+      class="term-detail-dialog"
       title="术语详情"
       width="800px"
       :append-to="pageRef"
       draggable
     >
-      <el-form label-width="90px">
-        <el-form-item
-          v-for="field in fields"
-          :key="field.prop"
-          :label="field.label"
-        >
-          <div v-if="field.prop === 'alias'" class="form-readonly alias-tags">
-            <el-tag v-for="item in parseAliases(detail.alias)" :key="item">{{
-              item
-            }}</el-tag
-            ><span v-if="!parseAliases(detail.alias).length">-</span>
-          </div>
-          <div
-            v-else
-            class="form-readonly"
-            :class="{
-              textarea: ['source', 'description'].includes(field.prop),
-            }"
-          >
-            {{
-              field.prop === "createTime"
-                ? proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") ||
-                  "-"
-                : detail[field.prop] || "-"
-            }}
-          </div>
-        </el-form-item>
+      <el-form
+        class="term-detail-form"
+        :model="detail"
+        label-width="90px"
+        label-position="right"
+      >
+        <el-row :gutter="20">
+          <el-col v-for="field in fields" :key="field.prop" :span="24">
+            <el-form-item :label="field.label" :prop="field.prop">
+              <div v-if="field.prop === 'alias'" class="form-readonly">
+                {{ detailAliases.join(", ") || "-" }}
+              </div>
+              <div
+                v-else-if="field.prop === 'createTime'"
+                class="form-readonly"
+              >
+                {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+              </div>
+              <div
+                v-else
+                class="form-readonly"
+                :class="{
+                  textarea: ['source', 'description'].includes(field.prop),
+                }"
+              >
+                {{ detail[field.prop] || "-" }}
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="detailOpen = false">关闭</el-button>
@@ -267,9 +336,6 @@ const { om_ai_adopt_status } = proxy.useDict("om_ai_adopt_status");
 const pageRef = ref();
 const formRef = ref();
 const { creatorPhones } = useCreatorPhones();
-const aliasInputRef = ref();
-const aliasInputVisible = ref(false);
-const aliasInputValue = ref("");
 const open = ref(false);
 const detailOpen = ref(false);
 const saving = ref(false);
@@ -348,37 +414,23 @@ const tableStore = reactive({
       sortOrders: ["descending", "ascending", null],
     },
     {
-      label: "名称",
-      prop: "stdName",
-      slot: "text",
-      width: 160,
-      minWidth: 160,
+      label: "术语信息",
+      slot: "termInfo",
+      minWidth: 320,
       align: "left",
-      showOverflowTooltip: { effect: "light" },
     },
     {
-      label: "英文名称",
-      prop: "enName",
-      slot: "text",
-      width: 150,
-      minWidth: 150,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "别名",
+      label: "术语别名",
       prop: "alias",
-      slot: "text",
-      width: 160,
+      slot: "alias",
       minWidth: 160,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
     {
-      label: "缩写",
+      label: "业务缩写",
       prop: "abbr",
-      slot: "text",
-      width: 120,
+      slot: "abbr",
       minWidth: 120,
       align: "left",
       showOverflowTooltip: { effect: "light" },
@@ -386,17 +438,8 @@ const tableStore = reactive({
     {
       label: "来源",
       prop: "source",
-      slot: "text",
-      width: 180,
+      slot: "source",
       minWidth: 180,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "描述",
-      prop: "description",
-      slot: "text",
-      minWidth: 240,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -412,17 +455,17 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 120,
-      minWidth: 120,
+      width: 130,
+      minWidth: 130,
       align: "left",
       headerAlign: "left",
     },
     {
       label: "创建时间",
       prop: "createTime",
-      date: true,
-      width: 180,
-      minWidth: 180,
+      slot: "createTime",
+      width: 150,
+      minWidth: 150,
       align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
@@ -440,18 +483,40 @@ const tableStore = reactive({
 });
 
 const rules = {
-  stdName: [{ required: true, message: "名称不能为空" }],
-  enName: [{ required: true, message: "英文名称不能为空" }],
-  alias: [{ required: true, message: "别名不能为空" }],
-  abbr: [{ required: true, message: "缩写不能为空" }],
-  source: [{ required: true, message: "来源不能为空" }],
+  stdName: [
+    { required: true, whitespace: true, message: "术语名称不能为空", trigger: "blur" },
+    { max: 256, message: "术语名称长度不能超过256个字符", trigger: "blur" },
+  ],
+  enName: [
+    { required: true, whitespace: true, message: "英文名称不能为空", trigger: "blur" },
+    { max: 256, message: "英文名称长度不能超过256个字符", trigger: "blur" },
+    {
+      pattern: /^[A-Za-z][A-Za-z0-9_]*$/,
+      message: "英文名称须以英文字母开头，后续仅支持英文字母、数字和下划线",
+      trigger: ["blur", "change"],
+    },
+  ],
+  alias: [
+    { required: true, whitespace: true, message: "术语别名不能为空", trigger: "blur" },
+    { max: 1024, message: "术语别名长度不能超过1024个字符", trigger: "blur" },
+  ],
+  abbr: [
+    { required: true, whitespace: true, message: "业务缩写不能为空", trigger: "blur" },
+    { max: 256, message: "业务缩写长度不能超过256个字符", trigger: "blur" },
+  ],
+  source: [
+    { required: true, whitespace: true, message: "来源不能为空", trigger: "blur" },
+    { max: 256, message: "来源长度不能超过256个字符", trigger: "blur" },
+  ],
+  description: [
+    { max: 256, message: "描述长度不能超过256个字符", trigger: "blur" },
+  ],
 };
 const fields = [
-  { prop: "id", label: "编号" },
-  { prop: "stdName", label: "名称" },
+  { prop: "stdName", label: "术语名称" },
   { prop: "enName", label: "英文名称" },
-  { prop: "alias", label: "别名" },
-  { prop: "abbr", label: "缩写" },
+  { prop: "alias", label: "术语别名" },
+  { prop: "abbr", label: "业务缩写" },
   { prop: "source", label: "来源" },
   { prop: "description", label: "描述" },
   { prop: "createBy", label: "创建人" },
@@ -463,41 +528,96 @@ const fields = [
  * @param {string} value 原始别名文本
  * @returns {Array<string>} 别名列表
  */
-const parseAliases = (value) => [
-  ...new Set(
-    (value || "")
-      .split(/[,，]/)
-      .map((item) => item.trim())
-      .filter(Boolean)
-  ),
-];
-const aliasTags = computed(() => parseAliases(form.value.alias));
+function parseAliases(value) {
+  return [
+    ...new Set(
+      (value || "")
+        .split(/[,，]/)
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+const detailAliases = computed(() => parseAliases(detail.value.alias));
 
-/** 展示别名输入框并自动聚焦。 */
-async function showAliasInput() {
-  aliasInputVisible.value = true;
-  await nextTick();
-  aliasInputRef.value?.focus();
+// 编辑草稿按行维护别名，接口仍沿用逗号分隔的 alias 字段。
+let nextAliasId = 0;
+const aliasRows = ref([{ id: nextAliasId++, value: "" }]);
+
+/** 英文名称仅保留字母、数字和下划线，且必须以字母开头。 */
+function formatEnglishName(value) {
+  return String(value ?? "")
+    .replace(/[^A-Za-z0-9_]/g, "")
+    .replace(/^[^A-Za-z]+/, "");
 }
 
-/** 确认新增别名，合并已有标签后写回表单。 */
-function confirmAlias() {
-  const items = [
-    ...new Set([...aliasTags.value, ...parseAliases(aliasInputValue.value)]),
-  ];
-  form.value.alias = items.join("，");
-  aliasInputValue.value = "";
-  aliasInputVisible.value = false;
+/** 依据当前表单别名重设多行别名输入。 */
+function resetAliasInput() {
+  const values = parseAliases(form.value.alias);
+  aliasRows.value = (values.length ? values : [""]).map((value) => ({
+    id: nextAliasId++,
+    value,
+  }));
+}
+
+/** 将各别名列合并写回表单字符串。 */
+function syncAliases() {
+  form.value.alias = aliasRows.value
+    .map((item) => item.value.trim())
+    .filter(Boolean)
+    .join("，");
+}
+
+/** 追加一行别名输入。 */
+function addAliasRow() {
+  if (saving.value) return;
+  aliasRows.value.push({ id: nextAliasId++, value: "" });
 }
 
 /**
- * 删除指定别名标签。
- * @param {string} item 待删除的别名
+ * 删除指定行别名，至少保留一行。
+ * @param {number} index 待删除行下标
  */
-function removeAlias(item) {
-  form.value.alias = aliasTags.value
-    .filter((value) => value !== item)
-    .join("，");
+function removeAliasRow(index) {
+  if (saving.value) return;
+  aliasRows.value.splice(index, 1);
+  if (!aliasRows.value.length)
+    aliasRows.value.push({ id: nextAliasId++, value: "" });
+  syncAliases();
+  formRef.value?.validateField("alias").catch(() => {});
+}
+
+/** 校验并合并别名，写回表单；不通过时给出提示。 */
+function confirmAlias() {
+  const values = aliasRows.value.flatMap((item) =>
+    item.value.split(/[,，]/).map((value) => value.trim()),
+  );
+  if (!values.length || values.some((value) => !value)) {
+    proxy.$modal.msgWarning("术语别名每一项都不能为空，请完善后提交");
+    return false;
+  }
+  if (new Set(values).size !== values.length) {
+    proxy.$modal.msgWarning("术语别名不能重复，请检查后提交");
+    return false;
+  }
+  const value = values.join("，");
+  if (value.length > 1024) {
+    proxy.$modal.msgWarning("术语别名总长度不能超过1024个字符");
+    return false;
+  }
+  form.value.alias = value;
+  return true;
+}
+
+/** 弹窗关闭动画结束后清理校验与别名草稿。 */
+function clearValidation() {
+  formRef.value?.clearValidate();
+  resetAliasInput();
+}
+
+/** 保存中禁止关闭弹窗。 */
+function handleBeforeClose(done) {
+  if (!saving.value) done();
 }
 
 /**
@@ -510,17 +630,20 @@ function openDetail(row) {
 }
 
 /**
- * 打开修改弹窗。
+ * 打开修改弹窗，并按当前别名重设多行输入。
  * @param {Object} row 当前行数据
  */
 function edit(row) {
   form.value = { ...row };
+  resetAliasInput();
   open.value = true;
+  nextTick(() => formRef.value?.clearValidate());
 }
 
-/** 提交修改，提交期间锁定确定按钮避免重复入库。 */
+/** 提交修改，先校验别名再提交，提交期间锁定确定按钮避免重复入库。 */
 async function save() {
   if (saving.value) return;
+  if (!confirmAlias()) return;
   const valid = await formRef.value.validate().catch(() => false);
   if (!valid || saving.value || !open.value) return;
   saving.value = true;
@@ -528,12 +651,12 @@ async function save() {
     await updateCandidate("term", {
       id: form.value.id,
       taskId: props.taskId,
-      stdName: form.value.stdName,
-      enName: form.value.enName,
-      alias: form.value.alias,
-      abbr: form.value.abbr,
-      source: form.value.source,
-      description: form.value.description,
+      stdName: (form.value.stdName ?? "").trim(),
+      enName: (form.value.enName ?? "").trim(),
+      alias: (form.value.alias ?? "").trim(),
+      abbr: (form.value.abbr ?? "").trim(),
+      source: (form.value.source ?? "").trim(),
+      description: (form.value.description ?? "").trim(),
     });
     proxy.$modal.msgSuccess("修改成功");
     open.value = false;
@@ -544,14 +667,41 @@ async function save() {
 }
 </script>
 
-<style scoped>
-.alias-tags {
+<style scoped lang="scss">
+.alias-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.alias-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
 }
-.alias-input {
-  width: 180px;
+
+.alias-row .el-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.alias-row .el-button {
+  flex-shrink: 0;
+  margin-left: 0;
+  padding: 8px 10px;
+}
+
+.term-detail-form {
+  padding: 0;
+}
+
+.term-character-count :deep(.el-input__count)::after {
+  content: " 个字符";
+}
+
+.term-character-count :deep(.el-textarea__inner) {
+  padding-bottom: 24px;
 }
 </style>

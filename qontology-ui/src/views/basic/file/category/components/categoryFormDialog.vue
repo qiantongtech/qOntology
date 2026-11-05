@@ -29,6 +29,13 @@
     :show-close="!saving"
     :before-close="handleBeforeClose"
   >
+    <guide-tip-panel
+      v-if="!readonly"
+      type="hint"
+      class="mb15"
+      allow-wrap
+      title="维护文件的分类目录，按层级归类管理模型数据文件，便于文件的归档与检索。"
+    />
     <el-form
       ref="formRef"
       :model="form"
@@ -38,7 +45,7 @@
       class="column-form"
       @submit.prevent="submitForm"
     >
-      <qt-form-item class="row-full" label="父级分类" prop="parentId">
+      <qt-form-item class="row-full" label="父级分类" prop="parentId" tip="选择所属分类的上级节点，留空则为顶级分类。">
         <div v-if="readonly" class="form-readonly">
           {{ parentCategoryName }}
         </div>
@@ -54,7 +61,7 @@
           style="width: 100%"
         />
       </qt-form-item>
-      <qt-form-item class="row-full" label="文件分类名称" prop="name">
+      <qt-form-item class="row-full" label="文件分类名称" prop="name" tip="填写文件分类的名称，用于在文件管理中归类检索。">
         <div v-if="readonly" class="form-readonly">{{ form.name || "—" }}</div>
         <el-input
           v-else
@@ -63,7 +70,7 @@
           :maxlength="100"
         />
       </qt-form-item>
-      <qt-form-item class="row-full" label="排序" prop="orderNum">
+      <qt-form-item class="row-full" label="排序" prop="orderNum" tip="数值越小越靠前，用于控制分类的展示顺序。">
         <div v-if="readonly" class="form-readonly">
           {{ form.orderNum ?? "—" }}
         </div>
@@ -77,7 +84,7 @@
           style="width: 100%"
         />
       </qt-form-item>
-      <qt-form-item class="row-full" label="状态" prop="validFlag">
+      <qt-form-item class="row-full" label="状态" prop="validFlag" tip="启用后分类可正常归类文件，停用后不再用于新归档。">
         <div v-if="readonly" class="form-readonly">
           {{
             form.validFlag === true
@@ -92,7 +99,7 @@
           <el-radio :value="false">禁用</el-radio>
         </el-radio-group>
       </qt-form-item>
-      <qt-form-item class="row-full" label="描述" prop="remark">
+      <qt-form-item class="row-full" label="描述" prop="remark" tip="补充该文件分类的用途说明。">
         <div v-if="readonly" class="form-readonly description">
           {{ form.remark || "—" }}
         </div>
@@ -107,6 +114,13 @@
           placeholder="请输入描述"
         />
       </qt-form-item>
+      <!-- 详情态补齐审计信息，创建人展示规则与枚举详情一致。 -->
+      <el-form-item v-if="readonly" class="row-full" label="创建人">
+        <div class="form-readonly">{{ formatCreator(form) }}</div>
+      </el-form-item>
+      <el-form-item v-if="readonly" class="row-full" label="创建时间">
+        <div class="form-readonly">{{ form.createTime || "—" }}</div>
+      </el-form-item>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
@@ -133,10 +147,12 @@ import {
   getModelDataCategory,
   updateModelDataCategory,
 } from "@/api/basic/file/basicFileCategory.js";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 // 弹窗独立管理数据加载、校验及保存，父页面仅负责打开与刷新列表。
 const emit = defineEmits(["success"]);
 const { proxy } = getCurrentInstance();
+const { creatorPhones } = useCreatorPhones();
 const visible = ref(false);
 const title = ref("");
 const readonly = ref(false);
@@ -171,6 +187,12 @@ const parentCategoryName = computed(() => {
   };
   return findName(categoryOptions.value) || "—";
 });
+
+/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
+function formatCreator(record) {
+  const phone = creatorPhones.value[record.creatorId];
+  return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
+}
 
 /** 每次打开重建表单；只采纳最新详情请求，避免快速切换记录时回显旧数据。 */
 async function openDialog(options) {

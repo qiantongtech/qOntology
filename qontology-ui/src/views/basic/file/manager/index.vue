@@ -109,39 +109,37 @@
               </el-button>
               <el-popover
                 placement="bottom"
-                :width="120"
+                :width="107"
+                popper-class="handle-popover"
                 trigger="click"
-                popper-class="table-action-popover handle-popover"
               >
                 <template #reference>
                   <el-button link type="primary" icon="ArrowDown"
                     >更多</el-button
                   >
                 </template>
-                <div class="file-action-list">
-                  <el-button
-                    link
-                    type="primary"
-                    icon="View"
-                    @click="handlePreview(row)"
-                    >预览</el-button
-                  >
-                  <el-button
-                    link
-                    type="primary"
-                    icon="Download"
-                    @click="handleDownload(row)"
-                    >下载</el-button
-                  >
-                  <el-button
-                    v-hasPermi="['basic:file:manager:remove']"
-                    link
-                    type="danger"
-                    icon="Delete"
-                    @click="handleDelete(row)"
-                    >删除
-                  </el-button>
-                </div>
+                <el-button
+                  link
+                  type="primary"
+                  icon="View"
+                  @click="handlePreview(row)"
+                  >预览</el-button
+                >
+                <el-button
+                  link
+                  type="primary"
+                  icon="Download"
+                  @click="handleDownload(row)"
+                  >下载</el-button
+                >
+                <el-button
+                  v-hasPermi="['basic:file:manager:remove']"
+                  link
+                  type="danger"
+                  icon="Delete"
+                  @click="handleDelete(row)"
+                  >删除</el-button
+                >
               </el-popover>
             </template>
           </qt-table>
@@ -289,7 +287,7 @@ const tableStore = reactive({
       width: 160,
       sortable: true,
     },
-    { label: "操作", slot: "handle", width: 210, fixed: "right" },
+    { label: "操作", slot: "handle", width: 240, minWidth: 240, align: "center", fixed: "right" },
   ],
   params: { fileName: "", fileSuffix: "" },
   func: listModelDataFile,
