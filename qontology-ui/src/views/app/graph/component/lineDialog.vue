@@ -55,8 +55,7 @@
                                             v-for="tag in item.entityList"
                                             :key="tag"
                                             @click="handleEntityClick(tag)"
-                                            >{{ tag.entityName }}</el-tag
-                                        >
+                                            >{{ tag.entityName }}</el-tag>
                                     </div>
                                 </div>
                                 <div class="line-item">
@@ -144,7 +143,6 @@
             // );
             // return uniqueEntities;
             return null;
-            emit('resetData');
         }
 
         // 如果有选中的项，只返回选中项的实体
@@ -160,14 +158,11 @@
         return uniqueEntities;
     });
 
-    const handleCheckboxChange = (item) => {
+    const handleCheckboxChange = () => {
         // 每次勾选/取消，都传递合并后的所有数据
         emit('handleEventClick', mergedEntityList.value);
     };
 
-    const handleEventClick = (item) => {
-        emit('handleEventClick', item);
-    };
 </script>
 <style lang="scss" scoped>
     .lineDialog {

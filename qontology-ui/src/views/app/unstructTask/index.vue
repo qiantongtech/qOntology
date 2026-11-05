@@ -99,18 +99,24 @@
             placement="bottom"
             :width="150"
             trigger="click"
-            popper-class="handle-popover table-action-popover"
           >
             <template #reference>
-              <el-button icon="ArrowDown" link type="primary" @click.stop>更多</el-button>
+              <el-button icon="ArrowDown" link type="primary" @click.stop
+                >更多</el-button
+              >
             </template>
             <div class="task-action-list">
+              <el-button icon="List" link type="primary" @click="showLogs(row)">
+                执行日志
+              </el-button>
               <el-button
-                icon="List"
+                class="btn-icon-offset"
+                icon="view"
                 link
                 type="primary"
-                @click="showLogs(row)">
-                执行日志
+                @click="handleDetail(row)"
+              >
+                详情
               </el-button>
               <el-button
                 class="btn-icon-offset"
@@ -118,7 +124,8 @@
                 icon="Edit"
                 link
                 type="primary"
-                @click="handleEdit(row)">
+                @click="handleEdit(row)"
+              >
                 修改
               </el-button>
               <el-button
@@ -127,37 +134,35 @@
                 icon="Delete"
                 link
                 type="danger"
-                @click="handleDelete(row)">
-                删除</el-button>
-              <el-button
-                class="btn-icon-offset"
-                icon="Document"
-                link
-                type="primary"
-                @click="handleDetail(row)">
-                详情
-              </el-button>
+                @click="handleDelete(row)"
+              >
+                删除</el-button
+              >
             </div>
           </el-popover>
         </template>
         <template #publishBy="{ row }">
           <div class="flex-column overflow-hidden">
             <span class="text-ellipsis" :title="row.createBy || ''">{{
-                row.publishBy || "-"
-              }}</span>
+              row.publishBy || "-"
+            }}</span>
             <span v-if="creatorPhones[row.publisherId]" class="desc-text">{{
-                creatorPhones[row.publisherId]
-              }}</span>
+              creatorPhones[row.publisherId]
+            }}</span>
           </div>
         </template>
         <template #responsibleUser="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.responsiblePersonName || ''">{{
-                row.responsiblePersonName || "-"
-              }}</span>
-            <span v-if="creatorPhones[row.responsibleUserId]" class="desc-text">{{
-                creatorPhones[row.responsibleUserId]
-              }}</span>
+            <span
+              class="text-ellipsis"
+              :title="row.responsiblePersonName || ''"
+              >{{ row.responsiblePersonName || "-" }}</span
+            >
+            <span
+              v-if="creatorPhones[row.responsibleUserId]"
+              class="desc-text"
+              >{{ creatorPhones[row.responsibleUserId] }}</span
+            >
           </div>
         </template>
       </qt-table>
@@ -186,18 +191,51 @@
               <el-input
                 v-model="form.name"
                 maxlength="256"
-                placeholder="请输入任务名称" />
+                placeholder="请输入任务名称"
+              />
+            </qt-form-item>
+            <qt-form-item
+              label="责任人"
+              prop="responsibleUserId"
+              class="row-full"
+            >
+              <el-select
+                v-model="form.responsibleUserId"
+                placeholder="请选择责任人"
+                clearable
+                filterable
+                @change="handleResponsibleUserChange"
+              >
+                <el-option
+                  v-for="user in userOptions"
+                  :key="user.value"
+                  :label="user.label"
+                  :value="user.value"
+                />
+              </el-select>
+            </qt-form-item>
+            <qt-form-item
+              label="联系电话"
+              prop="responsiblePhone"
+              class="row-full"
+            >
+              <el-input
+                :model-value="form.responsiblePhone"
+                disabled
+                placeholder="请输入联系电话"
+              />
             </qt-form-item>
             <qt-form-item label="导入文件" prop="sourceFiles">
               <el-button
                 :disabled="form.status && form.status !== 0"
                 plain
                 type="primary"
-                @click="selectFiles">
-                <i class="iconfont icon-upload-cloud-line mr5"/>导入文件
+                @click="selectFiles"
+              >
+                <i class="iconfont icon-upload-cloud-line mr5" />导入文件
               </el-button>
             </qt-form-item>
-            <div style="margin: 0 0 10px 80px">
+            <div class="unstruct-task__source-files">
               <qt-table v-bind="sourceFileTableStore" ref="sourceFileTableRef">
                 <template #fileName="{ row }">
                   {{ row.fileName || "-" }}
@@ -220,7 +258,8 @@
                 v-model:file-name="form.ttlFileName"
                 :file-size="20"
                 :file-type="['ttl']"
-                :limit="1" />
+                :limit="1"
+              />
             </qt-form-item>
             <qt-form-item label="描述" prop="remark">
               <el-input
@@ -229,34 +268,11 @@
                 :rows="3"
                 show-word-limit
                 type="textarea"
-                placeholder="请输入描述" />
-            </qt-form-item>
-            <qt-form-item label="责任人" prop="responsibleUserId" class="row-full">
-              <el-select
-                  v-model="form.responsibleUserId"
-                  placeholder="请选择责任人"
-                  clearable
-                  filterable
-                  @change="handleResponsibleUserChange"
-              >
-                <el-option
-                    v-for="user in userOptions"
-                    :key="user.value"
-                    :label="user.label"
-                    :value="user.value"
-                />
-              </el-select>
-            </qt-form-item>
-            <qt-form-item label="联系电话" class="row-full">
-              <el-input
-                  :model-value="form.responsiblePhone"
-                  disabled
-                  placeholder="请输入联系电话"
+                placeholder="请输入描述"
               />
             </qt-form-item>
           </el-col>
         </el-row>
-
       </el-form>
       <template #footer
         ><div class="dialog-footer">
@@ -284,14 +300,10 @@
           {{ detailTitle }}
         </span>
       </template>
-      <el-form
-        :model="detailForm"
-        label-width="80px"
-        class="column-form"
-      >
+      <el-form :model="detailForm" label-width="80px" class="column-form">
         <el-form-item label="任务名称" prop="name" class="row-full">
           <div class="form-readonly">
-            {{ detailForm.name || "—" }}
+            {{ detailForm.name || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="任务状态" prop="status">
@@ -308,17 +320,17 @@
         </el-form-item>
         <el-form-item label="责任人">
           <div class="form-readonly">
-            {{ detailForm.responsiblePersonName || "—" }}
+            {{ detailForm.responsiblePersonName || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="联系电话">
           <div class="form-readonly">
-            {{ detailForm.responsiblePhone || "—" }}
+            {{ detailForm.responsiblePhone || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="最后执行">
           <div class="form-readonly">
-            {{ detailForm.lastExecuteTime || "—" }}
+            {{ formatDetailTime(detailForm.lastExecuteTime) }}
           </div>
         </el-form-item>
         <el-form-item label="执行时长">
@@ -328,12 +340,14 @@
         </el-form-item>
         <el-form-item label="本体文件" prop="ttlFileName" class="row-full">
           <div class="form-readonly">
-            {{ detailForm.ttlFileName || "—" }}
+            {{ detailForm.ttlFileName || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="导入文件" class="row-full">
           <div class="form-readonly detail-file-list">
-            <template v-if="detailForm.sourceFiles && detailForm.sourceFiles.length">
+            <template
+              v-if="detailForm.sourceFiles && detailForm.sourceFiles.length"
+            >
               <el-tag
                 v-for="file in detailForm.sourceFiles"
                 :key="file.docId"
@@ -341,7 +355,7 @@
                 class="detail-file-tag"
                 :title="file.docName"
               >
-                {{ file.docName || "—" }}
+                {{ file.docName || "-" }}
               </el-tag>
             </template>
             <span v-else>—</span>
@@ -349,37 +363,37 @@
         </el-form-item>
         <el-form-item label="描述" prop="remark" class="row-full">
           <div class="form-readonly textarea">
-            {{ detailForm.remark || "—" }}
+            {{ detailForm.remark || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="发布人">
           <div class="form-readonly">
-            {{ detailForm.publishBy || "—" }}
+            {{ detailForm.publishBy || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="发布时间">
           <div class="form-readonly">
-            {{ detailForm.publishTime || "—" }}
+            {{ formatDetailTime(detailForm.publishTime) }}
           </div>
         </el-form-item>
         <el-form-item label="修改人" prop="updateBy">
           <div class="form-readonly">
-            {{ detailForm.updateBy || "—" }}
+            {{ detailForm.updateBy || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="修改时间" prop="updateTime">
           <div class="form-readonly">
-            {{ detailForm.updateTime || "—" }}
+            {{ formatDetailTime(detailForm.updateTime) }}
           </div>
         </el-form-item>
         <el-form-item label="创建人" prop="createBy">
           <div class="form-readonly">
-            {{ detailForm.createBy || "—" }}
+            {{ detailForm.createBy || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="创建时间" prop="createTime">
           <div class="form-readonly">
-            {{ detailForm.createTime || "—" }}
+            {{ formatDetailTime(detailForm.createTime) }}
           </div>
         </el-form-item>
       </el-form>
@@ -412,11 +426,11 @@ import {
 } from "@/api/app/unstructTask";
 import FileMultiple from "./fileMultiple.vue";
 import TaskLogDialog from "@/views/app/taskLog/taskLogDialog.vue";
-import {timeAgo} from "@/utils/time";
-import {useCreatorPhones} from "@/utils/useCreatorPhones.js";
-import {useRouter} from "vue-router";
-import {listUserAll} from "@/api/system/system/user.js";
-import {ref} from "vue";
+import { timeAgo } from "@/utils/time";
+import { useCreatorPhones } from "@/utils/useCreatorPhones.js";
+import { useRouter } from "vue-router";
+import { listUserAll } from "@/api/system/system/user.js";
+import { ref } from "vue";
 
 const { proxy } = getCurrentInstance();
 const router = useRouter();
@@ -439,6 +453,27 @@ const multiple = ref(true);
 const form = ref({});
 const userOptions = ref([]);
 
+const rules = {
+  name: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
+  responsibleUserId: [
+    { required: true, message: "请选择责任人", trigger: "change" },
+  ],
+  responsiblePhone: [
+    { required: true, message: "请输入联系电话", trigger: "blur" },
+  ],
+  sourceFiles: [
+    {
+      required: true,
+      type: "array",
+      min: 1,
+      message: "请选择导入文件",
+      trigger: "change",
+    },
+  ],
+  ttlFilePath: [
+    { required: true, message: "请上传本体文件", trigger: "change" },
+  ],
+};
 
 function refreshSourceFileTable() {
   nextTick(() => sourceFileTableRef.value?.getList());
@@ -588,7 +623,7 @@ function formatParams(params) {
 // 负责人选择变化时更新电话（按字符串比对，兼容数字/字符串类型）
 function handleResponsibleUserChange(value) {
   const user = userOptions.value.find(
-      (user) => String(user.value) === String(value)
+    (user) => String(user.value) === String(value)
   );
   form.value.responsiblePhone = user?.phone || "";
   form.value.responsiblePersonName = user?.label || "";
@@ -600,13 +635,13 @@ async function loadUserOptions() {
   const response = await listUserAll();
   const rows = response.rows || response.data?.rows || [];
   userOptions.value = rows
-      .filter((user) => user.userId != null)
-      .map((user) => ({
-        // value 保持数字类型，与后端返回的 responsibleUserId 一致，避免 el-select 回显失配
-        value: user.userId,
-        label: user.nickName || user.userName || String(user.userId),
-        phone: user.phonenumber || "",
-      }));
+    .filter((user) => user.userId != null)
+    .map((user) => ({
+      // value 保持数字类型，与后端返回的 responsibleUserId 一致，避免 el-select 回显失配
+      value: user.userId,
+      label: user.nickName || user.userName || String(user.userId),
+      phone: user.phonenumber || "",
+    }));
 }
 
 /** 最近执行时间、执行耗时、抽取成果、发布人/负责人电话后端暂未返回，先按约定字段名占位。 */
@@ -615,6 +650,11 @@ function formatDuration(value) {
   const seconds = Math.max(Math.round(Number(value)), 0);
   if (seconds < 60) return `${seconds}秒`;
   return `${Math.floor(seconds / 60)}分${seconds % 60}秒`;
+}
+
+/** 详情时间统一展示到秒，兼容接口返回的 ISO 时间字符串。 */
+function formatDetailTime(value) {
+  return value ? proxy.parseTime(value, "{y}-{m}-{d} {h}:{i}:{s}") || "-" : "-";
 }
 
 /** 任务状态开关：接口未返回 validFlag 时按启用展示，publishStatus 为空时归一为未发布(0)。 */
@@ -628,31 +668,35 @@ function formatData(rows) {
 
 /** 任务状态（启用/停用）开关，后端启用/停用接口待提供。 */
 function handleValidFlagChange(row, value) {
-  if (value === 0){
+  if (value === 0) {
     proxy.$modal.confirm("是否确认取消发布？").then(() => {
       const request = cancelReleaseUnstructTask(row.id);
-      request.then((response) => {
-        if (response && response.code === 200) {
-          proxy.$modal.msgSuccess("取消发布成功");
-          tableRef.value.getList();
-        }
-      }).catch(() => {
-        row.publishStatus = !value;
-        proxy.$modal.msgError("取消发布失败");
-      });
+      request
+        .then((response) => {
+          if (response && response.code === 200) {
+            proxy.$modal.msgSuccess("取消发布成功");
+            tableRef.value.getList();
+          }
+        })
+        .catch(() => {
+          row.publishStatus = !value;
+          proxy.$modal.msgError("取消发布失败");
+        });
     });
-  }else {
+  } else {
     proxy.$modal.confirm("是否确认发布？").then(() => {
       const request = releaseUnstructTask(row.id);
-      request.then((response) => {
-        if (response && response.code === 200) {
-          proxy.$modal.msgSuccess("发布成功");
-          tableRef.value.getList();
-        }
-      }).catch(() => {
-        row.publishStatus = !value;
-        proxy.$modal.msgError("发布失败");
-      });
+      request
+        .then((response) => {
+          if (response && response.code === 200) {
+            proxy.$modal.msgSuccess("发布成功");
+            tableRef.value.getList();
+          }
+        })
+        .catch(() => {
+          row.publishStatus = !value;
+          proxy.$modal.msgError("发布失败");
+        });
     });
   }
 }
@@ -700,7 +744,7 @@ function handleEdit(row) {
   getUnstructTask(row.id).then(({ data }) => {
     // 详情未返回电话时，从用户选项中按责任人id兜底获取
     const matchedUser = userOptions.value.find(
-        (user) => String(user.value) === String(data.responsibleUserId)
+      (user) => String(user.value) === String(data.responsibleUserId)
     );
     form.value = {
       id: data.id,
@@ -711,10 +755,11 @@ function handleEdit(row) {
       status: data.status,
       // 后端返回数字型 userId，与下拉选项按同一类型回显
       responsibleUserId:
-          data.responsibleUserId == null || data.responsibleUserId === ""
-              ? null
-              : Number(data.responsibleUserId),
-      responsiblePersonName: data.responsiblePersonName || matchedUser?.label || "",
+        data.responsibleUserId == null || data.responsibleUserId === ""
+          ? null
+          : Number(data.responsibleUserId),
+      responsiblePersonName:
+        data.responsiblePersonName || matchedUser?.label || "",
       responsiblePhone: data.responsiblePhone || matchedUser?.phone || "",
       sourceFiles: (data.relPageReqVOS || []).map((item) => ({
         id: item.docId,
@@ -749,6 +794,12 @@ function removeSourceFile(index) {
   refreshSourceFileTable();
 }
 
+// FileUpload 未派发 el.form.change，上传/删除后手动触发本体文件校验以刷新错误态
+watch(
+  () => form.value.ttlFilePath,
+  () => taskRef.value?.validateField("ttlFilePath")
+);
+
 /** 提交新增或修改任务。 */
 function submitForm() {
   taskRef.value.validate((valid) => {
@@ -765,9 +816,10 @@ function submitForm() {
       responsiblePersonName: form.value.responsiblePersonName,
       // 提交时归一为数字，与后端字段类型保持一致
       responsibleUserId:
-          form.value.responsibleUserId == null || form.value.responsibleUserId === ""
-              ? null
-              : Number(form.value.responsibleUserId),
+        form.value.responsibleUserId == null ||
+        form.value.responsibleUserId === ""
+          ? null
+          : Number(form.value.responsibleUserId),
     };
     submitting.value = true;
     (data.id ? updateUnstructTask(data) : addUnstructTask(data))
@@ -815,7 +867,7 @@ function handleDetail(row) {
   getUnstructTask(row.id).then(({ data }) => {
     // 详情未返回电话时，从用户选项中按责任人id兜底获取
     const matchedUser = userOptions.value.find(
-        (user) => String(user.value) === String(data.responsibleUserId)
+      (user) => String(user.value) === String(data.responsibleUserId)
     );
     detailForm.value = {
       ...data,
@@ -888,6 +940,10 @@ function handleDelete(row) {
 </script>
 
 <style scoped lang="scss">
+.unstruct-task__source-files {
+  margin: 0 0 10px 80px;
+}
+
 .task-status {
   justify-content: center;
 }

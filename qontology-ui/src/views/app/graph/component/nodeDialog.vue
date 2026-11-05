@@ -32,8 +32,7 @@
               v-if="!isEditName"
               >{{
                 "实体详情 - " + currNodeData.name + " (" + currNodeData.id + ")"
-              }}</span
-            >
+              }}</span>
             <el-input
               v-model="currNodeData.name"
               autofocus="true"
@@ -110,7 +109,7 @@
                         type="primary"
                         icon="Edit"
                         @click="attrUpdate(scope.row)"
-                        style="margin-left: 5px"
+                        class="btn-margin-left"
                         >修改
                       </el-button>
                       <el-button
@@ -155,8 +154,7 @@
                         @dblclick="
                           !releaseStatus && (isRelationshipEdit = scope.$index)
                         "
-                        >{{ scope.row.name }}</span
-                      >
+                        >{{ scope.row.name }}</span>
                       <el-input
                         v-model="scope.row.name"
                         autofocus="true"
@@ -185,8 +183,7 @@
                         type="danger"
                         icon="Delete"
                         @click="tripletDelete(scope.row)"
-                        >删除</el-button
-                      >
+                        >删除</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -222,34 +219,22 @@
                 <template #title>
                   <div class="collapse-title">关联数据源</div>
                 </template>
-                <div class="collapse-con1">
-                  <div
-                    style="
-                      display: grid;
-                      grid-template-columns: 1fr 1fr;
-                      margin-bottom: 8px;
-                    "
-                  >
-                    <div style="text-align: left">
+                <div class="collapse-con">
+                  <div class="ds-info-grid">
+                    <div class="text-left">
                       数据库名称:
                       {{ dataSource.database.type }}
                     </div>
-                    <div style="text-align: left">
+                    <div class="text-left">
                       数据库地址: {{ dataSource.database.host }}
                     </div>
                   </div>
-                  <div
-                    style="
-                      display: grid;
-                      grid-template-columns: 1fr 1fr;
-                      margin-bottom: 8px;
-                    "
-                  >
-                    <div style="text-align: left">
+                  <div class="ds-info-grid">
+                    <div class="text-left">
                       数据库名称:
                       {{ dataSource.database.databaseName }}
                     </div>
-                    <div style="text-align: left">
+                    <div class="text-left">
                       表名称: {{ dataSource.database.tableName }}
                     </div>
                   </div>
@@ -283,12 +268,11 @@
                 <template #title>
                   <div class="collapse-title">关联分段</div>
                 </template>
-                <div class="collapse-con1">
+                <div class="collapse-con">
                   <div v-for="(item, index) in textList" :key="index">
                     <span
                       v-if="isAssociatedText(currNodeData.textIds, item.id)"
-                      >{{ item.text }}</span
-                    >
+                      >{{ item.text }}</span>
                   </div>
                 </div>
               </el-collapse-item>
@@ -296,7 +280,7 @@
                 <template #title>
                   <div class="collapse-title">关联文件</div>
                 </template>
-                <div class="collapse-con1">
+                <div class="collapse-con">
                   <div v-for="(doc, index) in docList" :key="index">
                     <div v-if="currNodeData.docId == doc.id" class="docItem">
                       <td
@@ -311,7 +295,7 @@
                       >
                         {{ doc.name }}
                       </td>
-                      <td style="text-align: right">
+                      <td class="text-right">
                         {{ parseTime(doc.createTime, "{y}-{m}-{d}") }}
                       </td>
                     </div>
@@ -948,9 +932,10 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
       .label {
         width: 270px;
         margin-left: 12px;
-        //color: var(--el-color-primary);
         font-size: 16px;
-        font-weight: 200;
+        color: var(--qt-text-primary);
+        font-family: PingFang SC;
+        font-weight: 500;
       }
     }
 
@@ -989,13 +974,12 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
     }
 
     .collapse-title {
-      font-family: Pingfang Sc;
-      font-size: 14px;
-      //font-weight: 600;
-      // padding: 0 10px;
+      font-size: 16px;
+      color: var(--qt-text-primary);
       display: flex;
       align-items: center;
-
+      font-family: PingFang SC;
+      font-weight: 500;
       &::before {
         display: inline-block;
         content: "";
@@ -1022,7 +1006,7 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
       }
     }
 
-    .collapse-con1 {
+    .collapse-con {
       padding: 5px 5px;
 
       :deep(.el-descriptions__label.el-descriptions__cell.is-bordered-label) {
@@ -1044,6 +1028,27 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
     }
   }
 }
+/* 公共工具类 */
+.btn-margin-left {
+  margin-left: 5px;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* 数据源信息网格布局 */
+.ds-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
 :deep(.attr-dialog) {
   &:not(.is-fullscreen) {
     margin-top: 30vh !important;

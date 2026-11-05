@@ -73,7 +73,7 @@
           <router-link
             v-if="
               auth.hasPermi('om:enumeration:type:query') &&
-                auth.hasPermi('om:enumeration:data:list')
+              auth.hasPermi('om:enumeration:data:list')
             "
             :to="{
               name: 'OmEnumDetail',
@@ -81,7 +81,7 @@
               query: { tab: 'data' },
             }"
             class="link-type"
-          >{{ row.enumType }}
+            >{{ row.enumType }}
           </router-link>
           <span v-else>{{ row.enumType }}</span>
         </template>
@@ -92,7 +92,11 @@
             active-value="0"
             inactive-value="1"
             :loading="statusSaving[row.enumId] === true"
-            :disabled="!auth.hasPermi('om:enumeration:type:edit') || !auth.hasPermi('om:enumeration:type:query') || statusSaving[row.enumId] === true"
+            :disabled="
+              !auth.hasPermi('om:enumeration:type:edit') ||
+              !auth.hasPermi('om:enumeration:type:query') ||
+              statusSaving[row.enumId] === true
+            "
             @change="(value) => handleStatusChange(row, value)"
           />
           <span v-else>-</span>
@@ -123,7 +127,7 @@
             icon="View"
             @click="handleDetail(row)"
             v-hasPermi="['om:enumeration:type:query']"
-          >详情
+            >详情
           </el-button>
           <el-button
             link
@@ -131,7 +135,7 @@
             icon="Edit"
             @click="handleUpdate(row)"
             v-hasPermi="['om:enumeration:type:edit']"
-          >修改
+            >修改
           </el-button>
           <el-button
             link
@@ -139,7 +143,7 @@
             icon="Delete"
             @click="handleDelete(row)"
             v-hasPermi="['om:enumeration:type:remove']"
-          >删除
+            >删除
           </el-button>
         </template>
       </qt-table>
@@ -205,7 +209,7 @@
               v-for="dict in enumStatusOptions"
               :key="dict.value"
               :label="dict.value"
-            >{{ dict.label }}
+              >{{ dict.label }}
             </el-radio>
           </el-radio-group>
         </qt-form-item>
@@ -229,11 +233,9 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button
-            type="primary"
-            size="mini"
-            @click="submitForm"
-          >确 定</el-button>
+          <el-button type="primary" size="mini" @click="submitForm"
+            >确 定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -268,7 +270,9 @@ import { useRouter } from "vue-router";
 const { proxy } = getCurrentInstance();
 const router = useRouter();
 const { project_status } = proxy.useDict("project_status");
-const enumStatusOptions = computed(() => toEnumStatusOptions(project_status.value));
+const enumStatusOptions = computed(() =>
+  toEnumStatusOptions(project_status.value)
+);
 const { versionId, requireVersion } = useOntologyVersion();
 const pageRef = ref();
 const tableRef = ref();
@@ -418,11 +422,16 @@ async function loadEnumTypes(params) {
   if (!params.versionId) return { data: { rows: [], total: 0 } };
   const response = await listType(params);
   if (auth.hasPermi("om:dataType:datatype:list")) {
-    const references = await loadProjectEnumReferences({ versionId: params.versionId }).catch(() => null);
-    if (references) response.data.rows = response.data.rows.map((row) => ({
-      ...row,
-      referenceCount: references.filter((item) => item.enumType === row.enumType).length,
-    }));
+    const references = await loadProjectEnumReferences({
+      versionId: params.versionId,
+    }).catch(() => null);
+    if (references)
+      response.data.rows = response.data.rows.map((row) => ({
+        ...row,
+        referenceCount: references.filter(
+          (item) => item.enumType === row.enumType
+        ).length,
+      }));
   }
   return response;
 }
@@ -453,10 +462,11 @@ function formatListData(rows) {
   return rows.map((row) => {
     const record = { ...row };
     fields.forEach((field) => {
-      if (record[field] == null || record[field] === "") record[field] = "—";
+      if (record[field] == null || record[field] === "") record[field] = "-";
     });
     if (row.status != null) record.status = String(row.status);
-    record.remark = row.remark == null || String(row.remark).trim() === "" ? "-" : row.remark;
+    record.remark =
+      row.remark == null || String(row.remark).trim() === "" ? "-" : row.remark;
     return record;
   });
 }
@@ -518,7 +528,10 @@ async function handleUpdate(row) {
   const request = ++detailRequest;
   const response = await getType(row?.enumId ?? ids.value[0]);
   if (request !== detailRequest) return;
-  if (!response.data || String(response.data.versionId) !== String(versionId.value)) {
+  if (
+    !response.data ||
+    String(response.data.versionId) !== String(versionId.value)
+  ) {
     proxy.$modal.msgWarning("记录已不存在，请刷新");
     return;
   }
@@ -565,7 +578,10 @@ async function handleStatusChange(row, value) {
 
 /** 携带枚举编号打开独立详情页，由详情页统一加载概要及关联列表。 */
 function handleDetail(row) {
-  router.push({ name: "OmEnumDetail", params: { enumId: row.enumId, versionId: versionId.value } });
+  router.push({
+    name: "OmEnumDetail",
+    params: { enumId: row.enumId, versionId: versionId.value },
+  });
 }
 
 /** 校验并保存枚举类型，成功后通过公共表格刷新当前列表。 */
@@ -573,7 +589,13 @@ async function submitForm() {
   if (!requireVersion() || saving.value) return;
   const submittingVersion = versionId.value;
   const valid = await typeRef.value.validate().catch(() => false);
-  if (!valid || saving.value || !open.value || submittingVersion !== versionId.value) return;
+  if (
+    !valid ||
+    saving.value ||
+    !open.value ||
+    submittingVersion !== versionId.value
+  )
+    return;
   saving.value = true;
   try {
     const payload = {
@@ -591,7 +613,7 @@ async function submitForm() {
     }
     if (submittingVersion !== versionId.value) return;
     proxy.$modal.msgSuccess(
-      form.value.enumId != null ? "修改成功" : "新增成功",
+      form.value.enumId != null ? "修改成功" : "新增成功"
     );
     open.value = false;
     tableRef.value?.getList();
@@ -607,7 +629,7 @@ async function handleDelete(row) {
   if (!recordIds.length || deleting.value) return;
   try {
     await proxy.$modal.confirm(
-      '是否确认删除枚举编号为"' + recordIds.join(",") + '"的数据项？',
+      '是否确认删除枚举编号为"' + recordIds.join(",") + '"的数据项？'
     );
   } catch {
     return;

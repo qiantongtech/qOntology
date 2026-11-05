@@ -53,7 +53,9 @@
 
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
-        <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop]
+        }}</template>
         <!-- 版本号列保留“当前版本”标签。 -->
         <template #version="{ row }">
           <span class="text-ellipsis" :title="row.version || ''">{{
@@ -100,7 +102,10 @@
             @click="handleDiff(row)"
             v-hasPermi="['basic:project:projectversion:diff']"
           >
-            <svg-icon icon-class="meta-version" class="handle-svg-icon" />版本对比</el-button
+            <svg-icon
+              icon-class="meta-version"
+              class="handle-svg-icon"
+            />版本对比</el-button
           >
           <el-button
             link
@@ -236,7 +241,7 @@
         </el-form-item>
         <el-form-item label="基准版本" prop="baseVersion">
           <div class="form-readonly">
-            {{ form.baseVersion || "—" }}
+            {{ form.baseVersion || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="描述" prop="description" class="row-full">

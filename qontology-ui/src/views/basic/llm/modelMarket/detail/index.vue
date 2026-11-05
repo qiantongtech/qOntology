@@ -1,89 +1,36 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
  You may use qOntology for commercial purposes, but you may not remove, hide,
  modify, or replace the qOntology logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
 <template>
   <div class="app-container" ref="app-container">
-    <div class="pagecont-top" v-show="showSearch" style="padding-bottom: 15px">
-      <div class="infotop">
-        <div class="infotop-title mb15">
-          <span style="margin-left: 8px">
-            {{ modelDetail.name }}
-          </span>
-          <el-row :gutter="15" class="btn-style" style="margin-left: auto">
-            <el-col :span="1.5">
-              <el-button
-                type="primary"
-                size="small"
-                class="fhbtn"
-                plain
-                @click="handleReturn"
-                @mousedown="(e) => e.preventDefault()"
-              >
-                <svg-icon
-                  style="width: 1em; height: 1em; margin-right: 3px"
-                  :iconClass="'fhs'"
-                />
-                返回
-              </el-button>
-            </el-col>
-          </el-row>
-        </div>
-        <el-row :gutter="3" style="margin-bottom: 3px">
-          <el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">模型名称</div>
-              <div class="infotop-row-value">
-                {{ modelDetail.name || "-" }}
-              </div>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">支持语言</div>
-              <div class="infotop-row-value">
-                {{ "中/英文" }}
-              </div>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">模型提供方</div>
-              <div class="infotop-row-value">
-                <dict-tag
-                  :options="ai_model_platform"
-                  :value="modelDetail.platform"
-                />
-              </div>
-            </div>
-          </el-col>
-        </el-row>
-
-        <el-row>
-          <el-col :span="24">
-            <div class="infotop-row border-top">
-              <div class="infotop-row-lable">描述</div>
-              <div class="infotop-row-value">
-                {{ modelDetail.description || "-" }}
-              </div>
-            </div>
-          </el-col>
-        </el-row>
-      </div>
-    </div>
+    <detail-info
+      :data="detailData"
+      :header="{
+        className: 'clearfixs',
+        idKey: 'id',
+        nameKey: 'name',
+        statusKey: 'status',
+        statusOptions: ai_apikey_status,
+        routerBack: false,
+      }"
+      :items="detailItems"
+      mode="free"
+      @back="handleReturn"
+    />
 
     <div class="pagecont-bottom">
       <el-tabs v-model="activeName" class="demo-tabs" @tab-change="tabChange">
@@ -100,29 +47,46 @@
 </template>
 
 <script setup name="ModelMarketDetail">
-import { listByPlatform, getByPlatform } from "@/api/basic/llm/modelMarket/key.js";
+import {
+  listByPlatform,
+  getByPlatform,
+} from "@/api/basic/llm/modelMarket/key.js";
 import { useRoute } from "vue-router";
 import ModelTable from "./modelTable.vue";
 
 const { proxy } = getCurrentInstance();
-const { ai_apikey_status, ai_model_platform, ai_deploy_type } = proxy.useDict(
+const { ai_apikey_status, ai_model_platform } = proxy.useDict(
   "ai_apikey_status",
-  "ai_model_platform",
-  "ai_deploy_type"
+  "ai_model_platform"
 );
 
-const activeName = ref("1");
+const activeName = ref("");
 const platformKeyList = ref([]);
 
 let keyId = 0;
-const showSearch = ref(true);
 const route = useRoute();
-let platform = route.query.platform;
+
+// 详情概要字段：布局与枚举详情页一致，描述独占一行
+// 字典 ref 在 script 中需 .value 解包后再传入子组件
+const detailItems = computed(() => [
+  { label: "模型名称", key: "name" },
+  { label: "支持语言", value: "中/英文" },
+  { label: "模型提供方", key: "platform", dictOptions: ai_model_platform.value },
+  {
+    label: "描述",
+    key: "description",
+    span: 24,
+    className: "mt2 mb2",
+    formatter: (value) => value?.trim() || "-",
+  },
+  { label: "创建人", key: "createBy" },
+  { label: "创建时间", key: "createTime", type: "time" },
+  { label: "更新时间", key: "updateTime", type: "time" },
+]);
 // 监听 id 变化
 watch(
   () => route.query.platform,
   (newPlatform) => {
-    platform = newPlatform; // 如果 id 为空，使用默认值 1
     queryByPlatform(newPlatform);
     queryInfoByPlatform(newPlatform);
   },
@@ -133,16 +97,30 @@ const data = reactive({
   form: {},
 });
 
-const { modelDetail, rules } = toRefs(data);
+const { modelDetail } = toRefs(data);
+
+// 编号、创建人、创建/更新时间等审计字段在 listByPlatform 的 key 记录中，
+// getByPlatform（平台信息）不返回，两份数据合并后传给详情组件
+const modelAudit = ref({});
+// 平台信息接口中的审计字段为空，审计数据需最后合并，避免被 null 覆盖。
+const detailData = computed(() => ({ ...modelDetail.value, ...modelAudit.value }));
 
 function queryByPlatform(platform) {
   if (!platform) {
     return;
   }
   listByPlatform(platform).then((response) => {
-    platformKeyList.value = response.data;
-    keyId = response.data[0].id;
-    activeName.value = response.data[0].id;
+    const keyList = Array.isArray(response.data) ? response.data : [];
+    platformKeyList.value = keyList;
+    const first = keyList[0] || {};
+    keyId = first.id || 0;
+    activeName.value = first.id || "";
+    modelAudit.value = {
+      id: first.id,
+      createBy: first.createBy,
+      createTime: first.createTime,
+      updateTime: first.updateTime,
+    };
   });
 }
 
@@ -172,21 +150,4 @@ function handleReturn() {
   }
 }
 
-queryByPlatform(platform);
-queryInfoByPlatform(platform);
 </script>
-<style lang="scss" scoped>
-.fhbtn {
-  .svg-icon {
-    font-size: 12px;
-    margin-right: 3px;
-    vertical-align: middle;
-    margin-top: -3px;
-  }
-  &:hover {
-    .svg-icon {
-      filter: brightness(0) invert(1) !important;
-    }
-  }
-}
-</style>

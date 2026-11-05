@@ -403,7 +403,7 @@ function formatListData(rows) {
   return rows.map((row) => {
     const record = { ...row };
     fields.forEach((field) => {
-      if (record[field] == null || record[field] === "") record[field] = "—";
+      if (record[field] == null || record[field] === "") record[field] = "-";
     });
     return record;
   });
@@ -449,15 +449,15 @@ function handleStatusChange(row, status) {
   const text = status === "0" ? "启用" : "停用";
   const previous = status === "0" ? "1" : "0";
   proxy.$modal
-    .confirm('确认要' + text + '"' + row.enumName + '"枚举类型吗？')
+    .confirm("确认要" + text + '"' + row.enumName + '"枚举类型吗？')
     .then(function () {
       // 修改接口要求名称、编码及状态必填，故随同提交当前行的展示字段。
       return updateType({
         enumId: row.enumId,
-        enumName: row.enumName === "—" ? "" : row.enumName,
-        enumType: row.enumType === "—" ? "" : row.enumType,
+        enumName: row.enumName === "-" ? "" : row.enumName,
+        enumType: row.enumType === "-" ? "" : row.enumType,
         status: status,
-        remark: row.remark === "—" ? "" : row.remark,
+        remark: row.remark === "-" ? "" : row.remark,
       });
     })
     .then(() => {

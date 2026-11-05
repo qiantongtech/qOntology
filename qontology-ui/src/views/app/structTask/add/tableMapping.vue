@@ -1,17 +1,17 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qKnow is licensed under Apache License 2.0 with additional qKnow terms.
  You may use qKnow for commercial purposes, but you may not remove, hide,
  modify, or replace the qKnow logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qKnow as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qknow.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
@@ -19,7 +19,7 @@
 <!-- TableMapping.vue -->
 <template>
   <div>
-    <div class="h2-titles">表映射</div>
+    <div class="h2-titles mb15">表映射</div>
     <div class="justify-between mb15">
       <el-row :gutter="15">
         <el-col :span="1.5" class="header-actions">
@@ -106,24 +106,6 @@ const onDeleteClick = (row) => {
 </script>
 
 <style scoped lang="scss">
-.h2-titles {
-  font-size: 16px;
-  color: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  font-weight: 500;
-  margin: 8px 0;
-}
-.h2-titles::before {
-  display: inline-block;
-  content: "";
-  width: 6px;
-  height: 16px;
-  border-radius: 3px;
-  background: var(--el-color-primary);
-  margin-right: 8px;
-}
-
 .header-actions {
   display: flex;
   align-items: center;

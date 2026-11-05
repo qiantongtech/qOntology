@@ -62,7 +62,7 @@
         />
       </qt-form-item>
       <qt-form-item class="row-full" label="文件分类名称" prop="name" tip="填写文件分类的名称，用于在文件管理中归类检索。">
-        <div v-if="readonly" class="form-readonly">{{ form.name || "—" }}</div>
+        <div v-if="readonly" class="form-readonly">{{ form.name || "-" }}</div>
         <el-input
           v-else
           v-model="form.name"
@@ -72,7 +72,7 @@
       </qt-form-item>
       <qt-form-item class="row-full" label="排序" prop="orderNum" tip="数值越小越靠前，用于控制分类的展示顺序。">
         <div v-if="readonly" class="form-readonly">
-          {{ form.orderNum ?? "—" }}
+          {{ form.orderNum ?? "-" }}
         </div>
         <el-input-number
           v-else
@@ -91,7 +91,7 @@
               ? "启用"
               : form.validFlag === false
               ? "禁用"
-              : "—"
+              : "-"
           }}
         </div>
         <el-radio-group v-else v-model="form.validFlag">
@@ -101,7 +101,7 @@
       </qt-form-item>
       <qt-form-item class="row-full" label="描述" prop="remark" tip="补充该文件分类的用途说明。">
         <div v-if="readonly" class="form-readonly description">
-          {{ form.remark || "—" }}
+          {{ form.remark || "-" }}
         </div>
         <el-input
           v-else
@@ -185,8 +185,17 @@ const parentCategoryName = computed(() => {
     }
     return "";
   };
-  return findName(categoryOptions.value) || "—";
+  return findName(categoryOptions.value) || "-";
 });
+
+// 创建人沿用“姓名/电话”单行格式，与枚举详情页及列表列保持一致。
+const { formatCreator } = useCreatorPhones();
+const creatorText = computed(() => formatCreator(form.value));
+const createTimeText = computed(() =>
+  form.value.createTime
+    ? proxy.parseTime(form.value.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+    : "-"
+);
 
 /** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
 function formatCreator(record) {

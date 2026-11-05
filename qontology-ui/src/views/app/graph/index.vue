@@ -44,7 +44,6 @@
 <!--    }-->
 <!--</style>-->
 
-
 <template>
   <div class="app-container">
     <GuideTip tip-id="kg/graphExploration" />

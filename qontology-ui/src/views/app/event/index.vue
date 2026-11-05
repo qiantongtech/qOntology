@@ -58,7 +58,11 @@
         <!-- 参与实体沿用标签换行展示的样式 -->
         <template #entityList="{ row }">
           <div class="multiline-ellipsis">
+            <span v-if="!row.entityNameList || !row.entityNameList.length"
+              >-</span
+            >
             <el-tag
+              v-else
               v-for="tag in row.entityNameList"
               :key="tag.id"
               class="card-tag"
@@ -71,14 +75,22 @@
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
             <span class="text-ellipsis" :title="row.createBy || ''">{{
-                row.createBy || '-'
-              }}</span>
+              row.createBy || "-"
+            }}</span>
             <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
-                creatorPhones[row.creatorId]
-              }}</span>
+              creatorPhones[row.creatorId]
+            }}</span>
           </div>
         </template>
         <template #handle="{ row }">
+          <el-button
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            v-hasPermi="['app:graph:event:query']"
+            >详情</el-button
+          >
           <el-button
             link
             type="primary"
@@ -95,56 +107,51 @@
             v-hasPermi="['app:graph:event:remove']"
             >删除</el-button
           >
-          <el-button
-            link
-            type="primary"
-            icon="view"
-            @click="handleDetail(row)"
-            v-hasPermi="['app:graph:event:query']"
-            >详情</el-button
-          >
         </template>
       </qt-table>
     </qt-wrap>
 
     <!-- 新增/修改事件表单：本地草稿与实体选择由组件维护，父页面统一保存。 -->
     <EventFormDialog
-        v-model:open="open"
-        :title="title"
-        :form="form"
-        :rules="rules"
-        :event-type-options="app_event_type"
-        :entity-options="app_enetity_type"
-        :graph-id="route.params.kgId"
-        :saving="eventSaving"
-        :append-to="$refs['app-container']"
-        @cancel="cancel"
-        @submit="submitForm"
+      v-model:open="open"
+      :title="title"
+      :form="form"
+      :rules="rules"
+      :event-type-options="app_event_type"
+      :entity-options="app_enetity_type"
+      :graph-id="route.params.kgId"
+      :saving="eventSaving"
+      :append-to="$refs['app-container']"
+      @cancel="cancel"
+      @submit="submitForm"
     />
 
     <!-- 事件管理详情对话框 -->
     <el-dialog
-        :title="title"
-        v-model="openDetail"
-        width="800px"
-        :append-to="$refs['app-container']"
-        draggable
+      :title="title"
+      v-model="openDetail"
+      width="800px"
+      :append-to="$refs['app-container']"
+      draggable
     >
       <template #header>
-        <span role="heading" aria-level="2" class="el-dialog__title">{{ title }}</span>
+        <span role="heading" aria-level="2" class="el-dialog__title">{{
+          title
+        }}</span>
       </template>
       <el-form :model="form" label-width="90px" class="column-form">
         <el-form-item label="事件名称" prop="name" class="row-full">
-          <div class="form-readonly">{{ form.name || '—' }}</div>
+          <div class="form-readonly">{{ form.name || "-" }}</div>
         </el-form-item>
-        <el-form-item label="事件类型" prop="type">
+        <el-form-item label="事件类型" prop="type" class="row-full">
           <dict-tag :options="app_event_type" :value="form.type" />
         </el-form-item>
-        <el-form-item label="发生时间" prop="occurTime">
-          <div class="form-readonly">{{ form.occurTime || '—' }}</div>
+        <el-form-item label="发生时间" prop="occurTime" class="row-full">
+          <div class="form-readonly">{{ form.occurTime || "-" }}</div>
         </el-form-item>
+
         <el-form-item label="发生地点" prop="occurPlace" class="row-full">
-          <div class="form-readonly">{{ form.occurPlace || '—' }}</div>
+          <div class="form-readonly">{{ form.occurPlace || "-" }}</div>
         </el-form-item>
         <el-form-item label="参与实体" prop="entityNameList" class="row-full">
           <div class="detail-entity-list">
@@ -155,14 +162,26 @@
             >
               {{ tag.name }}
             </el-tag>
-            <span v-if="!form.entityNameList || !form.entityNameList.length">—</span>
+            <span v-if="!form.entityNameList || !form.entityNameList.length"
+              >-</span
+            >
           </div>
         </el-form-item>
         <el-form-item label="事件描述" prop="description" class="row-full">
-          <div class="form-readonly textarea">{{ form.description ?? '-' }}</div>
+          <div class="form-readonly textarea">
+            {{ form.description ?? "-" }}
+          </div>
         </el-form-item>
         <el-form-item label="备注" prop="remark" class="row-full">
-          <div class="form-readonly textarea">{{ form.remark ?? '-' }}</div>
+          <div class="form-readonly textarea">{{ form.remark ?? "-" }}</div>
+        </el-form-item>
+        <el-form-item label="创建人" prop="createBy" class="row-full">
+          <div class="form-readonly">{{ form.createBy || "-" }}</div>
+        </el-form-item>
+        <el-form-item label="创建时间" prop="createTime" class="row-full">
+          <div class="form-readonly">
+            {{ proxy.parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -175,14 +194,23 @@
 </template>
 
 <script setup name="Event">
-import {addEvent, delEvent, getEvent, listEvent, updateEvent} from '@/api/app/event/event';
-import {useCreatorPhones} from '@/utils/useCreatorPhones';
-import EventFormDialog from './components/eventFormDialog.vue';
+import {
+  addEvent,
+  delEvent,
+  getEvent,
+  listEvent,
+  updateEvent,
+} from "@/api/app/event/event";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+import EventFormDialog from "./components/eventFormDialog.vue";
 
-const {proxy} = getCurrentInstance();
-const {app_event_type, app_enetity_type} = proxy.useDict('app_event_type', 'app_enetity_type');
+const { proxy } = getCurrentInstance();
+const { app_event_type, app_enetity_type } = proxy.useDict(
+  "app_event_type",
+  "app_enetity_type"
+);
 // 联系电话复用公共用户关联逻辑，按创建人编号索引。
-const {creatorPhones} = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 
 const tableRef = ref();
 
@@ -191,8 +219,7 @@ const openDetail = ref(false);
 const ids = ref([]);
 const single = ref(true);
 const multiple = ref(true);
-const title = ref('');
-const router = useRouter();
+const title = ref("");
 const route = useRoute();
 // 父页面持有保存状态，供表单组件统一禁用提交和关闭操作。
 const eventSaving = ref(false);
@@ -204,7 +231,7 @@ function formatData(rows) {
     entityNameList:
       item.entityList != null && item.entityList.length > 0
         ? item.entityList.map((entityItem) => ({ name: entityItem.entityName }))
-        : []
+        : [],
   }));
 }
 
@@ -214,63 +241,77 @@ const tableStore = reactive({
     sort: true,
     table: {
       stripe: true,
-      rowKey: 'id',
-      defaultSort: { prop: 'createTime', order: 'descending' },
-      onSelectionChange: handleSelectionChange
-    }
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
   },
   columns: [
-    { type: 'selection', width: 55 },
-    { label: '编号', prop: 'id', width: 80, sortable: 'custom', sortableKey: 'id' },
+    { type: "selection", width: 55 },
     {
-      label: '事件名称',
-      prop: 'name',
+      label: "编号",
+      prop: "id",
+      width: 80,
+      sortable: "custom",
+      sortableKey: "id",
+    },
+    {
+      label: "事件名称",
+      prop: "name",
       minWidth: 200,
-      align: 'left',
-      showOverflowTooltip: { effect: 'light' }
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
     },
     {
-      label: '事件描述',
-      prop: 'description',
+      label: "事件描述",
+      prop: "description",
       minWidth: 250,
-      align: 'left',
-      showOverflowTooltip: { effect: 'light' }
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
     },
-    { label: '事件类型', prop: 'type', slot: 'eventType' },
+    { label: "事件类型", prop: "type", slot: "eventType" },
     {
-      label: '参与实体',
-      prop: 'entityNameList',
-      slot: 'entityList',
+      label: "参与实体",
+      prop: "entityNameList",
+      slot: "entityList",
       minWidth: 250,
-      align: 'center',
-      showOverflowTooltip: { effect: 'light' }
+      align: "center",
+      showOverflowTooltip: { effect: "light" },
     },
     {
-      label: '发生时间',
-      prop: 'occurTime',
+      label: "发生时间",
+      prop: "occurTime",
       date: true,
       width: 180,
-      sortable: 'custom',
-      sortableKey: 'occurTime'
+      sortable: "custom",
+      sortableKey: "occurTime",
     },
     {
-      label: '发生地点',
-      prop: 'occurPlace',
+      label: "发生地点",
+      prop: "occurPlace",
       minWidth: 200,
-      align: 'left',
-      showOverflowTooltip: { effect: 'light' }
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
     },
-    { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: { effect: 'light' } },
     {
-      label: '创建时间',
-      prop: 'createTime',
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 130,
+      align: "left",
+      headerAlign: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
       date: true,
       width: 180,
-      align: 'left',
-      sortable: 'custom',
-      sortableKey: 'createTime'
+      align: "left",
+      sortable: "custom",
+      sortableKey: "createTime",
     },
-    { label: '操作', slot: 'handle', width: 240, fixed: 'right' }
+    { label: "操作", slot: "handle", width: 240, fixed: "right" },
   ],
   func: listEvent,
   params: {
@@ -279,42 +320,54 @@ const tableStore = reactive({
     modelId: null,
     name: null,
     type: null,
-    createBy: null
+    createBy: null,
   },
   events: {
-    formatData
-  }
+    formatData,
+  },
 });
 
 // 搜索项配置
 const searchStore = reactive({
   items: [
-    { label: '事件名称', prop: 'name', component: { is: 'input' } },
+    { label: "事件名称", prop: "name", component: { is: "input" } },
     {
-      label: '事件类型',
-      prop: 'type',
-      component: { is: 'select', options: app_event_type }
+      label: "事件类型",
+      prop: "type",
+      component: { is: "select", options: app_event_type },
     },
-    { label: '创建人', prop: 'createBy', component: { is: 'input' } }
-  ]
+    { label: "创建人", prop: "createBy", component: { is: "input" } },
+  ],
 });
 
 const data = reactive({
   form: {},
   rules: {
-    workspaceId: [{required: true, message: '工作区id不能为空', trigger: 'blur'}],
-    name: [{required: true, message: '事件名称不能为空', trigger: 'blur'}],
-    type: [{required: true, message: '事件类型不能为空', trigger: 'change'}],
-    occurTime: [{required: true, message: '发生时间不能为空', trigger: 'change'}],
-    entityNameList: [{required: true, message: '参与实体不能为空', trigger: 'change'}],
-    validFlag: [{required: true, message: '是否有效不能为空', trigger: 'blur'}],
-    delFlag: [{required: true, message: '删除标志不能为空', trigger: 'blur'}],
-    createTime: [{required: true, message: '创建时间不能为空', trigger: 'blur'}],
-    updateTime: [{required: true, message: '更新时间不能为空', trigger: 'blur'}]
-  }
+    workspaceId: [
+      { required: true, message: "工作区id不能为空", trigger: "blur" },
+    ],
+    name: [{ required: true, message: "事件名称不能为空", trigger: "blur" }],
+    type: [{ required: true, message: "事件类型不能为空", trigger: "change" }],
+    occurTime: [
+      { required: true, message: "发生时间不能为空", trigger: "change" },
+    ],
+    entityNameList: [
+      { required: true, message: "参与实体不能为空", trigger: "change" },
+    ],
+    validFlag: [
+      { required: true, message: "是否有效不能为空", trigger: "blur" },
+    ],
+    delFlag: [{ required: true, message: "删除标志不能为空", trigger: "blur" }],
+    createTime: [
+      { required: true, message: "创建时间不能为空", trigger: "blur" },
+    ],
+    updateTime: [
+      { required: true, message: "更新时间不能为空", trigger: "blur" },
+    ],
+  },
 });
 
-const {form, rules} = toRefs(data);
+const { form, rules } = toRefs(data);
 
 // 取消当前弹窗操作；保存期间由组件与父页面共同阻止关闭。
 function cancel() {
@@ -340,7 +393,7 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset();
   open.value = true;
-  title.value = '新增事件管理';
+  title.value = "新增事件管理";
 }
 
 /** 修改按钮操作 */
@@ -350,16 +403,16 @@ function handleUpdate(row) {
   getEvent(_id).then((response) => {
     form.value = response.data;
     form.value.entityIdList =
-        form.value.entityList != null && form.value.entityList.length > 0
-            ? form.value.entityList.map((item) => item.entityId)
-            : [];
+      form.value.entityList != null && form.value.entityList.length > 0
+        ? form.value.entityList.map((item) => item.entityId)
+        : [];
     form.value.entityNameList =
-        form.value.entityList != null && form.value.entityList.length > 0
-            ? form.value.entityList.map((item) => item.entityName)
-            : [];
+      form.value.entityList != null && form.value.entityList.length > 0
+        ? form.value.entityList.map((item) => item.entityName)
+        : [];
 
     open.value = true;
-    title.value = '修改事件管理';
+    title.value = "修改事件管理";
   });
 }
 
@@ -370,11 +423,11 @@ function handleDetail(row) {
   getEvent(_id).then((response) => {
     form.value = response.data;
     form.value.entityNameList =
-        form.value.entityList != null && form.value.entityList.length > 0
-            ? form.value.entityList.map((items) => ({name: items.entityName}))
-            : [];
+      form.value.entityList != null && form.value.entityList.length > 0
+        ? form.value.entityList.map((items) => ({ name: items.entityName }))
+        : [];
     openDetail.value = true;
-    title.value = '事件管理详情';
+    title.value = "事件管理详情";
   });
 }
 
@@ -389,7 +442,7 @@ async function submitForm(payload) {
     } else {
       await addEvent(payload);
     }
-    proxy.$modal.msgSuccess(payload.id != null ? '修改成功' : '新增成功');
+    proxy.$modal.msgSuccess(payload.id != null ? "修改成功" : "新增成功");
     open.value = false;
     tableRef.value?.getList();
   } catch {
@@ -403,35 +456,15 @@ async function submitForm(payload) {
 function handleDelete(row) {
   const _ids = row.id || ids.value;
   proxy.$modal
-      .confirm('是否确认删除事件管理编号为"' + _ids + '"的数据项？')
-      .then(function () {
-        return delEvent(_ids);
-      })
-      .then(() => {
-        tableRef.value?.getList();
-        proxy.$modal.msgSuccess('删除成功');
-      })
-      .catch(() => {
-      });
-}
-
-function routeTo(link, row) {
-  if (link !== '' && link.indexOf('http') !== -1) {
-    window.location.href = link;
-    return;
-  }
-  if (link !== '') {
-    if (link === router.currentRoute.value.path) {
-      window.location.reload();
-    } else {
-      router.push({
-        path: link,
-        query: {
-          id: row.id
-        }
-      });
-    }
-  }
+    .confirm('是否确认删除事件管理编号为"' + _ids + '"的数据项？')
+    .then(function () {
+      return delEvent(_ids);
+    })
+    .then(() => {
+      tableRef.value?.getList();
+      proxy.$modal.msgSuccess("删除成功");
+    })
+    .catch(() => {});
 }
 </script>
 <style scoped lang="scss">

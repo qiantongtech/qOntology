@@ -46,21 +46,24 @@
           plain
           :disabled="!defaultEnumType || !contextReady"
           @click="handleAdd"
-        ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button>
+          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button
+        >
         <el-button
           v-hasPermi="['om:enumeration:data:remove']"
           type="danger"
           plain
           :disabled="multiple || deleting"
           @click="handleDelete()"
-        ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button>
+          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button
+        >
         <el-button
           v-if="!embedded && route.params.enumId"
           type="warning"
           plain
           icon="Close"
           @click="handleClose"
-        >关闭</el-button>
+          >关闭</el-button
+        >
       </template>
       <!-- 路由入口先解析枚举编码，再挂载表格；切换上下文时重建实例，隔离旧列表响应。 -->
       <qt-table
@@ -79,7 +82,11 @@
             active-value="0"
             inactive-value="1"
             :loading="statusSaving[row.enumCode] === true"
-            :disabled="!auth.hasPermi('om:enumeration:data:edit') || !auth.hasPermi('om:enumeration:data:query') || statusSaving[row.enumCode] === true"
+            :disabled="
+              !auth.hasPermi('om:enumeration:data:edit') ||
+              !auth.hasPermi('om:enumeration:data:query') ||
+              statusSaving[row.enumCode] === true
+            "
             :aria-label="`${row.enumLabel}状态`"
             @change="(value) => handleStatusChange(row, value)"
           />
@@ -87,9 +94,9 @@
         </template>
         <template #createTime="{ row }">
           {{
-            row.createTime === "—"
-              ? "—"
-              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "—"
+            row.createTime === "-"
+              ? "-"
+              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
           }}
         </template>
         <template #handle="{ row }">
@@ -99,14 +106,16 @@
             type="primary"
             icon="View"
             @click="handleDetail(row)"
-          >详情</el-button>
+            >详情</el-button
+          >
           <el-button
             v-hasPermi="['om:enumeration:data:edit']"
             link
             type="primary"
             icon="Edit"
             @click="handleUpdate(row)"
-          >修改</el-button>
+            >修改</el-button
+          >
           <el-button
             v-hasPermi="['om:enumeration:data:remove']"
             link
@@ -114,7 +123,8 @@
             icon="Delete"
             :disabled="deleting"
             @click="handleDelete(row)"
-          >删除</el-button>
+            >删除</el-button
+          >
         </template>
       </qt-table>
     </qt-wrap>
@@ -143,7 +153,11 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <qt-form-item class="row-full" label="枚举类型" tip="填写唯一的英文编码，以字母开头，仅支持字母、数字和下划线。">
+        <qt-form-item
+          class="row-full"
+          label="枚举类型"
+          tip="填写唯一的英文编码，以字母开头，仅支持字母、数字和下划线。"
+        >
           <el-input v-model="form.enumType" disabled />
         </qt-form-item>
         <qt-form-item
@@ -195,7 +209,7 @@
               v-for="dict in enumStatusOptions"
               :key="dict.value"
               :label="dict.value"
-            >{{ dict.label }}
+              >{{ dict.label }}
             </el-radio>
           </el-radio-group>
         </qt-form-item>
@@ -219,11 +233,9 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button
-            type="primary"
-            size="mini"
-            @click="submitForm"
-          >确 定</el-button>
+          <el-button type="primary" size="mini" @click="submitForm"
+            >确 定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -245,27 +257,33 @@
           <div class="form-readonly">{{ detail.enumType }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="枚举标签">
-          <div class="form-readonly">{{ detail.enumLabel ?? "—" }}</div>
+          <div class="form-readonly">{{ detail.enumLabel ?? "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="枚举键值">
-          <div class="form-readonly">{{ detail.enumValue ?? "—" }}</div>
+          <div class="form-readonly">{{ detail.enumValue ?? "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="排序">
-          <div class="form-readonly">{{ detail.enumSort ?? "—" }}</div>
+          <div class="form-readonly">{{ detail.enumSort ?? "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="状态">
-          <dict-tag :options="enumStatusOptions" :value="detail.status" class="con-value access-tag" />
+          <dict-tag
+            :options="enumStatusOptions"
+            :value="detail.status"
+            class="con-value access-tag"
+          />
         </el-form-item>
         <el-form-item class="row-full" label="创建人">
-          <div class="form-readonly">{{ detail.createBy || "—" }}</div>
+          <div class="form-readonly">{{ detail.createBy || "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
-            {{ parseTime(detail.createTime) || "—" }}
+            {{ parseTime(detail.createTime) || "-" }}
           </div>
         </el-form-item>
         <el-form-item class="row-full" label="备注">
-          <div class="form-readonly textarea">{{ detail.remark?.trim() || "-" }}</div>
+          <div class="form-readonly textarea">
+            {{ detail.remark?.trim() || "-" }}
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -308,7 +326,9 @@ const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
 const { project_status } = proxy.useDict("project_status");
-const enumStatusOptions = computed(() => toEnumStatusOptions(project_status.value));
+const enumStatusOptions = computed(() =>
+  toEnumStatusOptions(project_status.value)
+);
 const route = useRoute();
 const { versionId, requireVersion } = useOntologyVersion();
 const pageRef = ref();
@@ -487,10 +507,11 @@ function formatListData(rows) {
   return rows.map((row) => {
     const record = { ...row };
     fields.forEach((field) => {
-      if (record[field] == null || record[field] === "") record[field] = "—";
+      if (record[field] == null || record[field] === "") record[field] = "-";
     });
     if (row.status != null) record.status = String(row.status);
-    record.remark = row.remark == null || String(row.remark).trim() === "" ? "-" : row.remark;
+    record.remark =
+      row.remark == null || String(row.remark).trim() === "" ? "-" : row.remark;
     return record;
   });
 }
@@ -604,7 +625,11 @@ async function handleStatusChange(row, value) {
       row.status = previous;
       return;
     }
-    if (!record || String(record.versionId) !== String(submittingVersion) || record.enumType !== submittingEnumType) {
+    if (
+      !record ||
+      String(record.versionId) !== String(submittingVersion) ||
+      record.enumType !== submittingEnumType
+    ) {
       proxy.$modal.msgWarning("记录已不存在或不属于当前枚举，请刷新");
       row.status = previous;
       return;
@@ -626,7 +651,13 @@ async function submitForm() {
   if (!requireVersion() || saving.value) return;
   const submittingVersion = versionId.value;
   const valid = await dataRef.value.validate().catch(() => false);
-  if (!valid || saving.value || !open.value || submittingVersion !== versionId.value) return;
+  if (
+    !valid ||
+    saving.value ||
+    !open.value ||
+    submittingVersion !== versionId.value
+  )
+    return;
   saving.value = true;
   try {
     const payload = {
@@ -647,7 +678,7 @@ async function submitForm() {
     if (submittingVersion !== versionId.value) return;
     emit("dataChange");
     proxy.$modal.msgSuccess(
-      form.value.enumCode != null ? "修改成功" : "新增成功",
+      form.value.enumCode != null ? "修改成功" : "新增成功"
     );
     open.value = false;
     getList();
@@ -663,7 +694,7 @@ async function handleDelete(row) {
   if (!recordIds.length || deleting.value) return;
   try {
     await proxy.$modal.confirm(
-      '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？',
+      '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
     );
   } catch {
     return;
@@ -690,7 +721,11 @@ function handleClose() {
 let typeRequest = 0;
 /** 解析内嵌参数或独立页面路由的枚举编码，切换时重置列表、筛选和弹窗上下文。 */
 watch(
-  () => [props.enumType, embedded.value ? undefined : route.params.enumId, versionId.value],
+  () => [
+    props.enumType,
+    embedded.value ? undefined : route.params.enumId,
+    versionId.value,
+  ],
   async ([enumType, enumId]) => {
     ++contextRequest;
     const request = ++typeRequest;
@@ -730,7 +765,7 @@ watch(
       if (request === typeRequest) contextReady.value = true;
     }
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 // 页面离开后使类型加载、删除确认及弹窗详情请求失效。

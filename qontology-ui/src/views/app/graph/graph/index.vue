@@ -124,8 +124,7 @@
                   v-if="!isEditName"
                   >{{
                     currentNodeData.name + "&nbsp;(" + currentNodeData.id + ")"
-                  }}</span
-                >
+                  }}</span>
                 <el-input
                   v-model="currentNodeData.name"
                   autofocus="true"
@@ -247,8 +246,7 @@
                               !releaseStatus &&
                                 (isRelationshipEdit = scope.$index)
                             "
-                            >{{ scope.row.name }}</span
-                          >
+                            >{{ scope.row.name }}</span>
                           <el-input
                             v-model="scope.row.name"
                             autofocus="true"
@@ -371,8 +369,7 @@
                               .split(',')
                               .includes(item.id.toString())
                           "
-                          >{{ item.text }}</span
-                        >
+                          >{{ item.text }}</span>
                         <!--                        <span v-if="currentNodeData.paragraphIndex && currentNodeData.paragraphIndex === item.paragraphIndex">{{ item.text }}</span>-->
                       </div>
                     </div>
@@ -459,8 +456,7 @@
           <template #footer>
             <div class="dialog-footer">
               <el-button @click="attrFormCancel">取 消</el-button>
-              <el-button type="primary" @click="attrFormSubmit"
-                >确 定
+              <el-button type="primary" @click="attrFormSubmit">确 定
               </el-button>
             </div>
           </template>
@@ -492,7 +488,15 @@
 </template>
 
 <script setup name="KEresult">
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, getCurrentInstance } from "vue";
+import {
+  ref,
+  computed,
+  watch,
+  nextTick,
+  onMounted,
+  onBeforeUnmount,
+  getCurrentInstance,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import AddEntity from "@/views/app/graph/graphExploration/addEntity.vue";
 import AddRelationship from "@/views/app/graph/graphExploration/addRelationship.vue";
@@ -1590,12 +1594,10 @@ const handleDel = () => {
         proxy.$modal.msgSuccess("删除成功");
       });
     })
-    .catch((err) => {
-    });
+    .catch((err) => {});
 };
 const collapseAct = ref(["1", "2", "3", "4", "5"]);
-const collapseChange = (val) => {
-};
+const collapseChange = (val) => {};
 // 属性信息
 // const getAttrData = (node) => {
 //     attrLoading.value = true;
@@ -2266,12 +2268,12 @@ function openTagMultiple() {
         }
 
         .collapse-title {
-          font-family: Pingfang Sc;
           font-size: 16px;
-          font-weight: 600;
-          // padding: 0 10px;
+          color: var(--qt-text-primary);
           display: flex;
           align-items: center;
+          font-family: PingFang SC;
+          font-weight: 500;
 
           &::before {
             display: inline-block;

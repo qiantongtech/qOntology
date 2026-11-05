@@ -35,10 +35,8 @@
                 <el-col :span="24">
                     <el-form-item label="实体关系" prop="tableData">
                         <template #label> 实体关系 </template>
-                        <el-button type="primary" style="margin-bottom: 15px" @click="addItem" plain
-                            >新增实体关系</el-button
-                        >
-                        <el-table :data="form.tableData" style="width: 100%">
+                        <el-button type="primary" class="graph-edit-add" @click="addItem" plain>新增实体关系</el-button>
+                        <el-table :data="form.tableData" class="graph-edit-table">
                             <el-table-column label="实体名称1" min-width="180">
                                 <template #default="scope">
                                     <el-input
@@ -243,3 +241,13 @@
     };
     defineExpose({ openDialog });
 </script>
+
+<style scoped lang="scss">
+.graph-edit-add {
+    margin-bottom: 15px;
+}
+
+.graph-edit-table {
+    width: 100%;
+}
+</style>

@@ -195,13 +195,13 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'basic/file/category.list': {
-        title: '文件分类',
+        title: '文件分类 - 构建数据文件的多级分类树',
         content: '构建模型数据文件的多级分类树，支持分类的新增、修改与删除，为文件管理中的文件提供按类归集与检索的基础。',
         type: 'remind',
         version: '1.0'
     },
     'basic/file/manager.list': {
-        title: '文件管理',
+        title: '文件管理- 集中维护模型数据文件',
         content: '集中维护模型数据文件，支持按分类树与文件名称快速定位，提供文件的新增、预览、下载、修改与删除能力。',
         type: 'remind',
         version: '1.0'

@@ -34,7 +34,7 @@
           type="primary"
           plain
           @click="handleAdd"
-        ><i class="iconfont-mini icon-xinzeng mr5"></i>新增
+          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
         <el-button
           v-hasPermi="['om:term:term:remove']"
@@ -42,7 +42,7 @@
           plain
           :disabled="!selectedIds.length || deleting"
           @click="handleDelete()"
-        ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
         </el-button>
       </template>
       <div v-loading="loading">
@@ -58,10 +58,20 @@
               <div class="qt-table-info__main">
                 <span
                   class="info-title"
-                  :title="row.enName ? `${row.stdName || '-'}（${row.enName}）` : row.stdName"
-                >{{ row.stdName || "-" }}<template v-if="row.enName">（{{ row.enName }}）</template></span>
+                  :title="
+                    row.enName
+                      ? `${row.stdName || '-'}（${row.enName}）`
+                      : row.stdName
+                  "
+                  >{{ row.stdName || "-"
+                  }}<template v-if="row.enName"
+                    >（{{ row.enName }}）</template
+                  ></span
+                >
               </div>
-              <div class="info-desc" :title="row.description">{{ row.description || "-" }}</div>
+              <div class="info-desc" :title="row.description">
+                {{ row.description || "-" }}
+              </div>
             </div>
           </template>
           <template #alias="{ row }">{{ row.alias || "-" }}</template>
@@ -73,19 +83,26 @@
               :active-value="1"
               :inactive-value="0"
               :loading="statusSaving[row.id] === true"
-              :disabled="!auth.hasPermi('om:term:term:edit') || statusSaving[row.id] === true"
+              :disabled="
+                !auth.hasPermi('om:term:term:edit') ||
+                statusSaving[row.id] === true
+              "
               :aria-label="`${row.stdName}状态`"
               @change="(value) => handleStatusChange(row, value)"
             />
           </template>
           <template #creator="{ row }">
             <div class="flex-column overflow-hidden">
-              <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || "-" }}</span>
-              <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+              <span class="text-ellipsis" :title="row.createBy || ''">{{
+                row.createBy || "-"
+              }}</span>
+              <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+                creatorPhones[row.creatorId]
+              }}</span>
             </div>
           </template>
           <template #createTime="scope">{{
-            parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") || "—"
+            parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
           }}</template>
           <template #action="{ row }">
             <el-button
@@ -113,7 +130,7 @@
               icon="Delete"
               :disabled="deleting"
               @click="handleDelete(row)"
-            >删除
+              >删除
             </el-button>
           </template>
         </qt-table>
@@ -150,7 +167,6 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-
         <qt-form-item
           class="row-full"
           tip="填写业务中使用的标准概念名称，作为对象类型和属性命名的依据。"
@@ -186,7 +202,11 @@
           prop="alias"
         >
           <div class="alias-list">
-            <div v-for="(item, index) in aliasRows" :key="item.id" class="alias-row">
+            <div
+              v-for="(item, index) in aliasRows"
+              :key="item.id"
+              class="alias-row"
+            >
               <el-input
                 v-model="item.value"
                 placeholder="请输入术语别名"
@@ -211,7 +231,8 @@
                 :disabled="saving"
                 aria-label="新增术语别名"
                 @click="addAliasRow"
-              >+</el-button>
+                >+</el-button
+              >
             </div>
           </div>
         </qt-form-item>
@@ -236,7 +257,11 @@
           prop="status"
         >
           <el-radio-group v-model="form.status" :disabled="saving">
-            <el-radio v-for="dict in project_status" :key="Number(dict.value)" :value="Number(dict.value)">
+            <el-radio
+              v-for="dict in project_status"
+              :key="Number(dict.value)"
+              :value="Number(dict.value)"
+            >
               {{ dict.label }}
             </el-radio>
           </el-radio-group>
@@ -275,16 +300,13 @@
             show-word-limit
           />
         </qt-form-item>
-
       </el-form>
       <template #footer>
         <div class="dialog-footer">
           <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button
-            type="primary"
-            size="mini"
-            @click="submitForm"
-          >确 定</el-button>
+          <el-button type="primary" size="mini" @click="submitForm"
+            >确 定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -305,10 +327,7 @@
         <el-row :gutter="20">
           <el-col v-for="field in detailFields" :key="field.prop" :span="24">
             <el-form-item :label="field.label" :prop="field.prop">
-              <div
-                v-if="field.prop === 'alias'"
-                class="form-readonly"
-              >
+              <div v-if="field.prop === 'alias'" class="form-readonly">
                 {{ detailAliases.join(", ") || "-" }}
               </div>
               <dict-tag
@@ -423,7 +442,15 @@ function formatEnglishName(value) {
 }
 
 const rules = {
-  status: [{ required: true, type: "number", enum: [0, 1], message: "请选择状态", trigger: "change" }],
+  status: [
+    {
+      required: true,
+      type: "number",
+      enum: [0, 1],
+      message: "请选择状态",
+      trigger: "change",
+    },
+  ],
   stdName: [
     {
       required: true,
@@ -552,7 +579,11 @@ const tableColumns = reactive([
 const searchItems = computed(() => [
   { label: "术语名称", prop: "stdName", component: { is: "input" } },
   { label: "英文名称", prop: "enName", component: { is: "input" } },
-  { label: "状态", prop: "status", component: { is: "select", options: project_status.value } },
+  {
+    label: "状态",
+    prop: "status",
+    component: { is: "select", options: project_status.value },
+  },
 ]);
 const listActions = { getList };
 const tableConfig = {
@@ -588,7 +619,7 @@ function parseAliases(value) {
       (value || "")
         .split(/[,，]/)
         .map((alias) => alias.trim())
-        .filter(Boolean),
+        .filter(Boolean)
     ),
   ];
 }
@@ -603,7 +634,10 @@ function resetAliasInput() {
 }
 
 function syncAliases() {
-  form.value.alias = aliasRows.value.map((item) => item.value.trim()).filter(Boolean).join("，");
+  form.value.alias = aliasRows.value
+    .map((item) => item.value.trim())
+    .filter(Boolean)
+    .join("，");
 }
 
 function addAliasRow() {
@@ -614,14 +648,15 @@ function addAliasRow() {
 function removeAliasRow(index) {
   if (saving.value) return;
   aliasRows.value.splice(index, 1);
-  if (!aliasRows.value.length) aliasRows.value.push({ id: nextAliasId++, value: "" });
+  if (!aliasRows.value.length)
+    aliasRows.value.push({ id: nextAliasId++, value: "" });
   syncAliases();
   termRef.value?.validateField("alias").catch(() => {});
 }
 
 function confirmAlias() {
   const values = aliasRows.value.flatMap((item) =>
-    item.value.split(/[,，]/).map((value) => value.trim()),
+    item.value.split(/[,，]/).map((value) => value.trim())
   );
   if (!values.length || values.some((value) => !value)) {
     ElMessage.warning("术语别名每一项都不能为空，请完善后提交");
@@ -646,12 +681,20 @@ async function handleStatusChange(row, value) {
   const text = value === 1 ? "启用" : "禁用";
   statusSaving[row.id] = true;
   try {
-    await ElMessageBox.confirm(`确认要${text}术语“${row.stdName}”吗？`, "状态确认", { type: "warning" });
+    await ElMessageBox.confirm(
+      `确认要${text}术语“${row.stdName}”吗？`,
+      "状态确认",
+      { type: "warning" }
+    );
     if (submittingVersion !== versionId.value) {
       row.status = previous;
       return;
     }
-    await updateTermStatus({ id: row.id, versionId: submittingVersion, status: value });
+    await updateTermStatus({
+      id: row.id,
+      versionId: submittingVersion,
+      status: value,
+    });
     if (submittingVersion !== versionId.value) return;
     ElMessage.success("操作成功");
     await getList();
@@ -800,7 +843,9 @@ async function handleDelete(row) {
   const ids = row ? [row.id] : [...selectedIds.value];
   if (!ids.length) return;
   try {
-    await proxy.$modal.confirm('是否确认删除术语编号为"' + ids.join(',') + '"的数据项？');
+    await proxy.$modal.confirm(
+      '是否确认删除术语编号为"' + ids.join(",") + '"的数据项？'
+    );
   } catch {
     return;
   }
@@ -836,7 +881,7 @@ watch(
     queryParams.pageNum = 1;
     getList();
   },
-  { immediate: true },
+  { immediate: true }
 );
 onBeforeUnmount(() => {
   ++contextRequest;

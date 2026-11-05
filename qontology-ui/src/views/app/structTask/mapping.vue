@@ -1,17 +1,17 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qKnow is licensed under Apache License 2.0 with additional qKnow terms.
  You may use qKnow for commercial purposes, but you may not remove, hide,
  modify, or replace the qKnow logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qKnow as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qknow.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
@@ -21,25 +21,26 @@
   <el-dialog
     :title="title"
     v-model="visible"
-    width="1300px"
+    width="1200px"
     top="5vh"
     :append-to="$refs['app-container']"
     draggable
     destroy-on-close
     @close="handleClose"
-    class="custom-dialog"
+    class="mapping-dialog"
   >
-    <div class="pagecont-top">
-      <el-form
-        ref="mappingRef"
-        :model="form"
-        :rules="rules"
-        label-width="110px"
-        @submit.prevent
-      >
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="对象类型" prop="concept">
+    <div class="mapping-dialog__content">
+      <section class="mapping-section">
+        <div class="h2-titles mb15">基础信息</div>
+        <el-form
+          ref="mappingRef"
+          :model="form"
+          :rules="rules"
+          label-width="110px"
+          class="column-form"
+          @submit.prevent
+        >
+          <el-form-item label="对象类型" prop="concept">
               <el-tree-select
                 v-model="form.concept"
                 @change="conceptChange"
@@ -51,12 +52,8 @@
                 filterable
                 clearable
               />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="实体名称字段" prop="entityNameField">
+          </el-form-item>
+          <el-form-item label="实体名称字段" prop="entityNameField">
               <el-select
                 v-model="form.entityNameField"
                 placeholder="请选择实体名称字段"
@@ -69,12 +66,8 @@
                 >
                 </el-option>
               </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="主键" prop="primaryKey">
+          </el-form-item>
+          <el-form-item label="主键" prop="primaryKey">
               <el-select v-model="form.primaryKey" placeholder="请选择主键">
                 <el-option
                   v-for="item in attributeMappingList"
@@ -84,12 +77,12 @@
                 >
                 </el-option>
               </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20" v-if="timeFieldShow">
-          <el-col :span="12">
-            <el-form-item label="增量依据字段" prop="entityTimeField">
+          </el-form-item>
+          <el-form-item
+            v-if="timeFieldShow"
+            label="增量依据字段"
+            prop="entityTimeField"
+          >
               <el-select
                 v-model="form.entityTimeField"
                 placeholder="请选择增量依据字段"
@@ -102,13 +95,17 @@
                 >
                 </el-option>
               </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="属性映射" prop="attributeMapping">
-              <el-table :data="attributeMappingList" style="height: 330px">
+          </el-form-item>
+        </el-form>
+      </section>
+      <section class="mapping-section mapping-section--table">
+        <div class="h2-titles mb15">属性映射</div>
+        <el-table
+          v-loading="loading"
+          :data="attributeMappingList"
+          height="360px"
+          stripe
+        >
                 <el-table-column
                   prop="field"
                   label="数据表字段"
@@ -139,11 +136,8 @@
                     </el-select>
                   </template>
                 </el-table-column>
-              </el-table>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
+        </el-table>
+      </section>
     </div>
     <template #footer>
       <div class="dialog-footer">
@@ -162,10 +156,7 @@ import { listAttribute } from "@/api/app/structMapping";
 import { listRelation } from "@/api/app/structMapping";
 
 const title = ref("数据映射");
-const total = ref(0);
 const visible = ref(false);
-const tables = ref([]);
-const dbTableList = ref([]);
 const conceptList = ref([]);
 const conceptTree = computed(() => buildTree(conceptList.value));
 
@@ -191,7 +182,6 @@ const customMappingList = ref([]);
 const queryParams = ref(null);
 const { proxy } = getCurrentInstance();
 const loading = ref(false);
-const route = useRoute();
 
 const timeFieldShow = ref(false);
 
@@ -216,15 +206,14 @@ const rules = reactive({
   ],
 });
 
-const emit = defineEmits(["ok", "close-dialog"]);
+const emit = defineEmits(["ok", "closeDialog"]);
 
 const handleClose = () => {
-  emit("close-dialog");
+  emit("closeDialog");
 };
 
 /** 查询参数列表 */
 async function show(val) {
-  console.log("---------val------", val);
   timeFieldShow.value = val.timeFieldShow; // 时间字段是否显示
   queryParams.value = val;
   form.dataSourceId = val.dataSourceId;
@@ -257,7 +246,6 @@ async function show(val) {
     form.entityTimeField = val.mappingData.entityTimeField;
     //查询对应对象类型的属性
     await conceptChange();
-    console.log("-------val.mappingData-----", val.mappingData);
     // console.log('-------attributeMappingList.value-----', attributeMappingList.value)
 
     //属性映射
@@ -358,7 +346,6 @@ const getTableDetail = async () => {
 
 //获取关联表的字段
 const changeAssociationTable = async (row) => {
-  console.log("=======", row);
   if (loading.value) {
     return;
   }
@@ -384,19 +371,6 @@ const changeAssociationTable = async (row) => {
 
   loading.value = false;
 };
-// 添加一行数据
-const addRow = () => {
-  customMappingList.value.push({
-    field: null,
-    customSQL: null,
-  });
-};
-
-// 删除某一行
-const removeRow = (index) => {
-  customMappingList.value.splice(index, 1);
-};
-
 //切换对象类型  根据对象类型id获取对象类型属性
 const conceptChange = async () => {
   conceptList.value.find((e) => {
@@ -485,9 +459,21 @@ defineExpose({
 });
 </script>
 <style scoped lang="scss">
-/*:deep(.custom-dialog) {*/
-/*    .el-dialog__body {*/
-/*        height: 700px !important;*/
-/*    }*/
-/*}*/
+.mapping-dialog__content {
+  max-height: calc(90vh - 150px);
+  overflow-y: auto;
+  padding: 0 4px;
+}
+
+.mapping-section + .mapping-section {
+  margin-top: 24px;
+}
+
+.mapping-section--table {
+  padding-bottom: 4px;
+}
+
+:deep(.mapping-dialog .el-dialog__body) {
+  padding-top: 16px;
+}
 </style>

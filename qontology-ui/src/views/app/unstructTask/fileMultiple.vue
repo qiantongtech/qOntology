@@ -14,7 +14,7 @@
 
   Business License: https://community.qontology.ai/business/policy.html
   See the LICENSE file in the project root for full license information.
---> 
+-->
 <template>
   <el-dialog
     v-model="visible"
@@ -38,8 +38,8 @@
           v-model="queryParams.fileName"
           clearable
           placeholder="请输入文件名称"
-          style="width: 240px"
           @keyup.enter="handleQuery"
+          class="file-multiple__search-input"
         />
       </el-form-item>
       <el-form-item>
@@ -80,8 +80,7 @@
         :show-overflow-tooltip="{ effect: 'light' }"
         ><template #default="scope">{{
           scope.row.categoryName || "-"
-        }}</template></el-table-column
-      >
+        }}</template></el-table-column>
       <el-table-column
         align="left"
         label="文件名称"
@@ -90,23 +89,20 @@
         :show-overflow-tooltip="{ effect: 'light' }"
         ><template #default="scope">{{
           scope.row.fileName || "-"
-        }}</template></el-table-column
-      >
+        }}</template></el-table-column>
       <el-table-column
-        align="center"
+        align="left"
+        header-align="left"
         label="文件描述"
         prop="description"
         width="250"
         :show-overflow-tooltip="{ effect: 'light' }"
         ><template #default="scope">{{
           scope.row.description || "-"
-        }}</template></el-table-column
-      >
-      <el-table-column align="center" label="创建人" prop="createBy"
-        ><template #default="scope">{{
+        }}</template></el-table-column>
+      <el-table-column align="center" label="创建人" prop="createBy"><template #default="scope">{{
           scope.row.createBy || "-"
-        }}</template></el-table-column
-      >
+        }}</template></el-table-column>
       <el-table-column
         align="center"
         label="创建时间"
@@ -114,19 +110,16 @@
         width="150"
         ><template #default="scope">{{
           parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}")
-        }}</template></el-table-column
-      >
+        }}</template></el-table-column>
       <!-- <el-table-column align="center" label="备注" prop="remark"
         ><template #default="scope">{{
           scope.row.remark || "-"
         }}</template></el-table-column
       > -->
-      <template #empty
-        ><div class="emptyBg">
+      <template #empty><div class="emptyBg">
           <img src="@/assets/system/images/no_data/noData.png" alt="" />
           <p>暂无记录</p>
-        </div></template
-      >
+        </div></template>
     </el-table>
     <pagination
       v-show="total > 0"
@@ -135,14 +128,9 @@
       :total="total"
       @pagination="getList"
     />
-    <template #footer
-      ><div class="dialog-footer">
-        <el-button size="mini" @click="cancel">取 消</el-button
-        ><el-button type="primary" size="mini" @click="confirm"
-          >确 定</el-button
-        >
-      </div></template
-    >
+    <template #footer><div class="dialog-footer">
+        <el-button size="mini" @click="cancel">取 消</el-button><el-button type="primary" size="mini" @click="confirm">确 定</el-button>
+      </div></template>
   </el-dialog>
 </template>
 
@@ -261,3 +249,9 @@ function confirm() {
 
 defineExpose({ open });
 </script>
+
+<style scoped lang="scss">
+.file-multiple__search-input {
+  width: 240px;
+}
+</style>

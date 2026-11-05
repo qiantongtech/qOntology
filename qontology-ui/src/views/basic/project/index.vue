@@ -153,21 +153,22 @@
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
             <el-button
-              v-if="auth.hasPermi('basic:project:project:edit')"
-              link
-              type="primary"
-              icon="Edit"
-              @click="handleUpdate(row)"
-              >修改</el-button
-            >
-            <el-button
-              v-if="auth.hasPermi('basic:project:project:remove')"
-              link
-              type="danger"
-              icon="Delete"
-              @click="handleDelete(row)"
-              >删除</el-button
-            >
+                v-if="auth.hasPermi('basic:project:project:edit')"
+                link
+                type="primary"
+                icon="Edit"
+                @click="handleUpdate(row)"
+                >修改</el-button
+              >
+              <el-button
+                v-if="auth.hasPermi('basic:project:project:remove')"
+                link
+                type="danger"
+                icon="Delete"
+                @click="handleDelete(row)"
+                >删除</el-button
+              >
+
           </el-popover>
         </template>
       </qt-table>
@@ -302,12 +303,12 @@
         </el-form-item>
         <el-form-item label="责任人" class="row-full">
           <div class="form-readonly">
-            {{ form.responsiblePersonName || "—" }}
+            {{ form.responsiblePersonName || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="联系电话" class="row-full">
           <div class="form-readonly">
-            {{ form.responsiblePersonPhone || "—" }}
+            {{ form.responsiblePersonPhone || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="状态" prop="status">

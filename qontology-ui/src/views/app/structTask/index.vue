@@ -56,15 +56,19 @@
         <!-- 负责人沿用姓名、灰色电话的双行样式，联系电话复用公共用户关联方法。 -->
         <template #responsibleUser="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.responsiblePersonName || ''">{{
-                row.responsiblePersonName || "-"
-              }}</span>
-            <span v-if="creatorPhones[row.responsibleUserId]" class="desc-text">{{
-                creatorPhones[row.responsibleUserId]
-              }}</span>
+            <span
+              class="text-ellipsis"
+              :title="row.responsiblePersonName || ''"
+              >{{ row.responsiblePersonName || "-" }}</span
+            >
+            <span
+              v-if="creatorPhones[row.responsibleUserId]"
+              class="desc-text"
+              >{{ creatorPhones[row.responsibleUserId] }}</span
+            >
           </div>
         </template>
-<!--     运行控制   -->
+        <!--     运行控制   -->
         <template #runControl="{ row }">
           <div class="flex-column fz12 run-control">
             <div class="flex-center mb2">
@@ -78,16 +82,16 @@
             </div>
             <div class="flex-center">
               <span class="black-label mr5">调度状态:</span>
-                  <el-switch
-                    v-model="row.schedulingStatus"
-                    :active-value="0"
-                    :inactive-value="1"
-                    @change="(value) => handleStatusChange(row, value)"
-                  />
+              <el-switch
+                v-model="row.schedulingStatus"
+                :active-value="0"
+                :inactive-value="1"
+                @change="(value) => handleStatusChange(row, value)"
+              />
             </div>
           </div>
         </template>
-<!--最近执行信息-->
+        <!--最近执行信息-->
         <template #lastExecute="{ row }">
           <div class="flex-column">
             <dict-tag
@@ -115,7 +119,7 @@
               <dict-tag :options="app_update_type" :value="row.updateType" />
             </div>
             <div class="flex-center mt7">
-              <el-icon class="mr5" style="color: #3b82f6"><Clock /></el-icon>
+              <el-icon class="mr5 struct-task__clock"><Clock /></el-icon>
               <span
                 class="text-ellipsis cron-text"
                 :title="cronToZh(row.updateFrequency)"
@@ -126,22 +130,22 @@
         </template>
 
         <template #action="{ row }">
-<!--          <el-button-->
-<!--              class="btn-icon-offset"-->
-<!--              link-->
-<!--              type="primary"-->
-<!--              icon="view"-->
-<!--              @click="handleDetail"-->
-<!--          >详情</el-button>-->
+          <!--          <el-button-->
+          <!--              class="btn-icon-offset"-->
+          <!--              link-->
+          <!--              type="primary"-->
+          <!--              icon="view"-->
+          <!--              @click="handleDetail"-->
+          <!--          >详情</el-button>-->
           <el-button
-              link
-              type="primary"
-              icon="VideoPlay"
-              :disabled="
-                  row.publishStatus == 1 || row.status != 2 || isRunning(row)
-                "
-              @click="handleRun(row)"
-          >执行一次</el-button
+            link
+            type="primary"
+            icon="VideoPlay"
+            :disabled="
+              row.publishStatus == 1 || row.status != 2 || isRunning(row)
+            "
+            @click="handleRun(row)"
+            >执行一次</el-button
           >
           <el-button
             link
@@ -151,38 +155,28 @@
             @click="handleResult(row)"
             >抽取结果</el-button
           >
-          <el-popover
-            placement="bottom"
-            :width="150"
-            trigger="click"
-            popper-class="handle-popover table-action-popover"
-          >
+          <el-popover placement="bottom" :width="150" trigger="click">
             <template #reference>
-              <el-button link type="primary" icon="ArrowDown" @click.stop
-                >更多</el-button
-              >
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
             <div class="task-action-list">
-
               <el-button
-                class="btn-icon-offset"
                 link
                 type="primary"
                 icon="Edit"
                 :disabled="row.publishStatus == 1 || isRunning(row)"
                 @click="handleUpdate(row)"
                 v-hasPermi="['app:appStructTask:struct:edit']"
-                >修改</el-button
+                >修改任务</el-button
               >
               <el-button
-                class="btn-icon-offset"
                 link
                 type="danger"
                 icon="Delete"
                 :disabled="row.publishStatus == 1 || isRunning(row)"
                 @click="handleDelete(row)"
                 v-hasPermi="['app:appStructTask:struct:remove']"
-                >删除</el-button
+                >删除任务</el-button
               >
             </div>
           </el-popover>
@@ -191,11 +185,11 @@
         <template #publishBy="{ row }">
           <div class="flex-column overflow-hidden">
             <span class="text-ellipsis" :title="row.createBy || ''">{{
-                row.publishBy || "-"
-              }}</span>
+              row.publishBy || "-"
+            }}</span>
             <span v-if="creatorPhones[row.publisherId]" class="desc-text">{{
-                creatorPhones[row.publisherId]
-              }}</span>
+              creatorPhones[row.publisherId]
+            }}</span>
           </div>
         </template>
       </qt-table>
@@ -209,18 +203,18 @@
 import {
   listExtStruct,
   delExtStruct,
-  extExecuteExtraction,
-  runStructTask, strutCancelReleaseByTaskId, strutReleaseByTaskId,
+  runStructTask,
+  strutCancelReleaseByTaskId,
+  strutReleaseByTaskId,
 } from "@/api/app/structTask";
-import {useCreatorPhones} from '@/utils/useCreatorPhones';
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import { cronToZh } from "@/utils/cronUtils";
 import { timeAgo } from "@/utils/time";
 import { Clock } from "@element-plus/icons-vue";
 import TaskLogDialog from "@/views/app/taskLog/taskLogDialog.vue";
-import {cancelReleaseUnstructTask, releaseUnstructTask} from "@/api/app/unstructTask.js";
 
 const { proxy } = getCurrentInstance();
-const {creatorPhones} = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const { app_task_status, publish_status, app_update_type } = proxy.useDict(
   "app_task_status",
   "publish_status",
@@ -299,13 +293,13 @@ const tableStore = reactive({
       width: 120,
       align: "left",
       headerAlign: "left",
-      showOverflowTooltip: {effect: "light"},
+      showOverflowTooltip: { effect: "light" },
     },
     {
       label: "发布人",
       width: 110,
       align: "left",
-      slot: "publishBy"
+      slot: "publishBy",
     },
     {
       label: "发布时间",
@@ -412,37 +406,41 @@ function handleSelectionChange(selection) {
 function handleStatusChange(row, value) {
   if (row.publishStatus !== 1) {
     row.schedulingStatus = value === 0 ? 1 : 0;
-    proxy.$modal.msgWarning('请先开启任务状态');
+    proxy.$modal.msgWarning("请先开启任务状态");
   }
 }
 
 /** 调度上线期间禁止关闭任务，需先下线调度后再关闭。 */
 function handleEnableChange(row, value) {
-  if (value === 0){
+  if (value === 0) {
     proxy.$modal.confirm("是否确认取消发布？").then(() => {
-      const request = strutCancelReleaseByTaskId({taskId:row.id});
-      request.then((response) => {
-        if (response && response.code === 200) {
-          proxy.$modal.msgSuccess("取消发布成功");
-          tableRef.value.getList();
-        }
-      }).catch(() => {
-        row.publishStatus = !value;
-        proxy.$modal.msgError("取消发布失败");
-      });
+      const request = strutCancelReleaseByTaskId({ taskId: row.id });
+      request
+        .then((response) => {
+          if (response && response.code === 200) {
+            proxy.$modal.msgSuccess("取消发布成功");
+            tableRef.value.getList();
+          }
+        })
+        .catch(() => {
+          row.publishStatus = !value;
+          proxy.$modal.msgError("取消发布失败");
+        });
     });
-  }else {
+  } else {
     proxy.$modal.confirm("是否确认发布？").then(() => {
-      const request = strutReleaseByTaskId({taskId:row.id});
-      request.then((response) => {
-        if (response && response.code === 200) {
-          proxy.$modal.msgSuccess("发布成功");
-          tableRef.value.getList();
-        }
-      }).catch(() => {
-        row.publishStatus = !value;
-        proxy.$modal.msgError("发布失败");
-      });
+      const request = strutReleaseByTaskId({ taskId: row.id });
+      request
+        .then((response) => {
+          if (response && response.code === 200) {
+            proxy.$modal.msgSuccess("发布成功");
+            tableRef.value.getList();
+          }
+        })
+        .catch(() => {
+          row.publishStatus = !value;
+          proxy.$modal.msgError("发布失败");
+        });
     });
   }
 }
@@ -450,11 +448,6 @@ function handleEnableChange(row, value) {
 /** 点击执行状态标签查看任务日志，结构化任务 taskType 为 0 */
 function showLogs(row) {
   taskLogDialogRef.value.show(row.id, 0);
-}
-
-/** 任务详情页面待开发。 */
-function handleDetail() {
-  proxy.$modal.msg("功能开发中");
 }
 
 /** 判断任务是否执行中或队列中（不可执行/修改/删除） */
@@ -472,26 +465,6 @@ function handleRun(row) {
     .then(() => {
       proxy.$modal.msgWarning("任务执行中");
       tableRef.value.getList();
-    })
-    .catch(() => {});
-}
-
-/** 执行抽取 */
-function extraction(row) {
-  if (row.status == 1) {
-    proxy.$modal.msgWarning("任务执行中");
-    return;
-  }
-  proxy.$modal
-    .confirm('是否确认执行任务名称为"' + row.name + '"的数据项？')
-    .then(function () {})
-    .then(() => {
-      extExecuteExtraction({ id: row.id }).then((res) => {
-        if (res && res.code == 200) {
-          proxy.$modal.msgSuccess("操作成功,执行中");
-          tableRef.value.getList();
-        }
-      });
     })
     .catch(() => {});
 }
@@ -591,6 +564,10 @@ function routeTo(link, row) {
 </script>
 
 <style scoped lang="scss">
+.struct-task__clock {
+  color: var(--el-color-primary);
+}
+
 // 由可交互的外层承接禁用开关的悬浮提示，同时保持行内对齐。
 .schedule-switch-wrapper {
   display: inline-flex;

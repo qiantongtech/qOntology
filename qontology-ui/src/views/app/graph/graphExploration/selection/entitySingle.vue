@@ -36,11 +36,11 @@
         >
             <el-form-item label="实体名称" prop="name">
                 <el-input
-                    style="width: 240px"
                     v-model="queryParams.name"
                     placeholder="请输入参数名称"
                     clearable
                     @keyup.enter="handleQuery"
+                    class="entity-single__search-input"
                 />
             </el-form-item>
             <el-form-item>
@@ -68,12 +68,12 @@
             row-key="id"
             @current-change="handleCurrentChange"
         >
-            <el-table-column label="名称" align="center" prop="name">
+            <el-table-column label="名称" align="left" header-align="left" prop="name">
                 <template #default="scope">
                     {{ scope.row.name || '-' }}
                 </template>
             </el-table-column>
-            <el-table-column label="描述" align="center" prop="description">
+            <el-table-column label="描述" align="left" header-align="left" prop="description">
                 <template #default="scope">
                     {{ scope.row.description || '-' }}
                 </template>
@@ -222,3 +222,9 @@
 
     defineExpose({ open });
 </script>
+
+<style scoped lang="scss">
+.entity-single__search-input {
+    width: 240px;
+}
+</style>

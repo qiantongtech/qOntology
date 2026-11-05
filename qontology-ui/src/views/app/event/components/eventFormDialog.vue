@@ -30,7 +30,9 @@
     draggable
   >
     <template #header>
-      <span role="heading" aria-level="2" class="el-dialog__title">{{ title }}</span>
+      <span role="heading" aria-level="2" class="el-dialog__title">{{
+        title
+      }}</span>
     </template>
     <guide-tip-panel
       title="维护业务事件的基本信息及其参与的图谱实体，用于在时序视图与图谱探索中还原事件的发生过程。"
@@ -47,11 +49,25 @@
       class="column-form"
       @submit.prevent="submitForm"
     >
-      <qt-form-item label="事件名称" prop="name" class="row-full">
+      <qt-form-item
+        label="事件名称"
+        prop="name"
+        class="row-full"
+        tip="事件的简短名称，用于在图谱与时序视图中标识该业务事件。"
+      >
         <el-input v-model="localForm.name" placeholder="请输入事件名称" />
       </qt-form-item>
-      <qt-form-item label="事件类型" prop="type">
-        <el-select v-model="localForm.type" placeholder="请选择事件类型" clearable>
+      <qt-form-item
+        label="事件类型"
+        prop="type"
+        class="row-full"
+        tip="按业务分类选择事件类型，便于后续按类型检索和聚合分析。"
+      >
+        <el-select
+          v-model="localForm.type"
+          placeholder="请选择事件类型"
+          clearable
+        >
           <el-option
             v-for="dict in eventTypeOptions"
             :key="dict.value"
@@ -60,10 +76,9 @@
           />
         </el-select>
       </qt-form-item>
-      <qt-form-item label="发生时间" prop="occurTime">
+      <qt-form-item label="发生时间" prop="occurTime" class="row-full">
         <el-date-picker
           clearable
-          style="width: 100%"
           v-model="localForm.occurTime"
           type="date"
           value-format="YYYY-MM-DD HH:mm:ss"
@@ -74,28 +89,28 @@
         <el-input v-model="localForm.occurPlace" placeholder="请输入发生地点" />
       </qt-form-item>
       <!-- 参与实体通过图谱数据选择，输入框仅作只读回显。 -->
-      <qt-form-item label="参与实体" prop="entityNameList" class="row-full">
+      <qt-form-item
+        label="参与实体"
+        prop="entityNameList"
+        class="row-full"
+        tip="选择与该事件相关的图谱实体，用于在图谱探索中关联展示。"
+      >
         <div class="entity-select">
           <el-input
             v-model="localForm.entityNameList"
             placeholder="请选择参与实体"
             readonly
           />
-          <el-button
-            type="primary"
-            :disabled="saving"
-            style="margin-left: 11px"
-            @click="openGraphData"
-            >选择实体</el-button
-          >
+          <el-button type="primary" :disabled="saving" @click="openGraphData">选择实体</el-button>
         </div>
       </qt-form-item>
       <qt-form-item label="事件描述" prop="description" class="row-full">
         <el-input
           v-model="localForm.description"
           type="textarea"
+          :rows="3"
           placeholder="请输入事件描述"
-          maxlength="1024个字符"
+          maxlength="256个字符"
           show-word-limit
         />
       </qt-form-item>
@@ -103,8 +118,9 @@
         <el-input
           v-model="localForm.remark"
           type="textarea"
+          :rows="3"
           placeholder="请输入备注"
-          maxlength="512个字符"
+          maxlength="256个字符"
           show-word-limit
         />
       </qt-form-item>
@@ -118,8 +134,7 @@
           :loading="saving"
           :disabled="validating"
           @click="submitForm"
-          >确 定</el-button
-        >
+          >确 定</el-button>
       </div>
     </template>
   </el-dialog>
@@ -133,7 +148,9 @@
     draggable
   >
     <template #header>
-      <span role="heading" aria-level="2" class="el-dialog__title">{{ entityTitle }}</span>
+      <span role="heading" aria-level="2" class="el-dialog__title">{{
+        entityTitle
+      }}</span>
     </template>
     <el-form
       class="btn-style"
@@ -169,7 +186,10 @@
         >
           <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
         </el-button>
-        <el-button @click="resetQueryEntity" @mousedown="(e) => e.preventDefault()">
+        <el-button
+          @click="resetQueryEntity"
+          @mousedown="(e) => e.preventDefault()"
+        >
           <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
         </el-button>
       </el-form-item>
@@ -183,12 +203,14 @@
       row-key="id"
       @selection-change="handleEntitySelectionChange"
       @row-click="handleRowClick"
+      @sort-change="handleEntitySortChange"
     >
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column
         label="实体名称"
         prop="name"
-        align="center"
+        align="left"
+        header-align="left"
         :show-overflow-tooltip="{ effect: 'light' }"
       />
       <el-table-column
@@ -207,12 +229,17 @@
           <dict-tag :options="entityOptions" :value="scope.row.entityType" />
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" align="center" prop="createTime">
+      <el-table-column
+        label="创建时间"
+        prop="createTime"
+        align="center"
+        sortable="custom"
+      >
         <template #default="scope">
           <span>{{
             scope.row.createTime
-              ? parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}')
-              : '-'
+              ? parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}")
+              : "-"
           }}</span>
         </template>
       </el-table-column>
@@ -234,8 +261,8 @@
 </template>
 
 <script setup name="EventFormDialog">
-import { computed, nextTick, ref, watch } from 'vue';
-import { getGraphPage } from '@/api/app/graph';
+import { computed, nextTick, ref, watch } from "vue";
+import { getGraphPage } from "@/api/app/graph";
 
 /**
  * 事件新增/修改表单：维护本地草稿与参与实体选择，校验后通过 submit 提交快照。
@@ -250,9 +277,9 @@ const props = defineProps({
   entityOptions: { type: Array, default: () => [] },
   graphId: { type: [String, Number], default: undefined },
   saving: { type: Boolean, default: false },
-  appendTo: { type: [String, Object], default: undefined }
+  appendTo: { type: [String, Object], default: undefined },
 });
-const emit = defineEmits(['update:open', 'cancel', 'submit']);
+const emit = defineEmits(["update:open", "cancel", "submit"]);
 const formRef = ref();
 const validating = ref(false);
 
@@ -278,7 +305,7 @@ function createEmptyForm() {
     updateBy: null,
     updaterId: null,
     updateTime: null,
-    remark: null
+    remark: null,
   };
 }
 
@@ -288,8 +315,8 @@ const localForm = ref(createEmptyForm());
 const dialogVisible = computed({
   get: () => props.open,
   set: (value) => {
-    if (!props.saving) emit('update:open', value);
-  }
+    if (!props.saving) emit("update:open", value);
+  },
 });
 
 /** 同步父页面传入的初始数据，使用独立对象编辑，避免取消时污染父级表单。 */
@@ -301,7 +328,9 @@ watch(
     // 参与实体输入框以名称数组回显，兼容详情接口的对象数组与新增时的字符串数组。
     localForm.value.entityNameList =
       source.entityNameList != null && source.entityNameList.length > 0
-        ? source.entityNameList.map((item) => (typeof item === 'string' ? item : item.name))
+        ? source.entityNameList.map((item) =>
+            typeof item === "string" ? item : item.name
+          )
         : source.entityList != null && source.entityList.length > 0
         ? source.entityList.map((item) => item.entityName)
         : [];
@@ -317,7 +346,7 @@ function handleBeforeClose(done) {
 
 /** 取消只通知父页面，由父页面关闭弹窗并统一重置表单。 */
 function handleCancel() {
-  if (!props.saving) emit('cancel');
+  if (!props.saving) emit("cancel");
 }
 
 /** 校验本地草稿并提交快照；等待期间禁止重复校验，关闭或保存中的弹窗不再提交。 */
@@ -327,12 +356,13 @@ async function submitForm() {
   validating.value = true;
   try {
     const valid = await formRef.value.validate().catch(() => false);
-    if (!valid || !props.open || props.saving || draft !== localForm.value) return;
-    emit('submit', {
+    if (!valid || !props.open || props.saving || draft !== localForm.value)
+      return;
+    emit("submit", {
       ...draft,
       graphId: props.graphId,
       entityNameList: draft.entityNameList || [],
-      entityList: draft.entityList || []
+      entityList: draft.entityList || [],
     });
   } finally {
     validating.value = false;
@@ -340,7 +370,7 @@ async function submitForm() {
 }
 
 /* ------------------------------ 参与实体选择 ------------------------------ */
-const entityTitle = ref('');
+const entityTitle = ref("");
 const entityOpen = ref(false);
 const entityLoading = ref(true);
 const entityList = ref([]);
@@ -357,13 +387,15 @@ const queryParamsEntity = ref({
   pageSize: 10,
   name: null,
   graphId: null,
-  entityType: '0',
-  schema: null
+  entityType: "0",
+  schema: null,
+  orderByColumn: "createTime",
+  isAsc: "descending",
 });
 
 async function openGraphData() {
   entityOpen.value = true;
-  entityTitle.value = '选择实体';
+  entityTitle.value = "选择实体";
   entityLoading.value = true;
   queryParamsEntity.value.pageNum = 1;
   entity.value = localForm.value.entityList || [];
@@ -394,9 +426,15 @@ function getGraphData() {
 function setSelectionRow(rows, ignoreSelectable) {
   if (rows && rows.length > 0) {
     rows.forEach((row) => {
-      const matched = entityList.value.filter((item) => item.id == row.entityId);
+      const matched = entityList.value.filter(
+        (item) => item.id == row.entityId
+      );
       if (matched.length > 0) {
-        entityTableRef.value.toggleRowSelection(matched[0], undefined, ignoreSelectable);
+        entityTableRef.value.toggleRowSelection(
+          matched[0],
+          undefined,
+          ignoreSelectable
+        );
       }
     });
   }
@@ -409,7 +447,7 @@ function handleEntitySelectionChange(selection) {
     id: item.id,
     name: item.name,
     entityId: item.id,
-    entityName: item.name
+    entityName: item.name,
   }));
   if (selectionList.length > 0) {
     // 少选：移除本次未选中但上次选中的数据
@@ -429,7 +467,7 @@ function handleEntitySelectionChange(selection) {
             id: item.id,
             name: item.name,
             entityId: item.id,
-            entityName: item.name
+            entityName: item.name,
           });
         }
       });
@@ -439,9 +477,13 @@ function handleEntitySelectionChange(selection) {
   } else if (!isAuto.value) {
     // 取消到没有选择任何值且非分页导致
     oldSelection.value.forEach((item) => {
-      const index = selectionList.findIndex((ece) => ece.entityId == item.entityId);
+      const index = selectionList.findIndex(
+        (ece) => ece.entityId == item.entityId
+      );
       if (index == -1) {
-        entity.value = entity.value.filter((ece) => item.entityId != ece.entityId);
+        entity.value = entity.value.filter(
+          (ece) => item.entityId != ece.entityId
+        );
       }
     });
   }
@@ -459,7 +501,7 @@ function handleRowClick(row) {
       id: row.id,
       name: row.name,
       entityId: row.id,
-      entityName: row.name
+      entityName: row.name,
     });
   }
   entityTableRef.value.toggleRowSelection(row, index === -1);
@@ -476,11 +518,22 @@ function handleQueryEntity() {
   getGraphData();
 }
 
+/** 按创建时间切换实体列表排序，取消排序时恢复默认倒序。 */
+function handleEntitySortChange({ prop, order }) {
+  queryParamsEntity.value.orderByColumn = order ? prop : "createTime";
+  queryParamsEntity.value.isAsc = order || "descending";
+  queryParamsEntity.value.pageNum = 1;
+  getGraphData();
+}
+
 function resetQueryEntity() {
   queryParamsEntity.value.pageNum = 1;
   queryParamsEntity.value.pageSize = 10;
   queryParamsEntity.value.name = null;
   queryParamsEntity.value.entityType = null;
+  queryParamsEntity.value.schema = null;
+  queryParamsEntity.value.orderByColumn = "createTime";
+  queryParamsEntity.value.isAsc = "descending";
   getGraphData();
 }
 </script>

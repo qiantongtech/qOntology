@@ -17,9 +17,16 @@
 -->
 
 <template>
-  <div :class="props.embedded ? 'data-type-embedded' : 'app-container'" ref="app-container">
+  <div
+    :class="props.embedded ? 'data-type-embedded' : 'app-container'"
+    ref="app-container"
+  >
     <GuideTip v-if="!props.embedded" tip-id="om/semantic/dataType.list" />
-    <qt-wrap :columns="tableColumns" :table-ref="listActions" :config="{ fullContent: !props.embedded, searchShadow: !props.embedded }">
+    <qt-wrap
+      :columns="tableColumns"
+      :table-ref="listActions"
+      :config="{ fullContent: !props.embedded, searchShadow: !props.embedded }"
+    >
       <template #search>
         <qt-search-bar
           :items="searchItems"
@@ -73,7 +80,9 @@
                 :key="index"
                 class="text-ellipsis"
                 :title="line"
-              >{{ line }}</div>
+              >
+                {{ line }}
+              </div>
             </div>
           </template>
           <template #status="{ row }">
@@ -82,14 +91,23 @@
               :active-value="1"
               :inactive-value="0"
               :loading="statusSaving[row.id] === true"
-              :disabled="!auth.hasPermi('om:dataType:datatype:edit') || statusSaving[row.id] === true"
-              @change="value => handleStatusChange(row, value)"
+              :disabled="
+                !auth.hasPermi('om:dataType:datatype:edit') ||
+                statusSaving[row.id] === true
+              "
+              @change="(value) => handleStatusChange(row, value)"
             />
           </template>
           <template #createBy="scope">
             <div class="flex-column overflow-hidden">
-              <span class="text-ellipsis" :title="scope.row.createBy || ''">{{ scope.row.createBy || "-" }}</span>
-              <span v-if="creatorPhones[scope.row.creatorId]" class="desc-text">{{ creatorPhones[scope.row.creatorId] }}</span>
+              <span class="text-ellipsis" :title="scope.row.createBy || ''">{{
+                scope.row.createBy || "-"
+              }}</span>
+              <span
+                v-if="creatorPhones[scope.row.creatorId]"
+                class="desc-text"
+                >{{ creatorPhones[scope.row.creatorId] }}</span
+              >
             </div>
           </template>
           <template #createTime="scope">
@@ -104,7 +122,7 @@
               icon="view"
               @click="handleDetail(scope.row)"
               v-hasPermi="['om:dataType:datatype:query']"
-            >详情
+              >详情
             </el-button>
             <el-button
               link
@@ -112,7 +130,7 @@
               icon="Edit"
               @click="handleUpdate(scope.row)"
               v-hasPermi="['om:dataType:datatype:edit']"
-            >修改
+              >修改
             </el-button>
             <el-button
               link
@@ -120,7 +138,7 @@
               icon="Delete"
               @click="handleDelete(scope.row)"
               v-hasPermi="['om:dataType:datatype:remove']"
-            >删除
+              >删除
             </el-button>
           </template>
         </qt-table>
@@ -155,7 +173,14 @@
           class="row-full"
           tip="启用后可作为业务数据类型使用，禁用后保留已有配置。"
         >
-          <el-radio-group v-model="draft.status"><el-radio v-for="item in project_status" :key="item.value" :value="Number(item.value)">{{ item.label }}</el-radio></el-radio-group>
+          <el-radio-group v-model="draft.status"
+            ><el-radio
+              v-for="item in project_status"
+              :key="item.value"
+              :value="Number(item.value)"
+              >{{ item.label }}</el-radio
+            ></el-radio-group
+          >
         </qt-form-item>
       </template>
       <template #enum-source="{ form: draft }">
@@ -210,7 +235,6 @@
         label-width="110px"
         class="data-type-detail-form"
       >
-
         <el-row :gutter="20">
           <el-col :span="24">
             <qt-form-item label="业务数据名称" prop="name">
@@ -232,24 +256,41 @@
         <el-row :gutter="20">
           <!-- 只读详情展示已保存的文本约束，与编辑组件使用相同的格式编码。 -->
           <template v-if="form.dataType === dataTypeConstant.TEXT">
-            <el-col :span="24"><qt-form-item label="最小长度"><div class="form-readonly">
-              {{ form.minLength ?? "不限制" }}
-            </div></qt-form-item></el-col>
-            <el-col :span="24"><qt-form-item label="最大长度"><div class="form-readonly">
-              {{ form.maxLength ?? "不限制" }}
-            </div></qt-form-item></el-col>
-            <el-col :span="24"><qt-form-item label="格式校验"><div class="form-readonly">
-              {{ textValidationLabels[form.validationType || "NONE"] }}
-            </div></qt-form-item></el-col>
-            <el-col
-              v-if="form.validationType === 'CUSTOM'"
-              :span="24"
-            ><qt-form-item label="正则表达式"><div class="form-readonly">
-              {{ form.validationPattern }}
-            </div></qt-form-item></el-col>
-            <el-col :span="24"><qt-form-item label="示例值"><div class="form-readonly">
-              {{ form.exampleValue || "-" }}
-            </div></qt-form-item></el-col>
+            <el-col :span="24"
+              ><qt-form-item label="最小长度"
+                ><div class="form-readonly">
+                  {{ form.minLength ?? "不限制" }}
+                </div></qt-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><qt-form-item label="最大长度"
+                ><div class="form-readonly">
+                  {{ form.maxLength ?? "不限制" }}
+                </div></qt-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><qt-form-item label="格式校验"
+                ><div class="form-readonly">
+                  {{ textValidationLabels[form.validationType || "NONE"] }}
+                </div></qt-form-item
+              ></el-col
+            >
+            <el-col v-if="form.validationType === 'CUSTOM'" :span="24"
+              ><qt-form-item label="正则表达式"
+                ><div class="form-readonly">
+                  {{ form.validationPattern }}
+                </div></qt-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><qt-form-item label="示例值"
+                ><div class="form-readonly">
+                  {{ form.exampleValue || "-" }}
+                </div></qt-form-item
+              ></el-col
+            >
           </template>
 
           <el-col
@@ -274,36 +315,57 @@
               )
             "
           >
-            <el-col :span="24"><qt-form-item label="最小值"><div class="form-readonly">
-              {{ form.minValue ?? "不限制" }}
-            </div></qt-form-item></el-col>
-            <el-col :span="24"><qt-form-item label="最大值"><div class="form-readonly">
-              {{ form.maxValue ?? "不限制" }}
-            </div></qt-form-item></el-col>
+            <el-col :span="24"
+              ><qt-form-item label="最小值"
+                ><div class="form-readonly">
+                  {{ form.minValue ?? "不限制" }}
+                </div></qt-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><qt-form-item label="最大值"
+                ><div class="form-readonly">
+                  {{ form.maxValue ?? "不限制" }}
+                </div></qt-form-item
+              ></el-col
+            >
           </template>
-          <el-col
-            v-if="form.dataType === dataTypeConstant.DECIMAL"
-            :span="24"
-          ><qt-form-item label="总位数"><div class="form-readonly">
-            {{ form.allPlaces ?? "-" }}
-          </div></qt-form-item></el-col>
+          <el-col v-if="form.dataType === dataTypeConstant.DECIMAL" :span="24"
+            ><qt-form-item label="总位数"
+              ><div class="form-readonly">
+                {{ form.allPlaces ?? "-" }}
+              </div></qt-form-item
+            ></el-col
+          >
           <template v-if="form.dataType === dataTypeConstant.BOOLEAN">
-            <el-col :span="24"><qt-form-item label="true 对应文案"><el-input
-              :model-value="form.trueValue ?? '是'"
-              disabled
-            /></qt-form-item></el-col>
-            <el-col :span="24"><qt-form-item label="false 对应文案"><el-input
-              :model-value="form.falseValue ?? '否'"
-              disabled
-            /></qt-form-item></el-col>
+            <el-col :span="24"
+              ><qt-form-item label="true 对应文案"
+                ><el-input
+                  :model-value="form.trueValue ?? '是'"
+                  disabled /></qt-form-item
+            ></el-col>
+            <el-col :span="24"
+              ><qt-form-item label="false 对应文案"
+                ><el-input
+                  :model-value="form.falseValue ?? '否'"
+                  disabled /></qt-form-item
+            ></el-col>
           </template>
           <template v-if="form.dataType === dataTypeConstant.DATE">
-            <el-col :span="24"><qt-form-item label="最早日期"><div class="form-readonly">
-              {{ form.earliestTime || "不限制" }}
-            </div></qt-form-item></el-col>
-            <el-col :span="24"><qt-form-item label="最晚日期"><div class="form-readonly">
-              {{ form.latestTime || "不限制" }}
-            </div></qt-form-item></el-col>
+            <el-col :span="24"
+              ><qt-form-item label="最早日期"
+                ><div class="form-readonly">
+                  {{ form.earliestTime || "不限制" }}
+                </div></qt-form-item
+              ></el-col
+            >
+            <el-col :span="24"
+              ><qt-form-item label="最晚日期"
+                ><div class="form-readonly">
+                  {{ form.latestTime || "不限制" }}
+                </div></qt-form-item
+              ></el-col
+            >
           </template>
           <el-col
             :span="24"
@@ -338,7 +400,8 @@
                     :type="form.enumSource === 'GLOBAL' ? 'info' : 'primary'"
                     size="small"
                     :disable-transitions="true"
-                  >{{ selectedEnumSourceLabel }}</el-tag>
+                    >{{ selectedEnumSourceLabel }}</el-tag
+                  >
                 </span>
                 <span v-else>—</span>
               </div>
@@ -348,7 +411,11 @@
         <el-row :gutter="20">
           <el-col :span="24">
             <qt-form-item label="状态" prop="status">
-              <dict-tag :options="project_status" :value="form.status" class="con-value access-tag" />
+              <dict-tag
+                :options="project_status"
+                :value="form.status"
+                class="con-value access-tag"
+              />
             </qt-form-item>
           </el-col>
         </el-row>
@@ -367,7 +434,9 @@
           </el-col>
           <el-col :span="24">
             <qt-form-item label="创建时间" prop="createTime">
-              <div class="form-readonly">{{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}</div>
+              <div class="form-readonly">
+                {{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+              </div>
             </qt-form-item>
           </el-col>
         </el-row>
@@ -406,7 +475,10 @@ const tableRef = ref();
 const { creatorPhones } = useCreatorPhones();
 const saving = ref(false);
 const { proxy } = getCurrentInstance();
-const { basic_data_type, project_status } = proxy.useDict("basic_data_type", "project_status");
+const { basic_data_type, project_status } = proxy.useDict(
+  "basic_data_type",
+  "project_status"
+);
 const statusSaving = reactive({});
 
 const dataTypeList = ref([]);
@@ -447,14 +519,27 @@ const data = reactive({
     isAsc: defaultSort.value.order,
   },
   rules: {
-    status: [{ required: true, type: "number", message: "请选择状态", trigger: "change" }],
+    status: [
+      {
+        required: true,
+        type: "number",
+        message: "请选择状态",
+        trigger: "change",
+      },
+    ],
     name: [
       { required: true, message: "名称不能为空", trigger: "blur" },
       { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
     ],
-    description: [{ max: 256, message: "描述不能超过256个字符", trigger: "blur" }],
-    enumSource: [{ required: true, message: "请选择枚举来源", trigger: "change" }],
-    enumType: [{ required: true, message: "请选择枚举类型", trigger: "change" }],
+    description: [
+      { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
+    ],
+    enumSource: [
+      { required: true, message: "请选择枚举来源", trigger: "change" },
+    ],
+    enumType: [
+      { required: true, message: "请选择枚举类型", trigger: "change" },
+    ],
     dataType: [
       { required: true, message: "数据类型不能为空", trigger: "blur" },
     ],
@@ -476,7 +561,7 @@ const data = reactive({
               value !== "" &&
               (!Number.isInteger(value) || value < 0)
               ? new Error("小数位数必须为非负整数")
-              : undefined,
+              : undefined
           ),
         trigger: "change",
       },
@@ -500,33 +585,63 @@ function handleEnumSourceChange(draft) {
   enumSearch.value = "";
 }
 const textValidationLabels = {
-  NONE: "无校验", PHONE: "手机号码", ID_CARD: "身份证号", EMAIL: "电子邮箱", URL: "URL地址", CUSTOM: "自定义正则表达式",
+  NONE: "无校验",
+  PHONE: "手机号码",
+  ID_CARD: "身份证号",
+  EMAIL: "电子邮箱",
+  URL: "URL地址",
+  CUSTOM: "自定义正则表达式",
 };
 
 // 按类型读取实际配置，跳过空项后只展示两项；数值零属于有效配置。
 function getValueConfigLines(row) {
   const fieldsByType = {
-    "0": [
+    0: [
       ["validationType", "校验"],
       ["minLength", "最小长度"],
       ["maxLength", "最大长度"],
-      ...(row.validationType === "CUSTOM" ? [["validationPattern", "正则表达式"]] : []),
+      ...(row.validationType === "CUSTOM"
+        ? [["validationPattern", "正则表达式"]]
+        : []),
       ["exampleValue", "示例值"],
     ],
-    "1": [["unit", "单位"], ["minValue", "最小值"], ["maxValue", "最大值"]],
-    "2": [["unit", "单位"], ["decimalPlaces", "小数位数"], ["allPlaces", "总位数"], ["minValue", "最小值"], ["maxValue", "最大值"]],
-    "3": [["trueValue", "true 文案"], ["falseValue", "false 文案"]],
-    "4": [["format", "展示格式"], ["earliestTime", "最早日期"], ["latestTime", "最晚日期"]],
-    "5": [["enumType", "枚举类型"], ["enumSource", "枚举来源"]],
+    1: [
+      ["unit", "单位"],
+      ["minValue", "最小值"],
+      ["maxValue", "最大值"],
+    ],
+    2: [
+      ["unit", "单位"],
+      ["decimalPlaces", "小数位数"],
+      ["allPlaces", "总位数"],
+      ["minValue", "最小值"],
+      ["maxValue", "最大值"],
+    ],
+    3: [
+      ["trueValue", "true 文案"],
+      ["falseValue", "false 文案"],
+    ],
+    4: [
+      ["format", "展示格式"],
+      ["earliestTime", "最早日期"],
+      ["latestTime", "最晚日期"],
+    ],
+    5: [
+      ["enumType", "枚举类型"],
+      ["enumSource", "枚举来源"],
+    ],
   };
   const lines = [];
   for (const [key, label] of fieldsByType[String(row.dataType)] || []) {
     const value = row[key];
-    if (value == null || ["", "-", "—"].includes(String(value).trim())) continue;
+    if (value == null || ["", "-", "-"].includes(String(value).trim()))
+      continue;
     let display = value;
-    if (key === "validationType") display = textValidationLabels[value] || value;
+    if (key === "validationType")
+      display = textValidationLabels[value] || value;
     if (key === "enumType") display = row.enumName || value;
-    if (key === "enumSource") display = { PROJECT: "当前项目", GLOBAL: "全局" }[value] || value;
+    if (key === "enumSource")
+      display = { PROJECT: "当前项目", GLOBAL: "全局" }[value] || value;
     lines.push(`${label}：${display}`);
     if (lines.length === 2) break;
   }
@@ -536,21 +651,23 @@ function getValueConfigLines(row) {
 function getEnumOptions(draft) {
   const source = draft.enumSource || "PROJECT";
   const search = enumSearch.value.trim().toLowerCase();
-  return enumTypeDict.value.filter((item) =>
-    item.enumSource === source &&
-    (!search || `${item.enumName} ${item.enumType}`.toLowerCase().includes(search)),
+  return enumTypeDict.value.filter(
+    (item) =>
+      item.enumSource === source &&
+      (!search ||
+        `${item.enumName} ${item.enumType}`.toLowerCase().includes(search))
   );
 }
 const selectedEnumName = computed(() => {
   const source = form.value.enumSource || "PROJECT";
   const option = enumTypeDict.value.find(
     (item) =>
-      item.enumSource === source && item.enumType === form.value.enumType,
+      item.enumSource === source && item.enumType === form.value.enumType
   );
   return option?.enumName || form.value.enumType || "-";
 });
 const selectedEnumSourceLabel = computed(() =>
-  form.value.enumSource === "GLOBAL" ? "全局" : "当前项目",
+  form.value.enumSource === "GLOBAL" ? "全局" : "当前项目"
 );
 function filterEnums(value) {
   enumSearch.value = value;
@@ -632,8 +749,16 @@ const tableColumns = reactive([
 ]);
 const searchItems = computed(() => [
   { label: "业务数据名称", prop: "name", component: { is: "input" } },
-  { label: "业务数据类型", prop: "dataType", component: { is: "select", options: basic_data_type.value } },
-  { label: "状态", prop: "status", component: { is: "select", options: project_status.value } },
+  {
+    label: "业务数据类型",
+    prop: "dataType",
+    component: { is: "select", options: basic_data_type.value },
+  },
+  {
+    label: "状态",
+    prop: "status",
+    component: { is: "select", options: project_status.value },
+  },
 ]);
 const listActions = { getList };
 const tableConfig = {
@@ -676,7 +801,7 @@ watch(
     getList();
     queryEnumTypeDict();
   },
-  { immediate: true },
+  { immediate: true }
 );
 
 async function handleStatusChange(row, value) {
@@ -684,14 +809,26 @@ async function handleStatusChange(row, value) {
   const submittingVersion = versionId.value;
   statusSaving[row.id] = true;
   try {
-    await proxy.$modal.confirm(`确认要${value === 1 ? '启用' : '禁用'}业务数据类型“${row.name}”吗？`);
-    if (submittingVersion !== versionId.value) { row.status = previous; return; }
-    await updateDataTypeStatus({ id: row.id, versionId: submittingVersion, status: value });
+    await proxy.$modal.confirm(
+      `确认要${value === 1 ? "启用" : "禁用"}业务数据类型“${row.name}”吗？`
+    );
+    if (submittingVersion !== versionId.value) {
+      row.status = previous;
+      return;
+    }
+    await updateDataTypeStatus({
+      id: row.id,
+      versionId: submittingVersion,
+      status: value,
+    });
     if (submittingVersion !== versionId.value) return;
-    proxy.$modal.msgSuccess('操作成功');
+    proxy.$modal.msgSuccess("操作成功");
     await getList();
-  } catch { row.status = previous; }
-  finally { delete statusSaving[row.id]; }
+  } catch {
+    row.status = previous;
+  } finally {
+    delete statusSaving[row.id];
+  }
 }
 
 /** 查询数据类型列表 */
@@ -705,19 +842,25 @@ async function getList() {
   }
   loading.value = true;
   try {
-    const response = props.enumType !== undefined
-      ? await loadRelatedDataTypes()
-      : await listDataType({
-        ...queryParams.value,
-        versionId: versionId.value,
-        ...(props.enumType !== undefined ? {
-          dataType: dataTypeConstant.ENUM,
-          enumType: props.enumType,
-          enumSource: "PROJECT",
-        } : {}),
-      });
+    const response =
+      props.enumType !== undefined
+        ? await loadRelatedDataTypes()
+        : await listDataType({
+            ...queryParams.value,
+            versionId: versionId.value,
+            ...(props.enumType !== undefined
+              ? {
+                  dataType: dataTypeConstant.ENUM,
+                  enumType: props.enumType,
+                  enumSource: "PROJECT",
+                }
+              : {}),
+          });
     if (request !== listRequest) return;
-    dataTypeList.value = (response.data.rows || []).map(row => ({ ...row, status: Number(row.status ?? 1) }));
+    dataTypeList.value = (response.data.rows || []).map((row) => ({
+      ...row,
+      status: Number(row.status ?? 1),
+    }));
     total.value = response.data.total;
     handleSelectionChange([]);
   } finally {
@@ -728,16 +871,32 @@ async function getList() {
 async function loadRelatedDataTypes() {
   const { pageNum, pageSize, ...filters } = queryParams.value;
   // 当前页仅展示关联本枚举的数据类型；选择其他基础类型时返回空列表。
-  if (filters.dataType != null && filters.dataType !== "" && String(filters.dataType) !== dataTypeConstant.ENUM) {
+  if (
+    filters.dataType != null &&
+    filters.dataType !== "" &&
+    String(filters.dataType) !== dataTypeConstant.ENUM
+  ) {
     return { data: { rows: [], total: 0 } };
   }
-  const rows = await loadProjectEnumReferences({ ...filters, versionId: versionId.value, enumType: props.enumType });
+  const rows = await loadProjectEnumReferences({
+    ...filters,
+    versionId: versionId.value,
+    enumType: props.enumType,
+  });
   const key = filters.orderByColumn || "createTime";
   const direction = filters.isAsc === "ascending" ? 1 : -1;
-  rows.sort((a, b) => (typeof a[key] === "number" && typeof b[key] === "number"
-    ? a[key] - b[key]
-    : String(a[key] ?? "").localeCompare(String(b[key] ?? ""))) * direction);
-  return { data: { rows: rows.slice((pageNum - 1) * pageSize, pageNum * pageSize), total: rows.length } };
+  rows.sort(
+    (a, b) =>
+      (typeof a[key] === "number" && typeof b[key] === "number"
+        ? a[key] - b[key]
+        : String(a[key] ?? "").localeCompare(String(b[key] ?? ""))) * direction
+  );
+  return {
+    data: {
+      rows: rows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
+      total: rows.length,
+    },
+  };
 }
 
 async function queryEnumTypeDict() {
@@ -766,7 +925,7 @@ async function queryEnumTypeDict() {
           ...enumTypeDict.value.filter((item) => item.enumSource !== source),
           ...options,
         ];
-      }),
+      })
     );
   } finally {
     if (isCurrentRequest()) enumLoading.value = false;
@@ -791,7 +950,10 @@ function reset() {
     enumType: props.enumType ?? null,
     enumSource: "PROJECT",
     name: null,
-    dataType: props.enumType !== undefined ? dataTypeConstant.ENUM : dataTypeConstant.TEXT,
+    dataType:
+      props.enumType !== undefined
+        ? dataTypeConstant.ENUM
+        : dataTypeConstant.TEXT,
     description: null,
     unit: null,
     decimalPlaces: 2,
@@ -857,7 +1019,10 @@ function handleUpdate(row) {
   const _id = row.id || ids.value;
   getDataType(_id, versionId.value).then((response) => {
     if (request !== detailRequest) return;
-    form.value = { ...response.data, status: Number(response.data.status ?? 1) };
+    form.value = {
+      ...response.data,
+      status: Number(response.data.status ?? 1),
+    };
     open.value = true;
     title.value = "修改业务数据类型";
   });
@@ -870,7 +1035,10 @@ function handleDetail(row) {
   const _id = row.id || ids.value;
   getDataType(_id, versionId.value).then((response) => {
     if (request !== detailRequest) return;
-    form.value = { ...response.data, status: Number(response.data.status ?? 1) };
+    form.value = {
+      ...response.data,
+      status: Number(response.data.status ?? 1),
+    };
     openDetail.value = true;
     title.value = "业务数据类型详情";
   });
@@ -885,7 +1053,13 @@ async function submitForm(draft) {
     const payload = {
       ...draft,
       versionId: submittingVersion,
-      ...(props.enumType !== undefined ? { dataType: dataTypeConstant.ENUM, enumType: props.enumType, enumSource: "PROJECT" } : {}),
+      ...(props.enumType !== undefined
+        ? {
+            dataType: dataTypeConstant.ENUM,
+            enumType: props.enumType,
+            enumSource: "PROJECT",
+          }
+        : {}),
     };
     await (payload.id != null ? updateDataType(payload) : addDataType(payload));
     if (submittingVersion !== versionId.value) return;

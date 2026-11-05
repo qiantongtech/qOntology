@@ -75,12 +75,13 @@ See the LICENSE file in the project root for full license information.
                         <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
                     </el-button>
                     <el-button
-                        icon="Sort"
+                        type="primary"
+                        plain
                         @click="toggleExpand"
                         @mousedown="(e) => e.preventDefault()"
                     >
-                        <i class="iconfont-mini expandedIcon"></i>
-                        {{ isExpanded ? '合并' : '展开' }}
+                        <svg-icon :icon-class="isExpanded ? 'toggle' : 'expand'" />
+                        <span>{{ isExpanded ? ' 折叠' : ' 展开' }}</span>
                     </el-button>
                 </el-form-item>
             </div>
@@ -96,8 +97,7 @@ See the LICENSE file in the project root for full license information.
                 </el-form-item>
                 <el-form-item label="创建时间" v-if="isExpanded">
                     <el-date-picker
-                        style="width: 210px"
-                        class="el-form-input-width"
+                        class="el-form-input-width graph-table__date-picker"
                         v-model="dateRange"
                         value-format="YYYY-MM-DD"
                         type="daterange"
@@ -307,10 +307,17 @@ See the LICENSE file in the project root for full license information.
 </script>
 
 <style scoped lang="scss">
+.graph-table__date-picker {
+    width: 210px;
+}
+
     .tableView {
         height: auto;
     }
-    .expandedIcon {
-        //padding-left: 1px;
+    .el-button {
+        .svg-icon {
+            font-size: 12px;
+            margin-right: 6px;
+        }
     }
 </style>

@@ -101,9 +101,9 @@
         </template>
         <template #createTime="{ row }">
           {{
-            row.createTime === "—"
-              ? "—"
-              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "—"
+            row.createTime === "-"
+              ? "-"
+              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
           }}
         </template>
         <template #handle="{ row }">
@@ -256,13 +256,13 @@
           <div class="form-readonly">{{ detail.enumType }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="枚举标签">
-          <div class="form-readonly">{{ detail.enumLabel ?? "—" }}</div>
+          <div class="form-readonly">{{ detail.enumLabel ?? "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="枚举键值">
-          <div class="form-readonly">{{ detail.enumValue ?? "—" }}</div>
+          <div class="form-readonly">{{ detail.enumValue ?? "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="排序">
-          <div class="form-readonly">{{ detail.enumSort ?? "—" }}</div>
+          <div class="form-readonly">{{ detail.enumSort ?? "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="状态">
           <dict-tag :options="sys_normal_disable" :value="detail.status" />
@@ -273,7 +273,7 @@
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
-            {{ parseTime(detail.createTime) || "—" }}
+            {{ parseTime(detail.createTime) || "-" }}
           </div>
         </el-form-item>
         <el-form-item class="row-full" label="备注">
@@ -496,7 +496,7 @@ function formatListData(rows) {
   return rows.map((row) => {
     const record = { ...row };
     fields.forEach((field) => {
-      if (record[field] == null || record[field] === "") record[field] = "—";
+      if (record[field] == null || record[field] === "") record[field] = "-";
     });
     return record;
   });

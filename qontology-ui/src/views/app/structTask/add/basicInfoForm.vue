@@ -1,17 +1,17 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qKnow is licensed under Apache License 2.0 with additional qKnow terms.
  You may use qKnow for commercial purposes, but you may not remove, hide,
  modify, or replace the qKnow logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qKnow as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qknow.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
@@ -23,10 +23,9 @@
     :model="formData"
     :rules="rules"
     label-width="170px"
-    style="padding-right: 90px"
     :disabled="disabled"
   >
-    <div class="h2-titles">基础信息</div>
+    <div class="h2-titles mb15">基础信息</div>
     <el-row :gutter="20">
       <el-col :span="11">
         <el-form-item label="项目" prop="projectId">
@@ -63,17 +62,17 @@
       <el-col :span="11">
         <qt-form-item label="责任人" prop="responsibleUserId" class="row-full">
           <el-select
-              v-model="formData.responsibleUserId"
-              placeholder="请选择责任人"
-              clearable
-              filterable
-              @change="handleResponsibleUserChange"
+            v-model="formData.responsibleUserId"
+            placeholder="请选择责任人"
+            clearable
+            filterable
+            @change="handleResponsibleUserChange"
           >
             <el-option
-                v-for="user in userOptions"
-                :key="user.value"
-                :label="user.label"
-                :value="user.value"
+              v-for="user in userOptions"
+              :key="user.value"
+              :label="user.label"
+              :value="user.value"
             />
           </el-select>
         </qt-form-item>
@@ -81,9 +80,9 @@
       <el-col :span="11">
         <qt-form-item label="联系电话" class="row-full">
           <el-input
-              :model-value="formData.responsiblePhone"
-              disabled
-              placeholder="请输入联系电话"
+            :model-value="formData.responsiblePhone"
+            disabled
+            placeholder="请输入联系电话"
           />
         </qt-form-item>
       </el-col>
@@ -114,12 +113,8 @@
               <el-button type="primary" plain @click="onTestConnection">
                 测试连接
               </el-button>
-              <el-icon v-if="connectionSuccess" class="status-icon success-icon"
-                ><check
-              /></el-icon>
-              <el-icon v-if="connectionError" class="status-icon error-icon"
-                ><close
-              /></el-icon>
+              <el-icon v-if="connectionSuccess" class="status-icon success-icon"><check/></el-icon>
+              <el-icon v-if="connectionError" class="status-icon error-icon"><close/></el-icon>
             </div>
           </div>
         </el-form-item>
@@ -167,7 +162,7 @@
             v-model="formData.description"
             :rows="2"
             placeholder="请输入描述"
-            maxlength="512个字符"
+            maxlength="256个字符"
             show-word-limit
           />
         </el-form-item>
@@ -179,7 +174,7 @@
 <script setup>
 import { ref, watch } from "vue";
 import { Check, Close } from "@element-plus/icons-vue";
-import {listUserAll} from "@/api/system/system/user.js";
+import { listUserAll } from "@/api/system/system/user.js";
 
 const props = defineProps({
   formData: {
@@ -237,13 +232,13 @@ async function loadUserOptions() {
   const response = await listUserAll();
   const rows = response.rows || response.data?.rows || [];
   userOptions.value = rows
-      .filter((user) => user.userId != null)
-      .map((user) => ({
-        // value 保持数字类型，与后端返回的 responsibleUserId 一致，避免 el-select 回显失配
-        value: user.userId,
-        label: user.nickName || user.userName || String(user.userId),
-        phone: user.phonenumber || "",
-      }));
+    .filter((user) => user.userId != null)
+    .map((user) => ({
+      // value 保持数字类型，与后端返回的 responsibleUserId 一致，避免 el-select 回显失配
+      value: user.userId,
+      label: user.nickName || user.userName || String(user.userId),
+      phone: user.phonenumber || "",
+    }));
 }
 // 通知父组件切换数据源。
 const onDataSourceChange = (value) => {
@@ -253,7 +248,7 @@ const onDataSourceChange = (value) => {
 // 负责人选择变化时更新电话（按字符串比对，兼容数字/字符串类型）
 function handleResponsibleUserChange(value) {
   const user = userOptions.value.find(
-      (user) => String(user.value) === String(value)
+    (user) => String(user.value) === String(value)
   );
   props.formData.responsiblePhone = user?.phone || "";
   props.formData.responsiblePersonName = user?.label || "";
@@ -282,24 +277,6 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-.h2-titles {
-  font-size: 16px;
-  color: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  font-weight: 500;
-  margin: 8px 0;
-}
-.h2-titles::before {
-  display: inline-block;
-  content: "";
-  width: 6px;
-  height: 16px;
-  border-radius: 3px;
-  background: var(--el-color-primary);
-  margin-right: 8px;
-}
-
 .success-icon,
 .error-icon {
   width: 18px;

@@ -1,17 +1,17 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qKnow is licensed under Apache License 2.0 with additional qKnow terms.
  You may use qKnow for commercial purposes, but you may not remove, hide,
  modify, or replace the qKnow logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qKnow as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qknow.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
@@ -28,7 +28,12 @@
     destroy-on-close
     @close="handleClose"
   >
-    <el-form :model="queryParams" ref="queryRef" :inline="true">
+    <el-form
+      ref="queryRef"
+      :model="queryParams"
+      :inline="true"
+      class="btn-style"
+    >
       <el-form-item label="表名称" prop="tableName">
         <el-input
           v-model="queryParams.tableName"
@@ -39,12 +44,18 @@
         />
       </el-form-item>
       <el-form-item>
-        <!-- <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-                  <el-button icon="Refresh" @click="resetQuery">重置</el-button> -->
-        <el-button type="primary" @click="handleQuery">
+        <el-button
+          plain
+          type="primary"
+          @click="handleQuery"
+          @mousedown="(event) => event.preventDefault()"
+        >
           <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
         </el-button>
-        <el-button @click="resetQuery">
+        <el-button
+          @click="resetQuery"
+          @mousedown="(event) => event.preventDefault()"
+        >
           <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
         </el-button>
       </el-form-item>
@@ -112,7 +123,6 @@ const handleClose = () => {
 const dataSourceId = ref(null);
 /** 查询参数列表 */
 function show(val) {
-  console.log("---导入表----val----", val);
   dataSourceId.value = val.dataSourceId;
   getList();
   visible.value = true;
@@ -130,7 +140,7 @@ function handleSelectionChange(selection) {
 
 const dataList = ref([]);
 /** 查询表数据 */
-function getList(val) {
+function getList() {
   loading.value = true;
   getDaDatasourceTableList({
     dataSourceId: dataSourceId.value,
@@ -164,7 +174,6 @@ function resetQuery() {
 
 /** 导入按钮操作 */
 function handleImportTable() {
-  console.log("---导入表----tables----", tables);
   const tableNames = tables.value.join(",");
   if (tableNames == "") {
     proxy.$modal.msgError("请选择要导入的表");
@@ -177,7 +186,6 @@ function handleImportTable() {
   dataTableList = dbTableList.value.filter((e) =>
     tables.value.includes(e.tableName)
   );
-  console.log("-------dataTableList----", dataTableList);
   emit("importDataTable", dataTableList);
   visible.value = false;
   emit("ok");

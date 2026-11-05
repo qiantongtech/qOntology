@@ -114,31 +114,28 @@
                 trigger="click"
               >
                 <template #reference>
-                  <el-button link type="primary" icon="ArrowDown"
-                    >更多</el-button
-                  >
+                  <el-button link type="primary" icon="ArrowDown">更多</el-button>
                 </template>
                 <el-button
                   link
                   type="primary"
                   icon="View"
                   @click="handlePreview(row)"
-                  >预览</el-button
-                >
-                <el-button
-                  link
-                  type="primary"
-                  icon="Download"
-                  @click="handleDownload(row)"
-                  >下载</el-button
-                >
-                <el-button
-                  v-hasPermi="['basic:file:manager:remove']"
-                  link
-                  type="danger"
-                  icon="Delete"
-                  @click="handleDelete(row)"
-                  >删除</el-button
+                  >预览</el-button>
+                  <el-button
+                    link
+                    type="primary"
+                    icon="Download"
+                    @click="handleDownload(row)"
+                    >下载</el-button>
+                  <el-button
+                    v-hasPermi="['basic:file:manager:remove']"
+                    link
+                    type="danger"
+                    icon="Delete"
+                    @click="handleDelete(row)"
+                    >删除
+                  </el-button
                 >
               </el-popover>
             </template>
@@ -150,6 +147,10 @@
       ref="fileDialogRef"
       :category-options="categoryOptions"
       @success="refreshData"
+    />
+    <FileDetailDialog
+      ref="fileDetailDialogRef"
+      :category-options="categoryOptions"
     />
     <el-image-viewer
       v-if="imageViewerVisible"
@@ -176,6 +177,7 @@ import {
 } from "@/api/basic/file/basicFile.js";
 import DeptTree from "@/components/DeptTree";
 import FileFormDialog from "./components/fileFormDialog.vue";
+import FileDetailDialog from "./components/fileDetailDialog.vue";
 import { formatSize } from "@/utils/index";
 import { filePreview } from "@/utils/kkFileView";
 
@@ -230,6 +232,7 @@ const { creatorPhones } = useCreatorPhones();
 
 const deptTreeRef = ref();
 const fileDialogRef = ref();
+const fileDetailDialogRef = ref();
 const categoryOptions = ref([]);
 const leftWidth = ref(280);
 const selectedCategoryIds = ref([]);
