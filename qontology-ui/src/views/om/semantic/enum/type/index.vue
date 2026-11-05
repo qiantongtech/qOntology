@@ -115,30 +115,30 @@
               : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
           }}
         </template>
-        <template #handle="{ row }">
+        <!-- 操作区与业务数据类型、术语管理保持一致：三按钮平铺、权限指令控制显隐。 -->
+        <template #action="{ row }">
           <el-button
-            v-hasPermi="['om:enumeration:type:query']"
             link
             type="primary"
             icon="View"
             @click="handleDetail(row)"
+            v-hasPermi="['om:enumeration:type:query']"
           >详情
           </el-button>
           <el-button
-            v-if="auth.hasPermi('om:enumeration:type:edit')"
             link
             type="primary"
             icon="Edit"
             @click="handleUpdate(row)"
+            v-hasPermi="['om:enumeration:type:edit']"
           >修改
           </el-button>
           <el-button
-            v-if="auth.hasPermi('om:enumeration:type:remove')"
             link
             type="danger"
             icon="Delete"
-            :disabled="deleting"
             @click="handleDelete(row)"
+            v-hasPermi="['om:enumeration:type:remove']"
           >删除
           </el-button>
         </template>
@@ -349,7 +349,14 @@ const tableStore = reactive({
       width: 160,
       sortable: true,
     },
-    { label: "操作", slot: "handle", width: 200, fixed: "right" },
+    {
+      label: "操作",
+      slot: "action",
+      width: 240,
+      align: "center",
+      fixed: "right",
+      className: "small-padding fixed-width",
+    },
   ],
   func: loadEnumTypes,
   params: { enumName: "", enumType: "", status: "" },

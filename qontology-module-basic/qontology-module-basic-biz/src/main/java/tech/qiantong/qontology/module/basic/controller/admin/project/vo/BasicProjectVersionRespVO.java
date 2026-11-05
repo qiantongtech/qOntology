@@ -57,6 +57,10 @@ public class BasicProjectVersionRespVO implements Serializable {
     @Schema(description = "基准版本", example = "")
     private String baseVersion;
 
+    @Excel(name = "状态")
+    @Schema(description = "状态：0 禁用，1 启用", example = "1")
+    private Integer status;
+
     @Excel(name = "删除标志")
     @Schema(description = "删除标志", example = "")
     private Boolean delFlag;

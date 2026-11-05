@@ -53,6 +53,15 @@ export function updateProjectVersion(data) {
   })
 }
 
+// 单独修改项目版本启用状态，避免覆盖版本号、基准版本等其他字段
+export function updateProjectVersionStatus(data) {
+  return request({
+    url: '/basic/projectVersion/status',
+    method: 'put',
+    data: data
+  })
+}
+
 // 删除项目版本
 export function delProjectVersion(id) {
   return request({

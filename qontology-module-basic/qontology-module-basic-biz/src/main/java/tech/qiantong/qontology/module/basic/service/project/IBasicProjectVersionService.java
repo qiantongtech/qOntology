@@ -62,6 +62,15 @@ public interface IBasicProjectVersionService extends IService<BasicProjectVersio
     int updateBasicProjectVersion(BasicProjectVersionSaveReqVO updateReqVO);
 
     /**
+     * 修改项目版本启用状态
+     *
+     * @param id     项目版本编号
+     * @param status 状态：0 禁用，1 启用
+     * @return 影响行数
+     */
+    int updateBasicProjectVersionStatus(Long id, Integer status);
+
+    /**
      * 删除项目版本
      *
      * @param idList 项目版本编号

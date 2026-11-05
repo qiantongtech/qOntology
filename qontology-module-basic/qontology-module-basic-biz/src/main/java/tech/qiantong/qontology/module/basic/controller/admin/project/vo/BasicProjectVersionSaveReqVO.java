@@ -21,6 +21,8 @@ package tech.qiantong.qontology.module.basic.controller.admin.project.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -59,6 +61,11 @@ public class BasicProjectVersionSaveReqVO extends BaseEntity {
     @Schema(description = "基准版本", example = "")
     @Size(max = 128, message = "基准版本长度不能超过128个字符")
     private String baseVersion;
+
+    @Schema(description = "状态：0 禁用，1 启用", example = "1")
+    @Min(value = 0, message = "状态只能为启用或禁用")
+    @Max(value = 1, message = "状态只能为启用或禁用")
+    private Integer status;
 
     @Schema(description = "备注", example = "")
     @Size(max = 512, message = "备注长度不能超过512个字符")

@@ -67,6 +67,21 @@
             当前版本
           </el-tag>
         </template>
+        <!-- 状态列放在创建人之前，启停交互与术语管理一致。 -->
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            :active-value="1"
+            :inactive-value="0"
+            :loading="statusSaving[row.id] === true"
+            :disabled="
+              !auth.hasPermi('basic:project:projectversion:edit') ||
+              statusSaving[row.id] === true
+            "
+            :aria-label="`${row.version}状态`"
+            @change="(value) => handleStatusChange(row, value)"
+          />
+        </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -153,6 +168,19 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="form.status">
+                <el-radio
+                    v-for="dict in project_status"
+                    :key="Number(dict.value)"
+                    :value="Number(dict.value)"
+                >
+                  {{ dict.label }}
+                </el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
             <el-form-item label="描述" prop="description">
               <el-input
                 v-model="form.description"
@@ -172,6 +200,7 @@
               />
             </el-form-item>
           </el-col>
+
         </el-row>
       </el-form>
       <template #footer>
@@ -208,6 +237,9 @@
             {{ form.description }}
           </div>
         </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <dict-tag :options="project_status" :value="form.status" />
+        </el-form-item>
         <el-form-item label="创建人" prop="createBy">
           <div class="form-readonly">
             {{ formatCreator(form) }}
@@ -236,17 +268,20 @@ import {
   getProjectVersion,
   listProjectVersion,
   updateProjectVersion,
+  updateProjectVersionStatus,
 } from "@/api/basic/project/projectVersion.js";
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 const { proxy } = getCurrentInstance();
 const { creatorPhones, formatCreator } = useCreatorPhones();
+const { project_status } = proxy.useDict("project_status");
 const route = useRoute();
 const router = useRouter();
 
 const tableRef = ref();
 const projectVersionRef = ref();
+const statusSaving = reactive({});
 
 // 表格配置
 const tableStore = reactive({
@@ -298,6 +333,14 @@ const tableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     {
+      label: "状态",
+      prop: "status",
+      slot: "status",
+      width: 90,
+      minWidth: 90,
+      align: "center",
+    },
+    {
       label: "创建人",
       prop: "createBy",
       slot: "creator",
@@ -327,12 +370,20 @@ const tableStore = reactive({
   params: {
     projectId: null,
     version: null,
+    status: null,
   },
 });
 
 // 搜索项配置
 const searchStore = reactive({
-  items: [{ label: "版本号", prop: "version", component: { is: "input" } }],
+  items: [
+    { label: "版本号", prop: "version", component: { is: "input" } },
+    {
+      label: "状态",
+      prop: "status",
+      component: { is: "select", options: project_status },
+    },
+  ],
 });
 
 const open = ref(false);
@@ -349,6 +400,15 @@ const data = reactive({
   form: {},
   rules: {
     version: [{ required: true, message: "版本号不能为空", trigger: "blur" }],
+    status: [
+      {
+        required: true,
+        type: "number",
+        enum: [0, 1],
+        message: "请选择状态",
+        trigger: "change",
+      },
+    ],
   },
 });
 
@@ -383,6 +443,7 @@ function reset() {
     projectId: currentVersion.value?.projectId,
     version: null,
     description: null,
+    status: 1,
     createBy: null,
     creatorId: null,
     createTime: null,
@@ -403,6 +464,29 @@ function reset() {
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.id);
   multiple.value = !selection.length;
+}
+
+/**
+ * 启用/禁用项目版本，确认后只提交状态；取消或请求失败时回滚开关。
+ * @param {Object} row 当前行数据
+ * @param {Number} value 切换后的状态：0 禁用，1 启用
+ */
+async function handleStatusChange(row, value) {
+  const previous = value === 1 ? 0 : 1;
+  const text = value === 1 ? "启用" : "禁用";
+  statusSaving[row.id] = true;
+  try {
+    await proxy.$modal.confirm(`确认要${text}项目版本“${row.version}”吗？`);
+    await updateProjectVersionStatus({ id: row.id, status: value });
+  } catch {
+    row.status = previous;
+    return;
+  } finally {
+    delete statusSaving[row.id];
+  }
+  proxy.$modal.msgSuccess("操作成功");
+  tableRef.value?.getList();
+  notifyProjectVersionChanged();
 }
 
 /** 新增按钮操作。 */

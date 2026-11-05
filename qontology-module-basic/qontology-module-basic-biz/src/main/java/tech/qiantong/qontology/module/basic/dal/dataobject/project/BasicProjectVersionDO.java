@@ -67,6 +67,11 @@ public class BasicProjectVersionDO extends BaseEntity {
     private String baseVersion;
 
     /**
+     * 状态：0 禁用，1 启用
+     */
+    private Integer status;
+
+    /**
      * 删除标志
      */
     @TableLogic

@@ -20,6 +20,7 @@ package tech.qiantong.qontology.module.basic.service.project.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -88,6 +89,11 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
         }
 
         BasicProjectVersionDO dictType = BeanUtils.toBean(createReqVO, BasicProjectVersionDO.class);
+        // 未显式指定状态时默认启用，并校验取值，避免绕过参数校验的调用写入非法状态。
+        if (dictType.getStatus() == null) {
+            dictType.setStatus(1);
+        }
+        validateStatus(dictType.getStatus());
         baseMapper.insert(dictType);
 
         // 从容器中获取所有 Repeatable 接口的实现类
@@ -118,8 +124,45 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
             throw new ServiceException("项目版本号不能重复");
         }
         // 更新项目版本
+        BasicProjectVersionDO existing = baseMapper.selectById(updateReqVO.getId());
+        if (existing == null) {
+            throw new ServiceException("项目版本不存在或已删除", 601);
+        }
         BasicProjectVersionDO updateObj = BeanUtils.toBean(updateReqVO, BasicProjectVersionDO.class);
+        // 通用修改表单不携带状态时保留原状态，状态只由 /status 接口或显式传值变更。
+        if (updateObj.getStatus() == null) {
+            updateObj.setStatus(existing.getStatus());
+        }
+        validateStatus(updateObj.getStatus());
         return baseMapper.updateById(updateObj);
+    }
+
+    /**
+     * 修改项目版本启用状态，仅更新状态列，避免覆盖版本号、基准版本等业务字段。
+     *
+     * @param id     项目版本编号
+     * @param status 状态：0 禁用，1 启用
+     * @return 影响行数
+     */
+    @Override
+    public int updateBasicProjectVersionStatus(Long id, Integer status) {
+        validateStatus(status);
+        BasicProjectVersionDO existing = baseMapper.selectById(id);
+        if (existing == null) {
+            throw new ServiceException("项目版本不存在或已删除", 601);
+        }
+        return baseMapper.update(null, new UpdateWrapper<BasicProjectVersionDO>()
+                .eq("id", id)
+                .set("status", status));
+    }
+
+    /**
+     * 校验启用状态取值：0 禁用，1 启用。
+     */
+    private static void validateStatus(Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new ServiceException("状态只能为启用或禁用", 601);
+        }
     }
 
     /**

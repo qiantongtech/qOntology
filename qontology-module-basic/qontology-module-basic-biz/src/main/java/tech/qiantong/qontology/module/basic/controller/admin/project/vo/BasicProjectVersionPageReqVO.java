@@ -19,6 +19,8 @@
 package tech.qiantong.qontology.module.basic.controller.admin.project.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 import tech.qiantong.qontology.core.page.PageParam;
 
@@ -47,6 +49,9 @@ public class BasicProjectVersionPageReqVO extends PageParam {
     @Schema(description = "基准版本", example = "")
     private String baseVersion;
 
-
+    @Schema(description = "状态：0 禁用，1 启用", example = "1")
+    @Min(value = 0, message = "状态只能为启用或禁用")
+    @Max(value = 1, message = "状态只能为启用或禁用")
+    private Integer status;
 
 }

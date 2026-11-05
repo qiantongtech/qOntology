@@ -48,6 +48,7 @@ public interface BasicProjectVersionMapper extends BaseMapperX<BasicProjectVersi
                 .likeIfPresent(BasicProjectVersionDO::getVersion, reqVO.getVersion())
                 .eqIfPresent(BasicProjectVersionDO::getDescription, reqVO.getDescription())
                 .eqIfPresent(BasicProjectVersionDO::getBaseVersion, reqVO.getBaseVersion())
+                .eqIfPresent(BasicProjectVersionDO::getStatus, reqVO.getStatus())
                 .eqIfPresent(BasicProjectVersionDO::getCreateTime, reqVO.getCreateTime())
                 // 如果 reqVO.getName() 不为空，则添加 name 的精确匹配条件（name = '<name>'）
                 // .likeIfPresent(BasicProjectVersionDO::getName, reqVO.getName())

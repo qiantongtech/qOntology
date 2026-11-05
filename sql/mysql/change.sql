@@ -272,28 +272,9 @@ SET `task_name` = CONCAT('建模目标验证任务-', `id`)
 WHERE `task_name` IS NULL
    OR TRIM(`task_name`) = '';
 
--- ============================================================================
--- 恢复业务数据类型启用状态；已存在字段时保留原有状态及配置。
--- ============================================================================
+--版本管理添加停用启用状态。
+ALTER TABLE `basic_project_version`
+    ADD COLUMN `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '状态;0：禁用，1：启用' AFTER `base_version`;
 
--- 添加时间：2026-11-05 09:11:05（北京时间）
-SET @om_data_type_status_ddl = IF(
-    EXISTS (
-        SELECT 1
-        FROM `information_schema`.`COLUMNS`
-        WHERE `TABLE_SCHEMA` = DATABASE()
-          AND `TABLE_NAME` = 'om_data_type'
-          AND `COLUMN_NAME` = 'status'
-    ),
-    'SELECT 1',
-    'ALTER TABLE `om_data_type` ADD COLUMN `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT ''状态;0：禁用，1：启用'' AFTER `enum_source`'
-);
-
--- 添加时间：2026-11-05 09:11:05（北京时间）
-PREPARE om_data_type_status_stmt FROM @om_data_type_status_ddl;
-
--- 添加时间：2026-11-05 09:11:05（北京时间）
-EXECUTE om_data_type_status_stmt;
-
--- 添加时间：2026-11-05 09:11:05（北京时间）
-DEALLOCATE PREPARE om_data_type_status_stmt;
+ALTER TABLE `om_data_type`
+    ADD COLUMN `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用' AFTER `enum_source`;

@@ -179,94 +179,15 @@
       </template>
     </el-dialog>
     <el-dialog v-model="detailOpen" title="数据规则详情" width="860px" :append-to="$refs['app-container']" draggable destroy-on-close>
-      <el-form :model="detail" disabled label-width="120px" class="rule-form">
+      <!-- 详情与模型公理风格一致，用只读文本展示字段，并保留新增弹窗的分组标题。 -->
+      <el-form label-width="120px" class="rule-form">
         <div class="h2-title">基本信息</div>
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="detail.name" placeholder="请输入数据规则名称" maxlength="128"/>
-        </el-form-item>
-        <el-form-item label="类型" prop="type">
-          <el-select v-model="detail.type" placeholder="请选择类型">
-            <el-option v-for="item in om_data_rule_type" :key="item.value" :label="item.label" :value="item.value"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="级别" prop="level">
-          <el-radio-group v-model="detail.level">
-            <el-radio v-for="item in om_rule_level" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="detail.description" class="character-count" type="textarea" :rows="4"
-                    placeholder="请输入描述" :maxlength="512" show-word-limit
-          />
-        </el-form-item>
-        <el-form-item label="创建人">
-          <el-input :model-value="formatCreator(detail)"/>
-        </el-form-item>
-        <el-form-item label="创建时间">
-          <el-input :model-value="proxy.parseTime(detail.createTime, '{y}-{m}-{d} {h}:{i}') || '-'"/>
+        <el-form-item v-for="field in basicDetailFields" :key="field.label" :label="field.label">
+          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
         </el-form-item>
         <div class="h2-title">执行条件</div>
-        <el-form-item label="条件关系" prop="conditionRelation">
-          <el-radio-group v-model="detail.conditionRelation">
-            <el-radio value="OR">任一满足（OR）</el-radio>
-            <el-radio value="AND">全部满足（AND）</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="失败条件">
-          <div class="conditions">
-            <div v-for="(condition, index) in detail.conditions" :key="index" class="condition-row">
-              <div class="condition-label">条件 {{ index + 1 }}：</div>
-              <div class="condition-fields">
-                <el-tree-select
-                  v-model="condition.objectTypeId"
-                  :data="objectTypeTree"
-                  :props="objectTypeTreeProps"
-                  value-key="id"
-                  :loading="optionsLoading"
-                  check-strictly
-                  filterable
-                  clearable
-                  placeholder="请选择对象类型"
-                  class="condition-object"
-                  :aria-label="'第' + (index + 1) + '条对象类型'"
-                />
-                <el-select
-                  v-model="condition.attributeId"
-                  :loading="optionsLoading || attributeLoadingCount > 0"
-                  filterable
-                  :disabled="!condition.objectTypeId"
-                  class="condition-attribute"
-                  placeholder="请选择属性"
-                  :aria-label="'第' + (index + 1) + '条属性'"
-                >
-                  <el-option v-for="item in getConditionAttributes(condition, detail.type)" :key="item.id" :label="item.name" :value="item.id"/>
-                </el-select>
-                <span v-if="detail.type === 'REQUIRED'" class="condition-operator">为空</span>
-                <template v-else>
-                  <el-select v-if="detail.type === 'RANGE'" v-model="condition.operator" class="condition-comparison"
-                             :aria-label="'第' + (index + 1) + '条比较符'"
-                  >
-                    <el-option v-for="item in om_rule_operator" :key="item.value" :label="item.label" :value="item.value"/>
-                  </el-select>
-                  <span v-else class="condition-operator">{{ conditionOperator(detail.type, condition.operator) }}</span>
-                  <el-select v-if="detail.type === 'FORMAT'" v-model="condition.value" placeholder="请选择日期格式"
-                             class="condition-value" :aria-label="'第' + (index + 1) + '条日期格式'" clearable
-                  >
-                    <el-option v-for="format in dateFormatOptions" :key="format" :label="format" :value="format"/>
-                  </el-select>
-                  <el-input v-else :model-value="condition.value" placeholder="条件值"
-                            class="condition-value"
-                            :inputmode="detail.type === 'RANGE' ? 'decimal' : 'text'"
-                            :aria-label="'第' + (index + 1) + '条条件值'"
-                  />
-                </template>
-              </div>
-
-            </div>
-          </div>
-        </el-form-item>
-        <el-form-item label="失败提示" prop="failureMessage">
-          <el-input v-model="detail.failureMessage" placeholder="请输入失败提示" maxlength="512"/>
+        <el-form-item v-for="field in conditionDetailFields" :key="field.label" :label="field.label">
+          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -635,7 +556,7 @@ async function handleDetail(row) {
 }
 
 /**
- * 详情沿用新增的控件布局，加载对象和属性选项后回显名称。
+ * 详情展示前加载对象类型与条件属性选项，用于把编号回显为名称。
  */
 async function loadDetailOptions() {
   const request = dialogRequest;
@@ -842,6 +763,58 @@ function conditionOperator(type, operator) {
   if (type === 'FORMAT') return '不匹配';
   return proxy.selectDictLabel(om_rule_operator.value, operator);
 }
+
+/** 将条件关系字典值转为展示文案。 */
+function conditionRelationLabel(value) {
+  return {OR: '任一满足（OR）', AND: '全部满足（AND）'}[value] || '';
+}
+
+/**
+ * 将对象类型编号转为名称，选项未加载时回显编号。
+ * @param {string} id 对象类型编号
+ * @returns {string} 对象类型名称
+ */
+function objectTypeLabel(id) {
+  return objectTypeOptions.value.find(item => String(item.id) === String(id))?.name || id || '';
+}
+
+/**
+ * 将条件行的属性编号转为名称。
+ * @param {Object} condition 条件对象
+ * @returns {string} 属性名称
+ */
+function conditionAttributeLabel(condition) {
+  const attributes = attributeOptions[condition.objectTypeId] || [];
+  return attributes.find(item => String(item.id) === String(condition.attributeId))?.name || condition.attributeId || '';
+}
+
+/**
+ * 将失败条件拼为“条件N：对象类型·属性 操作 值”的多行文本。
+ * @param {Object} record 详情记录
+ * @returns {string} 条件展示文本
+ */
+function detailConditions(record) {
+  return (record.conditions || []).map((condition, index) => {
+    const operator = conditionOperator(record.type, condition.operator);
+    const value = record.type === 'REQUIRED' || !condition.value ? '' : ` ${condition.value}`;
+    return `条件${index + 1}：${objectTypeLabel(condition.objectTypeId)} · ${conditionAttributeLabel(condition)} ${operator}${value}`;
+  }).join('\n');
+}
+
+// 详情弹窗展示字段，分组与新增弹窗的“基本信息/执行条件”保持一致。
+const basicDetailFields = computed(() => [
+  {label: '规则名称', value: detail.value.name},
+  {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, detail.value.type)},
+  {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, detail.value.level)},
+  {label: '描述', value: detail.value.description, multiline: true},
+  {label: '创建人', value: formatCreator(detail.value)},
+  {label: '创建时间', value: proxy.parseTime(detail.value.createTime, '{y}-{m}-{d} {h}:{i}')}
+]);
+const conditionDetailFields = computed(() => [
+  {label: '条件关系', value: conditionRelationLabel(detail.value.conditionRelation)},
+  {label: '失败条件', value: detailConditions(detail.value), multiline: true},
+  {label: '失败提示', value: detail.value.failureMessage}
+]);
 
 // 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
 watch(versionId, async () => {

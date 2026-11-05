@@ -36,6 +36,7 @@ import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionPageReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionRespVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionSaveReqVO;
+import tech.qiantong.qontology.module.basic.controller.admin.project.vo.BasicProjectVersionStatusReqVO;
 import tech.qiantong.qontology.module.basic.controller.admin.project.vo.VersionDiffStatsVO;
 import tech.qiantong.qontology.module.basic.dal.dataobject.project.BasicProjectVersionDO;
 import tech.qiantong.qontology.module.basic.service.project.IBasicProjectVersionService;
@@ -88,6 +89,14 @@ public class BasicProjectVersionController extends BaseController {
     @PutMapping
     public CommonResult<Integer> edit(@Valid @RequestBody BasicProjectVersionSaveReqVO basicProjectVersion) {
         return CommonResult.toAjax(basicProjectVersionService.updateBasicProjectVersion(basicProjectVersion));
+    }
+
+    @Operation(summary = "修改项目版本状态")
+    @PreAuthorize("@ss.hasPermi('basic:project:projectversion:edit')")
+    @Log(title = "项目版本状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/status")
+    public CommonResult<Integer> updateStatus(@Valid @RequestBody BasicProjectVersionStatusReqVO request) {
+        return CommonResult.toAjax(basicProjectVersionService.updateBasicProjectVersionStatus(request.getId(), request.getStatus()));
     }
 
     @Operation(summary = "删除项目版本")
