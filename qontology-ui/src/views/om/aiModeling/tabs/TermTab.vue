@@ -300,6 +300,9 @@
               >
                 {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
               </div>
+              <div v-else-if="field.prop === 'createBy'" class="form-readonly">
+                {{ formatCreator(detail) }}
+              </div>
               <div
                 v-else
                 class="form-readonly"
@@ -335,7 +338,7 @@ const { om_ai_adopt_status } = proxy.useDict("om_ai_adopt_status");
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones } = useCreatorPhones();
+const { creatorPhones, formatCreator } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const saving = ref(false);
