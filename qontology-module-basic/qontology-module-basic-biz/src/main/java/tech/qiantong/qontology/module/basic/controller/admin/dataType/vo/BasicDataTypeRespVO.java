@@ -71,6 +71,41 @@ public class BasicDataTypeRespVO implements Serializable {
     @Excel(name = "枚举类型")
     private String enumType;
 
+    @Schema(description = "最大长度", example = "")
+    @Excel(name = "最大长度")
+    private Integer maxLength;
+
+    @Schema(description = "最小长度", example = "")
+    @Excel(name = "最小长度")
+    private Integer minLength;
+
+    @Schema(description = "最早日期", example = "")
+    @Excel(name = "最早日期")
+    private String earliestTime;
+
+    @Schema(description = "最晚日期", example = "")
+    @Excel(name = "最晚日期")
+    private String latestTime;
+
+    @Excel(name = "true 对应文案")
+    @Schema(description = "true 对应文案", example = "")
+    private String trueLabel;
+
+    @Schema(description = "false 对应文案", example = "")
+    @Excel(name = "false 对应文案")
+    private String falseLabel;
+
+    @Schema(description = "总位数", example = "")
+    @Excel(name = "总位数")
+    private Integer allPlaces;
+
+    @Schema(description = "格式验证", example = "")
+    private String validationType;
+
+    @Schema(description = "正则表达式", example = "")
+    private String validationPattern;
+
+
     @Excel(name = "是否有效")
     @Schema(description = "是否有效", example = "")
     private Boolean validFlag;

@@ -1077,7 +1077,7 @@ async function handleNextStep() {
 const handleSuccess = () => {
   // 然后跳转
   setTimeout(() => {
-    const obj = { path: "/app/structTask" };
+    const obj = { path: "/app/graph/structTask" };
     proxy.$tab.closeOpenPage(obj);
   }, 800);
 };
@@ -1135,6 +1135,11 @@ async function submitForm() {
           dataSourceId: form.value.dataSourceId,
           updateType: form.value.updateType,
           updateFrequency: form.value.updateFrequency,
+          responsiblePersonName: form.value.responsiblePersonName,
+          responsibleUserId:
+              form.value.responsibleUserId == null || form.value.responsibleUserId === ""
+                  ? null
+                  : Number(form.value.responsibleUserId),
           //对象类型关系映射数据
           relationData: relationData,
         };

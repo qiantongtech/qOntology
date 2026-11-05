@@ -32,8 +32,8 @@
                     <i class="iconfont icon-a-chaxunxianxing"></i>
                 </el-button>
             </el-tooltip>
-            <el-tooltip class="item" effect="dark" content="刷新" placement="top">
-                <el-button circle @click="refresh()">
+            <el-tooltip class="item" effect="dark" content="刷新" placement="top" v-if="refresh">
+                <el-button circle @click="refreshTable()">
                     <i class="iconfont icon-a-shuaxinxianxing"></i>
                 </el-button>
             </el-tooltip>
@@ -94,6 +94,11 @@
             type: Boolean,
             default: true
         },
+        /* 是否显示刷新图标 */
+        refresh: {
+            type: Boolean,
+            default: true
+        },
         /* 显隐列类型（transfer穿梭框、checkbox复选框） */
         showColumnsType: {
             type: String,
@@ -129,7 +134,7 @@
     }
 
     // 刷新
-    function refresh() {
+    function refreshTable() {
         emits('queryTable');
     }
 

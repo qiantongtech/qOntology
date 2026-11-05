@@ -24,6 +24,19 @@ public class AppUnstructTaskRespVO implements Serializable {
     private String ttlFilePath;
     @Schema(description = "任务状态")
     private Integer status;
+    @Schema(description = "最后执行时间")
+    private Date lastExecuteTime;
+    @Schema(description = "执行时长")
+    private Integer executeDuration;
+    /**
+     * 责任人用户编号；允许显式更新为空，以支持清除责任人。
+     */
+    private Long responsibleUserId;
+
+    /**
+     * 保存项目时从用户资料读取的责任人姓名快照。
+     */
+    private String responsiblePersonName;
     @Schema(description = "发布状态")
     private Integer publishStatus;
     @Schema(description = "发布时间")

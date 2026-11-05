@@ -18,15 +18,11 @@
 
 package tech.qiantong.qontology.module.app.dal.dataobject.appStructTask;
 
-import java.util.Date;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.*;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
 import tech.qiantong.qontology.core.domain.BaseEntity;
+
+import java.util.Date;
 
 /**
  * 结构化抽取任务 DO 对象 app_struct_task
@@ -98,6 +94,23 @@ public class AppStructTaskDO extends BaseEntity {
 
     /** 数据源名称 */
     private String datasourceName;
+
+    /** 最后执行时间 */
+    private Date lastExecuteTime;
+    /** 执行时长 */
+    private Integer executeDuration;
+    /** 调度状态 */
+    private Integer schedulingStatus;
+
+    /**
+     * 责任人用户编号；允许显式更新为空，以支持清除责任人。
+     */
+    private Long responsibleUserId;
+
+    /**
+     * 保存项目时从用户资料读取的责任人姓名快照。
+     */
+    private String responsiblePersonName;
 
     /** 描述 */
     private String description;

@@ -92,8 +92,7 @@
         <div class="justify-end top-right-btn">
           <right-toolbar
             v-model:showSearch="showSearch"
-            :columns="columns"
-            @queryTable="getList"
+            :refresh="false"
           />
         </div>
       </div>

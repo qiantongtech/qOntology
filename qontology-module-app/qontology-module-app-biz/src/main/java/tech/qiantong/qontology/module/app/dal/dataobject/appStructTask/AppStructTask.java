@@ -49,7 +49,15 @@ public class AppStructTask extends BaseEntity {
     private String updateFrequency; // 更新频率
     private Integer updateStatus; //定时更新状态
     private List<Relationship> relationshipList;// 数据映射表内容
+    /**
+     * 责任人用户编号；允许显式更新为空，以支持清除责任人。
+     */
+    private Long responsibleUserId;
 
+    /**
+     * 保存项目时从用户资料读取的责任人姓名快照。
+     */
+    private String responsiblePersonName;
     /**
      * 数据映射表内容
      */

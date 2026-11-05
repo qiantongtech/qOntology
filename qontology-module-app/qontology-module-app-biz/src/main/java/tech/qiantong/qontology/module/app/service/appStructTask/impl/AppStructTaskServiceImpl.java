@@ -198,6 +198,7 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
         Long logId = appTaskLogService.startInvoke(appStructTaskDO.getWorkspaceId(),
                 appStructTaskDO.getId(), appStructTaskDO.getName(), AppTaskTypeEnum.STRUCTURED,
                 appStructTaskDO.getCreateBy(), appStructTaskDO.getCreatorId());
+        long startTime = System.currentTimeMillis();
         try {
             appStructTaskDO.setStatus(AppTaskStatus.INPROGRESS.getValue());
             appStructTaskMapper.updateById(appStructTaskDO);
@@ -205,6 +206,9 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
             this.execStructTaskInternal(taskId, AppTaskUpdateType.INCREMENTUDATE.getValue().equals(appStructTaskDO.getUpdateType()));
             appTaskLogService.recordStep(logId, "结构化实体及关系已保存到 Neo4j");
             appTaskLogService.endInvoke(logId, AppLogStatusEnum.SUCCESS, "");
+            appStructTaskDO.setLastExecuteTime(new Date());
+            appStructTaskDO.setExecuteDuration((int) (System.currentTimeMillis() - startTime) / 1000);
+            appStructTaskMapper.updateById(appStructTaskDO);
         } catch (Exception e) {
             e.printStackTrace();
             // 捕获异常并打印日志
@@ -214,6 +218,9 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
             appStructTaskMapper.updateById(appStructTaskDO);
             appTaskLogService.recordStep(logId, "结构化抽取失败：" + e.getMessage());
             appTaskLogService.endInvoke(logId, AppLogStatusEnum.FAIL, e.getMessage());
+            appStructTaskDO.setLastExecuteTime(new Date());
+            appStructTaskDO.setExecuteDuration((int) (System.currentTimeMillis() - startTime) / 1000);
+            appStructTaskMapper.updateById(appStructTaskDO);
         }
         }
     }
@@ -964,6 +971,8 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
         appStructTaskDO.setUpdateBy(appStructTask.getUpdateBy());
         appStructTaskDO.setUpdaterId(appStructTask.getUpdaterId());
         appStructTaskDO.setUpdateTime(new Date());
+        appStructTaskDO.setResponsibleUserId(appStructTask.getResponsibleUserId());
+        appStructTaskDO.setResponsiblePersonName(appStructTask.getResponsiblePersonName());
         appStructTaskMapper.updateById(appStructTaskDO);
         //删除之前添加的映射关系
         appSchemaMappingMapper.delete("task_id", taskId.toString());//概念

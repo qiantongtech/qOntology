@@ -85,11 +85,16 @@
           </router-link>
           <span v-else>{{ row.enumType }}</span>
         </template>
+        <!-- 与项目列表一致：正常/停用用开关表示，未取得的空状态仍显示占位符。 -->
         <template #status="{ row }">
-          <dict-tag
-            v-if="row.status !== '-'"
-            :options="sys_normal_disable"
-            :value="row.status"
+          <el-switch
+            v-if="row.status === '0' || row.status === '1'"
+            v-model="row.status"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            active-value="0"
+            inactive-value="1"
+            @change="(e) => handleStatusChange(row, e)"
           />
           <span v-else>—</span>
         </template>
@@ -431,6 +436,30 @@ function cancel() {
   if (saving.value) return;
   open.value = false;
   reset();
+}
+
+/** 状态开关：确认后仅切换当前行状态，取消或失败时还原原值。 */
+function handleStatusChange(row, status) {
+  const text = status === "0" ? "启用" : "停用";
+  const previous = status === "0" ? "1" : "0";
+  proxy.$modal
+    .confirm('确认要' + text + '"' + row.enumName + '"枚举类型吗？')
+    .then(function () {
+      // 修改接口要求名称、编码及状态必填，故随同提交当前行的展示字段。
+      return updateType({
+        enumId: row.enumId,
+        enumName: row.enumName === "—" ? "" : row.enumName,
+        enumType: row.enumType === "—" ? "" : row.enumType,
+        status: status,
+        remark: row.remark === "—" ? "" : row.remark,
+      });
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess("操作成功");
+    })
+    .catch(function () {
+      row.status = previous;
+    });
 }
 
 /** 同步当前勾选的枚举编号，并控制批量删除按钮是否可用。 */
