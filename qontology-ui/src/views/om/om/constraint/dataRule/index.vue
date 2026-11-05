@@ -70,36 +70,42 @@
                :close-on-press-escape="!saving" :before-close="beforeClose" draggable destroy-on-close
                @closed="handleDialogClosed"
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="面向属性取值维护数据校验规则，配置校验类型、约束级别与失败条件，保障业务数据符合预期格式与范围。"
+      />
       <el-form ref="ruleRef" :model="form" :rules="rules" label-width="120px" class="rule-form"
                @submit.prevent="submitForm"
       >
         <div class="h2-title">基本信息</div>
-        <el-form-item label="规则名称" prop="name">
+        <qt-form-item label="规则名称" prop="name" tip="填写数据规则的业务名称，便于在列表中识别与检索。">
           <el-input v-model="form.name" placeholder="请输入规则名称" maxlength="128"/>
-        </el-form-item>
-        <el-form-item label="类型" prop="type">
+        </qt-form-item>
+        <qt-form-item label="类型" prop="type" tip="选择规则的校验类型，决定下方条件的配置方式。">
           <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
             <el-option v-for="item in om_data_rule_type" :key="item.value" :label="item.label" :value="item.value"/>
           </el-select>
-        </el-form-item>
-        <el-form-item label="级别" prop="level">
+        </qt-form-item>
+        <qt-form-item label="级别" prop="level" tip="设置规则的约束强度，决定校验失败时的处理方式。">
           <el-radio-group v-model="form.level">
             <el-radio v-for="item in om_rule_level" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
+        </qt-form-item>
+        <qt-form-item label="描述" prop="description" tip="补充该规则的业务含义与适用场景，最多512个字符。">
           <el-input v-model="form.description" class="character-count" type="textarea" :rows="4"
                     placeholder="请输入描述" :maxlength="512" show-word-limit
           />
-        </el-form-item>
+        </qt-form-item>
         <div class="h2-title">执行条件</div>
-        <el-form-item label="条件关系" prop="conditionRelation">
+        <qt-form-item label="条件关系" prop="conditionRelation" tip="设置多条失败条件之间的逻辑组合方式。">
           <el-radio-group v-model="form.conditionRelation">
             <el-radio value="OR">任一满足（OR）</el-radio>
             <el-radio value="AND">全部满足（AND）</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="失败条件" required>
+        </qt-form-item>
+        <qt-form-item label="失败条件" required tip="逐条配置触发校验失败的对象类型、属性与取值条件。">
           <div class="conditions">
             <div v-for="(condition, index) in form.conditions" :key="condition.key" class="condition-row">
               <div class="condition-label">条件 {{ index + 1 }}：</div>
@@ -166,10 +172,10 @@
               取值范围仅支持整数、小数类型的属性
             </div>
           </div>
-        </el-form-item>
-        <el-form-item label="失败提示" prop="failureMessage">
+        </qt-form-item>
+        <qt-form-item label="失败提示" prop="failureMessage" tip="校验失败时向用户展示的提示文案。">
           <el-input v-model="form.failureMessage" placeholder="请输入失败提示" maxlength="512"/>
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -859,6 +865,11 @@ onBeforeUnmount(() => {
 
 .rule-form .el-select {
   width: 100%;
+}
+
+/* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
+.rule-form :deep(.el-form-item.has-tip) {
+  margin-bottom: 25px;
 }
 
 .h2-title {

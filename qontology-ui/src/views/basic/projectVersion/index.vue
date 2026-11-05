@@ -154,21 +154,28 @@
       :append-to="$refs['app-container']"
       draggable
     >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护项目版本，填写版本号、状态与描述，并关联基准版本，支持本体模型的版本管理与差异对比。"
+      />
       <el-form
         ref="projectVersionRef"
         :model="form"
         :rules="rules"
         label-width="80px"
+        class="version-form"
         @submit.prevent
       >
         <el-row :gutter="20">
           <el-col :span="24">
-            <el-form-item label="版本号" prop="version">
+            <qt-form-item label="版本号" prop="version" tip="填写本版本的标识，例如 V1.0，用于区分不同版本。">
               <el-input v-model="form.version" placeholder="请输入版本号" />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="状态" prop="status">
+            <qt-form-item label="状态" prop="status" tip="启用后该版本可用于建模，停用后保留历史数据。">
               <el-radio-group v-model="form.status">
                 <el-radio
                     v-for="dict in project_status"
@@ -178,10 +185,10 @@
                   {{ dict.label }}
                 </el-radio>
               </el-radio-group>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="描述" prop="description">
+            <qt-form-item label="描述" prop="description" tip="补充本版本的变更说明或用途，最多200个字符。">
               <el-input
                 v-model="form.description"
                 type="textarea"
@@ -189,16 +196,16 @@
                 maxlength="200 个字符"
                 show-word-limit
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="基准版本" prop="baseVersion">
+            <qt-form-item label="基准版本" prop="baseVersion" tip="当前版本所基于的版本，新建首个版本时可为空。">
               <el-input
                 disabled
                 v-model="form.baseVersion"
                 placeholder="请输入基准版本"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
 
         </el-row>
@@ -597,5 +604,10 @@ function handleDiff(row) {
   /* 跟随按钮文字颜色（含 hover / active） */
   fill: currentColor;
   color: inherit;
+}
+
+/* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
+.version-form :deep(.el-form-item.has-tip) {
+  margin-bottom: 25px;
 }
 </style>

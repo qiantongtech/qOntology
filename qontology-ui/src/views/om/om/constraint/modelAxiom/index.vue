@@ -100,6 +100,12 @@
             destroy-on-close
             @closed="handleDialogClosed"
         >
+            <guide-tip-panel
+                type="hint"
+                class="mb15"
+                allow-wrap
+                title="为对象类型及其属性、关系设定逻辑约束，选择公理类型并配置适用范围与约束强度，保证模型的一致性与可校验性。"
+            />
             <el-form
                 ref="ruleRef"
                 :model="form"
@@ -110,10 +116,10 @@
                 @submit.prevent="submitForm"
             >
                 <div class="h2-title">基本信息</div>
-                <el-form-item label="公理名称" prop="name">
+                <qt-form-item label="公理名称" prop="name" tip="填写公理的业务名称，便于在列表中识别与检索。">
                     <el-input v-model="form.name" placeholder="请输入公理名称" maxlength="128" />
-                </el-form-item>
-                <el-form-item label="类型" prop="type">
+                </qt-form-item>
+                <qt-form-item label="类型" prop="type" tip="选择公理的约束类型，不同类型对应不同的表达配置。">
                     <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
                         <el-option
                             v-for="item in om_axiom_type"
@@ -122,15 +128,15 @@
                             :value="item.value"
                         />
                     </el-select>
-                </el-form-item>
-                <el-form-item label="级别" prop="level">
+                </qt-form-item>
+                <qt-form-item label="级别" prop="level" tip="设置公理的约束强度，决定校验失败时的处理方式。">
                     <el-radio-group v-model="form.level">
                         <el-radio v-for="item in om_rule_level" :key="item.value" :value="item.value">{{
                             item.label
                         }}</el-radio>
                     </el-radio-group>
-                </el-form-item>
-                <el-form-item label="描述" prop="description">
+                </qt-form-item>
+                <qt-form-item label="描述" prop="description" tip="补充该公理的业务含义与适用场景，最多512个字符。">
                     <el-input
                         v-model="form.description"
                         class="character-count"
@@ -140,13 +146,13 @@
                         :maxlength="512"
                         show-word-limit
                     />
-                </el-form-item>
+                </qt-form-item>
                 <div class="h2-title">公理表达</div>
                 <template v-if="form.type === 'DOMAIN_RANGE'">
-                    <el-form-item label="关系" prop="relationName">
+                    <qt-form-item label="关系" prop="relationName" tip="填写该约束作用的关系名称。">
                         <el-input v-model="form.relationName" placeholder="请输入关系名称" maxlength="128" clearable />
-                    </el-form-item>
-                    <el-form-item label="Domain" prop="domainId">
+                    </qt-form-item>
+                    <qt-form-item label="Domain" prop="domainId" tip="选择关系起点（定义域）对应的对象类型。">
                         <el-tree-select
                             v-model="form.domainId"
                             :data="objectTypeTree"
@@ -159,8 +165,8 @@
                             placeholder="请选择对象类型"
                             @change="handleDomainChange"
                         />
-                    </el-form-item>
-                    <el-form-item label="Range" prop="rangeId">
+                    </qt-form-item>
+                    <qt-form-item label="Range" prop="rangeId" tip="选择关系终点（值域）对应的对象类型。">
                         <el-tree-select
                             v-model="form.rangeId"
                             :data="rangeObjectTypeTree"
@@ -172,10 +178,10 @@
                             clearable
                             placeholder="请选择对象类型"
                         />
-                    </el-form-item>
+                    </qt-form-item>
                 </template>
                 <template v-else>
-                    <el-form-item :label="firstTypeLabel" prop="objectTypeId">
+                    <qt-form-item :label="firstTypeLabel" prop="objectTypeId" tip="选择该公理作用的主体对象类型。">
                         <el-tree-select
                             v-model="form.objectTypeId"
                             :data="objectTypeTree"
@@ -188,9 +194,9 @@
                             placeholder="请选择对象类型"
                             @change="handleObjectTypeChange"
                         />
-                    </el-form-item>
+                    </qt-form-item>
                     <template v-if="form.type === 'PROPERTY_RANGE'">
-                        <el-form-item label="对象类型属性" prop="attributeId">
+                        <qt-form-item label="对象类型属性" prop="attributeId" tip="选择当前对象类型下需要约束的属性。">
                             <el-select
                                 v-model="form.attributeId"
                                 :loading="optionsLoading || attributeLoadingCount > 0"
@@ -205,8 +211,8 @@
                                     :value="item.id"
                                 />
                             </el-select>
-                        </el-form-item>
-                        <el-form-item label="数据类型" prop="typeCategory">
+                        </qt-form-item>
+                        <qt-form-item label="数据类型" prop="typeCategory" tip="选择属性取值的基础数据类型或业务数据类型。">
                             <el-radio-group v-model="form.typeCategory" @change="handleValueTypeChange">
                                 <el-radio
                                     v-for="item in om_attribute_data_type"
@@ -216,8 +222,8 @@
                                     {{ item.label }}
                                 </el-radio>
                             </el-radio-group>
-                        </el-form-item>
-                        <el-form-item v-if="form.typeCategory === 1" label="基础数据类型" prop="basicTypeCode">
+                        </qt-form-item>
+                        <qt-form-item v-if="form.typeCategory === 1" label="基础数据类型" prop="basicTypeCode" tip="选择属性对应的基础数据类型。">
                             <el-select
                                 v-model="form.basicTypeCode"
                                 placeholder="请选择基础数据类型"
@@ -231,8 +237,8 @@
                                     :value="Number(item.value)"
                                 />
                             </el-select>
-                        </el-form-item>
-                        <el-form-item v-else label="业务数据类型" prop="businessTypeKey">
+                        </qt-form-item>
+                        <qt-form-item v-else label="业务数据类型" prop="businessTypeKey" tip="选择属性关联的业务数据类型。">
                             <el-select
                                 v-model="form.businessTypeKey"
                                 :loading="optionsLoading"
@@ -273,7 +279,7 @@
                                     />
                                 </el-option-group>
                             </el-select>
-                        </el-form-item>
+                        </qt-form-item>
                         <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
                             <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
                         </el-form-item>
@@ -292,7 +298,7 @@
                             <div class="form-readonly textarea">{{ selectedBusinessType.description }}</div>
                         </el-form-item>
                     </template>
-                    <el-form-item v-else :label="secondTypeLabel" prop="otherTypeId">
+                    <qt-form-item v-else :label="secondTypeLabel" prop="otherTypeId" tip="选择参与公理表达的另一对象类型。">
                         <el-tree-select
                             v-model="form.otherTypeId"
                             :data="otherObjectTypeTree"
@@ -304,7 +310,7 @@
                             clearable
                             placeholder="请选择对象类型"
                         />
-                    </el-form-item>
+                    </qt-form-item>
                 </template>
             </el-form>
             <template #footer>
@@ -1123,6 +1129,11 @@
 
     .rule-form .el-select {
         width: 100%;
+    }
+
+    /* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
+    .rule-form :deep(.el-form-item.has-tip) {
+        margin-bottom: 25px;
     }
 
     .h2-title {

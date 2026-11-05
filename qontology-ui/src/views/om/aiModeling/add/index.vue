@@ -49,6 +49,12 @@
         <div class="main wizard-content">
           <section v-show="activeStep === 0" class="base-step">
             <div class="h2-titles">基础信息</div>
+            <guide-tip-panel
+              type="hint"
+              class="mb15"
+              allow-wrap
+              title="上传业务文档并填写任务信息，AI 将自动解析生成术语、枚举、对象等候选结果，供下一步人工审核采纳。"
+            />
             <el-form
               ref="formRef"
               :model="form"
@@ -56,14 +62,14 @@
               label-width="120px"
               class="base-form"
             >
-              <el-form-item label="任务名称" prop="taskName">
+              <qt-form-item label="任务名称" prop="taskName" tip="填写本次建模任务的名称，便于在列表中区分不同任务。">
                 <el-input
                   v-model="form.taskName"
                   placeholder="请输入任务名称"
                   maxlength="100"
                 />
-              </el-form-item>
-              <el-form-item label="任务描述">
+              </qt-form-item>
+              <qt-form-item label="任务描述" tip="补充本次建模的业务背景、范围或重点关注内容。">
                 <el-input
                   v-model="form.description"
                   type="textarea"
@@ -72,8 +78,8 @@
                   maxlength="500个字符"
                   show-word-limit
                 />
-              </el-form-item>
-              <el-form-item label="上传文件" prop="filePaths">
+              </qt-form-item>
+              <qt-form-item label="上传文件" prop="filePaths" tip="上传需解析的业务文档，最多5个，支持 txt、pdf、docx 等格式。">
                 <FileUpload2
                   v-model="form.filePaths"
                   :file-name="form.fileNames"
@@ -84,7 +90,7 @@
                   relative-url
                   @update:file-info-list="(files) => (form.files = files)"
                 />
-              </el-form-item>
+              </qt-form-item>
             </el-form>
           </section>
 
@@ -811,6 +817,10 @@ onMounted(async () => {
 .base-form {
   max-width: 900px;
   margin: 0 auto;
+}
+/* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
+.base-form :deep(.el-form-item.has-tip) {
+  margin-bottom: 25px;
 }
 .analysis-step {
   display: flex;
