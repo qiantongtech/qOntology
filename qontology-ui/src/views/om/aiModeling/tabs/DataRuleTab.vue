@@ -239,6 +239,19 @@
             :maxlength="512"
           />
         </qt-form-item>
+        <template v-if="readonly">
+          <div class="h2-title">系统信息</div>
+          <el-form-item label="创建人">
+            <div class="form-readonly">
+              {{ formatCreator(form) }}
+            </div>
+          </el-form-item>
+          <el-form-item label="创建时间">
+            <div class="form-readonly">
+              {{ form.createTime || "-" }}
+            </div>
+          </el-form-item>
+        </template>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -283,7 +296,7 @@ const {
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones } = useCreatorPhones();
+const { creatorPhones, formatCreator } = useCreatorPhones();
 const open = ref(false);
 const readonly = ref(false);
 const form = ref({ conditionItems: [{}] });

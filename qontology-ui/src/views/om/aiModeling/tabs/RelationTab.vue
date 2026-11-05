@@ -337,6 +337,16 @@
             {{ detail.description || "-" }}
           </div>
         </el-form-item>
+        <el-form-item label="创建人">
+          <div class="form-readonly">
+            {{ formatCreator(detail) }}
+          </div>
+        </el-form-item>
+        <el-form-item label="创建时间">
+          <div class="form-readonly">
+            {{ detail.createTime || "-" }}
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -372,7 +382,7 @@ const { om_ai_adopt_status, sys_yes_no } = proxy.useDict(
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones } = useCreatorPhones();
+const { creatorPhones, formatCreator } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const saving = ref(false);
