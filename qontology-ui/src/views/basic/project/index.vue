@@ -529,7 +529,7 @@ const tableStore = reactive({
       width: 240,
       align: "left",
       showOverflowTooltip: { effect: "light" },
-      headerTooltip: '数据元：表示一个具体的数值字段<br>代码表：表示一组枚举值',
+      headerTooltip: '命名空间用于唯一标识本体的术语来源，遵循 W3C 标准。例如：https://example.com',
       showHeaderTooltip: true,
     },
     {
