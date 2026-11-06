@@ -49,7 +49,7 @@
           @click="handleDelete()"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
       <qt-table :key="versionId" v-bind="tableStore" ref="tableRef">
@@ -178,7 +178,6 @@
           label="枚举名称"
           prop="enumName"
           class="row-full"
-          tip="填写枚举定义的业务名称，例如“供应商类别”。"
         >
           <el-input
             v-model="form.enumName"
@@ -190,7 +189,6 @@
           label="枚举类型"
           prop="enumType"
           class="row-full"
-          tip="填写唯一的英文编码，以字母开头，仅支持字母、数字和下划线。"
         >
           <el-input
             v-model="form.enumType"
@@ -202,7 +200,6 @@
           label="状态"
           prop="status"
           class="row-full"
-          tip="启用后可用于业务取值，禁用后保留已有定义。"
         >
           <el-radio-group v-model="form.status">
             <el-radio
@@ -214,28 +211,25 @@
           </el-radio-group>
         </qt-form-item>
         <qt-form-item
-          label="备注"
-          prop="remark"
+          label="描述"
+          prop="description"
           class="row-full"
-          tip="补充取值含义、适用场景或使用约定，最多256个字符。"
         >
           <el-input
-            v-model="form.remark"
+            v-model="form.description"
             class="character-count"
             type="textarea"
             :rows="3"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
-            placeholder="请输入备注"
+            placeholder="请输入描述"
           />
         </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm"
-            >确 定</el-button
-          >
+          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" @click="submitForm">确 定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -313,18 +307,18 @@ const tableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     {
-      label: "枚举类型",
-      prop: "enumType",
-      slot: "enumType",
-      minWidth: 150,
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 200,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
     {
-      label: "备注",
-      prop: "remark",
-      slot: "text",
-      minWidth: 200,
+      label: "枚举类型",
+      prop: "enumType",
+      slot: "enumType",
+      minWidth: 150,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -411,6 +405,7 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
+    description: [{ max: 256, message: "描述不能超过256个字符", trigger: "blur" }],
     remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });
@@ -465,8 +460,7 @@ function formatListData(rows) {
       if (record[field] == null || record[field] === "") record[field] = "-";
     });
     if (row.status != null) record.status = String(row.status);
-    record.remark =
-      row.remark == null || String(row.remark).trim() === "" ? "-" : row.remark;
+    record.description = row.description?.trim() || "-";
     return record;
   });
 }
@@ -484,6 +478,7 @@ function reset() {
     enumName: "",
     enumType: "",
     status: "0",
+    description: "",
     remark: "",
   };
   clearValidation();
@@ -603,6 +598,7 @@ async function submitForm() {
       enumName: form.value.enumName.trim(),
       enumType: form.value.enumType.trim(),
       status: form.value.status,
+      description: (form.value.description || "").trim(),
       remark: (form.value.remark || "").trim(),
     };
     if (form.value.enumId != null) {

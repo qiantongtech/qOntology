@@ -56,7 +56,7 @@ public class BasicDataTypeController extends BaseController {
     @Operation(summary = "查询数据类型列表")
     @PreAuthorize("@ss.hasPermi('basic:dataType:datatype:list')")
     @GetMapping("/list")
-    public CommonResult<PageResult<BasicDataTypeRespVO>> list(BasicDataTypePageReqVO basicDataType) {
+    public CommonResult<PageResult<BasicDataTypeRespVO>> list(@Valid BasicDataTypePageReqVO basicDataType) {
         PageResult<BasicDataTypeDO> page = basicDataTypeService.getBasicDataTypePage(basicDataType);
         return CommonResult.success(BeanUtils.toBean(page, BasicDataTypeRespVO.class));
     }
@@ -84,6 +84,20 @@ public class BasicDataTypeController extends BaseController {
     @PutMapping
     public CommonResult<Integer> edit(@Valid @RequestBody BasicDataTypeSaveReqVO basicDataType) {
         return CommonResult.toAjax(basicDataTypeService.updateBasicDataType(basicDataType));
+    }
+
+    @Operation(summary = "修改业务数据类型状态")
+    @PreAuthorize("@ss.hasPermi('basic:dataType:datatype:edit')")
+    @Log(title = "业务数据类型状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/{id}/status")
+    public CommonResult<Integer> updateStatus(
+            @PathVariable Long id,
+            @RequestParam @jakarta.validation.constraints.Min(0) @jakarta.validation.constraints.Max(1) int status) {
+        boolean updated = basicDataTypeService.lambdaUpdate()
+                .eq(BasicDataTypeDO::getId, id)
+                .set(BasicDataTypeDO::getStatus, status)
+                .update();
+        return CommonResult.toAjax(updated ? 1 : 0);
     }
 
     @Operation(summary = "删除数据类型")

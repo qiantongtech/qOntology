@@ -144,4 +144,12 @@ public class BasicDataTypeRespVO implements Serializable {
     @Schema(description = "备注", example = "")
     private String remark;
 
+    /** 状态：0 禁用，1 启用。 */
+    private Integer status;
+
+    private String exampleValue;
+
+    private java.math.BigDecimal minValue;
+
+    private java.math.BigDecimal maxValue;
 }

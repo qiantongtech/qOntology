@@ -60,3 +60,11 @@ export function delDataType(id) {
     method: 'delete'
   })
 }
+
+export function updateDataTypeStatus(id, status) {
+  return request({
+    url: `/basic/dataType/${id}/status`,
+    method: 'put',
+    params: { status },
+  })
+}

@@ -43,30 +43,13 @@
           @click="handleDelete()"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
-        <!-- 关系信息列：可逆时单个双向箭头、不可逆时单向箭头；关系名称在箭头上方，反向名称在箭头下方。 -->
-        <template #relationInfo="{ row }">
-          <div class="qt-table-info relation-info">
-            <div class="qt-table-info__main relation-info__main">
-              <span class="relation-node text-ellipsis">{{ row.startTypeName || '-' }}</span>
-              <span class="relation-edge">
-                <span class="relation-name text-ellipsis">{{ row.name || '-' }}</span>
-                <svg-icon :icon-class="relationArrowIcon(row.reversibleFlag)" class="relation-arrow" />
-                <span
-                  v-if="row.reversibleFlag === 1 && row.reverseName"
-                  class="relation-reverse text-ellipsis"
->{{ row.reverseName }}</span>
-              </span>
-              <span class="relation-node text-ellipsis">{{ row.endTypeName || '-' }}</span>
-            </div>
-          </div>
-        </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -131,6 +114,7 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
+        <div class="h2-titles row-full">基础信息</div>
 
         <qt-form-item
           class="row-full"
@@ -152,7 +136,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="填写表达业务联系的动词或动宾短语，例如“提供”“采购物料”。"
           label="对象类型关系名称"
           prop="name"
         >
@@ -161,7 +144,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="选择关系指向的业务对象，例如“供应商提供物料”中的物料。"
           label="终点类型"
           prop="endTypeId"
         >
@@ -180,7 +162,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="选择“是”时，需填写从终点指向起点的反向关系名称。"
           label="是否可逆"
           prop="reversibleFlag"
         >
@@ -220,22 +201,16 @@
           />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          tip="选择该对象关系支撑的建模目标，便于核对业务需求覆盖情况。"
-          label="关联建模目标"
-          prop="targetIds"
-        >
-          <el-button
-            type="primary"
-            plain
-            :disabled="saving"
-            @click="targetPickerOpen = true"
-          >
-            导入建模目标
-          </el-button>
-        </qt-form-item>
-        <div class="target-table">
+        <div class="row-full">
+          <div class="h2-titles mb15">关联建模目标</div>
+          <div class="mb15">
+            <el-form-item prop="targetIds" label-width="0">
+              <el-button type="primary" plain icon="Plus" :disabled="saving" @click="targetPickerOpen = true">
+                导入建模目标
+              </el-button>
+              <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
+            </el-form-item>
+          </div>
           <TargetTable
             :targets="selectedTargets"
             editable
@@ -298,7 +273,6 @@
     /** 将 1/0 可逆标识转换为 sys_yes_no 字典值。 */
     const reversibleDictValue = (value) => (value === 1 ? 'Y' : 'N');
     /** 可逆关系展示双向箭头，不可逆展示单向箭头。 */
-    const relationArrowIcon = (value) => (value === 1 ? 'arrow-left-right-line' : 'arrow-right-line');
     const tableRef = ref();
     const relationRef = ref();
     const selectedIds = ref([]);
@@ -341,7 +315,10 @@
         columns: [
             { type: 'selection', width: 55, minWidth: 55 },
             { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true },
-            { label: '对象类型关系信息（起点类型→关系名称→终点类型）', prop: 'name', slot: 'relationInfo', minWidth: 360, align: 'left', },
+            { label: '起点类型', prop: 'startTypeName', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '关系名称', prop: 'name', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '终点类型', prop: 'endTypeName', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '反向名称', prop: 'reverseName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '描述', prop: 'description', slot: 'text', minWidth: 256, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 10, showOverflowTooltip: { effect: 'light' },},
             { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: { effect: 'light' },},
@@ -609,55 +586,17 @@
 </script>
 
 <style scoped lang="scss">
-    /* 关系信息列：起点→关系名称→终点 单行排列，中间关系名称高亮，箭头与文字间留白避免拥挤。 */
-    .relation-info__main {
-        flex-wrap: nowrap;
-        gap: 6px;
-    }
-    .relation-node {
-        flex: 0 1 auto;
-        min-width: 0;
-        color: var(--el-text-color-primary);
-    }
-    .relation-name {
-        max-width: 160px;
-        min-width: 0;
-        color: var(--el-color-primary);
-        font-weight: 500;
-        line-height: 16px;
-    }
+
     /* 带标签的边：关系名称在上、箭头在下，整体居中。 */
-    .relation-edge {
-        display: inline-flex;
-        flex-direction: column;
-        align-items: center;
-        flex-shrink: 0;
-    }
-    .relation-arrow {
-        width: 44px;
-        height: 22px;
-        color: var(--el-text-color-secondary);
-    }
     /* 反向名称：仅可逆关系展示在箭头下方。 */
-    .relation-reverse {
-        max-width: 160px;
-        color: var(--el-text-color-secondary);
-        line-height: 16px;
-    }
     /* 表单控件撑满所在列宽，避免行内 style。 */
     .form-control-full {
         width: 100%;
-    }
-    .target-table {
-        margin: 0 0 10px 140px;
     }
     .object-type-relation-page :deep(.el-dialog) {
         max-width: calc(100vw - 32px);
     }
     @media (max-width: 600px) {
-        .target-table {
-            margin-left: 0;
-        }
     }
     .character-count :deep(.el-input__count) {
         background: transparent;

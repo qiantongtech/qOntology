@@ -77,4 +77,6 @@ public class OmEnumDataDO extends BaseEntity {
     /** 逻辑删除标志：true 已删除，false 未删除 */
     @TableLogic
     private Boolean delFlag;
+    /** 描述 */
+    private String description;
 }

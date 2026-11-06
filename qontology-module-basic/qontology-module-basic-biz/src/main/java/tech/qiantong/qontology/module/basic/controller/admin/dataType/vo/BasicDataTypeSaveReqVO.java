@@ -101,5 +101,14 @@ public class BasicDataTypeSaveReqVO extends BaseEntity {
     @Size(max = 512, message = "备注长度不能超过512个字符")
     private String remark;
 
+    /** 状态：0 禁用，1 启用。 */
+    @jakarta.validation.constraints.Min(0)
+    @jakarta.validation.constraints.Max(1)
+    private Integer status;
 
+    private String exampleValue;
+
+    private java.math.BigDecimal minValue;
+
+    private java.math.BigDecimal maxValue;
 }

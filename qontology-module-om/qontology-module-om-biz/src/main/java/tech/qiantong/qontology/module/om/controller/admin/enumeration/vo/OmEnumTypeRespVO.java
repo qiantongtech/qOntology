@@ -99,4 +99,6 @@ public class OmEnumTypeRespVO implements Serializable {
     @Schema(description = "备注信息", example = "")
     @Excel(name = "备注")
     private String remark;
+    @Schema(description = "描述")
+    private String description;
 }

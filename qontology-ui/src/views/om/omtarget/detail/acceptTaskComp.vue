@@ -86,7 +86,6 @@
           label="任务名称"
           prop="taskName"
           class="row-full"
-          tip="概括本次验证的范围或目的，便于区分同一建模目标的多次验证记录。"
         >
           <el-input v-model="form.taskName" placeholder="请输入任务名称，例如：采购订单与入库关联覆盖验证" :maxlength="256" />
         </qt-form-item>
@@ -94,7 +93,6 @@
           label="判断结果"
           prop="acceptResult"
           class="row-full"
-          tip="根据验收标准判断目标问题是否被完整覆盖，默认选择已覆盖。"
         >
           <el-radio-group v-model="form.acceptResult"><el-radio v-for="item in acceptOptions" :key="item.value" :value="String(item.value)">{{ item.label }}</el-radio></el-radio-group>
         </qt-form-item>
@@ -102,13 +100,12 @@
           label="判断说明"
           prop="taskExplain"
           class="row-full"
-          tip="说明已覆盖的模型内容、验证依据，或尚未覆盖的缺口及改进方向。"
         >
           <el-input
             v-model="form.taskExplain"
             type="textarea"
             :rows="3"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
             placeholder="请输入判断说明，描述验证依据、覆盖范围或待完善的问题"
           />
@@ -127,6 +124,15 @@
         <qt-form-item label="任务名称" class="row-full"><div class="form-readonly">{{ detail.taskName || '-' }}</div></qt-form-item>
         <qt-form-item label="判断结果" class="row-full"><dict-tag :options="om_accept_status" :value="detail.acceptResult" /></qt-form-item>
         <qt-form-item label="判断说明" class="row-full"><div class="form-readonly textarea">{{ detail.taskExplain || '-' }}</div></qt-form-item>
+        <qt-form-item label="验证人" class="row-full">
+          <div class="form-readonly">{{ detail.createBy || '-' }}</div>
+        </qt-form-item>
+        <qt-form-item label="联系方式" class="row-full">
+          <div class="form-readonly">{{ creatorPhones[detail.creatorId] || '-' }}</div>
+        </qt-form-item>
+        <qt-form-item label="验证时间" class="row-full">
+          <div class="form-readonly">{{ proxy.parseTime(detail.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</div>
+        </qt-form-item>
       </el-form>
       <template #footer><el-button @click="openDetail = false">关 闭</el-button></template>
     </el-dialog>

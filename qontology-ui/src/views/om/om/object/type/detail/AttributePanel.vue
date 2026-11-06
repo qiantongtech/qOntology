@@ -48,7 +48,7 @@
           :disabled="!selectedIds.length || deleting || loading"
           @click="handleDelete()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
@@ -160,7 +160,7 @@
           label="属性代码"
           prop="code"
         >
-          <el-input v-model="form.code" placeholder="例如 purchase_amount" maxlength="128" />
+          <el-input v-model="form.code" placeholder="请输入属性代码，例如 purchase_amount" maxlength="128" />
         </qt-form-item>
 
         <qt-form-item
@@ -174,7 +174,7 @@
             type="textarea"
             :rows="4"
             placeholder="请输入描述"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>
@@ -183,7 +183,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="直接配置基础数据类型的取值规则，或引用已定义的业务数据类型。"
           label="数据类型"
           prop="typeCategory"
         >
@@ -199,7 +198,6 @@
         <qt-form-item
           v-if="form.typeCategory === 1"
           class="row-full"
-          tip="选择该属性取值所属的基础类型，不同类型会展示对应的补充配置项。"
           label="基础数据类型"
           prop="basicTypeCode"
           required
@@ -223,7 +221,6 @@
         <template v-else>
           <qt-form-item
             class="row-full"
-            tip="选择业务数据类型来自当前项目还是全局，切换后会重新筛选可选类型。"
             label="业务类型来源"
             prop="businessTypeSource"
             required
@@ -235,7 +232,6 @@
           </qt-form-item>
           <qt-form-item
             class="row-full"
-            tip="引用已定义的业务数据类型，其类型配置将作为该属性的取值规则。"
             label="业务数据类型"
             prop="businessTypeId"
             required
@@ -292,11 +288,11 @@
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
+          <el-button :disabled="saving" @click="open = false">取 消</el-button>
 
           <el-button
             type="primary"
-            size="mini"
+
             :loading="saving"
             @click="submitForm"
             >确 定</el-button>
@@ -377,7 +373,7 @@
       </el-form>
 
       <template #footer><div class="dialog-footer">
-          <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
+          <el-button @click="detailOpen = false">关 闭</el-button>
         </div></template>
     </el-dialog>
   </div>
@@ -419,7 +415,7 @@ const props = defineProps({
 const emit = defineEmits(["changed"]);
 
 const { proxy } = getCurrentInstance();
-const { creatorPhones, loadCreators } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 
 const panelRef = ref();
 

@@ -76,4 +76,7 @@ public class OmEnumDataSaveReqVO extends BaseEntity {
     @Schema(description = "备注信息", example = "")
     @Size(max = 512, message = "备注长度不能超过512个字符")
     private String remark;
+    @Schema(description = "描述")
+    @Size(max = 256, message = "描述不能超过256个字符")
+    private String description;
 }

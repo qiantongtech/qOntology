@@ -46,24 +46,21 @@
           plain
           :disabled="!defaultEnumType || !contextReady"
           @click="handleAdd"
-          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button
-        >
+          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button>
         <el-button
           v-hasPermi="['om:enumeration:data:remove']"
           type="danger"
           plain
           :disabled="multiple || deleting"
           @click="handleDelete()"
-          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button
-        >
+          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除</el-button>
         <el-button
           v-if="!embedded && route.params.enumId"
           type="warning"
           plain
           icon="Close"
           @click="handleClose"
-          >关闭</el-button
-        >
+          >关闭</el-button>
       </template>
       <!-- 路由入口先解析枚举编码，再挂载表格；切换上下文时重建实例，隔离旧列表响应。 -->
       <qt-table
@@ -116,16 +113,14 @@
             type="primary"
             icon="View"
             @click="handleDetail(row)"
-            >详情</el-button
-          >
+            >详情</el-button>
           <el-button
             v-hasPermi="['om:enumeration:data:edit']"
             link
             type="primary"
             icon="Edit"
             @click="handleUpdate(row)"
-            >修改</el-button
-          >
+            >修改</el-button>
           <el-button
             v-hasPermi="['om:enumeration:data:remove']"
             link
@@ -133,8 +128,7 @@
             icon="Delete"
             :disabled="deleting"
             @click="handleDelete(row)"
-            >删除</el-button
-          >
+            >删除</el-button>
         </template>
       </qt-table>
     </qt-wrap>
@@ -184,7 +178,6 @@
           class="row-full"
           label="枚举键值"
           prop="enumValue"
-          tip="填写实际存储和引用的枚举值，例如 GROUP；同一枚举类型下应保持唯一。"
         >
           <el-input
             v-model="form.enumValue"
@@ -229,18 +222,31 @@
             class="character-count"
             type="textarea"
             :rows="3"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
             placeholder="请输入描述"
+          />
+        </qt-form-item>
+        <qt-form-item
+          class="row-full"
+          label="备注"
+          prop="remark"
+        >
+          <el-input
+            v-model="form.remark"
+            class="character-count"
+            type="textarea"
+            :rows="3"
+            maxlength="256个字符"
+            show-word-limit
+            placeholder="请输入备注"
           />
         </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm"
-            >确 定</el-button
-          >
+          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" @click="submitForm">确 定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -276,6 +282,11 @@
             :value="detail.status"
             class="con-value access-tag"
           />
+        </el-form-item>
+        <el-form-item class="row-full" label="描述">
+          <div class="form-readonly textarea">
+            {{ detail.description?.trim() || "-" }}
+          </div>
         </el-form-item>
         <el-form-item class="row-full" label="备注">
           <div class="form-readonly textarea">
@@ -388,6 +399,14 @@ const tableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     {
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 200,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
       label: "枚举键值",
       prop: "enumValue",
       slot: "text",
@@ -403,14 +422,6 @@ const tableStore = reactive({
       sortable: true,
     },
     { label: "状态", prop: "status", slot: "status", width: 100 },
-    {
-      label: "备注",
-      prop: "remark",
-      slot: "text",
-      minWidth: 200,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
     {
       label: "创建人",
       prop: "createBy",
@@ -479,6 +490,7 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
+    description: [{ max: 256, message: "描述不能超过256个字符", trigger: "blur" }],
     remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });
@@ -522,8 +534,7 @@ function formatListData(rows) {
       if (record[field] == null || record[field] === "") record[field] = "-";
     });
     if (row.status != null) record.status = String(row.status);
-    record.remark =
-      row.remark == null || String(row.remark).trim() === "" ? "-" : row.remark;
+    record.description = row.description?.trim() || "-";
     return record;
   });
 }
@@ -548,6 +559,7 @@ function reset() {
     enumSort: 0,
     enumType: defaultEnumType.value,
     status: "0",
+    description: "",
     remark: "",
   };
   clearValidation();
@@ -679,6 +691,7 @@ async function submitForm() {
       enumSort: form.value.enumSort,
       enumType: form.value.enumType,
       status: form.value.status,
+      description: (form.value.description || "").trim(),
       remark: (form.value.remark || "").trim(),
     };
     if (form.value.enumCode != null) {
@@ -788,19 +801,13 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .enum-detail-form {
   padding: 0;
 }
 
-/* 内嵌到枚举详情页时，搜索区沿用外层卡片，不再保留独立的宫格间距。 */
-
 .enum-page :deep(.el-dialog) {
   max-width: calc(100vw - 32px);
-}
-
-.character-count :deep(.el-input__count)::after {
-  content: " 个字符";
 }
 
 .character-count :deep(.el-textarea__inner) {

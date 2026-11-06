@@ -39,7 +39,7 @@
           plain
           :disabled="!selectedIds.length || deleting || loading"
           @click="handleDelete()"
-        ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除</el-button>
+        ><i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除</el-button>
       </template>
       <div v-loading="loading">
         <qt-table
@@ -93,7 +93,7 @@
   <el-dialog
     v-model="open"
     :title="dialogTitle"
-    width="800px"
+    width="1100px"
     :append-to="pageRef"
     :close-on-click-modal="!saving"
     :close-on-press-escape="!saving"
@@ -112,10 +112,11 @@
       ref="relationRef"
       :model="form"
       :rules="rules"
-      label-width="130px"
+      label-width="140px"
       class="column-form"
       @submit.prevent="submitForm"
     >
+      <div class="h2-titles row-full">基础信息</div>
       <qt-form-item
         label="起点类型"
         prop="startTypeId"
@@ -166,6 +167,7 @@
       </qt-form-item>
       <qt-form-item
         label="反向名称"
+        v-if="form.reversibleFlag === 1"
         prop="reverseName"
         class="row-full"
         tip="描述反向查看该关系时的业务含义，例如“提供”的反向名称为“由供应商提供”。"
@@ -184,28 +186,54 @@
           type="textarea"
           :rows="3"
           placeholder="请输入关系描述，说明起点与终点之间的业务联系及适用场景"
-          :maxlength="256"
+          maxlength="256个字符"
           show-word-limit
         />
       </qt-form-item>
+      <div class="row-full">
+        <div class="h2-titles mb15">关联建模目标</div>
+        <div class="mb15">
+          <el-button type="primary" plain icon="Plus" :disabled="saving" @click="targetPickerOpen = true">
+            导入建模目标
+          </el-button>
+          <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
+        </div>
+        <TargetTable
+          :targets="associatedTargets"
+          :locked-target-id="props.targetDetail?.id"
+          editable
+          :disabled="saving"
+          @remove="removeTarget"
+        />
+      </div>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
+        <el-button :disabled="saving" @click="open = false">取 消</el-button>
         <el-button
           type="primary"
-          size="mini"
+
           :loading="saving"
           @click="submitForm"
         >确 定</el-button>
       </div>
     </template>
   </el-dialog>
+  <TargetPicker
+    v-model="targetPickerOpen"
+    :selected-targets="associatedTargets"
+    :version-id="versionId"
+    :append-to="pageRef"
+    :load-options="listRelationTargetOptions"
+    @confirm="addTargets"
+  />
 </template>
 
 <script setup>
+import TargetPicker from "@/views/om/om/object/type/TargetPicker.vue";
+import TargetTable from "@/views/om/om/object/type/TargetTable.vue";
 import { useCreatorPhones } from '@/utils/useCreatorPhones';
-import {getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
+import { computed,getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
 import {ElMessage, ElMessageBox} from 'element-plus';
@@ -217,6 +245,7 @@ import {
   updateRelation,
   delRelation,
   listRelationTargets,
+  listRelationTargetOptions,
 } from '@/api/om/object/relation';
 
 defineOptions({name: 'OmObjectTypeRelation'});
@@ -241,6 +270,24 @@ const appliedReversible = ref();
 const open = ref(false);
 const targetPickerOpen = ref(false);
 const selectedTargets = ref([]);
+const associatedTargets = computed(() => {
+  const current = props.targetDetail;
+  if (!current?.id || selectedTargets.value.some(target => String(target.id) === String(current.id))) {
+    return selectedTargets.value;
+  }
+  return [current, ...selectedTargets.value];
+});
+
+function addTargets(targets) {
+  const merged = new Map(associatedTargets.value.map(target => [String(target.id), target]));
+  targets.forEach(target => merged.set(String(target.id), target));
+  selectedTargets.value = [...merged.values()];
+}
+
+function removeTarget(target) {
+  if (saving.value || String(target.id) === String(props.targetDetail?.id)) return;
+  selectedTargets.value = selectedTargets.value.filter(item => String(item.id) !== String(target.id));
+}
 const typeOptions = ref([]);
 const dialogTitle = ref('新增对象类型关系');
 
@@ -248,12 +295,12 @@ const appliedName = ref('');
 const columns = reactive([
   { type: 'selection', width: 55 },
   { prop: 'id', label: '编号', width: 80, sortable: 'custom' },
-  { prop: 'name', label: '对象类型关系名称', slot: 'text', minWidth: 160, align: 'left' },
-  { prop: 'startTypeName', label: '起点类型', slot: 'text', minWidth: 150, align: 'left' },
-  { prop: 'endTypeName', label: '终点类型', slot: 'text', minWidth: 150, align: 'left' },
+  { prop: 'startTypeName', label: '起点类型', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
+  { prop: 'name', label: '关系名称', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
+  { prop: 'endTypeName', label: '终点类型', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
+  { prop: 'reverseName', label: '反向名称', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
   { prop: 'description', label: '描述', slot: 'text', minWidth: 240, align: 'left' },
   { prop: 'reversibleFlag', label: '是否可逆', slot: 'reversibleFlag', width: 100 },
-  { prop: 'reverseName', label: '反向名称', slot: 'text', minWidth: 150, align: 'left' },
   { prop: 'createBy', label: '创建人', slot: 'creator', width: 130, align: 'left', headerAlign: 'left' },
   { prop: 'createTime', label: '创建时间', slot: 'createTime', width: 160, sortable: 'custom' },
   { label: '操作', slot: 'operation', width: 220, minWidth: 220, fixed: 'right' },
@@ -374,7 +421,7 @@ async function handleUpdate(row) {
   ]);
   if (request !== dialogRequest) return;
   typeOptions.value = proxy.handleTree(options.data || [], 'id', 'parentId');
-  form.value = {...emptyForm(), ...response.data};
+  form.value = {...emptyForm(), ...response.data, reversibleFlag: Number(response.data.reversibleFlag)};
   selectedTargets.value = targetsResponse.data || [];
   form.value.targetIds = [props.targetDetail.id];
   targetPickerOpen.value = false;
@@ -405,8 +452,8 @@ async function submitForm() {
     startTypeId: form.value.startTypeId,
     endTypeId: form.value.endTypeId,
     reversibleFlag: form.value.reversibleFlag,
-    reverseName: (form.value.reverseName || '').trim(),
-    targetIds: [props.targetDetail.id]
+    reverseName: form.value.reversibleFlag === 1 ? (form.value.reverseName || '').trim() : '',
+    targetIds: associatedTargets.value.map(target => String(target.id))
   };
   saving.value = true;
   try {
@@ -479,13 +526,12 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .target-relations :deep(.qt-wrap--search) { padding: 0; }
 .relation-actions .el-button + .el-button { margin-left: 0; }
 .target-table { margin: 0 0 10px 120px; }
 .object-type-relation-page :deep(.el-dialog) { max-width: calc(100vw - 32px); }
 @media (max-width: 600px) {
-  .target-table { margin-left: 0; }
 }
 .character-count :deep(.el-input__count) {
   background: transparent;

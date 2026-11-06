@@ -105,4 +105,6 @@ public class BasicEnumDataRespVO implements Serializable {
     @Schema(description = "备注", example = "")
     private String remark;
 
+    @Schema(description = "描述")
+    private String description;
 }

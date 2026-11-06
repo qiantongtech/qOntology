@@ -48,23 +48,8 @@
         <template #text="{ row, column_data }">{{
           row[column_data.prop] ?? "-"
         }}</template>
-        <!-- 关系信息列：起点类型→关系名称→终点类型，下方描述，对齐外部关系管理。 -->
-        <template #relationInfo="{ row }">
-          <div class="qt-table-info relation-info">
-            <div class="qt-table-info__main relation-info__main">
-              <span class="relation-node text-ellipsis" :title="objectName(row.startObjectCandidateId)">{{ objectName(row.startObjectCandidateId) }}</span>
-              <span class="relation-arrow" aria-hidden="true">→</span>
-              <span class="relation-name text-ellipsis" :title="row.name || ''">{{ row.name || '-' }}</span>
-              <span class="relation-arrow" aria-hidden="true">→</span>
-              <span class="relation-node text-ellipsis" :title="objectName(row.endObjectCandidateId)">{{ objectName(row.endObjectCandidateId) }}</span>
-            </div>
-            <div
-              v-if="row.description"
-              class="info-desc"
-              :title="row.description"
-            >{{ row.description }}</div>
-          </div>
-        </template>
+        <template #startTypeName="{ row }">{{ objectName(row.startObjectCandidateId) }}</template>
+        <template #endTypeName="{ row }">{{ objectName(row.endObjectCandidateId) }}</template>
         <!-- 是否可逆用 dict-tag 渲染。 -->
         <template #reversible="{ row }">
           <dict-tag :options="sys_yes_no" :value="row.reversibleFlag === 1 ? 'Y' : 'N'" />
@@ -90,15 +75,13 @@
             icon="Check"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >采纳</el-button
-          >
+            >采纳</el-button>
           <el-button
             link
             type="primary"
             icon="Document"
             @click="showEvidence(row)"
-            >来源</el-button
-          >
+            >来源</el-button>
           <el-popover
             placement="bottom"
             :width="107"
@@ -113,24 +96,21 @@
               type="primary"
               icon="View"
               @click="showDetail(row)"
-              >详情</el-button
-            >
+              >详情</el-button>
             <el-button
               link
               type="primary"
               icon="Edit"
               :disabled="row.adoptStatus === 1"
               @click="edit(row)"
-              >修改</el-button
-            >
+              >修改</el-button>
             <el-button
               link
               type="danger"
               icon="Delete"
               :disabled="row.adoptStatus === 1"
               @click="remove(row)"
-              >删除</el-button
-            >
+              >删除</el-button>
           </el-popover>
         </template>
       </qt-table>
@@ -197,7 +177,6 @@
           class="row-full"
           label="终点类型"
           prop="endObjectCandidateId"
-          tip="选择关系指向的业务对象，例如“供应商提供物料”中的物料。"
         >
           <el-select
             v-model="form.endObjectCandidateId"
@@ -217,7 +196,6 @@
           class="row-full"
           label="是否可逆"
           prop="reversibleFlag"
-          tip="选择“是”时，需填写从终点指向起点的反向关系名称。"
         >
           <el-radio-group
             v-model="form.reversibleFlag"
@@ -227,8 +205,7 @@
               v-for="dict in sys_yes_no"
               :key="dict.value"
               :value="dict.value === 'Y' ? 1 : 0"
-              >{{ dict.label }}</el-radio
-            >
+              >{{ dict.label }}</el-radio>
           </el-radio-group>
         </qt-form-item>
         <qt-form-item
@@ -267,9 +244,7 @@
           prop="targetIds"
           tip="选择该对象关系支撑的建模目标，便于核对业务需求覆盖情况。"
         >
-          <el-button type="primary" plain @click="targetPickerOpen = true"
-            >导入建模目标</el-button
-          >
+          <el-button type="primary" plain @click="targetPickerOpen = true">导入建模目标</el-button>
         </qt-form-item>
         <div class="target-table">
           <TargetTable
@@ -282,9 +257,7 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button :disabled="saving" @click="open = false">取 消</el-button>
-          <el-button type="primary" :loading="saving" @click="save"
-            >确 定</el-button
-          >
+          <el-button type="primary" :loading="saving" @click="save">确 定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -466,13 +439,11 @@ const tableStore = reactive({
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
-    {
-      label: "对象类型关系信息（起点类型→关系名称→终点类型）",
-      prop: "name",
-      slot: "relationInfo",
-      minWidth: 360,
-      align: "left",
-    },
+    { label: "起点类型", prop: "startTypeName", slot: "startTypeName", minWidth: 140, align: "left" },
+    { label: "关系名称", prop: "name", slot: "text", minWidth: 160, align: "left" },
+    { label: "终点类型", prop: "endTypeName", slot: "endTypeName", minWidth: 140, align: "left" },
+    { label: "反向名称", prop: "reverseName", slot: "text", minWidth: 150, align: "left" },
+    { label: "描述", prop: "description", slot: "text", minWidth: 200, align: "left", showOverflowTooltip: { effect: "light" } },
     {
       label: "是否可逆",
       prop: "reversibleFlag",
@@ -480,14 +451,6 @@ const tableStore = reactive({
       width: 100,
       minWidth: 100,
       align: "center",
-    },
-    {
-      label: "反向名称",
-      prop: "reverseName",
-      slot: "text",
-      minWidth: 150,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
     },
     {
       label: "采纳状态",
@@ -677,31 +640,6 @@ loadObjects();
 </script>
 
 <style scoped lang="scss">
-/* 关系信息列：起点→关系名称→终点 单行排列，中间关系名称高亮。 */
-.relation-info__main {
-  flex-wrap: nowrap;
-  gap: 6px;
-}
-
-.relation-node {
-  flex: 0 1 auto;
-  min-width: 0;
-  color: var(--el-text-color-primary);
-}
-
-.relation-name {
-  flex: 0 1 auto;
-  min-width: 0;
-  color: var(--el-color-primary);
-  font-weight: 500;
-}
-
-.relation-arrow {
-  flex-shrink: 0;
-  color: var(--el-text-color-secondary);
-  font-weight: 600;
-  line-height: 22px;
-}
 
 .target-table {
   margin: 0 0 10px 120px;

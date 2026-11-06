@@ -1,4 +1,3 @@
-UPDATE `system_menu` SET `menu_name` = '文件管理', `parent_id` = 1080, `order_num` = 4, `path` = 'file', `component` = NULL, `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'M', `visible` = '0', `status` = '0', `perms` = '', `icon` = '文件管理', `create_by` = '吴同', `create_time` = '2026-11-02 14:18:12', `update_by` = '吴同', `update_time` = '2026-11-03 15:58:22', `remark` = '文件分类与文件管理统一入口' WHERE `menu_id` = 1195;
 
 ALTER TABLE basic_data_type ADD max_length int NULL COMMENT '最大长度';
 ALTER TABLE basic_data_type CHANGE max_length max_length int NULL COMMENT '最大长度' AFTER enum_type;
@@ -39,245 +38,252 @@ ALTER TABLE app_struct_task CHANGE responsible_user_id responsible_user_id bigin
 ALTER TABLE app_struct_task ADD responsible_person_name varchar(128) NULL COMMENT '负责人姓名';
 ALTER TABLE app_struct_task CHANGE responsible_person_name responsible_person_name varchar(128) NULL COMMENT '负责人姓名' AFTER responsible_user_id;
 
--- ============================================================================
--- 2026-11-04 字段变更
--- ============================================================================
+ALTER TABLE `om_term` ADD COLUMN `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用' AFTER `description`;
 
--- 1. 术语状态：0 禁用，1 启用；历史数据默认启用。
-ALTER TABLE `om_term`
-    ADD COLUMN `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用' AFTER `description`;
+ALTER TABLE `om_data_type` ADD COLUMN `max_length` INT NULL COMMENT '最大长度' AFTER `enum_type`;
+ALTER TABLE `om_data_type` ADD COLUMN `min_length` INT NULL COMMENT '最小长度' AFTER `max_length`;
+ALTER TABLE `om_data_type` ADD COLUMN `earliest_time` DATETIME NULL COMMENT '最早日期' AFTER `min_length`;
+ALTER TABLE `om_data_type` ADD COLUMN `latest_time` DATETIME NULL COMMENT '最晚日期' AFTER `earliest_time`;
+ALTER TABLE `om_data_type` ADD COLUMN `true_value` VARCHAR(64) NULL COMMENT 'true 对应文案' AFTER `latest_time`;
+ALTER TABLE `om_data_type` ADD COLUMN `false_value` VARCHAR(64) NULL COMMENT 'false 对应文案' AFTER `true_value`;
+ALTER TABLE `om_data_type` ADD COLUMN `all_places` INT NULL COMMENT '总位数' AFTER `false_value`;
 
--- 2. 业务数据类型：与基础管理使用相同的字段名、类型和顺序。
-ALTER TABLE `om_data_type`
-    ADD COLUMN `max_length`    INT         NULL COMMENT '最大长度'       AFTER `enum_type`,
-    ADD COLUMN `min_length`    INT         NULL COMMENT '最小长度'       AFTER `max_length`,
-    ADD COLUMN `earliest_time` DATETIME    NULL COMMENT '最早日期'       AFTER `min_length`,
-    ADD COLUMN `latest_time`   DATETIME    NULL COMMENT '最晚日期'       AFTER `earliest_time`,
-    ADD COLUMN `true_value`    VARCHAR(64) NULL COMMENT 'true 对应文案'  AFTER `latest_time`,
-    ADD COLUMN `false_value`   VARCHAR(64) NULL COMMENT 'false 对应文案' AFTER `true_value`,
-    ADD COLUMN `all_places`    INT         NULL COMMENT '总位数'        AFTER `false_value`;
+ALTER TABLE `om_data_type` ADD COLUMN `validation_type` VARCHAR(16) NULL COMMENT '文本格式校验编码' AFTER `all_places`;
+ALTER TABLE `om_data_type` ADD COLUMN `validation_pattern` VARCHAR(512) NULL COMMENT '自定义正则表达式' AFTER `validation_type`;
+ALTER TABLE `om_data_type` ADD COLUMN `example_value` VARCHAR(256) NULL COMMENT '示例值' AFTER `validation_pattern`;
+ALTER TABLE `om_data_type` ADD COLUMN `min_value` DECIMAL(65, 20) NULL COMMENT '数值最小值' AFTER `example_value`;
+ALTER TABLE `om_data_type` ADD COLUMN `max_value` DECIMAL(65, 20) NULL COMMENT '数值最大值' AFTER `min_value`;
 
--- 3. 新交互所需的其他配置字段。
-ALTER TABLE `om_data_type`
-    ADD COLUMN `validation_type`    VARCHAR(16)     NULL COMMENT '文本格式校验编码'   AFTER `all_places`,
-    ADD COLUMN `validation_pattern` VARCHAR(512)    NULL COMMENT '自定义正则表达式'   AFTER `validation_type`,
-    ADD COLUMN `example_value`      VARCHAR(256)    NULL COMMENT '示例值'        AFTER `validation_pattern`,
-    ADD COLUMN `min_value`          DECIMAL(65, 20) NULL COMMENT '数值最小值'      AFTER `example_value`,
-    ADD COLUMN `max_value`          DECIMAL(65, 20) NULL COMMENT '数值最大值'      AFTER `min_value`;
 
--- ============================================================================
--- 2026-11-04 数据更新（在上述字段变更完成后执行）
--- ============================================================================
 
--- 2026-11-04 业务数据类型存量配置补齐（先执行上方 om_data_type 加字段语句）。
--- 具体取值约束仅用于版本1的供应链示例；按编号、名称、类型和示例标记共同匹配。
--- 已填写的配置、枚举来源及枚举编码均保留。
-START TRANSACTION;
+ALTER TABLE `om_enum_type` ADD COLUMN `description` varchar(512) DEFAULT NULL COMMENT '描述' AFTER `enum_type`;
+ALTER TABLE `om_enum_data` ADD COLUMN `description` varchar(512) DEFAULT NULL COMMENT '描述' AFTER `enum_type`;
 
--- 文本示例：补齐长度和示例，不对普通历史文本强加业务约束。
-UPDATE `om_data_type`
-SET `validation_type` = COALESCE(`validation_type`, 'NONE'),
-    `min_length` = 1,
-    `max_length` = 512,
-    `example_value` = COALESCE(`example_value`, '江苏省南京市示例路1号')
-WHERE `id` = 3
-  AND `version_id` = 1
-  AND `name` = '联系地址'
-  AND `data_type` = 0
-  AND `remark` = '供应链示例数据'
-  AND `del_flag` = 0
-  AND `min_length` IS NULL
-  AND `max_length` IS NULL;
+ALTER TABLE `om_target_task` ADD COLUMN `task_name` VARCHAR(256) NULL COMMENT '任务名称' AFTER `target_id`;
+ALTER TABLE `basic_project_version` ADD COLUMN `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '状态;0：禁用，1：启用' AFTER `base_version`;
+ALTER TABLE `om_data_type` ADD COLUMN `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用' AFTER `enum_source`;
+ALTER TABLE `basic_data_type` ADD COLUMN `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用' AFTER `enum_type`;
+ALTER TABLE `basic_data_type` ADD COLUMN `example_value` VARCHAR(256) NULL COMMENT '示例值' AFTER `validation_pattern`;
+ALTER TABLE `basic_data_type` ADD COLUMN `min_value` DECIMAL(65, 20) NULL COMMENT '数值最小值' AFTER `example_value`;
+ALTER TABLE `basic_data_type` ADD COLUMN `max_value` DECIMAL(65, 20) NULL COMMENT '数值最大值' AFTER `min_value`;
+ALTER TABLE `basic_enum_type` ADD COLUMN `description` VARCHAR(512) NULL COMMENT '描述' AFTER `enum_type`;
+ALTER TABLE `basic_enum_data` ADD COLUMN `description` VARCHAR(512) NULL COMMENT '描述' AFTER `enum_type`;
 
--- 联系电话含区号、前导零、连接符，不直接套用仅适用于手机的 PHONE 规则。
-UPDATE `om_data_type`
-SET `validation_type` = COALESCE(`validation_type`, 'CUSTOM'),
-    `validation_pattern` = COALESCE(`validation_pattern`, '^[0-9+() -]{3,32}$'),
-    `min_length` = 3,
-    `max_length` = 32,
-    `example_value` = COALESCE(`example_value`, '025-12345678')
-WHERE `id` = 5
-  AND `version_id` = 1
-  AND `name` = '联系电话'
-  AND `data_type` = 0
-  AND `remark` = '供应链示例数据'
-  AND `del_flag` = 0
-  AND `min_length` IS NULL
-  AND `max_length` IS NULL;
+UPDATE `system_menu` SET `menu_name` = '文件管理', `parent_id` = 1080, `order_num` = 4, `path` = 'file', `component` = NULL, `query` = NULL, `route_name` = '', `is_frame` = 1, `is_cache` = 0, `menu_type` = 'M', `visible` = '0', `status` = '0', `perms` = '', `icon` = '文件管理', `create_by` = '吴同', `create_time` = '2026-11-02 14:18:12', `update_by` = '吴同', `update_time` = '2026-11-03 15:58:22', `remark` = '文件分类与文件管理统一入口' WHERE `menu_id` = 1195;
 
-UPDATE `om_data_type`
-SET `validation_type` = COALESCE(`validation_type`, 'NONE'),
-    `min_length` = 1,
-    `max_length` = 128,
-    `example_value` = COALESCE(`example_value`, CASE `id`
-        WHEN 17 THEN '示例供应商'
-        ELSE 'PO_20260001'
-    END)
-WHERE `version_id` = 1
-  AND `data_type` = 0
-  AND `remark` = '供应链示例数据'
-  AND `del_flag` = 0
-  AND (
-        (`id` = 17 AND `name` = '业务名称')
-        OR (`id` = 24 AND `name` = '业务编码')
-  )
-  AND `min_length` IS NULL
-  AND `max_length` IS NULL;
+UPDATE `om_data_type` SET `validation_type` = COALESCE(`validation_type`, 'NONE'), `min_length` = 1, `max_length` = 512, `example_value` = COALESCE(`example_value`, '江苏省南京市示例路1号') WHERE `id` = 3 AND `version_id` = 1 AND `name` = '联系地址' AND `data_type` = 0 AND `remark` = '供应链示例数据' AND `del_flag` = 0 AND `min_length` IS NULL AND `max_length` IS NULL;
+UPDATE `om_data_type` SET `validation_type` = COALESCE(`validation_type`, 'CUSTOM'), `validation_pattern` = COALESCE(`validation_pattern`, '^[0-9+() -]{3,32}$'), `min_length` = 3, `max_length` = 32, `example_value` = COALESCE(`example_value`, '025-12345678') WHERE `id` = 5 AND `version_id` = 1 AND `name` = '联系电话' AND `data_type` = 0 AND `remark` = '供应链示例数据' AND `del_flag` = 0 AND `min_length` IS NULL AND `max_length` IS NULL;
+UPDATE `om_data_type` SET `validation_type` = COALESCE(`validation_type`, 'NONE'), `min_length` = 1, `max_length` = 128, `example_value` = COALESCE(`example_value`, CASE `id` WHEN 17 THEN '示例供应商' ELSE 'PO_20260001' END) WHERE `version_id` = 1 AND `data_type` = 0 AND `remark` = '供应链示例数据' AND `del_flag` = 0 AND ( (`id` = 17 AND `name` = '业务名称') OR (`id` = 24 AND `name` = '业务编码') ) AND `min_length` IS NULL AND `max_length` IS NULL;
+UPDATE `om_data_type` SET `all_places` = COALESCE(`all_places`, GREATEST(5, COALESCE(`decimal_places`, 2))), `min_value` = COALESCE(`min_value`, 0), `max_value` = COALESCE(`max_value`, 100) WHERE `id` = 7 AND `version_id` = 1 AND `name` = '税率' AND `data_type` = 2 AND `remark` = '供应链示例数据' AND `del_flag` = 0 AND `min_value` IS NULL AND `max_value` IS NULL;
+UPDATE `om_data_type` SET `all_places` = COALESCE(`all_places`, GREATEST(18, COALESCE(`decimal_places`, 2))), `min_value` = 0 WHERE `version_id` = 1 AND `data_type` = 2 AND `remark` = '供应链示例数据' AND `del_flag` = 0 AND ( (`id` = 15 AND `name` = '物料重量') OR (`id` = 19 AND `name` = '采购单价') OR (`id` = 25 AND `name` = '订单金额') ) AND `min_value` IS NULL AND (`max_value` IS NULL OR `max_value` >= 0);
+UPDATE `om_data_type` SET `min_value` = 0 WHERE `version_id` = 1 AND `data_type` = 1 AND `remark` = '供应链示例数据' AND `del_flag` = 0 AND ( (`id` = 13 AND `name` = '交货周期') OR (`id` = 21 AND `name` = '件数') ) AND `min_value` IS NULL AND (`max_value` IS NULL OR `max_value` >= 0);
+UPDATE `om_data_type` SET `true_value` = COALESCE(`true_value`, '合格'), `false_value` = COALESCE(`false_value`, '不合格') WHERE `id` = 9 AND `version_id` = 1 AND `name` = '是否验收合格' AND `data_type` = 3 AND `remark` = '供应链示例数据' AND `del_flag` = 0;
+UPDATE `om_data_type` SET `true_value` = COALESCE(`true_value`, '启用'), `false_value` = COALESCE(`false_value`, '禁用') WHERE `id` = 20 AND `version_id` = 1 AND `name` = '是否启用' AND `data_type` = 3 AND `remark` = '供应链示例数据' AND `del_flag` = 0;
+UPDATE `om_data_type` SET `validation_type` = 'NONE' WHERE `data_type` = 0 AND `validation_type` IS NULL AND `del_flag` = 0;
+UPDATE `om_data_type` SET `all_places` = COALESCE(`all_places`, GREATEST(10, COALESCE(`decimal_places`, 2))), `decimal_places` = COALESCE(`decimal_places`, 2) WHERE `data_type` = 2 AND `del_flag` = 0;
+UPDATE `om_data_type` SET `true_value` = COALESCE(`true_value`, '是'), `false_value` = COALESCE(`false_value`, '否') WHERE `data_type` = 3 AND `del_flag` = 0;
+UPDATE `om_data_type` SET `format` = CASE `format` WHEN 'yyyy-MM-dd' THEN 'YYYY-MM-DD' WHEN 'yyyy/MM/dd' THEN 'YYYY/MM/DD' WHEN 'yyyy年MM月dd日' THEN 'YYYY年MM月DD日' WHEN 'yyyy-MM-dd HH:mm:ss' THEN 'YYYY-MM-DD HH:mm:ss' ELSE COALESCE(NULLIF(`format`, ''), 'YYYY-MM-DD') END WHERE `data_type` = 4 AND `del_flag` = 0;
 
--- 税率按百分数记录，金额、重量、数量和天数均采用非负示例边界。
-UPDATE `om_data_type`
-SET `all_places` = COALESCE(`all_places`, GREATEST(5, COALESCE(`decimal_places`, 2))),
-    `min_value` = COALESCE(`min_value`, 0),
-    `max_value` = COALESCE(`max_value`, 100)
-WHERE `id` = 7
-  AND `version_id` = 1
-  AND `name` = '税率'
-  AND `data_type` = 2
-  AND `remark` = '供应链示例数据'
-  AND `del_flag` = 0
-  AND `min_value` IS NULL
-  AND `max_value` IS NULL;
 
-UPDATE `om_data_type`
-SET `all_places` = COALESCE(`all_places`, GREATEST(18, COALESCE(`decimal_places`, 2))),
-    `min_value` = 0
-WHERE `version_id` = 1
-  AND `data_type` = 2
-  AND `remark` = '供应链示例数据'
-  AND `del_flag` = 0
-  AND (
-        (`id` = 15 AND `name` = '物料重量')
-        OR (`id` = 19 AND `name` = '采购单价')
-        OR (`id` = 25 AND `name` = '订单金额')
-  )
-  AND `min_value` IS NULL
-  AND (`max_value` IS NULL OR `max_value` >= 0);
+UPDATE `om_enum_type` SET `description` = CASE `enum_type` WHEN 'outbound_purpose' THEN '区分生产领用、销售发货等出库用途，用于追踪物料出库去向。' WHEN 'component_category' THEN '统一零部件分类口径，便于采购、库存及产品结构管理。' WHEN 'raw_material_category' THEN '统一原材料分类口径，便于采购计划、库存统计及生产领料。' WHEN 'settlement_method' THEN '定义采购业务的结算方式，用于记录订单付款及对账约定。' WHEN 'purchase_category' THEN '区分采购业务类别，便于采购需求归类及订单统计。' WHEN 'document_status' THEN '统一采购、入库及出库等业务单据的状态取值。' WHEN 'transport_mode' THEN '定义物流运输方式，用于记录运输安排及交付信息。' WHEN 'material_unit' THEN '统一物料计量单位，用于采购、收货及库存数量核算。' WHEN 'material_category' THEN '统一物料分类口径，便于物料档案、采购及库存管理。' WHEN 'supplier_category' THEN '定义供应商业务类别，便于供应商分类维护及采购协同。' WHEN 'organization_category' THEN '区分集团、公司、工厂及部门等组织类别，明确业务主体层级。' ELSE `description` END WHERE `workspace_id` = 1001 AND `version_id` = 1 AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '') AND ( (`enum_id` = 1 AND `enum_type` = 'outbound_purpose') OR (`enum_id` = 2 AND `enum_type` = 'component_category') OR (`enum_id` = 3 AND `enum_type` = 'raw_material_category') OR (`enum_id` = 4 AND `enum_type` = 'settlement_method') OR (`enum_id` = 5 AND `enum_type` = 'purchase_category') OR (`enum_id` = 6 AND `enum_type` = 'document_status') OR (`enum_id` = 7 AND `enum_type` = 'transport_mode') OR (`enum_id` = 8 AND `enum_type` = 'material_unit') OR (`enum_id` = 9 AND `enum_type` = 'material_category') OR (`enum_id` = 10 AND `enum_type` = 'supplier_category') OR (`enum_id` = 11 AND `enum_type` = 'organization_category') );
+UPDATE `om_enum_data` SET `description` = CASE `enum_code` WHEN 1 THEN '因实物盘点数量少于账面结存而形成的差异出库，用于记录盘亏核销及库存差异处理。' WHEN 2 THEN '物料因损坏、失效、过期或不再具备使用价值，经确认后办理的报废处置出库。' WHEN 3 THEN '为开展质量检验、性能验证或问题分析而领出物料的业务类型，适用于抽检、送检及内部检测。' WHEN 4 THEN '面向研发验证、工艺试验或新产品试制任务领用物料的业务类型，与常规批量生产领料相区分。' WHEN 5 THEN '为设备检修、故障排除或日常保养而领用备件及材料的出库类型。' WHEN 6 THEN '将样品发往客户、合作单位或检测机构所形成的出库类型，重点记录样品交付去向。' WHEN 7 THEN '物料从一个仓库或库存地点转出并转入另一库存地点的业务类型，应与对应调入记录保持关联。' WHEN 8 THEN '对已采购或已验收入库、后续需退还供应商的物料办理出库的业务类型。' WHEN 9 THEN '因委外加工需要，将自有物料发交外部加工单位的出库类型，适用于委外发料及后续回收核对。' WHEN 10 THEN '依据生产计划、生产订单或工单向生产环节发放原材料、零部件及辅料的出库类型。' WHEN 11 THEN '依据销售订单或发货指令，将商品交付客户而办理的出库类型。' WHEN 12 THEN '用于电力传输、信号传递或设备内部布线的线缆类零部件，通常按结构、芯数、截面及长度规格管理。' WHEN 13 THEN '用于线缆、设备或电路之间建立电气或信号连接的部件，通常按接口形式、针位及规格型号区分。' WHEN 14 THEN '接收输入信号并依据控制逻辑输出指令的控制类部件，是设备控制与执行协调的重要组成部分。' WHEN 15 THEN '感知温度、压力、位置、速度等物理量并输出检测信号的部件，按检测对象及量程等参数管理。' WHEN 16 THEN '将电能转换为机械能并提供旋转或驱动输出的部件，通常按功率、转速及安装形式区分。' WHEN 17 THEN '利用弹性变形提供复位、缓冲、支撑或预紧作用的机械零部件。' WHEN 18 THEN '用于限制液体、气体或粉尘通过接合间隙的密封类零部件，按结构形式、材质及适配尺寸管理。' WHEN 19 THEN '用于支承旋转部件、传递扭矩或连接传动机构的轴类机械零件。' WHEN 20 THEN '通过齿面啮合传递运动和动力，并实现转速、转矩或运动方向变化的传动零件。' WHEN 21 THEN '用于支承轴或其他运动部件、保持运动精度并降低摩擦阻力的机械部件。' WHEN 22 THEN '用于两个或多个零部件之间连接、紧固或定位的标准件及专用紧固件。' WHEN 23 THEN '由两种或两种以上不同材料组合形成、以获得特定综合性能的材料类别。' WHEN 24 THEN '用于生产配方、工艺处理或化学反应过程的化工原料及相关化学品，需结合品名、纯度和规格管理。' WHEN 25 THEN '以天然木材或木质加工材料为主体的原材料，通常按材种、等级、含水率及尺寸规格区分。' WHEN 26 THEN '以无机非金属材料为主要组成，经成型、烧结等工艺制备的陶瓷类原材料。' WHEN 27 THEN '以玻璃为主要材质的片材、管材或其他供加工使用的原材料，通常按厚度、尺寸及性能规格管理。' WHEN 28 THEN '天然橡胶、合成橡胶及其基础胶料等具有弹性特征的材料类别。' WHEN 29 THEN '用于制造结构件或功能件、具备相应机械强度及耐热性能要求的工程塑料材料。' WHEN 30 THEN '具有相应耐腐蚀性能的不锈钢材料，通常依据钢种牌号、表面状态及规格进行区分。' WHEN 31 THEN '以铜为主要成分的有色金属材料，常见供货形态包括板、带、管、棒及线材。' WHEN 32 THEN '以铝为主要成分的金属材料，通常按合金牌号、材料状态、截面及尺寸规格管理。' WHEN 33 THEN '以铁碳合金为基础的钢材原料，按材质牌号、力学性能及供货形态进行管理。' WHEN 34 THEN '由收款方依据交易约定委托银行向付款方收取款项的结算方式，具体办理条件以合同及银行规则为准。' WHEN 35 THEN '由开证银行依据信用证条款作出有条件付款承诺的结算方式，付款以受益人提交符合约定的单据为条件。' WHEN 36 THEN '以商业承兑汇票作为支付工具、由企业等商业主体承担到期承兑付款责任的结算方式。' WHEN 37 THEN '以银行承兑汇票作为支付工具，由承兑银行承担汇票到期付款责任的结算方式。' WHEN 38 THEN '将合同应付款项按照约定的期次、金额或比例分阶段支付的结算安排。' WHEN 39 THEN '按合同约定账期进行结算，款项在约定起算日后的90天内支付；起算口径以双方约定为准。' WHEN 40 THEN '按合同约定账期进行结算，款项在约定起算日后的60天内支付；起算口径以双方约定为准。' WHEN 41 THEN '按合同约定账期进行结算，款项在约定起算日后的30天内支付；起算口径以双方约定为准。' WHEN 42 THEN '在货物交付或服务完成前，按照合同约定预先支付全部或部分款项的结算方式。' WHEN 43 THEN '在货物交付时收取相应货款后完成交付的结算方式，具体收款时点及方式以交易约定为准。' WHEN 44 THEN '交易双方按照约定即时支付并完成款项结算的方式，不设置常规赊账账期。' WHEN 45 THEN '采购运输、仓储、装卸、配送等物流环节服务所形成的采购类别。' WHEN 46 THEN '采购技术咨询、技术支持、检测、维护或专业实施等技术类服务所形成的采购类别。' WHEN 47 THEN '采购软件产品、软件许可、订阅权益或相关软件服务所形成的采购类别。' WHEN 48 THEN '采购日常办公所需文具、纸品、办公耗材及其他办公用品所形成的采购类别。' WHEN 49 THEN '采购在生产作业过程中持续消耗、需按使用情况补充的材料及耗材所形成的采购类别。' WHEN 50 THEN '采购用于产品包装、运输防护、标识或仓储周转的包装材料所形成的采购类别。' WHEN 51 THEN '采购用于设备维修、故障更换、检修保养的备品备件所形成的采购类别。' WHEN 52 THEN '采购用于生产、检测、仓储或经营活动的设备及成套装置所形成的采购类别。' WHEN 53 THEN '采购已完成规定生产加工、可按成品状态验收和入库的商品所形成的采购类别。' WHEN 54 THEN '采购用于产品装配、设备组成或系统集成的零部件及配套组件所形成的采购类别。' WHEN 55 THEN '采购用于生产加工、构成产品实体或参与生产工艺过程的基础原材料所形成的采购类别。' WHEN 56 THEN '单据业务处理已结束并完成关闭，不再参与当前流程的常规流转。' WHEN 57 THEN '单据已被取消，所对应的业务流程终止，后续不再按原单据继续执行。' WHEN 58 THEN '单据所涉及的业务事项已全部处理完毕，要求完成的执行内容均已结束。' WHEN 59 THEN '单据所涉及的业务仅完成部分数量或部分事项，仍有未完成内容待继续处理。' WHEN 60 THEN '单据已进入实际办理阶段，相关业务操作正在执行过程中。' WHEN 61 THEN '单据已具备后续办理条件，当前等待责任岗位或执行人员开展业务操作。' WHEN 62 THEN '单据审批未获通过，已按审批结果退回，需根据意见修订或重新发起流程。' WHEN 63 THEN '单据已通过审批，审批环节完成，可依据业务规则进入后续处理阶段。' WHEN 64 THEN '单据已提交审批申请，当前处于等待审批人员审核的状态。' WHEN 65 THEN '单据内容已创建或编辑完成，但尚未正式提交，仍待提交人发起后续流程。' WHEN 66 THEN '单据处于初始编辑状态，内容尚未正式提交，未进入审批或执行流程。' WHEN 67 THEN '依托相对固定的运输线路、班次或专属运力组织货物运输的方式，适用于线路和时效要求明确的配送安排。' WHEN 68 THEN '在一项运输过程中衔接使用两种或两种以上运输方式，以完成货物全程运输的组织方式。' WHEN 69 THEN '通过快递服务网络完成揽收、分拨、运输和末端派送的运输方式，适用于包裹及小批量货物。' WHEN 70 THEN '通过国际航空运输网络完成跨境货物运输的方式，适用于对运输时效有相应要求的国际货运业务。' WHEN 71 THEN '通过境内航空运输网络完成国内货物运输的方式。' WHEN 72 THEN '通过国际海运航线及港口完成跨境货物运输的方式，适用于相应货量和交付周期的国际货运业务。' WHEN 73 THEN '通过境内沿海或内河航运网络完成国内货物运输的方式。' WHEN 74 THEN '以标准化集装箱作为装载单元，通过铁路运输网络完成货物运输的方式。' WHEN 75 THEN '以铁路货车车厢为运输载体，按整车组织装载和运输的方式。' WHEN 76 THEN '单批货物不足以单独占用整辆货车，与其他货物拼载完成运输的公路运输方式。' WHEN 77 THEN '由单一托运业务使用整辆货车承运的公路运输方式，适用于整车货物运输需求。' WHEN 78 THEN '卷状物料的计量单位，适用于线缆、卷材等按卷存储、发放或结算的物料；单卷规格应由物料档案定义。' WHEN 79 THEN '箱装物料的计量单位，适用于按整箱进行收发和库存管理的物料；箱内数量及换算关系以包装规格为准。' WHEN 80 THEN '升，体积计量单位，适用于液体物料的采购、收发及库存数量记录。' WHEN 81 THEN '立方米，体积计量单位，适用于散装物料或按空间体积核算的物料。' WHEN 82 THEN '平方米，面积计量单位，适用于板材、片材及其他按覆盖面积核算的物料。' WHEN 83 THEN '米，长度计量单位，适用于线缆、管材、型材等按长度收发和核算的物料。' WHEN 84 THEN '克，质量计量单位，适用于小质量物料、配料或按克称量的材料。' WHEN 85 THEN '吨，质量计量单位，适用于大宗原材料及其他按吨计量的物料。' WHEN 86 THEN '千克，质量计量单位，适用于一般原材料、零部件及其他按重量核算的物料。' WHEN 87 THEN '套，成套计量单位，适用于由多个配套部件组成、按完整组合进行交付或领用的物料。' WHEN 88 THEN '件，单件计数单位，适用于可按独立个体逐件清点、收发和核算的物料。' WHEN 89 THEN '用于办公和日常行政活动的文具、纸品、办公耗材及相关用品，不作为生产物料归类。' WHEN 90 THEN '可独立承担生产、检测、仓储或辅助作业功能的设备及装置类资产或物资。' WHEN 91 THEN '用于产品加工、装配、检测或工艺定位的工装、夹具及专用辅助工具。' WHEN 92 THEN '用于设备维修、保养和故障更换的备品备件，通常与对应设备或部件型号关联管理。' WHEN 93 THEN '在生产或作业过程中被消耗、使用后需要补充的物资，通常不作为产品主体组成部分管理。' WHEN 94 THEN '为生产、加工或业务作业提供辅助支持的材料，通常用于改善工艺、保障作业或配合主材使用。' WHEN 95 THEN '用于产品包装、运输防护、标识及仓储周转的材料或包装物。' WHEN 96 THEN '已完成规定生产工序并达到成品要求，可按成品进行检验、入库、销售或交付的产品。' WHEN 97 THEN '已完成部分生产工序、尚需继续加工或装配后才能达到成品要求的中间产品。' WHEN 98 THEN '构成产品或设备的组成部件，可作为装配、维修或产品结构管理中的独立物料。' WHEN 99 THEN '用于生产加工并构成产品实体或参与工艺过程的基础投入材料。' WHEN 100 THEN '提供多类型专业服务或综合配套服务的供应商，其业务范围不局限于单一商品或服务类别。' WHEN 101 THEN '提供材料、产品、设备或过程检验检测、试验验证及相关技术服务的供应商。' WHEN 102 THEN '提供设备检修、故障维修、维护保养或相关维修技术服务的供应商。' WHEN 103 THEN '提供软件产品、软件许可、订阅服务、系统实施或软件技术支持的供应商。' WHEN 104 THEN '以生产或运营过程中使用的消耗性物资为主要供应内容的供应商。' WHEN 105 THEN '以包装材料、包装制品及运输防护用品为主要供应内容的供应商。' WHEN 106 THEN '以生产设备、检测设备、仓储设备或其他专用装置为主要供应内容的供应商。' WHEN 107 THEN '以产品或设备所需零部件、组件及配套部件为主要供应内容的供应商。' WHEN 108 THEN '以生产加工所需基础原材料为主要供应内容的供应商。' WHEN 109 THEN '通过代理、经销或贸易流通方式组织商品销售与供应的经营主体，主要承担商品流通和供货职能。' WHEN 110 THEN '具备产品生产制造能力，以自产产品或受托加工制造成果作为主要供货内容的供应商。' WHEN 111 THEN '组织管理范围之外，因合同、项目或业务协作关系参与相关活动的外部单位或机构。' WHEN 112 THEN '围绕特定项目目标组建的协作单元，负责项目范围内的任务组织、协同推进及成果交付。' WHEN 113 THEN '依据组织职能设置的内部部门，承担专业管理、业务执行或职能支持职责。' WHEN 114 THEN '承担物资接收、验收入库、储存保管、盘点、拣配及出库管理职责的组织单元。' WHEN 115 THEN '承担运输组织、仓配协调、物流调度及物流过程管理职责的组织单元。' WHEN 116 THEN '承担区域或特定业务范围内市场拓展、客户经营、销售合同及产品销售职责的公司主体。' WHEN 117 THEN '负责采购需求统筹、采购组织实施、供应商协同及采购业务管理的组织单元。' WHEN 118 THEN '承担技术研究、产品研发、方案设计、试验验证及技术成果管理职责的组织单元。' WHEN 119 THEN '承担生产计划执行、产品制造、生产现场管理及相关质量控制职责的生产单位。' WHEN 120 THEN '在特定地理区域内承担经营管理、市场拓展或业务协调职责的公司主体。' WHEN 121 THEN '承担集团整体战略规划、资源统筹、经营协调及总部管理职责的组织主体。' ELSE `description` END WHERE `workspace_id` = 1001 AND `version_id` = 1 AND `del_flag` = 0 AND `enum_code` IN ( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121 ) AND (`description` IS NULL OR TRIM(`description`) = '');
 
-UPDATE `om_data_type`
-SET `min_value` = 0
-WHERE `version_id` = 1
-  AND `data_type` = 1
-  AND `remark` = '供应链示例数据'
-  AND `del_flag` = 0
-  AND (
-        (`id` = 13 AND `name` = '交货周期')
-        OR (`id` = 21 AND `name` = '件数')
-  )
-  AND `min_value` IS NULL
-  AND (`max_value` IS NULL OR `max_value` >= 0);
 
-UPDATE `om_data_type`
-SET `true_value` = COALESCE(`true_value`, '合格'),
-    `false_value` = COALESCE(`false_value`, '不合格')
-WHERE `id` = 9
-  AND `version_id` = 1
-  AND `name` = '是否验收合格'
-  AND `data_type` = 3
-  AND `remark` = '供应链示例数据'
-  AND `del_flag` = 0;
+UPDATE `basic_data_type` SET `description` = LEFT(CONCAT('定义「', `name`, '」字段的取值和格式。'), 256) WHERE (`description` IS NULL OR TRIM(`description`) = '') AND `name` IS NOT NULL AND `del_flag` = 0;
+UPDATE `om_data_type` SET `description` = LEFT(CONCAT('定义「', `name`, '」字段的取值和格式。'), 256) WHERE (`description` IS NULL OR TRIM(`description`) = '') AND `name` IS NOT NULL AND `del_flag` = 0;
+-- 2026-11-06 补齐工作区 1001 的全局枚举描述
+UPDATE `basic_enum_type` SET `description` = '记录用户资料中的性别选项，用于信息维护和展示。' WHERE `enum_id` = 1 AND `workspace_id` = 1001 AND `enum_type` = 'sys_user_sex' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '区分系统用户账号的正常、禁用、锁定和待激活状态。' WHERE `enum_id` = 2 AND `workspace_id` = 1001 AND `enum_type` = 'sys_user_status' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '记录本体项目从草稿、审核、发布到归档或停用的状态。' WHERE `enum_id` = 3 AND `workspace_id` = 1001 AND `enum_type` = 'proj_status' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '区分本体版本的开发、测试、候选、正式发布及废弃阶段。' WHERE `enum_id` = 4 AND `workspace_id` = 1001 AND `enum_type` = 'ontology_version_status' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '按合作重要性和资质评估结果对供应商进行分级。' WHERE `enum_id` = 5 AND `workspace_id` = 1001 AND `enum_type` = 'supplier_level' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '按物料在生产、装配、销售和维修中的用途进行分类。' WHERE `enum_id` = 6 AND `workspace_id` = 1001 AND `enum_type` = 'material_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '记录采购订单从提交、审核、发货到到货和关闭的进度。' WHERE `enum_id` = 7 AND `workspace_id` = 1001 AND `enum_type` = 'purchase_order_status' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '区分物料在库存和流转中的可用、冻结、在途、待检及处置状态。' WHERE `enum_id` = 8 AND `workspace_id` = 1001 AND `enum_type` = 'inventory_status' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '记录设备当前的运行、待机、维修、故障或停用状态。' WHERE `enum_id` = 9 AND `workspace_id` = 1001 AND `enum_type` = 'equipment_run_status' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '按任务的重要性和时效要求划分处理优先级。' WHERE `enum_id` = 10 AND `workspace_id` = 1001 AND `enum_type` = 'task_priority' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '记录任务的执行进度，以及暂停、取消和逾期等状态。' WHERE `enum_id` = 11 AND `workspace_id` = 1001 AND `enum_type` = 'task_status' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '按质量检验结果和产品标准划分产品质量等级。' WHERE `enum_id` = 12 AND `workspace_id` = 1001 AND `enum_type` = 'quality_level' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '区分个人身份核验和组织登记信息使用的证件或标识。' WHERE `enum_id` = 13 AND `workspace_id` = 1001 AND `enum_type` = 'sys_cert_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '记录人员的学历层次，用于人员档案维护。' WHERE `enum_id` = 14 AND `workspace_id` = 1001 AND `enum_type` = 'sys_education_level' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '按岗位承担的主要职责划分岗位类别。' WHERE `enum_id` = 15 AND `workspace_id` = 1001 AND `enum_type` = 'hr_position_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '按部门在组织中承担的主要职责划分部门类别。' WHERE `enum_id` = 16 AND `workspace_id` = 1001 AND `enum_type` = 'hr_dept_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '按合同约定的业务事项划分采购、销售、服务等合同类别。' WHERE `enum_id` = 17 AND `workspace_id` = 1001 AND `enum_type` = 'contract_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '记录合同从起草、审批、签署到履行完成或解除的状态。' WHERE `enum_id` = 18 AND `workspace_id` = 1001 AND `enum_type` = 'contract_status' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '记录业务金额和结算使用的币种。' WHERE `enum_id` = 19 AND `workspace_id` = 1001 AND `enum_type` = 'currency_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '记录物料数量、质量或长度所用的计量单位。' WHERE `enum_id` = 20 AND `workspace_id` = 1001 AND `enum_type` = 'measure_unit' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '定义用户可访问的数据范围，用于数据权限配置。' WHERE `enum_id` = 21 AND `workspace_id` = 1001 AND `enum_type` = 'data_permission_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '保留旧版操作日志中新增、修改和删除的分类，用于历史记录识别。' WHERE `enum_id` = 22 AND `workspace_id` = 1001 AND `enum_type` = 'old_log_operate_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_type` SET `description` = '按触发来源和处理目的划分系统、业务、告警、待办及审批通知。' WHERE `enum_id` = 23 AND `workspace_id` = 1001 AND `enum_type` = 'message_notify_type' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
-UPDATE `om_data_type`
-SET `true_value` = COALESCE(`true_value`, '启用'),
-    `false_value` = COALESCE(`false_value`, '禁用')
-WHERE `id` = 20
-  AND `version_id` = 1
-  AND `name` = '是否启用'
-  AND `data_type` = 3
-  AND `remark` = '供应链示例数据'
-  AND `del_flag` = 0;
+-- 用户性别
+UPDATE `basic_enum_data` SET `description` = '用户资料中的性别登记为女性。' WHERE `enum_code` = 1 AND `workspace_id` = 1001 AND `enum_type` = 'sys_user_sex' AND `enum_value` = '2' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用户资料中的性别登记为男性。' WHERE `enum_code` = 2 AND `workspace_id` = 1001 AND `enum_type` = 'sys_user_sex' AND `enum_value` = '1' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
--- 其他历史记录仅填补新表单必需的缺省配置，不新增数值上下限或覆盖用户配置。
-UPDATE `om_data_type`
-SET `validation_type` = 'NONE'
-WHERE `data_type` = 0
-  AND `validation_type` IS NULL
-  AND `del_flag` = 0;
+-- 用户状态
+UPDATE `basic_enum_data` SET `description` = '账号处于可正常使用的状态。' WHERE `enum_code` = 3 AND `workspace_id` = 1001 AND `enum_type` = 'sys_user_status' AND `enum_value` = '0' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '账号已被禁用，使用权限受到限制。' WHERE `enum_code` = 4 AND `workspace_id` = 1001 AND `enum_type` = 'sys_user_status' AND `enum_value` = '1' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '账号处于锁定状态，需解除锁定后方可恢复正常使用。' WHERE `enum_code` = 5 AND `workspace_id` = 1001 AND `enum_type` = 'sys_user_status' AND `enum_value` = '2' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '账号已创建，正在等待完成激活。' WHERE `enum_code` = 6 AND `workspace_id` = 1001 AND `enum_type` = 'sys_user_status' AND `enum_value` = '3' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
-UPDATE `om_data_type`
-SET `all_places` = COALESCE(`all_places`, GREATEST(10, COALESCE(`decimal_places`, 2))),
-    `decimal_places` = COALESCE(`decimal_places`, 2)
-WHERE `data_type` = 2
-  AND `del_flag` = 0;
+-- 项目状态
+UPDATE `basic_enum_data` SET `description` = '项目处于起草和编辑阶段，尚未提交审核。' WHERE `enum_code` = 7 AND `workspace_id` = 1001 AND `enum_type` = 'proj_status' AND `enum_value` = '0' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '项目已提交，正在等待或接受审核。' WHERE `enum_code` = 8 AND `workspace_id` = 1001 AND `enum_type` = 'proj_status' AND `enum_value` = '1' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '项目已完成发布，可按发布内容开展后续工作。' WHERE `enum_code` = 9 AND `workspace_id` = 1001 AND `enum_type` = 'proj_status' AND `enum_value` = '2' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '项目已归档，相关资料供后续查阅。' WHERE `enum_code` = 10 AND `workspace_id` = 1001 AND `enum_type` = 'proj_status' AND `enum_value` = '3' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '项目已停用，暂停用于当前业务。' WHERE `enum_code` = 11 AND `workspace_id` = 1001 AND `enum_type` = 'proj_status' AND `enum_value` = '4' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
-UPDATE `om_data_type`
-SET `true_value` = COALESCE(`true_value`, '是'),
-    `false_value` = COALESCE(`false_value`, '否')
-WHERE `data_type` = 3
-  AND `del_flag` = 0;
+-- 本体版本状态
+UPDATE `basic_enum_data` SET `description` = '本体版本正在开发，模型内容仍在完善。' WHERE `enum_code` = 12 AND `workspace_id` = 1001 AND `enum_type` = 'ontology_version_status' AND `enum_value` = 'dev' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '本体版本已进入测试验证阶段。' WHERE `enum_code` = 13 AND `workspace_id` = 1001 AND `enum_type` = 'ontology_version_status' AND `enum_value` = 'beta' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '本体版本已形成发布候选，等待正式发布前的确认。' WHERE `enum_code` = 14 AND `workspace_id` = 1001 AND `enum_type` = 'ontology_version_status' AND `enum_value` = 'rc' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '本体版本已正式发布，供业务使用。' WHERE `enum_code` = 15 AND `workspace_id` = 1001 AND `enum_type` = 'ontology_version_status' AND `enum_value` = 'release' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '本体版本已标记为废弃，供历史记录查阅。' WHERE `enum_code` = 16 AND `workspace_id` = 1001 AND `enum_type` = 'ontology_version_status' AND `enum_value` = 'deprecated' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
--- 日期格式切换为新选择框编码；业务时间保留时分秒，不降为只有日期。
-UPDATE `om_data_type`
-SET `format` = CASE `format`
-    WHEN 'yyyy-MM-dd' THEN 'YYYY-MM-DD'
-    WHEN 'yyyy/MM/dd' THEN 'YYYY/MM/DD'
-    WHEN 'yyyy年MM月dd日' THEN 'YYYY年MM月DD日'
-    WHEN 'yyyy-MM-dd HH:mm:ss' THEN 'YYYY-MM-DD HH:mm:ss'
-    ELSE COALESCE(NULLIF(`format`, ''), 'YYYY-MM-DD')
-END
-WHERE `data_type` = 4
-  AND `del_flag` = 0;
+-- 供应商等级
+UPDATE `basic_enum_data` SET `description` = '承担长期战略合作或关键供应保障职责的供应商。' WHERE `enum_code` = 17 AND `workspace_id` = 1001 AND `enum_type` = 'supplier_level' AND `enum_value` = 'A' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '在日常采购中承担主要供货职责的供应商。' WHERE `enum_code` = 18 AND `workspace_id` = 1001 AND `enum_type` = 'supplier_level' AND `enum_value` = 'B' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '已通过供应商资格评估，具备相应供货资格。' WHERE `enum_code` = 19 AND `workspace_id` = 1001 AND `enum_type` = 'supplier_level' AND `enum_value` = 'C' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于补充供货或应对供应中断的备选供应商。' WHERE `enum_code` = 20 AND `workspace_id` = 1001 AND `enum_type` = 'supplier_level' AND `enum_value` = 'D' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '评估结果未达到供应商准入或考核要求。' WHERE `enum_code` = 21 AND `workspace_id` = 1001 AND `enum_type` = 'supplier_level' AND `enum_value` = 'E' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
-COMMIT;
+-- 物料类型
+UPDATE `basic_enum_data` SET `description` = '用于生产加工并构成产品主体的基础材料。' WHERE `enum_code` = 22 AND `workspace_id` = 1001 AND `enum_type` = 'material_type' AND `enum_value` = 'raw' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于产品装配或作为设备组成部分的独立组件。' WHERE `enum_code` = 23 AND `workspace_id` = 1001 AND `enum_type` = 'material_type' AND `enum_value` = 'component' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '已完成部分工序，仍需继续加工或装配的物料。' WHERE `enum_code` = 24 AND `workspace_id` = 1001 AND `enum_type` = 'material_type' AND `enum_value` = 'semi' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '已完成生产并达到成品要求，可办理成品入库或交付。' WHERE `enum_code` = 25 AND `workspace_id` = 1001 AND `enum_type` = 'material_type' AND `enum_value` = 'finished' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于辅助生产或改善工艺的材料。' WHERE `enum_code` = 26 AND `workspace_id` = 1001 AND `enum_type` = 'material_type' AND `enum_value` = 'auxiliary' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于设备维护、故障维修或更换的储备物料。' WHERE `enum_code` = 27 AND `workspace_id` = 1001 AND `enum_type` = 'material_type' AND `enum_value` = 'spare' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
--- ============================================================================
--- 2026-11-04 项目枚举仿真数据备注补齐
--- ============================================================================
+-- 采购订单状态
+UPDATE `basic_enum_data` SET `description` = '采购订单已起草，等待提交审核。' WHERE `enum_code` = 28 AND `workspace_id` = 1001 AND `enum_type` = 'purchase_order_status' AND `enum_value` = '0' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '采购订单已提交，等待审核人员处理。' WHERE `enum_code` = 29 AND `workspace_id` = 1001 AND `enum_type` = 'purchase_order_status' AND `enum_value` = '1' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '采购订单已完成审核，可进入后续采购执行环节。' WHERE `enum_code` = 30 AND `workspace_id` = 1001 AND `enum_type` = 'purchase_order_status' AND `enum_value` = '2' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '采购订单等待供应商发出货物。' WHERE `enum_code` = 31 AND `workspace_id` = 1001 AND `enum_type` = 'purchase_order_status' AND `enum_value` = '3' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '采购订单已有部分货物到达，仍有未到货数量。' WHERE `enum_code` = 32 AND `workspace_id` = 1001 AND `enum_type` = 'purchase_order_status' AND `enum_value` = '4' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '采购订单约定的货物已全部到达。' WHERE `enum_code` = 33 AND `workspace_id` = 1001 AND `enum_type` = 'purchase_order_status' AND `enum_value` = '5' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '采购订单已关闭，订单的常规处理流程已结束。' WHERE `enum_code` = 34 AND `workspace_id` = 1001 AND `enum_type` = 'purchase_order_status' AND `enum_value` = '6' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
--- 仅补齐工作区 1001、版本 1 的原有示例枚举，不覆盖已填写的备注。
-UPDATE `om_enum_type`
-SET `remark` = CASE `enum_type`
-    WHEN 'outbound_purpose' THEN '区分生产领用、销售发货等出库用途，用于追踪物料出库去向。'
-    WHEN 'component_category' THEN '统一零部件分类口径，便于采购、库存及产品结构管理。'
-    WHEN 'raw_material_category' THEN '统一原材料分类口径，便于采购计划、库存统计及生产领料。'
-    WHEN 'settlement_method' THEN '定义采购业务的结算方式，用于记录订单付款及对账约定。'
-    WHEN 'purchase_category' THEN '区分采购业务类别，便于采购需求归类及订单统计。'
-    WHEN 'document_status' THEN '统一采购、入库及出库等业务单据的状态取值。'
-    WHEN 'transport_mode' THEN '定义物流运输方式，用于记录运输安排及交付信息。'
-    WHEN 'material_unit' THEN '统一物料计量单位，用于采购、收货及库存数量核算。'
-    WHEN 'material_category' THEN '统一物料分类口径，便于物料档案、采购及库存管理。'
-    WHEN 'supplier_category' THEN '定义供应商业务类别，便于供应商分类维护及采购协同。'
-    WHEN 'organization_category' THEN '区分集团、公司、工厂及部门等组织类别，明确业务主体层级。'
-    ELSE `remark`
-END
-WHERE `workspace_id` = 1001
-  AND `version_id` = 1
-  AND `del_flag` = 0
-  AND (`remark` IS NULL OR TRIM(`remark`) = '')
-  AND (
-        (`enum_id` = 1 AND `enum_type` = 'outbound_purpose')
-        OR (`enum_id` = 2 AND `enum_type` = 'component_category')
-        OR (`enum_id` = 3 AND `enum_type` = 'raw_material_category')
-        OR (`enum_id` = 4 AND `enum_type` = 'settlement_method')
-        OR (`enum_id` = 5 AND `enum_type` = 'purchase_category')
-        OR (`enum_id` = 6 AND `enum_type` = 'document_status')
-        OR (`enum_id` = 7 AND `enum_type` = 'transport_mode')
-        OR (`enum_id` = 8 AND `enum_type` = 'material_unit')
-        OR (`enum_id` = 9 AND `enum_type` = 'material_category')
-        OR (`enum_id` = 10 AND `enum_type` = 'supplier_category')
-        OR (`enum_id` = 11 AND `enum_type` = 'organization_category')
-  );
+-- 库存状态
+UPDATE `basic_enum_data` SET `description` = '物料已在库且库存状态正常，可按业务规则使用。' WHERE `enum_code` = 35 AND `workspace_id` = 1001 AND `enum_type` = 'inventory_status' AND `enum_value` = 'normal' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '物料仍在库内，因冻结而受到出入库或领用限制。' WHERE `enum_code` = 36 AND `workspace_id` = 1001 AND `enum_type` = 'inventory_status' AND `enum_value` = 'frozen' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '物料已进入运输环节，尚未到达目的地。' WHERE `enum_code` = 37 AND `workspace_id` = 1001 AND `enum_type` = 'inventory_status' AND `enum_value` = 'in_transit' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '物料等待质量检验或检验结果确认。' WHERE `enum_code` = 38 AND `workspace_id` = 1001 AND `enum_type` = 'inventory_status' AND `enum_value` = 'pending_check' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '物料的检验结果未达到适用的质量要求。' WHERE `enum_code` = 39 AND `workspace_id` = 1001 AND `enum_type` = 'inventory_status' AND `enum_value` = 'unqualified' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '物料已完成报废确认，退出正常库存使用。' WHERE `enum_code` = 40 AND `workspace_id` = 1001 AND `enum_type` = 'inventory_status' AND `enum_value` = 'scrapped' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
--- ============================================================================
--- 建模目标验证任务：新增任务名称
--- ============================================================================
+-- 设备运行状态
+UPDATE `basic_enum_data` SET `description` = '设备已启动并正在执行作业。' WHERE `enum_code` = 41 AND `workspace_id` = 1001 AND `enum_type` = 'equipment_run_status' AND `enum_value` = 'running' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '设备当前未执行作业，处于等待运行的状态。' WHERE `enum_code` = 42 AND `workspace_id` = 1001 AND `enum_type` = 'equipment_run_status' AND `enum_value` = 'standby' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '设备正在接受故障处理、检修或维修。' WHERE `enum_code` = 43 AND `workspace_id` = 1001 AND `enum_type` = 'equipment_run_status' AND `enum_value` = 'repairing' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '设备发生异常，正常运行受到影响。' WHERE `enum_code` = 44 AND `workspace_id` = 1001 AND `enum_type` = 'equipment_run_status' AND `enum_value` = 'fault' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '设备已停用，当前不参与生产或作业。' WHERE `enum_code` = 45 AND `workspace_id` = 1001 AND `enum_type` = 'equipment_run_status' AND `enum_value` = 'stop' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
--- 添加时间：2026-11-04 19:34:52（北京时间）
-ALTER TABLE `om_target_task`
-    ADD COLUMN `task_name` VARCHAR(256) NULL COMMENT '任务名称' AFTER `target_id`;
+-- 任务优先级
+UPDATE `basic_enum_data` SET `description` = '时效要求较低，可安排在更高优先级任务之后处理。' WHERE `enum_code` = 46 AND `workspace_id` = 1001 AND `enum_type` = 'task_priority' AND `enum_value` = 'low' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '按常规计划和时限处理的普通任务。' WHERE `enum_code` = 47 AND `workspace_id` = 1001 AND `enum_type` = 'task_priority' AND `enum_value` = 'medium' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '重要性较高，需要优先安排资源和处理时间。' WHERE `enum_code` = 48 AND `workspace_id` = 1001 AND `enum_type` = 'task_priority' AND `enum_value` = 'high' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '时效要求紧迫，需要尽快安排处理。' WHERE `enum_code` = 49 AND `workspace_id` = 1001 AND `enum_type` = 'task_priority' AND `enum_value` = 'urgent' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '最高优先级，需要立即响应并优先协调资源。' WHERE `enum_code` = 50 AND `workspace_id` = 1001 AND `enum_type` = 'task_priority' AND `enum_value` = 'critical' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
--- 添加时间：2026-11-04 19:34:52（北京时间）
--- 补齐历史任务名称，保留已有名称和验证结论。
-UPDATE `om_target_task`
-SET `task_name` = CONCAT('建模目标验证任务-', `id`)
-WHERE `task_name` IS NULL
-   OR TRIM(`task_name`) = '';
+-- 任务状态
+UPDATE `basic_enum_data` SET `description` = '任务已建立，尚未开始执行。' WHERE `enum_code` = 51 AND `workspace_id` = 1001 AND `enum_type` = 'task_status' AND `enum_value` = 'todo' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '任务已开始，相关工作正在执行。' WHERE `enum_code` = 52 AND `workspace_id` = 1001 AND `enum_type` = 'task_status' AND `enum_value` = 'doing' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '任务执行暂时中止，等待后续恢复。' WHERE `enum_code` = 53 AND `workspace_id` = 1001 AND `enum_type` = 'task_status' AND `enum_value` = 'paused' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '任务要求的工作已执行完毕。' WHERE `enum_code` = 54 AND `workspace_id` = 1001 AND `enum_type` = 'task_status' AND `enum_value` = 'done' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '任务已取消，后续执行已终止。' WHERE `enum_code` = 55 AND `workspace_id` = 1001 AND `enum_type` = 'task_status' AND `enum_value` = 'canceled' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '任务已超过计划完成时间，仍未完成。' WHERE `enum_code` = 56 AND `workspace_id` = 1001 AND `enum_type` = 'task_status' AND `enum_value` = 'overdue' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
---版本管理添加停用启用状态。
-ALTER TABLE `basic_project_version`
-    ADD COLUMN `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '状态;0：禁用，1：启用' AFTER `base_version`;
+-- 质量等级
+UPDATE `basic_enum_data` SET `description` = '质量达到适用标准所定义的优等品要求。' WHERE `enum_code` = 57 AND `workspace_id` = 1001 AND `enum_type` = 'quality_level' AND `enum_value` = 'grade_a' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '质量达到适用标准所定义的一等品要求。' WHERE `enum_code` = 58 AND `workspace_id` = 1001 AND `enum_type` = 'quality_level' AND `enum_value` = 'grade_b' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '质量达到适用标准规定的合格要求。' WHERE `enum_code` = 59 AND `workspace_id` = 1001 AND `enum_type` = 'quality_level' AND `enum_value` = 'grade_c' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '质量检验结果未达到合格要求，需要进一步处置。' WHERE `enum_code` = 60 AND `workspace_id` = 1001 AND `enum_type` = 'quality_level' AND `enum_value` = 'unqualified' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '已判定为废品，按质量处置流程处理。' WHERE `enum_code` = 61 AND `workspace_id` = 1001 AND `enum_type` = 'quality_level' AND `enum_value` = 'waste' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
 
-ALTER TABLE `om_data_type`
-    ADD COLUMN `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用，1启用' AFTER `enum_source`;
+-- 证件类型
+UPDATE `basic_enum_data` SET `description` = '用于登记或核验个人身份的居民身份证。' WHERE `enum_code` = 62 AND `workspace_id` = 1001 AND `enum_type` = 'sys_cert_type' AND `enum_value` = 'id_card' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于登记个人身份和跨境出行证件信息的护照。' WHERE `enum_code` = 63 AND `workspace_id` = 1001 AND `enum_type` = 'sys_cert_type' AND `enum_value` = 'passport' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于登记军官身份凭证的证件类型。' WHERE `enum_code` = 64 AND `workspace_id` = 1001 AND `enum_type` = 'sys_cert_type' AND `enum_value` = 'officer_card' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于登记企业或其他市场主体注册信息的营业执照。' WHERE `enum_code` = 65 AND `workspace_id` = 1001 AND `enum_type` = 'sys_cert_type' AND `enum_value` = 'business_license' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于登记和识别组织主体的统一社会信用代码。' WHERE `enum_code` = 66 AND `workspace_id` = 1001 AND `enum_type` = 'sys_cert_type' AND `enum_value` = 'uscc' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 学历等级
+UPDATE `basic_enum_data` SET `description` = '记录高中或低于高中层次的学历。' WHERE `enum_code` = 67 AND `workspace_id` = 1001 AND `enum_type` = 'sys_education_level' AND `enum_value` = 'high_school' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '记录专科层次的高等教育学历。' WHERE `enum_code` = 68 AND `workspace_id` = 1001 AND `enum_type` = 'sys_education_level' AND `enum_value` = 'college' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '记录本科层次的高等教育学历。' WHERE `enum_code` = 69 AND `workspace_id` = 1001 AND `enum_type` = 'sys_education_level' AND `enum_value` = 'bachelor' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '记录硕士研究生层次的学历。' WHERE `enum_code` = 70 AND `workspace_id` = 1001 AND `enum_type` = 'sys_education_level' AND `enum_value` = 'master' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '记录博士研究生层次的学历。' WHERE `enum_code` = 71 AND `workspace_id` = 1001 AND `enum_type` = 'sys_education_level' AND `enum_value` = 'doctor' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 岗位类型
+UPDATE `basic_enum_data` SET `description` = '承担团队管理、资源协调或组织决策职责的岗位。' WHERE `enum_code` = 72 AND `workspace_id` = 1001 AND `enum_type` = 'hr_position_type' AND `enum_value` = 'management' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '承担技术研发、工程实施或专业技术支持职责的岗位。' WHERE `enum_code` = 73 AND `workspace_id` = 1001 AND `enum_type` = 'hr_position_type' AND `enum_value` = 'technology' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '承担客户服务、市场销售或具体业务执行职责的岗位。' WHERE `enum_code` = 74 AND `workspace_id` = 1001 AND `enum_type` = 'hr_position_type' AND `enum_value` = 'business' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '承担设备操作、现场作业或生产执行职责的岗位。' WHERE `enum_code` = 75 AND `workspace_id` = 1001 AND `enum_type` = 'hr_position_type' AND `enum_value` = 'operation' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '承担人事、财务、行政等内部管理职能的岗位。' WHERE `enum_code` = 76 AND `workspace_id` = 1001 AND `enum_type` = 'hr_position_type' AND `enum_value` = 'function' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 部门类型
+UPDATE `basic_enum_data` SET `description` = '直接承担经营活动、客户服务或核心业务执行的部门。' WHERE `enum_code` = 77 AND `workspace_id` = 1001 AND `enum_type` = 'hr_dept_type' AND `enum_value` = 'business_dept' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '承担人事、财务、行政等组织管理职能的部门。' WHERE `enum_code` = 78 AND `workspace_id` = 1001 AND `enum_type` = 'hr_dept_type' AND `enum_value` = 'function_dept' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '承担研究、产品设计或技术开发职责的部门。' WHERE `enum_code` = 79 AND `workspace_id` = 1001 AND `enum_type` = 'hr_dept_type' AND `enum_value` = 'rnd_dept' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '承担生产组织、制造执行或现场管理职责的部门。' WHERE `enum_code` = 80 AND `workspace_id` = 1001 AND `enum_type` = 'hr_dept_type' AND `enum_value` = 'produce_dept' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '为其他部门提供资源、运维或综合协助的部门。' WHERE `enum_code` = 81 AND `workspace_id` = 1001 AND `enum_type` = 'hr_dept_type' AND `enum_value` = 'support_dept' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 合同类型
+UPDATE `basic_enum_data` SET `description` = '约定采购货物、设备或服务及其交付条件的合同。' WHERE `enum_code` = 82 AND `workspace_id` = 1001 AND `enum_type` = 'contract_type' AND `enum_value` = 'purchase' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '约定向客户销售产品或商品及其交付条件的合同。' WHERE `enum_code` = 83 AND `workspace_id` = 1001 AND `enum_type` = 'contract_type' AND `enum_value` = 'sales' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '约定服务内容、交付要求和费用的合同。' WHERE `enum_code` = 84 AND `workspace_id` = 1001 AND `enum_type` = 'contract_type' AND `enum_value` = 'service' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '约定资产使用权、租赁期限和租金的合同。' WHERE `enum_code` = 85 AND `workspace_id` = 1001 AND `enum_type` = 'contract_type' AND `enum_value` = 'lease' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '约定技术开发、转让、咨询或技术服务事项的合同。' WHERE `enum_code` = 86 AND `workspace_id` = 1001 AND `enum_type` = 'contract_type' AND `enum_value` = 'technology' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '约定劳务内容、履行要求和报酬的合同。' WHERE `enum_code` = 87 AND `workspace_id` = 1001 AND `enum_type` = 'contract_type' AND `enum_value` = 'labor' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 合同状态
+UPDATE `basic_enum_data` SET `description` = '合同内容正在起草或编辑，尚未提交审批。' WHERE `enum_code` = 88 AND `workspace_id` = 1001 AND `enum_type` = 'contract_status' AND `enum_value` = 'draft' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '合同已提交，正在等待或接受审批。' WHERE `enum_code` = 89 AND `workspace_id` = 1001 AND `enum_type` = 'contract_status' AND `enum_value` = 'approving' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '合同已由相关方完成签署。' WHERE `enum_code` = 90 AND `workspace_id` = 1001 AND `enum_type` = 'contract_status' AND `enum_value` = 'signed' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '合同已进入约定义务的履行阶段。' WHERE `enum_code` = 91 AND `workspace_id` = 1001 AND `enum_type` = 'contract_status' AND `enum_value` = 'performing' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '合同约定事项已履行完毕。' WHERE `enum_code` = 92 AND `workspace_id` = 1001 AND `enum_type` = 'contract_status' AND `enum_value` = 'finished' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '合同履行过程中已记录违约事项。' WHERE `enum_code` = 93 AND `workspace_id` = 1001 AND `enum_type` = 'contract_status' AND `enum_value` = 'breach' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '合同已解除，后续按解除约定处理。' WHERE `enum_code` = 94 AND `workspace_id` = 1001 AND `enum_type` = 'contract_status' AND `enum_value` = 'terminated' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 币种类型
+UPDATE `basic_enum_data` SET `description` = '人民币，用于记录以 CNY 计价或结算的金额。' WHERE `enum_code` = 95 AND `workspace_id` = 1001 AND `enum_type` = 'currency_type' AND `enum_value` = 'CNY' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '美元，用于记录以 USD 计价或结算的金额。' WHERE `enum_code` = 96 AND `workspace_id` = 1001 AND `enum_type` = 'currency_type' AND `enum_value` = 'USD' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '欧元，用于记录以 EUR 计价或结算的金额。' WHERE `enum_code` = 97 AND `workspace_id` = 1001 AND `enum_type` = 'currency_type' AND `enum_value` = 'EUR' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '日元，用于记录以 JPY 计价或结算的金额。' WHERE `enum_code` = 98 AND `workspace_id` = 1001 AND `enum_type` = 'currency_type' AND `enum_value` = 'JPY' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '英镑，用于记录以 GBP 计价或结算的金额。' WHERE `enum_code` = 99 AND `workspace_id` = 1001 AND `enum_type` = 'currency_type' AND `enum_value` = 'GBP' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 计量单位
+UPDATE `basic_enum_data` SET `description` = '用于按单个物品记录数量的计数单位。' WHERE `enum_code` = 100 AND `workspace_id` = 1001 AND `enum_type` = 'measure_unit' AND `enum_value` = 'piece' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '用于按独立物件记录收发或库存数量的计数单位。' WHERE `enum_code` = 101 AND `workspace_id` = 1001 AND `enum_type` = 'measure_unit' AND `enum_value` = 'unit' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '质量计量单位，适用于按千克记录物料重量。' WHERE `enum_code` = 102 AND `workspace_id` = 1001 AND `enum_type` = 'measure_unit' AND `enum_value` = 'kg' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '质量计量单位，适用于大宗物料的称重和统计。' WHERE `enum_code` = 103 AND `workspace_id` = 1001 AND `enum_type` = 'measure_unit' AND `enum_value` = 'ton' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '长度计量单位，适用于按长度记录线材、管材等物料。' WHERE `enum_code` = 104 AND `workspace_id` = 1001 AND `enum_type` = 'measure_unit' AND `enum_value` = 'meter' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '以整箱为计数单位，箱内数量按物料包装规格确定。' WHERE `enum_code` = 105 AND `workspace_id` = 1001 AND `enum_type` = 'measure_unit' AND `enum_value` = 'box' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 数据权限类型
+UPDATE `basic_enum_data` SET `description` = '在当前授权范围内可访问全部数据。' WHERE `enum_code` = 106 AND `workspace_id` = 1001 AND `enum_type` = 'data_permission_type' AND `enum_value` = 'all' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '仅可访问归属于用户所在部门的数据。' WHERE `enum_code` = 107 AND `workspace_id` = 1001 AND `enum_type` = 'data_permission_type' AND `enum_value` = 'dept' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '可访问用户所在部门及其下级部门的数据。' WHERE `enum_code` = 108 AND `workspace_id` = 1001 AND `enum_type` = 'data_permission_type' AND `enum_value` = 'dept_and_child' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '仅可访问按业务归属判定属于用户本人的数据。' WHERE `enum_code` = 109 AND `workspace_id` = 1001 AND `enum_type` = 'data_permission_type' AND `enum_value` = 'self' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '可访问权限配置中单独指定的数据范围。' WHERE `enum_code` = 110 AND `workspace_id` = 1001 AND `enum_type` = 'data_permission_type' AND `enum_value` = 'custom' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 旧版日志操作类型
+UPDATE `basic_enum_data` SET `description` = '记录旧版日志中的新建或添加操作。' WHERE `enum_code` = 111 AND `workspace_id` = 1001 AND `enum_type` = 'old_log_operate_type' AND `enum_value` = 'add' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '记录旧版日志中对已有数据的编辑操作。' WHERE `enum_code` = 112 AND `workspace_id` = 1001 AND `enum_type` = 'old_log_operate_type' AND `enum_value` = 'edit' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '记录旧版日志中对已有数据的删除操作。' WHERE `enum_code` = 113 AND `workspace_id` = 1001 AND `enum_type` = 'old_log_operate_type' AND `enum_value` = 'delete' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+-- 消息通知类型
+UPDATE `basic_enum_data` SET `description` = '传达系统公告、维护安排或其他平台级信息。' WHERE `enum_code` = 114 AND `workspace_id` = 1001 AND `enum_type` = 'message_notify_type' AND `enum_value` = 'system' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '传达业务流程进度、单据变更或业务事件。' WHERE `enum_code` = 115 AND `workspace_id` = 1001 AND `enum_type` = 'message_notify_type' AND `enum_value` = 'business' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '提醒接收人关注异常、风险或告警事件。' WHERE `enum_code` = 116 AND `workspace_id` = 1001 AND `enum_type` = 'message_notify_type' AND `enum_value` = 'alarm' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '提醒接收人处理分配给自己的待办事项。' WHERE `enum_code` = 117 AND `workspace_id` = 1001 AND `enum_type` = 'message_notify_type' AND `enum_value` = 'todo' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+UPDATE `basic_enum_data` SET `description` = '传达审批请求、审批进度或审批结果。' WHERE `enum_code` = 118 AND `workspace_id` = 1001 AND `enum_type` = 'message_notify_type' AND `enum_value` = 'approve' AND `del_flag` = 0 AND (`description` IS NULL OR TRIM(`description`) = '');
+
+UPDATE `basic_enum_type` SET `description` = LEFT(COALESCE(NULLIF(TRIM(`remark`), ''), CONCAT('定义「', `enum_name`, '」的可选业务值。')), 256) WHERE (`description` IS NULL OR TRIM(`description`) = '') AND `enum_name` IS NOT NULL AND `del_flag` = 0;
+UPDATE `om_enum_type` SET `description` = LEFT(COALESCE(NULLIF(TRIM(`remark`), ''), CONCAT('定义「', `enum_name`, '」的可选业务值。')), 256) WHERE (`description` IS NULL OR TRIM(`description`) = '') AND `enum_name` IS NOT NULL AND `del_flag` = 0;
+UPDATE `basic_enum_data` SET `description` = LEFT(COALESCE(NULLIF(TRIM(`remark`), ''), CONCAT('表示「', `enum_label`, '」的枚举取值，键值为 ', `enum_value`, '。')), 256) WHERE (`description` IS NULL OR TRIM(`description`) = '') AND `enum_label` IS NOT NULL AND `del_flag` = 0;
+UPDATE `om_enum_data` SET `description` = LEFT(COALESCE(NULLIF(TRIM(`remark`), ''), CONCAT('表示「', `enum_label`, '」的枚举取值，键值为 ', `enum_value`, '。')), 256) WHERE (`description` IS NULL OR TRIM(`description`) = '') AND `enum_label` IS NOT NULL AND `del_flag` = 0;
 
 
 UPDATE `system_dict_data` SET `dict_sort` = 0, `dict_label` = '全量更新', `dict_value` = '0', `dict_type` = 'app_update_type', `css_class` = NULL, `list_class` = 'primary', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-22 20:06:17', `update_by` = '吴同', `update_time` = '2026-11-06 12:47:58', `remark` = '' WHERE `dict_code` = 101;

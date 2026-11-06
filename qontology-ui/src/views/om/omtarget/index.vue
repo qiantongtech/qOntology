@@ -47,7 +47,7 @@
           v-hasPermi="['om:target:target:remove']"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
@@ -133,7 +133,6 @@
           label="问题来源"
           prop="questionSource"
           class="row-full"
-          tip="说明问题由哪个部门、业务角色或需求材料提出，便于后续沟通和追溯。"
         >
           <el-input v-model="form.questionSource" placeholder="请输入问题来源，例如：采购管理部门提出" :maxlength="256" />
         </qt-form-item>
@@ -141,7 +140,6 @@
           label="优先级"
           prop="priority"
           class="row-full"
-          tip="根据业务价值、紧急程度及实施顺序选择高、中或低优先级。"
         >
           <el-radio-group v-model="form.priority"><el-radio v-for="dict in om_target_priority" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio></el-radio-group>
         </qt-form-item>
@@ -149,7 +147,6 @@
           label="业务场景"
           prop="businessScenarios"
           class="row-full"
-          tip="描述问题发生的业务流程、参与角色和使用情境，明确本次建模服务的范围。"
         >
           <el-input
             v-model="form.businessScenarios"
@@ -157,7 +154,7 @@
             type="textarea"
             :rows="3"
             placeholder="请输入业务场景，例如：采购人员在订单到货后核对订单与入库记录"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>
@@ -165,7 +162,6 @@
           label="验收标准"
           prop="acceptCriterion"
           class="row-full"
-          tip="填写可用于判断目标是否达成的明确条件，作为验证任务的判断依据。"
         >
           <el-input
             v-model="form.acceptCriterion"
@@ -173,15 +169,15 @@
             type="textarea"
             :rows="3"
             placeholder="请输入验收标准，例如：能够按采购订单查询全部关联入库记录"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" @click="submitForm">确 定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -430,9 +426,3 @@ function routeTo(link, row) {
   }
 }
 </script>
-
-<style scoped>
-.target-textarea :deep(.el-input__count)::after {
-  content: " 个字符";
-}
-</style>

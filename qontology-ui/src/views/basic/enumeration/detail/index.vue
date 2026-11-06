@@ -123,15 +123,15 @@ const loading = ref(false);
 const activeName = ref("data");
 const emptyMessage = ref("枚举类型已不存在");
 // 自由布局完整声明概要字段，避免通用组件默认追加与枚举无关的描述字段。
-const detailItems = [
+const detailItems = computed(() => [
   { label: "枚举名称", key: "enumName" },
   { label: "枚举类型", key: "enumType" },
   { label: "枚举数据数", key: "enumDataCount" },
-  { label: "备注", key: "remark", span: 24, className: "mt2 mb2", formatter: (value) => value?.trim() || "-" },
+  { label: "描述", key: "description", span: 24, className: "mt2 mb2", formatter: (value) => value?.trim() || "-" },
   { label: "创建人", key: "createBy", formatter: formatCreator },
   { label: "创建时间", key: "createTime", type: "time" },
   { label: "更新时间", key: "updateTime", type: "time" },
-];
+]);
 /** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
 function formatCreator(name, record) {
   const phone = creatorPhones.value[record.creatorId];

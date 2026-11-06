@@ -57,4 +57,8 @@ public class BasicDataTypePageReqVO extends PageParam {
     @Schema(description = "枚举类型", example = "")
     private String enumType;
 
+    /** 状态：0 禁用，1 启用。 */
+    @jakarta.validation.constraints.Min(0)
+    @jakarta.validation.constraints.Max(1)
+    private Integer status;
 }

@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-    import { computed, getCurrentInstance, onBeforeUnmount, ref, watch } from 'vue';
+    import { onBeforeUnmount, ref, watch } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import { ElMessage } from 'element-plus';
     import { getType } from '@/api/om/object/type';
@@ -67,7 +67,6 @@
     defineOptions({ name: 'OmObjectTypeDetail' });
     const route = useRoute();
     const router = useRouter();
-    const { proxy } = getCurrentInstance();
     const { creatorPhones } = useCreatorPhones();
     const detail = ref({});
     const loading = ref(false);
@@ -75,7 +74,7 @@
     const activeTab = ref('attributes');
     const descriptionOverflow = ref(false);
     let requestId = 0;
-    
+
     const detailItems = [
         { label: '属性数量', key: 'attributeCount' },
         { label: '关系数量', key: 'relationCount' },
@@ -83,14 +82,14 @@
             const phone = creatorPhones.value[record.creatorId];
             return phone ? `${name || '-'} / ${phone}` : name || '-';
         } },
-        { label: '描述', key: 'description', span: 24, className: 'mb2', slot: 'description' },
+        { label: '描述', key: 'description', span: 24, className: 'mt2 mb2', slot: 'description' },
         { label: '创建时间', key: 'createTime', type: 'time' },
         { label: '更新时间', key: 'updateTime', type: 'time' },
         { label: '更新人', key: 'updateBy', formatter: (name, record) => {
             const phone = creatorPhones.value[record.creatorId];
             return phone ? `${name || '-'} / ${phone}` : name || '-';
         } },
-        
+
     ];
     function checkDescriptionOverflow(event) {
         const element = event.currentTarget;

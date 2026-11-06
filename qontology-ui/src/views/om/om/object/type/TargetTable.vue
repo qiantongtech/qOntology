@@ -28,7 +28,7 @@
             </div>
         </template>
         <template #handle="{ row }">
-            <el-button link type="danger" icon="Delete" :disabled="disabled" @click="emit('remove', row)">
+            <el-button link type="danger" icon="Delete" :disabled="disabled || (lockedTargetId != null && String(row.id) === String(lockedTargetId))" @click="emit('remove', row)">
                 删除
             </el-button>
         </template>
@@ -47,7 +47,8 @@
         targets: { type: Array, default: () => [] },
         columns: { type: Array, default: () => [] },
         editable: { type: Boolean, default: false },
-        disabled: { type: Boolean, default: false }
+        disabled: { type: Boolean, default: false },
+        lockedTargetId: { type: [String, Number], default: undefined }
     });
     const emit = defineEmits(['remove', 'sort-change']);
     const qtTableRef = ref();
@@ -190,7 +191,7 @@
             table: {
                 rowKey: 'id',
                 stripe: true,
-                class: { 'target-detail-table': !props.editable },
+                class: { 'target-detail-table': !props.editable, 'target-edit-table': props.editable },
                 defaultSort: props.editable ? undefined : { prop: 'createTime', order: 'descending' }
             }
         },
@@ -214,11 +215,20 @@
         padding-left: 16px;
         line-height: 24px;
     }
-    .target-empty {
-        padding: 20px 0;
+    .target-edit-table :deep(.el-table__empty-block) {
+        min-height: 190px;
     }
-    .target-empty img {
-        width: 100px;
-        height: 100px;
+    .target-empty {
+        justify-content: center;
+
+        img {
+            width: 100px;
+            height: 100px;
+            margin-top: 12px;
+        }
+
+        p {
+            margin: 4px 0 12px;
+        }
     }
 </style>

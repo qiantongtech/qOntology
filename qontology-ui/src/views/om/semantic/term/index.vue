@@ -42,7 +42,7 @@
           plain
           :disabled="!selectedIds.length || deleting"
           @click="handleDelete()"
-          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
       <div v-loading="loading">
@@ -54,25 +54,7 @@
           :func="readTableRows"
         >
           <template #termInfo="{ row }">
-            <div class="qt-table-info">
-              <div class="qt-table-info__main">
-                <span
-                  class="info-title"
-                  :title="
-                    row.enName
-                      ? `${row.stdName || '-'}（${row.enName}）`
-                      : row.stdName
-                  "
-                  >{{ row.stdName || "-"
-                  }}<template v-if="row.enName"
-                    >（{{ row.enName }}）</template
-                  ></span
-                >
-              </div>
-              <div class="info-desc" :title="row.description">
-                {{ row.description || "-" }}
-              </div>
-            </div>
+            <TermInfoCell :row="row" />
           </template>
           <template #alias="{ row }">{{ row.alias || "-" }}</template>
           <template #abbr="{ row }">{{ row.abbr || "-" }}</template>
@@ -176,7 +158,7 @@
           <el-input
             v-model="form.stdName"
             placeholder="请输入术语名称"
-            :maxlength="256"
+            maxlength="256个字符"
           />
         </qt-form-item>
 
@@ -190,62 +172,28 @@
             :formatter="formatEnglishName"
             :parser="formatEnglishName"
             placeholder="请输入英文名称，以英文字母开头，后续支持英文字母、数字和下划线"
-            :maxlength="256"
           />
         </qt-form-item>
 
         <qt-form-item
           class="row-full"
-          tip="填写同一业务概念的其他叫法；可逐条新增，避免重复别名。"
           label="术语别名"
           prop="alias"
         >
-          <div class="alias-list">
-            <div
-              v-for="(item, index) in aliasRows"
-              :key="item.id"
-              class="alias-row"
-            >
-              <el-input
-                v-model="item.value"
-                placeholder="请输入术语别名"
-                :maxlength="1024"
-                :disabled="saving"
-                @input="syncAliases"
-                @keydown.enter.stop.prevent="addAliasRow"
-              />
-              <el-button
-                v-if="aliasRows.length > 1"
-                size="small"
-                type="danger"
-                icon="Delete"
-                :disabled="saving"
-                :aria-label="`删除第${index + 1}个术语别名`"
-                @click="removeAliasRow(index)"
-              />
-              <el-button
-                v-if="index === aliasRows.length - 1"
-                size="small"
-                type="primary"
-                :disabled="saving"
-                aria-label="新增术语别名"
-                @click="addAliasRow"
-                >+</el-button
-              >
-            </div>
-          </div>
+          <el-input
+            v-model="form.alias"
+            placeholder="请输入术语别名，多个别名用逗号（，）分隔"
+          />
         </qt-form-item>
 
         <qt-form-item
           class="row-full"
-          tip="填写常用的简短业务标识，例如采购订单的业务缩写 PO。"
           label="业务缩写"
           prop="abbr"
         >
           <el-input
             v-model="form.abbr"
             placeholder="请输入业务缩写"
-            :maxlength="256"
           />
         </qt-form-item>
 
@@ -267,7 +215,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="说明该术语的业务出处，例如制度规范、需求材料或提出部门。"
           label="来源"
           prop="source"
         >
@@ -277,7 +224,7 @@
             type="textarea"
             :rows="3"
             placeholder="请输入来源"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>
@@ -293,17 +240,15 @@
             type="textarea"
             :rows="4"
             placeholder="请输入描述"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">取 消</el-button>
-          <el-button type="primary" size="mini" @click="submitForm"
-            >确 定</el-button
-          >
+          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" @click="submitForm">确 定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -325,7 +270,7 @@
           <el-col v-for="field in detailFields" :key="field.prop" :span="24">
             <el-form-item :label="field.label" :prop="field.prop">
               <div v-if="field.prop === 'alias'" class="form-readonly">
-                {{ detailAliases.join(", ") || "-" }}
+                {{ detailAliases.join("，") || "-" }}
               </div>
               <dict-tag
                 v-else-if="field.prop === 'status'"
@@ -365,6 +310,7 @@
 </template>
 
 <script setup>
+import TermInfoCell from "./TermInfoCell.vue";
 import { onBeforeUnmount, computed, nextTick, watch, reactive, ref } from "vue";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -435,8 +381,6 @@ const emptyForm = () => ({
   description: "",
 });
 const form = ref(emptyForm());
-let nextAliasId = 0;
-const aliasRows = ref([{ id: nextAliasId++, value: "" }]);
 const detailAliases = computed(() => parseAliases(detail.value.alias));
 
 function formatEnglishName(value) {
@@ -628,40 +572,8 @@ function parseAliases(value) {
   ];
 }
 
-// 编辑草稿按行维护，接口仍沿用逗号分隔的 alias 字段。
-function resetAliasInput() {
-  const values = parseAliases(form.value.alias);
-  aliasRows.value = (values.length ? values : [""]).map((value) => ({
-    id: nextAliasId++,
-    value,
-  }));
-}
-
-function syncAliases() {
-  form.value.alias = aliasRows.value
-    .map((item) => item.value.trim())
-    .filter(Boolean)
-    .join("，");
-}
-
-function addAliasRow() {
-  if (saving.value) return;
-  aliasRows.value.push({ id: nextAliasId++, value: "" });
-}
-
-function removeAliasRow(index) {
-  if (saving.value) return;
-  aliasRows.value.splice(index, 1);
-  if (!aliasRows.value.length)
-    aliasRows.value.push({ id: nextAliasId++, value: "" });
-  syncAliases();
-  termRef.value?.validateField("alias").catch(() => {});
-}
-
 function confirmAlias() {
-  const values = aliasRows.value.flatMap((item) =>
-    item.value.split(/[,，]/).map((value) => value.trim())
-  );
+  const values = (form.value.alias || "").split(/[,，]/).map((value) => value.trim());
   if (!values.length || values.some((value) => !value)) {
     ElMessage.warning("术语别名每一项都不能为空，请完善后提交");
     return false;
@@ -755,7 +667,6 @@ function handleSelectionChange(selection) {
 
 function clearValidation() {
   termRef.value?.clearValidate();
-  resetAliasInput();
 }
 
 async function handleAdd() {
@@ -776,7 +687,7 @@ async function loadTerm(row, isDetail) {
     detail.value = response.data;
     detailOpen.value = true;
   } else {
-    form.value = { ...emptyForm(), ...response.data };
+    form.value = { ...emptyForm(), ...response.data, alias: parseAliases(response.data.alias).join("，") };
     dialogTitle.value = "修改术语";
     open.value = true;
     await nextTick();
@@ -893,41 +804,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
-.alias-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
-}
-
-.alias-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.alias-row .el-input {
-  flex: 1;
-  min-width: 0;
-}
-
-.alias-row .el-button {
-  flex-shrink: 0;
-  margin-left: 0;
-  padding: 8px 10px;
-}
-
 .term-detail-form {
   padding: 0;
 }
 
 .term-page :deep(.el-dialog) {
   max-width: calc(100vw - 32px);
-}
-
-.term-character-count :deep(.el-input__count)::after {
-  content: " 个字符";
 }
 
 .term-character-count :deep(.el-textarea__inner) {

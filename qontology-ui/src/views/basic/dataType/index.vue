@@ -55,7 +55,7 @@
           :disabled="multiple"
           @click="handleDelete()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
       <!-- 切换枚举时重建表格，重置分页并隔离前一个枚举尚未完成的列表请求。 -->
@@ -72,18 +72,20 @@
           />
           <span v-else>—</span>
         </template>
-        <!-- 取值配置：按业务数据类型以标签展示对应的关键配置。 -->
         <template #typeConfig="{ row }">
-          <div v-if="typeConfigTags(row).length" class="type-config-tags">
-            <el-tag
-              v-for="(tag, index) in typeConfigTags(row)"
-              :key="index"
-              :type="tag.tagType"
-              effect="light"
-            >{{ tag.text }}
-            </el-tag>
+          <div class="flex-column overflow-hidden">
+            <div v-for="(line, index) in getValueConfigLines(row)" :key="index" class="text-ellipsis" :title="line">{{ line }}</div>
           </div>
-          <span v-else>—</span>
+        </template>
+        <template #status="{ row }">
+          <el-switch
+            :model-value="row.status"
+            :active-value="1"
+            :inactive-value="0"
+            :loading="statusSaving[row.id] === true"
+            :disabled="props.readOnly || !auth.hasPermi('basic:dataType:datatype:edit') || statusSaving[row.id] === true"
+            @change="value => handleStatusChange(row, value)"
+          />
         </template>
         <!-- 与枚举创建人和项目责任人保持一致：姓名在上，联系电话以灰色小字在下。 -->
         <template #creator="{ row }">
@@ -140,12 +142,22 @@
       :rules="rules"
       :data-type-options="basic_data_type"
       :enum-options="enumTypeDict"
+      :show-field-tips="false"
+      footer-button-size=""
       :fixed-enum-type="props.enumType"
       :saving="saving"
       :append-to="$refs['app-container']"
       @cancel="cancel"
       @submit="submitForm"
-    />
+    >
+      <template #before-description="{ form: draft }">
+        <qt-form-item label="状态" prop="status" class="row-full">
+          <el-radio-group v-model="draft.status">
+            <el-radio v-for="item in project_status" :key="item.value" :value="Number(item.value)">{{ item.label }}</el-radio>
+          </el-radio-group>
+        </qt-form-item>
+      </template>
+    </DataTypeFormDialog>
 
     <!-- 数据类型详情对话框 -->
     <el-dialog
@@ -161,6 +173,9 @@
         </span>
       </template>
       <el-form ref="dataTypeRef" :model="form" label-width="100px">
+        <el-form-item label="状态" prop="status">
+          <dict-tag :options="project_status" :value="form.status" />
+        </el-form-item>
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="名称" prop="name">
@@ -311,7 +326,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">关 闭</el-button>
+          <el-button @click="cancel">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -319,12 +334,14 @@
 </template>
 
 <script setup name="DataType">
+import auth from "@/plugins/auth";
 import {
   addDataType,
   delDataType,
   getDataType,
   listDataType,
   updateDataType,
+  updateDataTypeStatus,
 } from "@/api/basic/dataType/dataType";
 import {
   computed,
@@ -347,7 +364,8 @@ const props = defineProps({
 });
 
 const { proxy } = getCurrentInstance();
-const { basic_data_type } = proxy.useDict("basic_data_type");
+const { basic_data_type, project_status } = proxy.useDict("basic_data_type", "project_status");
+const statusSaving = reactive({});
 
 const open = ref(false);
 // 保存状态由父页面管理，并传给弹窗阻止重复提交及保存中关闭。
@@ -389,7 +407,7 @@ function formatCreator(record) {
 }
 
 // 将已提交名称与输入草稿分开，保证翻页、排序和刷新沿用最近一次查询的条件。
-const appliedFilters = reactive({ name: "", dataType: "" });
+const appliedFilters = reactive({ name: "", dataType: "", status: null });
 
 // 与枚举列表使用相同的配置式表格，由公共组件统一管理分页、排序和列显隐。
 const tableStore = reactive({
@@ -441,6 +459,7 @@ const tableStore = reactive({
       align: "left",
       headerAlign: "left",
     },
+    { label: "状态", prop: "status", slot: "status", width: 90, align: "center" },
     {
       label: "创建人",
       prop: "createBy",
@@ -462,7 +481,7 @@ const tableStore = reactive({
       : []),
   ]),
   func: loadDataTypes,
-  params: { name: "", dataType: "" },
+  params: { name: "", dataType: "", status: null },
   events: {
     formatParams: formatListParams,
     formatData: formatListData,
@@ -473,16 +492,17 @@ const tableStore = reactive({
 // 有固定枚举关联键时只开放名称筛选；独立页面保留基础数据类型筛选。
 const searchStore = computed(() => ({
   items: [
-    { label: "名称", prop: "name", component: { is: "input" } },
+    { label: "业务数据名称", prop: "name", component: { is: "input" } },
     ...(props.enumType === undefined
       ? [
           {
-            label: "数据类型",
+            label: "业务数据类型",
             prop: "dataType",
             component: { is: "select", options: basic_data_type.value },
           },
         ]
       : []),
+    { label: "状态", prop: "status", component: { is: "select", options: project_status.value } },
   ],
 }));
 
@@ -490,6 +510,7 @@ const searchStore = computed(() => ({
 function applyFilters() {
   appliedFilters.name = (tableStore.params.name || "").trim();
   appliedFilters.dataType = tableStore.params.dataType ?? "";
+  appliedFilters.status = tableStore.params.status === "" ? null : tableStore.params.status;
 }
 
 /** 固定枚举关联范围，并在取消排序时恢复默认的创建时间倒序。 */
@@ -521,7 +542,7 @@ function formatListData(rows) {
     .map((column) => column.prop)
     .filter(Boolean);
   return rows.map((row) => {
-    const record = { ...row };
+    const record = { ...row, status: Number(row.status ?? 1) };
     fields.forEach((field) => {
       if (record[field] == null || record[field] === "") record[field] = "-";
     });
@@ -529,60 +550,72 @@ function formatListData(rows) {
   });
 }
 
-/** 按业务数据类型组装“取值配置”列的标签：文本看格式校验、整数/小数看单位、布尔看文案、日期看格式、枚举看类型。 */
-function typeConfigTags(row) {
-  // 列表统一将空值转为占位符，这里还原为“未填写”语义，避免将占位符当作有效配置展示。
-  const value = (field) => {
-    const raw = row[field];
-    return raw == null || raw === "-" ? "" : String(raw);
+// 按类型读取实际配置，跳过空项后只展示两项；数值零属于有效配置。
+function getValueConfigLines(row) {
+  const fieldsByType = {
+    0: [
+      ["validationType", "校验"],
+      ["minLength", "最小长度"],
+      ["maxLength", "最大长度"],
+      ...(row.validationType === "CUSTOM"
+        ? [["validationPattern", "正则表达式"]]
+        : []),
+      ["exampleValue", "示例值"],
+    ],
+    1: [
+      ["unit", "单位"],
+      ["minValue", "最小值"],
+      ["maxValue", "最大值"],
+    ],
+    2: [
+      ["unit", "单位"],
+      ["decimalPlaces", "小数位数"],
+      ["allPlaces", "总位数"],
+      ["minValue", "最小值"],
+      ["maxValue", "最大值"],
+    ],
+    3: [
+      ["trueLabel", "true 文案"],
+      ["falseLabel", "false 文案"],
+    ],
+    4: [
+      ["format", "展示格式"],
+      ["earliestTime", "最早日期"],
+      ["latestTime", "最晚日期"],
+    ],
+    5: [
+      ["enumType", "枚举类型"],
+
+    ],
   };
-  switch (String(row.dataType)) {
-    case dataTypeConstant.TEXT:
-      return [
-        {
-          text: `校验：${
-            textValidationLabels[row.validationType || "NONE"] ||
-            textValidationLabels.NONE
-          }`,
-          tagType: "info",
-        },
-      ];
-    case dataTypeConstant.INTEGER:
-    case dataTypeConstant.DECIMAL: {
-      const unit = value("unit");
-      const tags = [
-        { text: unit ? `单位：${unit}` : "未设置单位", tagType: unit ? "primary" : "info" },
-      ];
-      // 小数类型额外展示小数位数标签。
-      if (String(row.dataType) === dataTypeConstant.DECIMAL) {
-        const decimalPlaces = value("decimalPlaces");
-        tags.push({
-          text: decimalPlaces ? `位数：${decimalPlaces}` : "未设置位数",
-          tagType: decimalPlaces ? "success" : "info",
-        });
-      }
-      return tags;
-    }
-    case dataTypeConstant.BOOLEAN:
-      return [
-        { text: `true：${value("trueValue") || "是"}`, tagType: "success" },
-        { text: `false：${value("falseValue") || "否"}`, tagType: "danger" },
-      ];
-    case dataTypeConstant.DATE: {
-      const format = value("format");
-      return [{ text: format ? `格式：${format}` : "未设置格式", tagType: format ? "warning" : "info" }];
-    }
-    case dataTypeConstant.ENUM: {
-      const enumType = value("enumType");
-      const enumName =
-        enumTypeDict.value.find((item) => item.enumType === enumType)
-          ?.enumName || enumType;
-      return [
-        { text: enumName || "未设置枚举", tagType: enumName ? "success" : "info" },
-      ];
-    }
-    default:
-      return [];
+  const lines = [];
+  for (const [key, label] of fieldsByType[String(row.dataType)] || []) {
+    const value = row[key];
+    if (value == null || ["", "-"].includes(String(value).trim()))
+      continue;
+    let display = value;
+    if (key === "validationType")
+      display = textValidationLabels[value] || value;
+    if (key === "enumType") display = enumTypeDict.value.find(item => item.enumType === value)?.enumName || value;
+    lines.push(`${label}：${display}`);
+    if (lines.length === 2) break;
+  }
+  return [lines[0] ?? "-", lines[1] ?? "-"];
+}
+
+async function handleStatusChange(row, value) {
+  if (statusSaving[row.id]) return;
+  statusSaving[row.id] = true;
+  try {
+    await proxy.$modal.confirm(`确认要${value === 1 ? "启用" : "禁用"}业务数据类型“${row.name}”吗？`);
+    await updateDataTypeStatus(row.id, value);
+    row.status = value;
+    tableRef.value?.getList();
+    proxy.$modal.msgSuccess("操作成功");
+  } catch {
+    // 取消或失败时保留原有状态。
+  } finally {
+    delete statusSaving[row.id];
   }
 }
 
@@ -594,6 +627,8 @@ watch(
     tableStore.params.dataType = "";
     appliedFilters.name = "";
     appliedFilters.dataType = "";
+    appliedFilters.status = null;
+    tableStore.params.status = null;
     open.value = false;
     openDetail.value = false;
   }
@@ -672,6 +707,7 @@ function reset() {
     allPlaces: 10,
     minValue: null,
     maxValue: null,
+    status: 1,
     trueValue: "是",
     falseValue: "否",
     earliestTime: null,
@@ -718,7 +754,12 @@ function handleUpdate(row) {
   reset();
   const _id = row.id || ids.value;
   getDataType(_id).then((response) => {
-    form.value = response.data;
+    form.value = {
+      ...response.data,
+      status: Number(response.data.status ?? 1),
+      trueValue: response.data.trueLabel,
+      falseValue: response.data.falseLabel,
+    };
     open.value = true;
     title.value = "修改业务数据类型";
   });
@@ -729,7 +770,12 @@ function handleDetail(row) {
   reset();
   const _id = row.id || ids.value;
   getDataType(_id).then((response) => {
-    form.value = response.data;
+    form.value = {
+      ...response.data,
+      status: Number(response.data.status ?? 1),
+      trueValue: response.data.trueLabel,
+      falseValue: response.data.falseLabel,
+    };
     openDetail.value = true;
     title.value = "业务数据类型详情";
   });
@@ -745,6 +791,10 @@ async function submitForm(draft) {
     props.enumType !== undefined
       ? { ...draft, dataType: dataTypeConstant.ENUM, enumType: props.enumType }
       : { ...draft };
+  payload.trueLabel = payload.trueValue;
+  payload.falseLabel = payload.falseValue;
+  delete payload.trueValue;
+  delete payload.falseValue;
   saving.value = true;
   try {
     if (payload.id != null) await updateDataType(payload);
@@ -784,9 +834,4 @@ function handleDelete(row) {
 
 <style scoped lang="scss">
 /* “取值配置”列内的多个标签（如布尔 true/false）换行排列。 */
-.type-config-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
 </style>

@@ -156,7 +156,7 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'basic/enumeration.list': {
-        title: '枚举管理',
+        title: '枚举管理<span class="tip-unbold"> —— 统一业务字段的可选值</span>',
         content: '维护平台级共享的枚举类型，点击枚举类型可进入枚举数据维护枚举项及取值，统一状态、类别等业务字段的可选值，为系统功能与建模提供公共枚举基础。',
         type: 'remind',
         version: '1.0'
@@ -168,7 +168,7 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'basic/dataType.list': {
-        title: '业务数据类型',
+        title: '业务数据类型<span class="tip-unbold"> —— 规范属性取值与数据格式</span>',
         content: '维护平台级共享的业务数据类型，关联基础数据类型并补充业务描述，供对象类型属性引用，统一业务字段的类型口径。',
         type: 'remind',
         version: '1.0'

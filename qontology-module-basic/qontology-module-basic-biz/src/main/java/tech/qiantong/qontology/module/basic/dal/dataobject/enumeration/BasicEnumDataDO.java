@@ -88,5 +88,5 @@ public class BasicEnumDataDO extends BaseEntity {
     @TableLogic
     private Boolean delFlag;
 
-
+    private String description;
 }

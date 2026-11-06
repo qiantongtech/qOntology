@@ -138,6 +138,7 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
+        <div class="h2-titles row-full">基础信息</div>
 
         <qt-form-item
           class="row-full"
@@ -159,7 +160,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="填写业务对象的标准名称，也可从术语表选择，保持业务概念命名一致。"
           label="对象类型名称"
           prop="name"
         >
@@ -196,28 +196,22 @@
             class="character-count"
             type="textarea"
             :rows="4"
-            maxlength="256"
+            maxlength="256个字符"
             show-word-limit
             placeholder="请输入对象类型描述，说明业务含义、职责和适用范围"
           />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          tip="选择该对象类型需要支撑的建模目标，便于检查设计对业务问题的覆盖情况。"
-          label="关联建模目标"
-          prop="targetIds"
-        >
-          <el-button
-            type="primary"
-            plain
-            :disabled="saving"
-            @click="targetPickerOpen = true"
-          >
-            导入建模目标
-          </el-button>
-        </qt-form-item>
-        <div class="target-table">
+        <div class="row-full">
+          <div class="h2-titles mb15">关联建模目标</div>
+          <div class="mb15">
+            <el-form-item prop="targetIds" label-width="0">
+              <el-button type="primary" plain icon="Plus" :disabled="saving" @click="targetPickerOpen = true">
+                导入建模目标
+              </el-button>
+              <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
+            </el-form-item>
+          </div>
           <TargetTable
             :targets="selectedTargets"
             editable
@@ -229,10 +223,10 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
+          <el-button :disabled="saving" @click="open = false">取 消</el-button>
           <el-button
             type="primary"
-            size="mini"
+
             :loading="saving"
             :disabled="parentOptionsLoading"
             @click="submitForm"
@@ -260,11 +254,11 @@
         :model="termQuery"
         @submit.prevent="searchTerms"
       >
-        <el-form-item label="标准名称">
+        <el-form-item label="术语名称">
           <el-input
             v-model="termQuery.stdName"
             class="el-form-input-width"
-            placeholder="请输入标准名称"
+            placeholder="请输入术语名称"
             clearable
             @keyup.enter="searchTerms"
           />
@@ -286,11 +280,14 @@
         @row-click="selectTerm"
       >
         <el-table-column
-          type="index"
-          label="序号"
+          prop="id"
+          label="编号"
           width="65"
           align="center"
         />
+        <el-table-column label="术语信息" min-width="235">
+          <template #default="{ row }"><TermInfoCell :row="row" /></template>
+        </el-table-column>
         <el-table-column
           v-for="field in termFields"
           :key="field.prop"
@@ -300,6 +297,20 @@
           align="left"
           :show-overflow-tooltip="{ effect: 'light' }"
         />
+        <el-table-column label="状态" width="70" align="center">
+          <template #default>启用</template>
+        </el-table-column>
+        <el-table-column label="创建人" min-width="80">
+          <template #default="{ row }">
+            <div class="flex-column overflow-hidden">
+              <span class="text-ellipsis">{{ row.createBy || "-" }}</span>
+              <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="145" align="center">
+          <template #default="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
+        </el-table-column>
       </el-table>
       <pagination
         v-show="termTotal > 0"
@@ -310,11 +321,11 @@
       />
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="termOpen = false">取 消</el-button>
+          <el-button @click="termOpen = false">取 消</el-button>
           <el-button
             type="primary"
-            size="mini"
-            :disabled="!selectedTerm || termLoading"
+
+            :disabled="Number(selectedTerm?.status) !== 1 || termLoading"
             @click="applyTerm"
           >确 定
           </el-button>
@@ -325,6 +336,7 @@
 </template>
 
 <script setup>
+import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
     import { onBeforeUnmount, computed, getCurrentInstance, nextTick, reactive, ref, watch, onMounted } from 'vue';
     import { useRouter } from 'vue-router';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
@@ -656,20 +668,9 @@
     const termLoading = ref(false);
     const selectedTerm = ref();
     const termFields = [
-        { prop: 'stdName', label: '标准名称', width: 130 },
-        {
-            prop: 'enName',
-            label: '英文名称',
-            width: 130
-        },
-        { prop: 'alias', label: '别名', width: 140 },
-        { prop: 'abbr', label: '缩写', width: 100 },
-        {
-            prop: 'source',
-            label: '来源',
-            width: 140
-        },
-        { prop: 'description', label: '描述', width: 200 }
+      { prop: 'alias', label: '术语别名', width: 105 },
+      { prop: 'abbr', label: '业务缩写', width: 80 },
+      { prop: 'source', label: '来源', width: 105 },
     ];
     let termRequest = 0;
 
@@ -683,9 +684,9 @@
         termLoading.value = true;
         selectedTerm.value = undefined;
         try {
-            const response = await listTerm({ ...termQuery, workspaceId: 1001, versionId: versionId.value });
+            const response = await listTerm({ ...termQuery, workspaceId: 1001, versionId: versionId.value, status: 1, orderByColumn: "createTime", isAsc: "descending" });
             if (request !== termRequest) return;
-            terms.value = response.data.rows || [];
+            terms.value = (response.data.rows || []).filter(row => Number(row.status) === 1);
             termTotal.value = response.data.total || 0;
             await nextTick();
             termTableRef.value?.setCurrentRow();
@@ -710,7 +711,7 @@
     }
 
     function applyTerm() {
-        if (!selectedTerm.value) return;
+        if (Number(selectedTerm.value?.status) !== 1) return;
         if ((selectedTerm.value.stdName || '').length > 128) {
             ElMessage.warning('术语名称超过128个字符，请手动输入对象类型名称');
             return;
@@ -764,16 +765,8 @@
         width: 100%;
     }
 
-    .target-table {
-        margin: 0 0 10px 120px;
-    }
-
     .object-type-page :deep(.el-dialog) {
         max-width: calc(100vw - 32px);
-    }
-
-    .character-count :deep(.el-input__count)::after {
-        content: ' 个字符';
     }
 
     .character-count :deep(.el-textarea__inner) {
@@ -781,9 +774,6 @@
     }
 
     @media (max-width: 600px) {
-        .target-table {
-            margin-left: 0;
-        }
         .name-input {
             flex-wrap: wrap;
         }
