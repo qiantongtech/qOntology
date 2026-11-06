@@ -293,7 +293,7 @@
             {{ parseTime(detail.createTime) || "-" }}
           </div>
         </el-form-item>
-        
+
       </el-form>
       <template #footer>
         <el-button @click="openDetail = false">关闭</el-button>
@@ -415,6 +415,7 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "createBy",
+      align: "left",
       width: 120,
     },
     {

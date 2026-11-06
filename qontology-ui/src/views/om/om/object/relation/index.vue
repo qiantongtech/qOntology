@@ -50,21 +50,16 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
-        <!-- 关系信息列：上方 起点类型→关系名称→终点类型，下方描述，布局对齐项目管理信息列。 -->
+        <!-- 关系信息列：起点类型→关系名称→终点类型 单行展示，箭头按是否可逆切换单向/双向；描述已拆为独立列。 -->
         <template #relationInfo="{ row }">
           <div class="qt-table-info relation-info">
             <div class="qt-table-info__main relation-info__main">
               <span class="relation-node text-ellipsis" :title="row.startTypeName || ''">{{ row.startTypeName || '-' }}</span>
-              <span class="relation-arrow" aria-hidden="true">→</span>
+              <svg-icon :icon-class="relationArrowIcon(row.reversibleFlag)" class="relation-arrow" />
               <span class="relation-name text-ellipsis" :title="row.name || ''">{{ row.name || '-' }}</span>
-              <span class="relation-arrow" aria-hidden="true">→</span>
+              <svg-icon :icon-class="relationArrowIcon(row.reversibleFlag)" class="relation-arrow" />
               <span class="relation-node text-ellipsis" :title="row.endTypeName || ''">{{ row.endTypeName || '-' }}</span>
             </div>
-            <div
-              v-if="row.description"
-              class="info-desc"
-              :title="row.description"
-            >{{ row.description }}</div>
           </div>
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
@@ -297,6 +292,8 @@
     const { sys_yes_no } = proxy.useDict('sys_yes_no');
     /** 将 1/0 可逆标识转换为 sys_yes_no 字典值。 */
     const reversibleDictValue = (value) => (value === 1 ? 'Y' : 'N');
+    /** 可逆关系展示双向箭头，不可逆展示单向箭头。 */
+    const relationArrowIcon = (value) => (value === 1 ? 'arrow-left-right-line' : 'arrow-right-line');
     const tableRef = ref();
     const relationRef = ref();
     const selectedIds = ref([]);
@@ -340,6 +337,7 @@
             { type: 'selection', width: 55, minWidth: 55 },
             { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true },
             { label: '对象类型关系信息（起点类型→关系名称→终点类型）', prop: 'name', slot: 'relationInfo', minWidth: 360, align: 'left' },
+            { label: '描述', prop: 'description', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 100 },
             { label: '反向名称', prop: 'reverseName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left' },
@@ -623,9 +621,10 @@
     }
     .relation-arrow {
         flex-shrink: 0;
+        width: 14px;
+        height: 14px;
         color: var(--el-text-color-secondary);
-        font-weight: 600;
-        line-height: 22px;
+        vertical-align: middle;
     }
     /* 表单控件撑满所在列宽，避免行内 style。 */
     .form-control-full {
