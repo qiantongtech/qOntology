@@ -121,7 +121,6 @@
         label="起点类型"
         prop="startTypeId"
         class="row-full"
-        tip="选择发起该关系的对象类型，例如“供应商提供物料”中的供应商。"
       >
         <el-tree-select
           v-model="form.startTypeId"
@@ -137,7 +136,6 @@
         label="对象类型关系名称"
         prop="name"
         class="row-full"
-        tip="使用能表达对象间业务联系的名称，建议填写动词或动宾短语，例如“提供”“采购物料”。"
       >
         <el-input v-model="form.name" placeholder="请输入对象类型关系名称，例如：提供、采购物料" :maxlength="128" />
       </qt-form-item>
@@ -145,7 +143,6 @@
         label="终点类型"
         prop="endTypeId"
         class="row-full"
-        tip="选择关系指向的对象类型，例如“供应商提供物料”中的物料。"
       >
         <el-tree-select
           v-model="form.endTypeId"
@@ -161,7 +158,6 @@
         label="是否可逆"
         prop="reversibleFlag"
         class="row-full"
-        tip="选择“是”时，需填写从终点类型指向起点类型的反向关系名称。"
       >
         <el-radio-group v-model="form.reversibleFlag"><el-radio :value="1">是</el-radio><el-radio :value="0">否</el-radio></el-radio-group>
       </qt-form-item>
@@ -170,7 +166,6 @@
         v-if="form.reversibleFlag === 1"
         prop="reverseName"
         class="row-full"
-        tip="描述反向查看该关系时的业务含义，例如“提供”的反向名称为“由供应商提供”。"
       >
         <el-input v-model="form.reverseName" placeholder="请输入反向名称，例如：由供应商提供" :maxlength="128" />
       </qt-form-item>
@@ -178,7 +173,6 @@
         label="描述"
         prop="description"
         class="row-full"
-        tip="补充关系适用的业务场景、对象间的职责或关联规则，最多256个字符。"
       >
         <el-input
           v-model="form.description"
@@ -190,22 +184,6 @@
           show-word-limit
         />
       </qt-form-item>
-      <div class="row-full">
-        <div class="h2-titles mb15">关联建模目标</div>
-        <div class="mb15">
-          <el-button type="primary" plain icon="Plus" :disabled="saving" @click="targetPickerOpen = true">
-            导入建模目标
-          </el-button>
-          <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
-        </div>
-        <TargetTable
-          :targets="associatedTargets"
-          :locked-target-id="props.targetDetail?.id"
-          editable
-          :disabled="saving"
-          @remove="removeTarget"
-        />
-      </div>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
@@ -219,21 +197,11 @@
       </div>
     </template>
   </el-dialog>
-  <TargetPicker
-    v-model="targetPickerOpen"
-    :selected-targets="associatedTargets"
-    :version-id="versionId"
-    :append-to="pageRef"
-    :load-options="listRelationTargetOptions"
-    @confirm="addTargets"
-  />
 </template>
 
 <script setup>
-import TargetPicker from "@/views/om/om/object/type/TargetPicker.vue";
-import TargetTable from "@/views/om/om/object/type/TargetTable.vue";
 import { useCreatorPhones } from '@/utils/useCreatorPhones';
-import { computed,getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
+import {getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
 import {ElMessage, ElMessageBox} from 'element-plus';
@@ -244,8 +212,7 @@ import {
   addRelation,
   updateRelation,
   delRelation,
-  listRelationTargets,
-  listRelationTargetOptions,
+  listRelationTargets
 } from '@/api/om/object/relation';
 
 defineOptions({name: 'OmObjectTypeRelation'});
@@ -268,26 +235,7 @@ const deleting = ref(false);
 const { creatorPhones } = useCreatorPhones();
 const appliedReversible = ref();
 const open = ref(false);
-const targetPickerOpen = ref(false);
-const selectedTargets = ref([]);
-const associatedTargets = computed(() => {
-  const current = props.targetDetail;
-  if (!current?.id || selectedTargets.value.some(target => String(target.id) === String(current.id))) {
-    return selectedTargets.value;
-  }
-  return [current, ...selectedTargets.value];
-});
-
-function addTargets(targets) {
-  const merged = new Map(associatedTargets.value.map(target => [String(target.id), target]));
-  targets.forEach(target => merged.set(String(target.id), target));
-  selectedTargets.value = [...merged.values()];
-}
-
-function removeTarget(target) {
-  if (saving.value || String(target.id) === String(props.targetDetail?.id)) return;
-  selectedTargets.value = selectedTargets.value.filter(item => String(item.id) !== String(target.id));
-}
+const existingTargetIds = ref([]);
 const typeOptions = ref([]);
 const dialogTitle = ref('新增对象类型关系');
 
@@ -329,8 +277,7 @@ const emptyForm = () => ({
   startTypeId: null,
   endTypeId: null,
   reversibleFlag: 0,
-  reverseName: '',
-  targetIds: []
+  reverseName: ''
 });
 
 const defaultSort = ref({prop: "createTime", order: "descending"});
@@ -340,7 +287,6 @@ const query = reactive({name: '', reversibleFlag: undefined, pageNum: 1, pageSiz
 
 const form = ref(emptyForm());
 const rules = {
-  // targetIds: [{type: 'array', required: true, min: 1, message: '请至少关联一个建模目标', trigger: 'change'}],
   name: [{required: true, whitespace: true, message: '关系名称不能为空', trigger: 'blur'}, {
     max: 128,
     message: '关系名称不能超过128个字符',
@@ -407,8 +353,7 @@ async function handleAdd() {
   if (request !== dialogRequest) return;
   typeOptions.value = proxy.handleTree(response.data || [], 'id', 'parentId');
   form.value = emptyForm();
-  selectedTargets.value = [];
-  targetPickerOpen.value = false;
+  existingTargetIds.value = [];
   dialogTitle.value = '新增对象类型关系';
   open.value = true;
   nextTick(() => relationRef.value?.clearValidate());
@@ -422,9 +367,7 @@ async function handleUpdate(row) {
   if (request !== dialogRequest) return;
   typeOptions.value = proxy.handleTree(options.data || [], 'id', 'parentId');
   form.value = {...emptyForm(), ...response.data, reversibleFlag: Number(response.data.reversibleFlag)};
-  selectedTargets.value = targetsResponse.data || [];
-  form.value.targetIds = [props.targetDetail.id];
-  targetPickerOpen.value = false;
+  existingTargetIds.value = (targetsResponse.data || []).map(target => String(target.id));
   dialogTitle.value = '修改对象类型关系';
   open.value = true;
   nextTick(() => relationRef.value?.clearValidate());
@@ -438,10 +381,13 @@ function handleDetail(row) {
 }
 
 async function submitForm() {
-  if (!requireVersion()) return;
+  const targetId = props.targetDetail?.id;
+  if (targetId == null || saving.value || !requireVersion()) return;
   const submittingVersion = versionId.value;
-  if (saving.value || !await relationRef.value.validate().catch(() => false)) return;
-  if (submittingVersion !== versionId.value || !open.value) return;
+  const request = dialogRequest;
+  const valid = await relationRef.value.validate().catch(() => false);
+  if (!valid || saving.value || !open.value || request !== dialogRequest
+      || submittingVersion !== versionId.value || targetId !== props.targetDetail?.id) return;
   const context = contextRequest;
   ++dialogRequest;
   const data = {
@@ -453,7 +399,7 @@ async function submitForm() {
     endTypeId: form.value.endTypeId,
     reversibleFlag: form.value.reversibleFlag,
     reverseName: form.value.reversibleFlag === 1 ? (form.value.reverseName || '').trim() : '',
-    targetIds: associatedTargets.value.map(target => String(target.id))
+    targetIds: [...new Set([String(targetId), ...existingTargetIds.value])]
   };
   saving.value = true;
   try {
@@ -506,8 +452,7 @@ watch(() => [versionId.value, props.targetDetail?.id], () => {
   ++contextRequest;
   ++dialogRequest;
   open.value = false;
-  targetPickerOpen.value = false;
-  selectedTargets.value = [];
+  existingTargetIds.value = [];
   query.name = '';
   appliedName.value = '';
   query.reversibleFlag = undefined;
@@ -518,7 +463,6 @@ watch(() => [versionId.value, props.targetDetail?.id], () => {
   total.value = 0;
   getList();
 }, {immediate: true});
-watch(open, value => { if (!value) targetPickerOpen.value = false; });
 onBeforeUnmount(() => {
   ++contextRequest;
   ++dialogRequest;

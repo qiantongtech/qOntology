@@ -156,21 +156,26 @@ const displayLogo = computed(() => {
   return isSpecialRoute;
 });
 
+const handleAbout = () => {
+  window.open("https://qontology.cn/", "_blank");
+};
+
 const handleFAQ = () => {
   window.open(
-    "https://gitee.com/qiantongtech/qOntology/blob/develop/QUICKSTART.md",
-    "_blank"
+      "https://docs.qontology.cn/docs/overview/introduction.html",
+      "_blank"
   );
 };
-const handleAbout = () => {
-  window.open("https://qiantong.tech/", "_blank");
-};
 const handleHelp = () => {
-  window.open("https://gitee.com/qiantongtech/qOntology/issues", "_blank");
+  window.open("https://docs.qontology.cn/discuss.html", "_blank");
 };
 </script>
 
 <style lang="scss" scoped>
+.has-logo > .sidebar-logo-container {
+  border-bottom-color: transparent;
+}
+
 /* 子菜单颜色 */
 .theme-dark {
   ::v-deep .nest-menu li {

@@ -28,7 +28,7 @@
             </div>
         </template>
         <template #handle="{ row }">
-            <el-button link type="danger" icon="Delete" :disabled="disabled || (lockedTargetId != null && String(row.id) === String(lockedTargetId))" @click="emit('remove', row)">
+            <el-button link type="danger" icon="Delete" :disabled="disabled" @click="emit('remove', row)">
                 删除
             </el-button>
         </template>
@@ -47,8 +47,7 @@
         targets: { type: Array, default: () => [] },
         columns: { type: Array, default: () => [] },
         editable: { type: Boolean, default: false },
-        disabled: { type: Boolean, default: false },
-        lockedTargetId: { type: [String, Number], default: undefined }
+        disabled: { type: Boolean, default: false }
     });
     const emit = defineEmits(['remove', 'sort-change']);
     const qtTableRef = ref();
