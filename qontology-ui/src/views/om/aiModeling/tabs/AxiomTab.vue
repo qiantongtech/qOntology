@@ -16,12 +16,15 @@
  See the LICENSE file in the project root for full license information.
 -->
 <template>
-  <div ref="pageRef" class="candidate-tab-page model-axiom-page">
-    <qt-wrap
-      :columns="tableStore.columns"
-      :table-ref="tableRef"
-      :config="wrapConfig"
-    >
+  <div ref="pageRef" class="candidate-tab-page axiom-page">
+    <qt-wrap v-bind="wrapConfig" :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+        />
+      </template>
       <template #actions-data>
         <el-button
           type="primary"
@@ -58,12 +61,6 @@
               creatorPhones[row.creatorId]
             }}</span>
           </div>
-        </template>
-        <template #type="{ row }">
-          <dict-tag :options="om_axiom_type" :value="row.type" />
-        </template>
-        <template #level="{ row }">
-          <dict-tag :options="om_rule_level" :value="row.level" />
         </template>
         <template #adoptStatus="{ row }">
           <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus" />
@@ -122,13 +119,16 @@
     </qt-wrap>
 
     <el-dialog
-      v-model="open"
-      :title="readonly ? '模型公理详情' : '修改模型公理'"
-      width="860px"
-      :append-to="pageRef"
-      draggable
-      destroy-on-close
-    >
+        v-model="open"
+        :title="readonly ? '模型公理详情' : '修改模型公理'"
+        width="860px"
+        :append-to="pageRef"
+        :close-on-press-escape="!saving"
+        :before-close="beforeClose"
+        draggable
+        destroy-on-close
+        @closed="handleDialogClosed"
+      >
       <guide-tip-panel
         type="hint"
         class="mb15"
@@ -152,7 +152,11 @@
           />
         </qt-form-item>
         <qt-form-item label="类型" prop="type" required tip="选择公理的约束类型，不同类型对应不同的表达配置。">
-          <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
+          <el-select
+            v-model="form.type"
+            placeholder="请选择类型"
+            @change="handleTypeChange"
+          >
             <el-option
               v-for="i in om_axiom_type"
               :key="i.value"
@@ -199,7 +203,7 @@
               filterable
               clearable
               placeholder="请选择对象类型"
-              @change="form.rangeCandidateId = undefined"
+              @change="handleDomainChange"
             />
           </qt-form-item>
           <qt-form-item label="Range" prop="rangeCandidateId" required tip="选择关系终点（值域）对应的对象类型。">
@@ -301,13 +305,27 @@
           </el-form-item>
           </template>
         </template>
+        <template v-if="readonly">
+          <div class="h2-title">系统信息</div>
+          <el-form-item label="创建人">
+            <div class="form-readonly">
+              {{ formatCreator(form) }}
+            </div>
+          </el-form-item>
+          <el-form-item label="创建时间">
+            <div class="form-readonly">
+              {{ form.createTime || "-" }}
+            </div>
+          </el-form-item>
+        </template>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="open = false">取 消</el-button>
+          <el-button @click="open = false">{{ readonly ? "关 闭" : "取 消" }}</el-button>
           <el-button
             v-if="!readonly"
             type="primary"
+            :loading="saving"
             @click="save"
             >确 定</el-button
           >
@@ -348,7 +366,7 @@ const {
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones } = useCreatorPhones();
+const { creatorPhones, formatCreator } = useCreatorPhones();
 const open = ref(false);
 const readonly = ref(false);
 const form = ref({});
@@ -385,8 +403,24 @@ const {
  */
 const wrapConfig = {
   fullContent: false,
-  actions: { table: { search: false } },
 };
+
+// 搜索项配置
+const searchStore = reactive({
+  items: [
+    { label: "公理名称", prop: "name", component: { is: "input" } },
+    {
+      label: "公理类型",
+      prop: "type",
+      component: { is: "select", options: om_axiom_type },
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
+  ],
+});
 
 // 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
 const tableStore = reactive({
@@ -437,7 +471,7 @@ const tableStore = reactive({
     {
       label: "公理类型",
       prop: "type",
-      slot: "type",
+      dict: "om_axiom_type",
       width: 150,
       minWidth: 150,
       align: "center",
@@ -445,17 +479,9 @@ const tableStore = reactive({
     {
       label: "级别",
       prop: "level",
-      slot: "level",
+      dict: "om_rule_level",
       width: 90,
       minWidth: 90,
-      align: "center",
-    },
-    {
-      label: "采纳状态",
-      prop: "adoptStatus",
-      slot: "adoptStatus",
-      width: 110,
-      minWidth: 110,
       align: "center",
     },
     {
@@ -465,6 +491,7 @@ const tableStore = reactive({
       width: 130,
       minWidth: 130,
       align: "left",
+      headerAlign: "left",
     },
     {
       label: "创建时间",
@@ -477,15 +504,28 @@ const tableStore = reactive({
       sortOrders: ["descending", "ascending", null],
     },
     {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      slot: "adoptStatus",
+      width: 90,
+      minWidth: 90,
+      align: "center",
+      fixed: "right",
+    },
+    {
       label: "操作",
       slot: "handle",
-      width: 250,
-      minWidth: 250,
-      align: "center",
+      width: 210,
+      minWidth: 210,
       fixed: "right",
     },
   ],
   func: fetchRows,
+  params: {
+    name: null,
+    type: null,
+    adoptStatus: null,
+  },
 });
 
 const treeProps = { label: "name", value: "id", children: "children" };
@@ -583,6 +623,25 @@ async function loadEnums() {
   } finally { enumsLoading.value = false; }
 }
 
+function handleDomainChange() {
+  if (form.value.domainCandidateId && form.value.domainCandidateId === form.value.rangeCandidateId) {
+    form.value.rangeCandidateId = undefined;
+  }
+}
+
+/**
+ * 保存期间拦截弹窗关闭回调。
+ * @param {Function} done el-dialog 的 before-close 完成回调
+ */
+function beforeClose(done) {
+  if (!saving.value) done();
+}
+
+/** 弹窗关闭后清除表单校验提示。 */
+function handleDialogClosed() {
+  formRef.value?.clearValidate();
+}
+
 /** 加载对象与属性候选，供公理表达弹窗的树形下拉与属性下拉使用。 */
 async function loadSupportData() {
   const [o, at] = await Promise.all([
@@ -595,7 +654,10 @@ async function loadSupportData() {
 loadSupportData();
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.axiom-page :deep(.el-dialog) {
+  max-width: calc(100vw - 32px);
+}
 .rule-form {
   min-height: 390px;
 }
@@ -603,7 +665,10 @@ loadSupportData();
 .rule-form .el-select {
   width: 100%;
 }
-
+/* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
+.rule-form :deep(.el-form-item.has-tip) {
+  margin-bottom: 25px;
+}
 .h2-title {
   font-size: 16px;
   color: rgba(0, 0, 0, 0.85);
@@ -635,8 +700,8 @@ loadSupportData();
   padding-bottom: 24px;
 }
 .business-type-label {
-  display: inline-flex;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
 }
 </style>

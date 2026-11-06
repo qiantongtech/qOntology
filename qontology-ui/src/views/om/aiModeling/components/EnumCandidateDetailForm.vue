@@ -24,6 +24,7 @@
           :options="statusOptions"
           :value="row.status || '0'"
         />
+        <template v-else-if="item.prop === 'createBy'">{{ formatCreator(row) }}</template>
         <template v-else>{{ displayValue(item.prop) }}</template>
       </div>
     </el-form-item>
@@ -31,12 +32,16 @@
 </template>
 
 <script setup>
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+
 const props = defineProps({
   row: { type: Object, default: () => ({}) },
   fields: { type: Array, default: () => [] },
   statusOptions: { type: Array, default: () => [] },
 });
 const { proxy } = getCurrentInstance();
+const { formatCreator } = useCreatorPhones();
+
 function displayValue(prop) {
   if (["createTime", "updateTime"].includes(prop)) {
     return proxy.parseTime(props.row[prop]) || "-";

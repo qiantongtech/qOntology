@@ -228,6 +228,9 @@
                 :value="detail.acceptStatus || '0'"
               />
             </template>
+            <template v-else-if="field.prop === 'createBy'">
+              {{ formatCreator(detail) }}
+            </template>
             <template v-else>{{ detail[field.prop] ?? "-" }}</template>
           </div>
         </el-form-item>
@@ -254,7 +257,7 @@ const { om_ai_adopt_status, om_target_priority, om_accept_status } =
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones } = useCreatorPhones();
+const { creatorPhones, formatCreator } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const saving = ref(false);
