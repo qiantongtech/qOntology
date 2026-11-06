@@ -1,19 +1,19 @@
 <!--
-  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
 
-  This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
+ This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
 
-  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
-  You may use qOntology for commercial purposes, but you may not remove, hide,
-  modify, or replace the qOntology logo, copyright notices, license notices,
+ qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ You may use qOntology for commercial purposes, but you may not remove, hide,
+ modify, or replace the qOntology logo, copyright notices, license notices,
   or attribution information without a separate commercial license.
 
-  White-label use, OEM distribution, rebranding, or presenting qOntology as
-  another product requires separate commercial authorization from
-  Jiangsu Qiantong Technology Co., Ltd.
+ White-label use, OEM distribution, rebranding, or presenting qOntology as
+ another product requires separate commercial authorization from
+ Jiangsu Qiantong Technology Co., Ltd.
 
-  Business License: https://community.qknow.ai/business/policy.html
-  See the LICENSE file in the project root for full license information.
+ Business License: https://community.qontology.ai/business/policy.html
+ See the LICENSE file in the project root for full license information.
 -->
 
 <template>
@@ -53,16 +53,11 @@
         label="事件名称"
         prop="name"
         class="row-full"
-        tip="事件的简短名称，用于在图谱与时序视图中标识该业务事件。"
+        tip="用于在图谱与时序视图中标识该业务事件。"
       >
         <el-input v-model="localForm.name" placeholder="请输入事件名称" />
       </qt-form-item>
-      <qt-form-item
-        label="事件类型"
-        prop="type"
-        class="row-full"
-        tip="按业务分类选择事件类型，便于后续按类型检索和聚合分析。"
-      >
+      <qt-form-item label="事件类型" prop="type" class="row-full">
         <el-select
           v-model="localForm.type"
           placeholder="请选择事件类型"
@@ -76,11 +71,25 @@
           />
         </el-select>
       </qt-form-item>
+      <!-- 参与实体通过图谱数据选择，输入框仅作只读回显。 -->
+      <qt-form-item label="参与实体" prop="entityNameList" class="row-full">
+        <div class="entity-select">
+          <el-input
+            v-model="localForm.entityNameList"
+            placeholder="请选择参与实体"
+            readonly
+          />
+          <el-button type="primary" :disabled="saving" @click="openGraphData"
+            >选择实体</el-button
+          >
+        </div>
+      </qt-form-item>
       <qt-form-item label="发生时间" prop="occurTime" class="row-full">
         <el-date-picker
+          class="occur-time-picker"
           clearable
           v-model="localForm.occurTime"
-          type="date"
+          type="datetime"
           value-format="YYYY-MM-DD HH:mm:ss"
           placeholder="请选择发生时间"
         />
@@ -88,22 +97,7 @@
       <qt-form-item label="发生地点" prop="occurPlace" class="row-full">
         <el-input v-model="localForm.occurPlace" placeholder="请输入发生地点" />
       </qt-form-item>
-      <!-- 参与实体通过图谱数据选择，输入框仅作只读回显。 -->
-      <qt-form-item
-        label="参与实体"
-        prop="entityNameList"
-        class="row-full"
-        tip="选择与该事件相关的图谱实体，用于在图谱探索中关联展示。"
-      >
-        <div class="entity-select">
-          <el-input
-            v-model="localForm.entityNameList"
-            placeholder="请选择参与实体"
-            readonly
-          />
-          <el-button type="primary" :disabled="saving" @click="openGraphData">选择实体</el-button>
-        </div>
-      </qt-form-item>
+
       <qt-form-item label="事件描述" prop="description" class="row-full">
         <el-input
           v-model="localForm.description"
@@ -127,14 +121,17 @@
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" :disabled="saving" @click="handleCancel">取 消</el-button>
+        <el-button size="mini" :disabled="saving" @click="handleCancel"
+          >取 消</el-button
+        >
         <el-button
           type="primary"
           size="mini"
           :loading="saving"
           :disabled="validating"
           @click="submitForm"
-          >确 定</el-button>
+          >确 定</el-button
+        >
       </div>
     </template>
   </el-dialog>
@@ -254,7 +251,9 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button size="mini" @click="entityOpen = false">取 消</el-button>
-        <el-button type="primary" size="mini" @click="submitEntityForm">确 定</el-button>
+        <el-button type="primary" size="mini" @click="submitEntityForm"
+          >确 定</el-button
+        >
       </div>
     </template>
   </el-dialog>
@@ -548,5 +547,12 @@ function resetQueryEntity() {
   .el-input {
     flex: 1;
   }
+}
+
+.occur-time-picker {
+  width: 100%;
+}
+:deep(.el-input) {
+  width: 100%;
 }
 </style>

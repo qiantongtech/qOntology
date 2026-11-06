@@ -12,7 +12,7 @@
  * another product requires separate commercial authorization from
  * Jiangsu Qiantong Technology Co., Ltd.
  *
- * Business License: https://community.qknow.ai/business/policy.html
+ * Business License: https://community.qontology.ai/business/policy.html
  * See the LICENSE file in the project root for full license information.
  */
 import request from '@/utils/request';

@@ -1,18 +1,18 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
 
- This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
+ This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
 
- qKnow is licensed under Apache License 2.0 with additional qKnow terms.
- You may use qKnow for commercial purposes, but you may not remove, hide,
- modify, or replace the qKnow logo, copyright notices, license notices,
- or attribution information without a separate commercial license.
+ qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ You may use qOntology for commercial purposes, but you may not remove, hide,
+ modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
 
- White-label use, OEM distribution, rebranding, or presenting qKnow as
+ White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
 
- Business License: https://community.qknow.ai/business/policy.html
+ Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
 
@@ -48,11 +48,14 @@
           v-hasPermi="['app:appStructTask:struct:remove']"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
+        <template #taskIcon>
+          <img :src="structuredTaskIcon" alt="" class="info-icon" />
+        </template>
         <!-- 负责人沿用姓名、灰色电话的双行样式，联系电话复用公共用户关联方法。 -->
         <template #responsibleUser="{ row }">
           <div class="flex-column overflow-hidden">
@@ -70,7 +73,7 @@
         </template>
         <!--     运行控制   -->
         <template #runControl="{ row }">
-          <div class="flex-column fz12 run-control">
+          <div class="flex-column run-control">
             <div class="flex-center mb2">
               <span class="black-label mr5">发布状态:</span>
               <el-switch
@@ -101,13 +104,18 @@
               @click="showLogs(row)"
             />
             <div class="last-execute-info">
-              <div class="last-execute-info__row">
+              <div class="last-execute-info__row struct-task-execution">
                 <span class="last-execute-info__value">{{
-                  row.lastExecuteTime ? timeAgo(row.lastExecuteTime) : "-"
+                  row.lastExecuteTime
+                    ? proxy.parseTime(
+                        row.lastExecuteTime,
+                        "{y}-{m}-{d} {h}:{i}:{s}"
+                      )
+                    : "-"
                 }}</span>
-                <span class="ml10 last-execute-info__value">{{
-                  formatDuration(row.executeDuration)
-                }}</span>
+                <span class="last-execute-info__value"
+                  >耗时：{{ formatDuration(row.executeDuration) }}</span
+                >
               </div>
             </div>
           </div>
@@ -130,23 +138,6 @@
         </template>
 
         <template #action="{ row }">
-          <!--          <el-button-->
-          <!--              class="btn-icon-offset"-->
-          <!--              link-->
-          <!--              type="primary"-->
-          <!--              icon="view"-->
-          <!--              @click="handleDetail"-->
-          <!--          >详情</el-button>-->
-          <el-button
-            link
-            type="primary"
-            icon="VideoPlay"
-            :disabled="
-              row.publishStatus == 1 || row.status != 2 || isRunning(row)
-            "
-            @click="handleRun(row)"
-            >执行一次</el-button
-          >
           <el-button
             link
             type="primary"
@@ -155,11 +146,27 @@
             @click="handleResult(row)"
             >抽取结果</el-button
           >
-          <el-popover placement="bottom" :width="150" trigger="click">
+          <el-button link type="primary" icon="View" @click="handleDetail(row)"
+            >详情</el-button
+          >
+          <el-popover
+            placement="bottom"
+            :width="150"
+            popper-class="struct-task-action-popover"
+            trigger="click"
+          >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
             <div class="task-action-list">
+              <el-button
+                link
+                type="primary"
+                icon="VideoPlay"
+                :disabled="row.publishStatus == 1 || isRunning(row)"
+                @click="handleRun(row)"
+                >执行一次</el-button
+              >
               <el-button
                 link
                 type="primary"
@@ -184,7 +191,7 @@
 
         <template #publishBy="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.createBy || ''">{{
+            <span class="text-ellipsis" :title="row.publishBy || ''">{{
               row.publishBy || "-"
             }}</span>
             <span v-if="creatorPhones[row.publisherId]" class="desc-text">{{
@@ -209,9 +216,9 @@ import {
 } from "@/api/app/structTask";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import { cronToZh } from "@/utils/cronUtils";
-import { timeAgo } from "@/utils/time";
 import { Clock } from "@element-plus/icons-vue";
 import TaskLogDialog from "@/views/app/taskLog/taskLogDialog.vue";
+import structuredTaskIcon from "@/assets/images/structured-extraction.svg";
 
 const { proxy } = getCurrentInstance();
 const { creatorPhones } = useCreatorPhones();
@@ -255,7 +262,7 @@ const tableStore = reactive({
     },
   },
   columns: [
-    { type: "selection", width: 55 },
+    { type: "selection", width: 55, minWidth: 55 },
     {
       label: "编号",
       prop: "id",
@@ -266,12 +273,13 @@ const tableStore = reactive({
     },
     {
       label: "任务信息",
-      minWidth: 220,
+      minWidth: 250,
       align: "left",
       info: {
+        iconSlot: "taskIcon",
         title: "name",
         desc: "description",
-        click: (row) => handleUpdate(row),
+        click: (row) => handleDetail(row),
       },
     },
     {
@@ -282,7 +290,7 @@ const tableStore = reactive({
     },
     {
       label: "更新策略",
-      width: 210,
+      width: 140,
       slot: "updateStrategy",
       align: "left",
     },
@@ -297,7 +305,7 @@ const tableStore = reactive({
     },
     {
       label: "发布人",
-      width: 110,
+      width: 100,
       align: "left",
       slot: "publishBy",
     },
@@ -305,7 +313,7 @@ const tableStore = reactive({
       label: "发布时间",
       prop: "publishTime",
       date: true,
-      width: 165,
+      width: 150,
       sortable: "custom",
       sortableKey: "publish_time",
       sortOrders: ["descending", "ascending"],
@@ -314,7 +322,7 @@ const tableStore = reactive({
       label: "创建时间",
       prop: "createTime",
       date: true,
-      width: 165,
+      width: 150,
       sortable: "custom",
       sortableKey: "create_time",
       sortOrders: ["descending", "ascending"],
@@ -322,7 +330,7 @@ const tableStore = reactive({
     {
       label: "操作",
       slot: "action",
-      width: 260,
+      width: 280,
       fixed: "right",
     },
   ],
@@ -478,6 +486,10 @@ function handleUpdate(row) {
   routeTo("/app/structTask/add", row);
 }
 
+function handleDetail(row) {
+  routeTo("/app/structTask/detail", row);
+}
+
 /** 删除按钮操作 */
 function canDeleteTask(row) {
   return !isRunning(row);
@@ -581,5 +593,27 @@ function routeTo(link, row) {
 .execute-tag {
   align-self: flex-start;
   cursor: pointer;
+}
+
+.struct-task-execution {
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: var(--qt-space-1);
+}
+
+:global(.struct-task-action-popover .el-popover__content) {
+  text-align: center;
+}
+
+:global(.struct-task-action-popover .task-action-list) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+:global(.struct-task-action-popover .el-button) {
+  width: 100%;
+  margin-left: 0;
+  justify-content: center;
 }
 </style>

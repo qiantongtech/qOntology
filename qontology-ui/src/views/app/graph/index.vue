@@ -46,7 +46,7 @@
 
 <template>
   <div class="app-container">
-    <GuideTip tip-id="kg/graphExploration" />
+    <guide-tip tip-id="kg/graphExploration" />
     <div class="pagecont-one">
       <div class="page-tabs">
         <el-tabs v-model="pageAct" @tab-click="tabsClick">
@@ -56,10 +56,10 @@
           <el-tab-pane label="表格视图" name="Table"> </el-tab-pane>
         </el-tabs>
       </div>
-      <Graph ref="graph" v-if="pageAct === 'General'" />
-      <RelationView ref="relationView" v-if="pageAct === 'Relation'" />
-      <TimeLineView ref="timeLineView" v-if="pageAct === 'TimeLine'" />
-      <TableView ref="tableView" v-if="pageAct === 'Table'" />
+      <graph ref="graph" v-if="pageAct === 'General'" />
+      <relation-view ref="relationView" v-if="pageAct === 'Relation'" />
+      <time-line-view ref="timeLineView" v-if="pageAct === 'TimeLine'" />
+      <table-view ref="tableView" v-if="pageAct === 'Table'" />
     </div>
   </div>
 </template>
@@ -96,13 +96,13 @@ watch(
     flex: 1;
     border-radius: 2px;
     :deep(.page-tabs) {
-      background: #fff;
+      background: var(--qt-surface-background);
       .el-tabs--top .el-tabs__item.is-top:nth-child(2) {
         padding-left: 36px;
       }
       .el-tabs__nav-wrap:after {
         height: 1px;
-        background-color: #e8e8e8;
+        background-color: var(--qt-graph-divider);
       }
       .el-tabs__item {
         height: 50px;
@@ -110,7 +110,7 @@ watch(
       .el-tabs__item:hover,
       .el-tabs__item.is-active,
       .el-tabs__active-bar {
-        color: #135afb;
+        color: var(--qt-element-fixed-primary);
       }
       .el-tabs__header {
         margin: 0;
@@ -120,13 +120,13 @@ watch(
       }
     }
     :deep(.view-form) {
-      background-color: #fff;
-      padding: 15px 15px 0;
-      margin-bottom: 15px;
+      margin-bottom: var(--qt-space-4);
+      padding: var(--qt-space-4) var(--qt-space-4) 0;
+      background-color: var(--qt-surface-background);
     }
     :deep(.view-main) {
-      background-color: #fff;
-      padding: 20px;
+      padding: var(--qt-space-5);
+      background-color: var(--qt-surface-background);
     }
   }
 }

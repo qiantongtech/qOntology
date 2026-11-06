@@ -282,9 +282,12 @@
                 </template>
                 <div class="collapse-con">
                   <div v-for="(doc, index) in docList" :key="index">
-                    <div v-if="currNodeData.docId == doc.id" class="docItem">
+                    <div
+                      v-if="currNodeData.docId == doc.id"
+                      class="document-item"
+                    >
                       <td
-                        class="docTd"
+                        class="document-name"
                         :title="doc.name"
                         @click="previewRefactoring(doc)"
                         v-track="{
@@ -402,8 +405,7 @@ import AddEntity from "./model/addEntity.vue";
 import { listAttributes } from "@/api/om/object/attribute";
 import AddRelationship from "./model/addRelationship.vue";
 // import TagMultiple from '@/views/kg/manage/tag/selection/tagMultiple.vue';
-import { filePreview, filePreviewUrl } from "@/utils/kkFileView.js";
-const route = useRoute();
+import { filePreview } from "@/utils/kkFileView.js";
 const { proxy } = getCurrentInstance();
 const { basic_data_type } = proxy.useDict("basic_data_type");
 
@@ -476,27 +478,8 @@ function loadData() {
   }
 }
 
-/** 查询字典类型列表 */
 const dictTypeList = ref([]);
-function getDictTypeList() {
-  const params = {
-    graphId: route.params.kgId,
-    status: "0",
-  };
-  listType(params).then((response) => {
-    dictTypeList.value = response.data.rows;
-  });
-}
-/** 查询字典管理列表 */
 const dictDataList = ref([]);
-function getDictDataList() {
-  const params = {
-    graphId: route.params.kgId,
-  };
-  listData(params).then((response) => {
-    dictDataList.value = response.data.rows;
-  });
-}
 // # 修改实体名称
 const isEditName = ref(false);
 const isRelationshipEdit = ref(-1);
@@ -563,17 +546,17 @@ const handleNodeDelete = () => {
       // edges.value = edges.value.filter((e) => e.from !== id && e.to !== id);
       emit("handleNodeDelete");
       // 接口
-      deleteNode(id).then((response) => {
+      deleteNode(id).then(() => {
         proxy.$modal.msgSuccess("删除成功");
         handleRefresh();
         dialogClose(true);
       });
     })
-    .catch((err) => {});
+    .catch(() => {});
 };
 // # 侧边栏展开事件
 const collapseAct = ref(["1", "2", "3", "4"]);
-const collapseChange = (val) => {};
+const collapseChange = () => {};
 
 // #region属性信息
 /** Neo4j节点中不作为业务属性展示的技术字段。 */
@@ -765,13 +748,13 @@ const tripletDelete = (row) => {
         getTripletData(currNodeData.value.id);
       }
       //
-      deleteRelationshipById(id).then((response) => {
+      deleteRelationshipById(id).then(() => {
         proxy.$modal.msgSuccess("删除成功");
         handleRefresh();
         dialogClose(true);
       });
     })
-    .catch((err) => {});
+    .catch(() => {});
 };
 // #endregion
 // #region关联数据源
@@ -818,24 +801,10 @@ function previewRefactoring(row) {
 }
 // #endregion
 // #region实体标签
-const tagMultipleRef = ref(null);
-const tagList = ref([]);
 // function openTagMultiple() {
 //     // 调用子组件暴露的 open 方法，可传入默认选中的标签（可选，这里不传则默认无选中）
 //     tagMultipleRef.value.open(tagList.value);
 // }
-
-/** 接收子组件选中的标签数据（子组件触发 confirm 事件时执行） */
-function handleTagSingleConfirm(selectedTag) {
-  // selectedTag 是子组件回传的选中标签对象（包含 id、name、graphId 等所有字段）
-  const updateTanEntityData = ref({
-    entityId: currNodeData.value.id,
-    graphId: route.params.kgId,
-    tagIds: selectedTag,
-  });
-  // 执行更新实体标签操作
-  updateTags(updateTanEntityData.value);
-}
 
 // 查询当前实体标签
 // function getEntityTags() {
@@ -910,8 +879,8 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
   right: 0;
   width: 400px;
   height: 100%;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--qt-surface-background);
+  border: 1px solid var(--qt-overlay-border);
 
   .details-title {
     height: 42px;
@@ -919,7 +888,7 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid var(--qt-graph-divider);
 
     .title-label {
       display: flex;
@@ -932,9 +901,9 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
       .label {
         width: 270px;
         margin-left: 12px;
-        font-size: 16px;
+        font-size: var(--qt-font-size-medium);
         color: var(--qt-text-primary);
-        font-family: PingFang SC;
+        font-family: var(--qt-font-family);
         font-weight: 500;
       }
     }
@@ -974,11 +943,11 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
     }
 
     .collapse-title {
-      font-size: 16px;
+      font-size: var(--qt-font-size-medium);
       color: var(--qt-text-primary);
       display: flex;
       align-items: center;
-      font-family: PingFang SC;
+      font-family: var(--qt-font-family);
       font-weight: 500;
       &::before {
         display: inline-block;
@@ -1000,9 +969,9 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
 
       :deep(.el-table .el-table__header th .cell) {
         font-weight: normal;
-        color: #333;
-        font-family: Pingfang Sc;
-        font-size: 14px;
+        color: var(--qt-text-primary);
+        font-family: var(--qt-font-family);
+        font-size: var(--qt-font-size-base);
       }
     }
 
@@ -1013,10 +982,10 @@ defineExpose({ dialogOpen, dialogClose, setAssociations, show });
         width: 100px;
       }
 
-      .docItem {
+      .document-item {
         display: flex;
         justify-content: space-between;
-        .docTd {
+        .document-name {
           text-align: left;
           width: 80%;
           white-space: nowrap;

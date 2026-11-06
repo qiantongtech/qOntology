@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <title>非结构化抽取</title>
+  <rect width="16" height="16" rx="2" fill="#135AFB"/>
+  <path d="M4 2.8h5.3l2.7 2.7v7.7H4z" fill="none" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"/>
+  <path d="M9.3 2.8v2.7H12M5.7 7.6h4.6M5.7 9.5h4.6M5.7 11.4h2.7" fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>
+</svg>

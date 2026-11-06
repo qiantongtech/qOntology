@@ -1,83 +1,59 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
 
- This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
+ This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
 
- qKnow is licensed under Apache License 2.0 with additional qKnow terms.
- You may use qKnow for commercial purposes, but you may not remove, hide,
- modify, or replace the qKnow logo, copyright notices, license notices,
- or attribution information without a separate commercial license.
+ qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ You may use qOntology for commercial purposes, but you may not remove, hide,
+ modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
 
- White-label use, OEM distribution, rebranding, or presenting qKnow as
+ White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
 
- Business License: https://community.qknow.ai/business/policy.html
+ Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
 
 <!-- TableMapping.vue -->
 <template>
   <div>
-    <div class="h2-titles mb15">表映射</div>
+    <div class="h2-titles mb15">
+      表映射
+      <!-- <guide-tip-panel
+        type="plain"
+        title="导入表之前需确保数据库连接信息正确"
+      /> -->
+    </div>
     <div class="justify-between mb15">
       <el-row :gutter="15">
         <el-col :span="1.5" class="header-actions">
           <el-button type="primary" plain @click="onImportTable" icon="Upload">
             导入表
           </el-button>
-          <span class="tip-text">注：导入表之前需确保数据库连接信息正确</span>
         </el-col>
       </el-row>
     </div>
-    <el-table :data="tableData" max-height="410">
-      <el-table-column prop="tableName" label="表名"></el-table-column>
-      <el-table-column prop="tableComment" label="表显示名称">
-        <template #default="scope">
-          {{ scope.row.tableComment || "-" }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="operate" label="对应对象类型">
-        <template #default="scope">
-          {{ scope.row.operate || "-" }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="status" label="状态" align="center" width="180">
-        <template #default="scope">
-          <dict-tag :options="app_mapping_status" :value="scope.row.status" />
-        </template>
-      </el-table-column>
-      <el-table-column prop="operate" align="center" label="操作" width="180">
-        <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            icon="Edit"
-            @click="onMappingClick(scope.row)"
-          >
-            映射
-          </el-button>
-          <el-button
-            link
-            type="danger"
-            icon="Delete"
-            @click="onDeleteClick(scope.row)"
-          >
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <qt-table v-bind="tableStore" ref="tableRef">
+      <template #status="{ row }">
+        <dict-tag :options="app_mapping_status" :value="row.status" />
+      </template>
+      <template #handle="{ row }">
+        <el-button link type="primary" icon="Edit" @click="onMappingClick(row)"
+          >映射</el-button
+        >
+        <el-button link type="danger" icon="Delete" @click="onDeleteClick(row)"
+          >删除</el-button
+        >
+      </template>
+    </qt-table>
   </div>
 </template>
 
 <script setup>
-import { InfoFilled } from "@element-plus/icons-vue";
 const { proxy } = getCurrentInstance();
-const { app_mapping_status, app_update_type } = proxy.useDict(
-  "app_mapping_status",
-  "app_update_type"
-);
+const { app_mapping_status } = proxy.useDict("app_mapping_status");
 
 const props = defineProps({
   tableData: {
@@ -90,18 +66,41 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["import-table", "mapping-click", "delete-click"]);
+const tableRef = ref();
+const tableStore = reactive({
+  config: {
+    notPagination: true,
+    table: { maxHeight: 410, rowKey: "tableName", stripe: true },
+  },
+  columns: [
+    { label: "表名", prop: "tableName", minWidth: 220, align: "left" },
+    { label: "表显示名称", prop: "tableComment", minWidth: 260, align: "left" },
+    { label: "对应对象类型", prop: "operate", minWidth: 260, align: "left" },
+    { label: "状态", prop: "status", slot: "status", width: 180 },
+    { label: "操作", slot: "handle", width: 180, fixed: "right" },
+  ],
+  func: () => Promise.resolve({ data: props.tableData || [] }),
+  params: {},
+});
+
+watch(
+  () => props.tableData,
+  () => nextTick(() => tableRef.value?.getList()),
+  { deep: true }
+);
+
+const emit = defineEmits(["importTable", "mappingClick", "deleteClick"]);
 
 const onImportTable = () => {
-  emit("import-table");
+  emit("importTable");
 };
 
 const onMappingClick = (row) => {
-  emit("mapping-click", row);
+  emit("mappingClick", row);
 };
 
 const onDeleteClick = (row) => {
-  emit("delete-click", row);
+  emit("deleteClick", row);
 };
 </script>
 
@@ -110,15 +109,9 @@ const onDeleteClick = (row) => {
   display: flex;
   align-items: center;
 }
-.tip-icon {
-  color: #909399;
-  font-size: 16px;
-  margin-left: 12px;
-  margin-right: 2px;
-}
 .tip-text {
-  color: #909399;
-  font-size: 12px;
-  margin-left: 15px;
+  margin-left: var(--qt-space-4);
+  color: var(--qt-text-secondary);
+  font-size: var(--qt-font-size-small);
 }
 </style>

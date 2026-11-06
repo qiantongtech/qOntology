@@ -64,12 +64,21 @@
       :default-sort="detailDefaultSort"
       stripe
       @sort-change="handleDetailSortChange"
+      class="detail-table"
     >
+      <el-table-column
+        align="center"
+        label="编号"
+        prop="id"
+        sortable="custom"
+        :sort-orders="['descending', 'ascending']"
+        width="100"
+      />
       <el-table-column
         align="left"
         label="执行步骤"
         prop="step"
-        min-width="430"
+        min-width="330"
         :show-overflow-tooltip="{ effect: 'light' }"
       >
         <template #default="scope">{{ scope.row.step || "-" }}</template>
@@ -104,6 +113,7 @@
       v-model:page="detailParams.pageNum"
       :total="detailTotal"
       @pagination="getLogDetails"
+      class="no-top-margin"
     />
     <template #footer>
       <div class="dialog-footer">
@@ -245,5 +255,13 @@ defineExpose({ show });
 <style scoped>
 .wrap-line {
   white-space: pre-wrap;
+}
+/* 操作步骤弹框内：消除 el-table 默认的底部外边距，
+   并让分页容器紧贴表格（去掉其上 padding）。 */
+.detail-table {
+  margin-bottom: 0;
+}
+.detail-table + :deep(.pagination-container) {
+  padding-top: 0;
 }
 </style>

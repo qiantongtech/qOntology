@@ -72,11 +72,12 @@
       @row-click="handleRowClick"
     >
       <el-table-column align="center" type="selection" width="55" />
+      <el-table-column align="center" label="编号" prop="id" width="80" />
       <el-table-column
         align="left"
         label="知识分类名称"
         prop="categoryName"
-        width="200"
+        width="150"
         :show-overflow-tooltip="{ effect: 'light' }"
         ><template #default="scope">{{
           scope.row.categoryName || "-"
@@ -85,7 +86,7 @@
         align="left"
         label="文件名称"
         prop="fileName"
-        width="300"
+        min-width="220"
         :show-overflow-tooltip="{ effect: 'light' }"
         ><template #default="scope">{{
           scope.row.fileName || "-"
@@ -95,11 +96,14 @@
         header-align="left"
         label="文件描述"
         prop="description"
-        width="250"
+        min-width="220"
         :show-overflow-tooltip="{ effect: 'light' }"
         ><template #default="scope">{{
           scope.row.description || "-"
         }}</template></el-table-column>
+      <el-table-column align="center" label="文件大小" prop="fileSize" width="110">
+        <template #default="scope">{{ formatSize(scope.row.fileSize) }}</template>
+      </el-table-column>
       <el-table-column align="center" label="创建人" prop="createBy"><template #default="scope">{{
           scope.row.createBy || "-"
         }}</template></el-table-column>
@@ -136,6 +140,7 @@
 
 <script setup name="AppFileMultiple">
 import { listModelDataFile } from "@/api/basic/file/basicFile";
+import { formatSize } from "@/utils/index";
 
 const { proxy } = getCurrentInstance();
 defineProps({

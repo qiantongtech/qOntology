@@ -17,7 +17,7 @@
 -->
 
 <template>
-    <div :class="['graphSetting', { toggle: toggle }]">
+    <div :class="['graph-setting', { 'is-collapsed': toggle }]">
         <div v-if="false" class="toggle" @click="handleToggle">
             <span class="toggle-text">{{ toggle ? '收起' : '展开' }}</span>
         </div>
@@ -348,18 +348,18 @@ import { reactive, toRefs } from 'vue';
     defineExpose({ gaphSetting, toggle });
 </script>
 <style lang="scss" scoped>
-    .graphSetting {
+    .graph-setting {
         // position: absolute;
         // top: 0;
         // left: -345px;
         width: 345px;
         height: 100%;
-        margin-right: 10px;
-        background: #fff;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-right: var(--qt-space-3);
+        background: var(--qt-surface-background);
+        border: 1px solid var(--qt-overlay-border);
         transition: all 0.3s ease;
         z-index: 1;
-        &.toggle {
+        &.is-collapsed {
             left: 0;
         }
         .toggle {
@@ -369,11 +369,11 @@ import { reactive, toRefs } from 'vue';
             right: -20px;
             top: -1px;
             width: 20px;
-            font-size: 12px;
+            font-size: var(--qt-font-size-small);
             text-align: center;
             line-height: 1.2;
-            background: #fff;
-            border-radius: 0 4px 4px 0;
+            background: var(--qt-surface-background);
+            border-radius: 0 var(--qt-radius-medium) var(--qt-radius-medium) 0;
         }
         //.setting-title {
         //	display: flex;
@@ -398,35 +398,35 @@ import { reactive, toRefs } from 'vue';
 
         .border-item-head {
             height: 50px;
-            padding: 0 20px;
+            padding: 0 var(--qt-space-5);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #e8e8e8;
+            border-bottom: 1px solid var(--qt-graph-divider);
         }
 
         .head-title {
-            font-size: 16px;
-            color: rgba(0, 0, 0, 0.85);
+            font-size: var(--qt-font-size-medium);
+            color: var(--qt-text-emphasis);
             display: flex;
             align-items: center;
-            font-family: PingFang SC;
+            font-family: var(--qt-font-family);
             font-weight: 500;
 
             &::before {
                 display: inline-block;
                 content: '';
-                width: 6px;
-                height: 16px;
-                border-radius: 3px;
+                width: var(--qt-title-marker-width);
+                height: var(--qt-title-marker-height);
+                border-radius: var(--qt-title-marker-radius);
                 background: var(--el-color-primary);
-                margin-right: 8px;
+                margin-right: var(--qt-title-marker-gap);
             }
         }
         :deep(.setting-content) {
             height: calc(100% - 50px);
-            padding: 20px;
-            font-size: 14px;
+            padding: var(--qt-space-5);
+            font-size: var(--qt-font-size-base);
             overflow: hidden auto;
             &::-webkit-scrollbar {
                 width: 0px;
@@ -436,7 +436,7 @@ import { reactive, toRefs } from 'vue';
                 margin-right: 0;
             }
             .el-form-item__label {
-                color: #262626;
+                color: var(--qt-text-primary);
             }
             .setting-form-width {
                 width: 228px;
@@ -459,8 +459,8 @@ import { reactive, toRefs } from 'vue';
                         cursor: pointer;
                         text-align: center;
                         line-height: 30px;
-                        border-radius: 4px;
-                        background: #f3f7ff;
+                        border-radius: var(--qt-radius-medium);
+                        background: var(--qt-graph-tool-background);
                         position: relative;
                         //opacity: 0;
                         &.tool0 {
@@ -535,7 +535,7 @@ import { reactive, toRefs } from 'vue';
                             display: inline-block;
                             width: 100%;
                             height: 100%;
-                            font-size: 12px;
+                            font-size: var(--qt-font-size-small);
                         }
                     }
 
@@ -568,7 +568,7 @@ import { reactive, toRefs } from 'vue';
                     justify-content: space-between;
                     align-items: center;
                     .tool-btn {
-                        background: #f3f7ff;
+                        background: var(--qt-graph-tool-background);
                         margin-right: 7px;
                         width: 25%;
                         height: 58px;
@@ -595,10 +595,10 @@ import { reactive, toRefs } from 'vue';
                             left: 0;
                             right: 0;
                             display: inline-block;
-                            font-family: PingFang SC;
+                            font-family: var(--qt-font-family);
                             font-weight: 400;
-                            font-size: 12px;
-                            color: #595959;
+                            font-size: var(--qt-font-size-small);
+                            color: var(--qt-text-regular);
                             line-height: 22px;
                             margin-top: 10px;
                         }
