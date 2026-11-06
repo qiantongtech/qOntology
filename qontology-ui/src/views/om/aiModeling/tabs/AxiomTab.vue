@@ -16,15 +16,14 @@
  See the LICENSE file in the project root for full license information.
 -->
 <template>
-  <div ref="pageRef" class="candidate-tab-page axiom-page">
-    <qt-wrap v-bind="wrapConfig" :columns="tableStore.columns" :table-ref="tableRef">
-      <template #search>
-        <qt-search-bar
-          :items="searchStore.items"
-          :params="tableStore.params"
-          :table-ref="tableRef"
-        />
-      </template>
+  <div ref="pageRef" class="candidate-tab-page">
+    <qt-search-bar
+        :items="searchStore.items"
+        :params="tableStore.params"
+        :table-ref="tableRef"
+    />
+    <qt-wrap :config="wrapConfig" :columns="tableStore.columns" :table-ref="tableRef">
+
       <template #actions-data>
         <el-button
           type="primary"
