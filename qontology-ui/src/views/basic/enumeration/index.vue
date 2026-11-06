@@ -171,21 +171,21 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <qt-form-item label="枚举名称" prop="enumName" class="row-full" tip="填写枚举的业务名称，例如订单状态，用于展示与检索。">
+        <qt-form-item label="枚举名称" prop="enumName" class="row-full" >
           <el-input
             v-model="form.enumName"
             placeholder="请输入枚举名称"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item label="枚举类型" prop="enumType" class="row-full" tip="填写枚举的程序标识，须以字母开头，仅允许字母、数字和下划线，供业务数据类型等引用。">
+        <qt-form-item label="枚举类型" prop="enumType" class="row-full" >
           <el-input
             v-model="form.enumType"
             placeholder="请输入枚举类型"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item label="状态" prop="status" tip="启用后枚举可用于业务建模，停用后保留历史定义。">
+        <qt-form-item label="状态" prop="status" >
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in sys_normal_disable"
@@ -206,7 +206,7 @@
             placeholder="请输入描述"
           />
         </qt-form-item>
-        <qt-form-item label="备注" prop="remark" class="row-full" tip="补充该枚举的业务背景或维护说明。">
+        <qt-form-item label="备注" prop="remark" class="row-full">
           <el-input
             v-model="form.remark"
             class="character-count"

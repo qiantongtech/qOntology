@@ -154,24 +154,24 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <qt-form-item class="row-full" label="枚举类型" tip="自动沿用当前枚举类型，不可修改。">
+        <qt-form-item class="row-full" label="枚举类型" >
           <el-input v-model="form.enumType" disabled />
         </qt-form-item>
-        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel" tip="填写候选项的展示文案，例如“已支付”，供业务理解与展示。">
+        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel" >
           <el-input
             v-model="form.enumLabel"
             placeholder="请输入枚举标签"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="枚举键值" prop="enumValue" tip="填写候选项的实际存储值，例如“2”，供系统识别与落库。">
+        <qt-form-item class="row-full" label="枚举键值" prop="enumValue" >
           <el-input
             v-model="form.enumValue"
             placeholder="请输入枚举键值"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="排序" prop="enumSort" tip="数值越小越靠前，控制候选项的展示顺序。">
+        <qt-form-item class="row-full" label="排序" prop="enumSort" >
           <el-input-number
             v-model="form.enumSort"
             :min="0"
@@ -180,7 +180,7 @@
             controls-position="right"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="状态" prop="status" tip="启用后该数据可被业务选用，停用后保留历史定义。">
+        <qt-form-item class="row-full" label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in sys_normal_disable"

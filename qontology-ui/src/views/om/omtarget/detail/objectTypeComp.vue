@@ -201,23 +201,6 @@
           placeholder="请输入对象类型描述，说明业务含义、职责和适用范围"
         />
       </qt-form-item>
-
-      <div class="row-full">
-        <div class="h2-titles mb15">关联建模目标</div>
-        <div class="mb15">
-          <el-button type="primary" plain icon="Plus" :disabled="saving" @click="targetPickerOpen = true">
-            导入建模目标
-          </el-button>
-          <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
-        </div>
-        <TargetTable
-          :targets="associatedTargets"
-          :locked-target-id="props.targetDetail?.id"
-          editable
-          :disabled="saving"
-          @remove="removeTarget"
-        />
-      </div>
     </el-form>
     <template #footer>
       <div class="dialog-footer">
@@ -231,13 +214,6 @@
       </div>
     </template>
   </el-dialog>
-  <TargetPicker
-    v-model="targetPickerOpen"
-    :selected-targets="associatedTargets"
-    :version-id="versionId"
-    :append-to="pageRef"
-    @confirm="addTargets"
-  />
   <el-dialog
     v-model="termOpen"
     title="从术语表中选择"
@@ -333,8 +309,6 @@
 </template>
 
 <script setup >
-import TargetPicker from "@/views/om/om/object/type/TargetPicker.vue";
-import TargetTable from "@/views/om/om/object/type/TargetTable.vue";
 import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
 import {computed, getCurrentInstance, nextTick, reactive, ref, watch, onMounted} from 'vue';
 import {useRouter} from 'vue-router';
@@ -362,26 +336,7 @@ const saving = ref(false);
 const deleting = ref(false);
 const open = ref(false);
 const termOpen = ref(false);
-const targetPickerOpen = ref(false);
-const selectedTargets = ref([]);
-const associatedTargets = computed(() => {
-  const current = props.targetDetail;
-  if (!current?.id || selectedTargets.value.some(target => String(target.id) === String(current.id))) {
-    return selectedTargets.value;
-  }
-  return [current, ...selectedTargets.value];
-});
-
-function addTargets(targets) {
-  const merged = new Map(associatedTargets.value.map(target => [String(target.id), target]));
-  targets.forEach(target => merged.set(String(target.id), target));
-  selectedTargets.value = [...merged.values()];
-}
-
-function removeTarget(target) {
-  if (saving.value || String(target.id) === String(props.targetDetail?.id)) return;
-  selectedTargets.value = selectedTargets.value.filter(item => String(item.id) !== String(target.id));
-}
+const existingTargetIds = ref([]);
 const tableRef = ref();
 const { creatorPhones } = useCreatorPhones();
 const isExpandAll = ref(true);
@@ -428,8 +383,7 @@ const emptyForm = () => ({
   name: '',
   description: '',
   parentId: null,
-  orderNum: 0,
-  targetIds: []
+  orderNum: 0
 });
 const form = ref(emptyForm());
 // 以打开弹窗时的节点层级判断，清空普通节点父级不会立即隐藏控件。
@@ -524,8 +478,7 @@ async function handleAdd(parent) {
   if (!requireVersion()) return;
   const request = ++editRequest;
   form.value = emptyForm();
-  selectedTargets.value = [];
-  targetPickerOpen.value = false;
+  existingTargetIds.value = [];
   editingRoot.value = false;
   parentOptions.value = [];
   if (parent) {
@@ -542,8 +495,7 @@ async function handleAdd(parent) {
 async function handleUpdate(row) {
   const request = ++editRequest;
   form.value = emptyForm();
-  selectedTargets.value = [];
-  targetPickerOpen.value = false;
+  existingTargetIds.value = [];
   parentOptions.value = [];
   const [response, targetsResponse] = await Promise.all([getType(row.id), listTypeTargets(row.id)]);
   if (request !== editRequest) return;
@@ -557,8 +509,7 @@ async function handleUpdate(row) {
     ...emptyForm(), ...response.data,
     parentId: editingRoot.value ? 0 : response.data.parentId
   };
-  selectedTargets.value = targetsResponse.data || [];
-  form.value.targetIds = [props.targetDetail.id];
+  existingTargetIds.value = (targetsResponse.data || []).map(target => String(target.id));
   dialogTitle.value = '修改对象类型';
   open.value = true;
   nextTick(() => typeRef.value?.clearValidate());
@@ -572,10 +523,13 @@ function handleDetail(row) {
 }
 
 async function submitForm() {
-  if (!requireVersion()) return;
+  const targetId = props.targetDetail?.id;
+  if (targetId == null || saving.value || !requireVersion()) return;
   const submittingVersion = versionId.value;
-  if (saving.value) return;
-  if (!await typeRef.value.validate().catch(() => false) || submittingVersion !== versionId.value || !open.value) return;
+  const request = editRequest;
+  const valid = await typeRef.value.validate().catch(() => false);
+  if (!valid || saving.value || !open.value || request !== editRequest
+      || submittingVersion !== versionId.value || targetId !== props.targetDetail?.id) return;
   saving.value = true;
   try {
     const data = {
@@ -583,13 +537,13 @@ async function submitForm() {
       workspaceId: 1001,
       versionId: submittingVersion,
       orderNum: form.value.orderNum,
-      targetIds: associatedTargets.value.map(target => String(target.id)),
+      targetIds: [...new Set([String(targetId), ...existingTargetIds.value])],
       parentId: editingRoot.value || form.value.parentId == null || form.value.parentId === '' ? 0 : form.value.parentId,
       name: form.value.name.trim(),
       description: (form.value.description ?? '').trim()
     };
     await (data.id ? updateType(data) : addType(data));
-    if (submittingVersion !== versionId.value) return;
+    if (submittingVersion !== versionId.value || targetId !== props.targetDetail?.id) return;
     ElMessage.success(data.id ? '修改成功' : '新增成功');
     open.value = false;
     await getList();
@@ -683,10 +637,8 @@ watch(versionId, () => {
   ++editRequest;
   open.value = false;
   termOpen.value = false;
-  targetPickerOpen.value = false;
   getList();
 });
-watch(open, value => { if (!value) targetPickerOpen.value = false; });
 watch(() => props.targetDetail?.id, () => {
   ++editRequest;
   open.value = false;
