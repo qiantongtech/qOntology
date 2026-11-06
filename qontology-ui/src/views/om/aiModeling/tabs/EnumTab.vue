@@ -490,10 +490,10 @@ const typeTableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     {
-      label: "备注",
-      prop: "remark",
+      label: "描述",
+      prop: "description",
       slot: "text",
-      minWidth: 200,
+      minWidth: 256,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },

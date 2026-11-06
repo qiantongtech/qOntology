@@ -148,7 +148,7 @@
           <el-input
             v-model="form.question"
             type="textarea"
-            :maxlength="200"
+            :maxlength="256"
             show-word-limit
             placeholder="请输入目标问题"
           />
@@ -157,7 +157,7 @@
           <el-input
             v-model="form.questionSource"
             type="textarea"
-            :maxlength="200"
+            :maxlength="256"
             show-word-limit
             placeholder="请输入问题来源"
           />
@@ -166,7 +166,7 @@
           <el-input
             v-model="form.businessScenarios"
             type="textarea"
-            :maxlength="200"
+            :maxlength="256"
             show-word-limit
             placeholder="请输入业务场景"
           />
@@ -175,7 +175,7 @@
           <el-input
             v-model="form.acceptCriterion"
             type="textarea"
-            :maxlength="200"
+            :maxlength="256"
             show-word-limit
             placeholder="请输入验收标准"
           />

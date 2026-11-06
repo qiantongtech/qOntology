@@ -342,7 +342,7 @@
             { type: 'selection', width: 55, minWidth: 55 },
             { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true },
             { label: '对象类型关系信息（起点类型→关系名称→终点类型）', prop: 'name', slot: 'relationInfo', minWidth: 360, align: 'left', },
-            { label: '描述', prop: 'description', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '描述', prop: 'description', slot: 'text', minWidth: 256, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 10, showOverflowTooltip: { effect: 'light' },},
             { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: { effect: 'light' },},
             { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true, showOverflowTooltip: { effect: 'light' },},
