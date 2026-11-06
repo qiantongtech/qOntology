@@ -18,20 +18,19 @@
 
 <template>
   <div ref="panelRef">
+    <qt-search-bar
+        :items="searchItems"
+        :params="query"
+        :table-ref="tableRef"
+        @query="handleQuery"
+        @reset="handleQuery"
+    />
     <qt-wrap
       :columns="columns"
       :table-ref="listActions"
       :config="{ fullContent: false }"
     >
-      <template #search>
-        <qt-search-bar
-          :items="searchItems"
-          :params="query"
-          :table-ref="tableRef"
-          @query="handleQuery"
-          @reset="handleQuery"
-        />
-      </template>
+
       <template #actions-data>
         <el-button
           v-hasPermi="['om:object:type:edit']"
@@ -67,6 +66,12 @@
             <el-tag :type="row.typeCategory === 2 ? 'success' : 'primary'" effect="light">
               {{ dataTypeLabel(row.typeCategory) }}
             </el-tag>
+          </template>
+          <template #createBy="{ row }">
+            <div class="flex-column overflow-hidden">
+              <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+              <span v-if="creatorPhones[row.creatorId]" class="desc-text text-ellipsis" :title="creatorPhones[row.creatorId]">{{ creatorPhones[row.creatorId] }}</span>
+            </div>
           </template>
           <template #createTime="{ row }">{{
             proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}")
@@ -144,7 +149,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="填写业务中使用的标准属性名称，保持同一对象类型下命名一致。"
           label="属性名称"
           prop="name"
         >
@@ -153,7 +157,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="以英文字母开头，后续仅支持英文字母、数字和下划线，作为属性的英文标识。"
           label="属性代码"
           prop="code"
         >
@@ -162,7 +165,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="说明该属性的业务含义、取值范围与适用场景，最多500个字符。"
           label="描述"
           prop="description"
         >
@@ -172,7 +174,7 @@
             type="textarea"
             :rows="4"
             placeholder="请输入描述"
-            :maxlength="500"
+            :maxlength="256"
             show-word-limit
           />
         </qt-form-item>
@@ -328,10 +330,13 @@
 
         <el-form-item label="创建人">
           <div class="form-readonly">
-            <div class="flex-column overflow-hidden">
-              <span class="text-ellipsis" :title="attributeDetail.createBy || ''">{{ attributeDetail.createBy || '-' }}</span>
-              <span v-if="creatorPhones[attributeDetail.creatorId]" class="desc-text">{{ creatorPhones[attributeDetail.creatorId] }}</span>
-            </div>
+            {{ attributeDetail.createBy || '-' }}
+          </div>
+        </el-form-item>
+
+        <el-form-item label="联系方式">
+          <div class="form-readonly">
+            {{ creatorPhones[attributeDetail.creatorId] || '-' }}
           </div>
         </el-form-item>
 
@@ -414,7 +419,7 @@ const props = defineProps({
 const emit = defineEmits(["changed"]);
 
 const { proxy } = getCurrentInstance();
-const { creatorPhones } = useCreatorPhones();
+const { creatorPhones, loadCreators } = useCreatorPhones();
 
 const panelRef = ref();
 
@@ -525,12 +530,11 @@ const columns = reactive([
   {
     label: "创建人",
     prop: "createBy",
-    slot: "text",
+    slot: "createBy",
     width: 130,
     minWidth: 130,
     align: "left",
     headerAlign: "left",
-    showOverflowTooltip: { effect: "light" },
   },
   {
     label: "创建时间",
@@ -754,7 +758,7 @@ const rules = {
   enumType: [validateConfig("enumType", [5], "请选择枚举类型")],
 
   description: [
-    { max: 500, message: "描述不能超过500个字符", trigger: "blur" },
+    { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
   ],
 };
 

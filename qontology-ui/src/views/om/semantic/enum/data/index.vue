@@ -92,6 +92,16 @@
           />
           <span v-else>-</span>
         </template>
+        <template #createBy="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
+        </template>
         <template #createTime="{ row }">
           {{
             row.createTime === "-"
@@ -156,7 +166,6 @@
         <qt-form-item
           class="row-full"
           label="枚举类型"
-          tip="填写唯一的英文编码，以字母开头，仅支持字母、数字和下划线。"
         >
           <el-input v-model="form.enumType" disabled />
         </qt-form-item>
@@ -164,7 +173,6 @@
           class="row-full"
           label="枚举标签"
           prop="enumLabel"
-          tip="填写界面中显示的业务名称，例如“集团总部”。"
         >
           <el-input
             v-model="form.enumLabel"
@@ -188,7 +196,6 @@
           class="row-full"
           label="排序"
           prop="enumSort"
-          tip="控制同一枚举类型内的展示顺序，数值越小越靠前。"
         >
           <el-input-number
             v-model="form.enumSort"
@@ -202,7 +209,6 @@
           class="row-full"
           label="状态"
           prop="status"
-          tip="启用后可用于业务取值，禁用后保留已有定义。"
         >
           <el-radio-group v-model="form.status">
             <el-radio
@@ -215,18 +221,17 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          label="备注"
-          prop="remark"
-          tip="补充取值含义、适用场景或使用约定，最多256个字符。"
+          label="描述"
+          prop="description"
         >
           <el-input
-            v-model="form.remark"
+            v-model="form.description"
             class="character-count"
             type="textarea"
             :rows="3"
             :maxlength="256"
             show-word-limit
-            placeholder="请输入备注"
+            placeholder="请输入描述"
           />
         </qt-form-item>
       </el-form>
@@ -272,19 +277,23 @@
             class="con-value access-tag"
           />
         </el-form-item>
+        <el-form-item class="row-full" label="备注">
+          <div class="form-readonly textarea">
+            {{ detail.remark?.trim() || "-" }}
+          </div>
+        </el-form-item>
         <el-form-item class="row-full" label="创建人">
           <div class="form-readonly">{{ detail.createBy || "-" }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="联系方式">
+          <div class="form-readonly">{{ creatorPhones[detail.creatorId] || "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
             {{ parseTime(detail.createTime) || "-" }}
           </div>
         </el-form-item>
-        <el-form-item class="row-full" label="备注">
-          <div class="form-readonly textarea">
-            {{ detail.remark?.trim() || "-" }}
-          </div>
-        </el-form-item>
+        
       </el-form>
       <template #footer>
         <el-button @click="openDetail = false">关闭</el-button>
@@ -317,6 +326,8 @@ import auth from "@/plugins/auth";
 import { getType } from "@/api/om/enumeration/type";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+
 // 传入 enumType 时作为详情页内嵌列表使用；未传入时沿用独立页面的路由加载逻辑。
 const props = defineProps({
   enumType: { type: String, default: undefined },
@@ -325,6 +336,7 @@ const props = defineProps({
 const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
+const { creatorPhones } = useCreatorPhones();
 const { project_status } = proxy.useDict("project_status");
 const enumStatusOptions = computed(() =>
   toEnumStatusOptions(project_status.value)
@@ -402,9 +414,8 @@ const tableStore = reactive({
     {
       label: "创建人",
       prop: "createBy",
-      slot: "text",
+      slot: "createBy",
       width: 120,
-      showOverflowTooltip: { effect: "light" },
     },
     {
       label: "创建时间",

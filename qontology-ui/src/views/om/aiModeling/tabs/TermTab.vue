@@ -168,7 +168,7 @@
       >
         <qt-form-item
           class="row-full"
-          tip="填写业务中使用的标准概念名称，作为对象类型和属性命名的依据。"
+
           label="术语名称"
           prop="stdName"
         >
@@ -176,7 +176,6 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          tip="使用英文字母开头，后续仅支持英文字母、数字和下划线，用于统一英文标识。"
           label="英文名称"
           prop="enName"
         >
@@ -250,7 +249,6 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          tip="解释术语的业务含义、适用范围与概念边界，最多256个字符。"
           label="描述"
           prop="description"
         >

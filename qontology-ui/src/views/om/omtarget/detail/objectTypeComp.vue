@@ -663,7 +663,7 @@ onMounted(getList);
 
 .name-input {
   display: flex;
-  gap: 12px;
+  gap: 0px;
   width: 100%;
 }
 

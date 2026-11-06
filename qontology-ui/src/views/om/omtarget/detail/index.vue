@@ -70,7 +70,6 @@ const detailItems = [
   { label: '问题来源', key: 'questionSource' },
   { label: '业务场景', key: 'businessScenarios' },
   { label: '优先级', key: 'priority', slot: 'priority' },
-  { label: '关联元素', slot: 'relatedElements', span: 24, className: 'mt2 mb2' },
   { label: '验收标准', key: 'acceptCriterion', span: 24, className: 'mb2' },
   { label: '创建人', key: 'createBy', formatter: (name, record) => {
     const phone = creatorPhones.value[record.creatorId];
