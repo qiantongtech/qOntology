@@ -331,7 +331,12 @@
         </el-form-item>
         <el-form-item label="创建人">
           <div class="form-readonly">
-            {{ formatCreator(detail) }}
+            {{ detail.createBy || "-" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="联系方式">
+          <div class="form-readonly">
+            {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
           </div>
         </el-form-item>
         <el-form-item label="创建时间">
@@ -375,7 +380,7 @@ const { om_ai_adopt_status, om_attribute_data_type, basic_data_type } =
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const saving = ref(false);

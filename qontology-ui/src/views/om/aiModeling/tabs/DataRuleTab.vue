@@ -130,21 +130,34 @@
       destroy-on-close
     >
       <guide-tip-panel
+        v-if="!readonly"
         type="hint"
         class="mb15"
         allow-wrap
         title="面向属性取值维护数据校验规则，配置校验类型、约束级别与失败条件，保障业务数据符合预期格式与范围。"
       />
+      <!-- 详情弹窗只读风格 -->
+      <el-form v-if="readonly" label-width="120px" class="rule-form">
+        <div class="h2-title">基本信息</div>
+        <el-form-item v-for="field in basicDetailFields" :key="field.label" :label="field.label">
+          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+        </el-form-item>
+        <div class="h2-title">执行条件</div>
+        <el-form-item v-for="field in conditionDetailFields" :key="field.label" :label="field.label">
+          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+        </el-form-item>
+      </el-form>
+      <!-- 修改弹窗可编辑风格 -->
       <el-form
+        v-else
         ref="formRef"
         :model="form"
         :rules="rules"
-        :disabled="readonly"
         label-width="120px"
         class="rule-form"
       >
         <div class="h2-title">基本信息</div>
-        <qt-form-item label="规则名称" prop="name" required tip="填写数据规则的业务名称，便于在列表中识别与检索。">
+        <qt-form-item label="规则名称" prop="name" required>
           <el-input
             v-model="form.name"
             placeholder="请输入规则名称"
@@ -239,29 +252,14 @@
             :maxlength="256"
           />
         </qt-form-item>
-        <template v-if="readonly">
-          <div class="h2-title">系统信息</div>
-          <el-form-item label="创建人">
-            <div class="form-readonly">
-              {{ formatCreator(form) }}
-            </div>
-          </el-form-item>
-          <el-form-item label="创建时间">
-            <div class="form-readonly">
-              {{ form.createTime || "-" }}
-            </div>
-          </el-form-item>
-        </template>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="open = false">取 消</el-button>
-          <el-button
-            v-if="!readonly"
-            type="primary"
-            @click="save"
-            >确 定</el-button
-          >
+          <el-button v-if="readonly" @click="open = false">关 闭</el-button>
+          <template v-else>
+            <el-button @click="open = false">取 消</el-button>
+            <el-button type="primary" @click="save">确 定</el-button>
+          </template>
         </div>
       </template>
     </el-dialog>
@@ -296,7 +294,7 @@ const {
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const readonly = ref(false);
 const form = ref({ conditionItems: [{}] });
@@ -507,6 +505,50 @@ function validateConditions() {
   }
   return "";
 }
+
+/**
+ * 按规则类型返回条件比较符文案。
+ */
+function conditionOperator(type, operator) {
+  if (type === 'REQUIRED') return '为空';
+  if (type === 'ENUM') return '不属于';
+  if (type === 'FORMAT') return '不匹配';
+  return proxy.selectDictLabel(om_rule_operator.value, operator);
+}
+
+/** 将条件关系字典值转为展示文案。 */
+function conditionRelationLabel(value) {
+  return {OR: '任一满足（OR）', AND: '全部满足（AND）'}[value] || '';
+}
+
+/**
+ * 将失败条件拼为“条件N：操作 值”的多行文本。
+ */
+function detailConditions(record) {
+  return (record.conditionItems || []).map((condition, index) => {
+    const operator = conditionOperator(record.type, condition.operator);
+    const value = record.type === 'REQUIRED' || !condition.value ? '' : ` ${condition.value}`;
+    const obj = objects.value.find((item) => item.id === condition.objectCandidateId)?.name || condition.objectCandidateId || '';
+    const attr = attributes.value.find((item) => item.id === condition.attributeCandidateId)?.name || condition.attributeCandidateId || '';
+    return `条件 ${index + 1}：${obj} - ${attr} ${operator}${value}`;
+  }).join('\n');
+}
+
+// 详情弹窗展示字段
+const basicDetailFields = computed(() => [
+  {label: '规则名称', value: form.value.name},
+  {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, form.value.type)},
+  {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, form.value.level)},
+  {label: '描述', value: form.value.description, multiline: true},
+  {label: '创建人', value: form.value.createBy || '-'},
+  {label: '联系方式', value: creatorPhones.value[form.value.creatorId] || '-'},
+  {label: '创建时间', value: proxy.parseTime(form.value.createTime, '{y}-{m}-{d} {h}:{i}')}
+]);
+const conditionDetailFields = computed(() => [
+  {label: '条件关系', value: conditionRelationLabel(form.value.conditionRelation)},
+  {label: '失败条件', value: detailConditions(form.value), multiline: true},
+  {label: '失败提示', value: form.value.failureMessage}
+]);
 
 /** 加载对象、属性与业务类型候选，供数据规则弹窗的条件构建器使用。 */
 async function loadSupportData() {

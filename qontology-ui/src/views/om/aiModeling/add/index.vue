@@ -62,14 +62,14 @@
               label-width="120px"
               class="base-form"
             >
-              <qt-form-item label="任务名称" prop="taskName" tip="填写本次建模任务的名称，便于在列表中区分不同任务。">
+              <qt-form-item label="任务名称" prop="taskName">
                 <el-input
                   v-model="form.taskName"
                   placeholder="请输入任务名称"
                   maxlength="100"
                 />
               </qt-form-item>
-              <qt-form-item label="任务描述" tip="补充本次建模的业务背景、范围或重点关注内容。">
+              <qt-form-item label="任务描述">
                 <el-input
                   v-model="form.description"
                   type="textarea"
@@ -79,7 +79,7 @@
                   show-word-limit
                 />
               </qt-form-item>
-              <qt-form-item label="上传文件" prop="filePaths" tip="上传需解析的业务文档，最多5个，支持 txt、pdf、docx 等格式。">
+              <qt-form-item label="上传文件" prop="filePaths">
                 <FileUpload2
                   v-model="form.filePaths"
                   v-model:file-name="form.fileNames"
@@ -835,8 +835,8 @@ onMounted(async () => {
   content: "";
 }
 .base-form {
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: 1200px;
+  margin: 0;
 }
 /* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
 .base-form :deep(.el-form-item.has-tip) {

@@ -130,18 +130,38 @@
         @closed="handleDialogClosed"
       >
       <guide-tip-panel
+        v-if="!readonly"
         type="hint"
         class="mb15"
         allow-wrap
         title="为对象类型及其属性、关系设定逻辑约束，选择公理类型并配置适用范围与约束强度，保证模型的一致性与可校验性。"
       />
+      <!-- 详情弹窗只读风格 -->
+      <el-form v-if="readonly" label-width="120px" class="column-form">
+        <el-form-item
+          v-for="field in detailFields"
+          :key="field.label"
+          :label="field.label"
+          :class="{ 'row-full': field.multiline }"
+        >
+          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+        </el-form-item>
+        <AttributeTypeConfig
+          v-if="form.type === 'PROPERTY_RANGE'"
+          :model="detailConfig"
+          readonly
+          :enum-options="enumOptions"
+        />
+      </el-form>
+      <!-- 修改弹窗可编辑风格 -->
       <el-form
+        v-else
         ref="formRef"
         :model="form"
         :rules="rules"
-        :disabled="readonly"
         label-width="120px"
         class="rule-form"
+        @submit.prevent="save"
       >
         <div class="h2-title">基本信息</div>
         <qt-form-item label="公理名称" prop="name" required tip="填写公理的业务名称，便于在列表中识别与检索。">
@@ -305,30 +325,19 @@
           </el-form-item>
           </template>
         </template>
-        <template v-if="readonly">
-          <div class="h2-title">系统信息</div>
-          <el-form-item label="创建人">
-            <div class="form-readonly">
-              {{ formatCreator(form) }}
-            </div>
-          </el-form-item>
-          <el-form-item label="创建时间">
-            <div class="form-readonly">
-              {{ form.createTime || "-" }}
-            </div>
-          </el-form-item>
-        </template>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="open = false">{{ readonly ? "关 闭" : "取 消" }}</el-button>
-          <el-button
-            v-if="!readonly"
-            type="primary"
-            :loading="saving"
-            @click="save"
-            >确 定</el-button
-          >
+          <el-button v-if="readonly" @click="open = false">关 闭</el-button>
+          <template v-else>
+            <el-button @click="open = false">取 消</el-button>
+            <el-button
+              type="primary"
+              :loading="saving"
+              @click="save"
+              >确 定</el-button
+            >
+          </template>
         </div>
       </template>
     </el-dialog>
@@ -366,7 +375,7 @@ const {
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const readonly = ref(false);
 const form = ref({});
@@ -641,6 +650,65 @@ function beforeClose(done) {
 function handleDialogClosed() {
   formRef.value?.clearValidate();
 }
+
+/**
+ * 按公理类型组装详情弹窗的展示字段。
+ * @param {Object} record 详情记录
+ * @returns {Array<Object>} 展示字段列表
+ */
+function getDetailFields(record) {
+  const typeLabel = proxy.selectDictLabel(om_axiom_type.value, record.type) || '-';
+  const levelLabel = proxy.selectDictLabel(om_rule_level.value, record.level) || '-';
+
+  let specificFields = [];
+  if (record.type === 'DOMAIN_RANGE') {
+    specificFields = [
+      { label: '关系', value: record.relationName },
+      { label: 'Domain', value: objectTree.value.find(item => item.id === record.domainCandidateId)?.name || record.domainCandidateId || '-' },
+      { label: 'Range', value: objectTree.value.find(item => item.id === record.rangeCandidateId)?.name || record.rangeCandidateId || '-' }
+    ];
+  } else if (record.type === 'PROPERTY_RANGE') {
+    const businessType = businessTypes.value.find((item) => String(item.id) === String(record.businessTypeId) && item.businessTypeSource === (record.businessTypeSource || "GLOBAL"));
+    specificFields = [
+      { label: '对象类型', value: objectTree.value.find(item => item.id === record.objectCandidateId)?.name || record.objectCandidateId || '-' },
+      { label: '对象类型属性', value: attributes.value.find(item => item.id === record.attributeCandidateId)?.name || record.attributeCandidateId || '-' },
+      { label: '数据类型', value: record.typeCategory === 1 ? '基础数据类型' : '业务数据类型' },
+      {
+        label: '数据类型',
+        value: record.typeCategory === 1
+          ? proxy.selectDictLabel(basic_data_type.value, record.basicTypeCode)
+          : businessType?.name || record.businessTypeId
+      }
+    ];
+    if (record.typeCategory === 2) {
+      specificFields.push({ label: '基础数据类型', value: basicTypeLabel(businessType ? Number(businessType.dataType) : record.basicTypeCode) });
+      if (businessType?.description) {
+        specificFields.push({ label: '类型描述', value: businessType.description, multiline: true });
+      }
+    }
+  } else {
+    const firstType = record.type === 'SUBCLASS' ? '子类型' : '对象类型A';
+    const secondType = record.type === 'SUBCLASS' ? '父类型' : '对象类型B';
+    specificFields = [
+      { label: firstType, value: objectTree.value.find(item => item.id === record.objectCandidateId)?.name || record.objectCandidateId || '-' },
+      { label: secondType, value: objectTree.value.find(item => item.id === record.otherObjectCandidateId)?.name || record.otherObjectCandidateId || '-' }
+    ];
+  }
+
+  return [
+    { label: '公理名称', value: record.name },
+    { label: '类型', value: typeLabel },
+    { label: '级别', value: levelLabel },
+    ...specificFields,
+    { label: '描述', value: record.description, multiline: true },
+    { label: '创建人', value: record.createBy || '-' },
+    { label: '联系方式', value: creatorPhones.value[record.creatorId] || '-' },
+    { label: '创建时间', value: proxy.parseTime(record.createTime, '{y}-{m}-{d} {h}:{i}') }
+  ];
+}
+
+const detailFields = computed(() => getDetailFields(form.value));
+const detailConfig = computed(() => effectiveConfig.value);
 
 /** 加载对象与属性候选，供公理表达弹窗的树形下拉与属性下拉使用。 */
 async function loadSupportData() {

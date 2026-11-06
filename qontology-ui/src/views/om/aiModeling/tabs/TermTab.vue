@@ -299,7 +299,10 @@
                 {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
               </div>
               <div v-else-if="field.prop === 'createBy'" class="form-readonly">
-                {{ formatCreator(detail) }}
+                {{ detail.createBy || "-" }}
+              </div>
+              <div v-else-if="field.prop === 'contact'" class="form-readonly">
+                {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
               </div>
               <div
                 v-else
@@ -336,7 +339,7 @@ const { om_ai_adopt_status } = proxy.useDict("om_ai_adopt_status");
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const saving = ref(false);
@@ -521,6 +524,7 @@ const fields = [
   { prop: "source", label: "来源" },
   { prop: "description", label: "描述" },
   { prop: "createBy", label: "创建人" },
+  { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
 ];
 

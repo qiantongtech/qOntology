@@ -24,7 +24,8 @@
           :options="statusOptions"
           :value="row.status || '0'"
         />
-        <template v-else-if="item.prop === 'createBy'">{{ formatCreator(row) }}</template>
+        <template v-else-if="item.prop === 'createBy'">{{ row.createBy || '-' }}</template>
+        <template v-else-if="item.prop === 'contact'">{{ (row.creatorId != null && creatorPhones[String(row.creatorId)]) ? creatorPhones[String(row.creatorId)] : '-' }}</template>
         <template v-else>{{ displayValue(item.prop) }}</template>
       </div>
     </el-form-item>
@@ -40,7 +41,7 @@ const props = defineProps({
   statusOptions: { type: Array, default: () => [] },
 });
 const { proxy } = getCurrentInstance();
-const { formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 
 function displayValue(prop) {
   if (["createTime", "updateTime"].includes(prop)) {

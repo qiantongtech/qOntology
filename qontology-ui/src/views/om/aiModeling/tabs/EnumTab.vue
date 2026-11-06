@@ -692,6 +692,7 @@ const typeDetailFields = [
   { prop: "enumType", label: "枚举类型" },
   { prop: "status", label: "状态" },
   { prop: "createBy", label: "创建人" },
+  { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
   { prop: "remark", label: "备注" },
 ];
@@ -703,6 +704,7 @@ const valueDetailFields = [
   { prop: "enumSort", label: "排序" },
   { prop: "status", label: "状态" },
   { prop: "createBy", label: "创建人" },
+  { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
   { prop: "remark", label: "备注" },
 ];
