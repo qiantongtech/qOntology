@@ -168,7 +168,7 @@
       >
         <qt-form-item
           class="row-full"
-          tip="填写业务中使用的标准概念名称，作为对象类型和属性命名的依据。"
+
           label="术语名称"
           prop="stdName"
         >
@@ -176,7 +176,6 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          tip="使用英文字母开头，后续仅支持英文字母、数字和下划线，用于统一英文标识。"
           label="英文名称"
           prop="enName"
         >
@@ -250,7 +249,6 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          tip="解释术语的业务含义、适用范围与概念边界，最多256个字符。"
           label="描述"
           prop="description"
         >
@@ -301,7 +299,10 @@
                 {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
               </div>
               <div v-else-if="field.prop === 'createBy'" class="form-readonly">
-                {{ formatCreator(detail) }}
+                {{ detail.createBy || "-" }}
+              </div>
+              <div v-else-if="field.prop === 'contact'" class="form-readonly">
+                {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
               </div>
               <div
                 v-else
@@ -338,7 +339,7 @@ const { om_ai_adopt_status } = proxy.useDict("om_ai_adopt_status");
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const saving = ref(false);
@@ -523,6 +524,7 @@ const fields = [
   { prop: "source", label: "来源" },
   { prop: "description", label: "描述" },
   { prop: "createBy", label: "创建人" },
+  { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
 ];
 

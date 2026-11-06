@@ -123,15 +123,15 @@ const canAdopt = computed(
 );
 /** 顶部信息表字段，复用 DetailInfo 自由模式与建模目标详情一致；行间距通过 mt2/mb2 与建模目标保持同样的上下节奏。 */
 const detailItems = [
-  { label: "任务名称", key: "taskName" },
   { label: "开始时间", key: "startedTime", type: "time" },
   { label: "完成时间", key: "finishedTime", type: "time" },
-  { label: "任务描述", key: "description", span: 24, className: "mt2 mb2" },
   { label: "失败原因", key: "failureReason", className: "mb2" },
+  { label: "任务描述", key: "description", span: 24, className: "mt2 mb2" },
   { label: "候选数量", key: "candidateCount", className: "mb2", formatter: (val) => val ?? 0 },
   { label: "文档名称", slot: "documents", className: "mb2" },
   { label: "创建人", key: "createBy", formatter: (_name, record) => formatCreator(record) },
   { label: "创建时间", key: "createTime", type: "time" },
+    { label: "更新人", key: "createBy", formatter: (_name, record) => formatCreator(record) },
   { label: "更新时间", key: "updateTime", type: "time" },
 ];
 /** 加载任务详情。 */

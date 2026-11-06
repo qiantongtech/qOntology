@@ -31,6 +31,17 @@ export default [
         }]
     },
     {
+        path: '/app/unstructTask/detail',
+        component: Layout,
+        hidden: true,
+        children: [{
+            path: '',
+            component: () => import('@/views/app/unstructTask/detail/index.vue'),
+            name: 'AppUnstructTaskDetail',
+            meta: { title: '非结构化抽取详情', activeMenu: '/app/graph/unstructTask' }
+        }]
+    },
+    {
         path: '/app/structTask/add',
         component: Layout,
         hidden: true,
@@ -39,6 +50,17 @@ export default [
             component: () => import('@/views/app/structTask/add/index.vue'),
             name: 'AppStructTaskAdd',
             meta: { title: '结构化抽取配置', activeMenu: '/app/graph/structTask' }
+        }]
+    },
+    {
+        path: '/app/structTask/detail',
+        component: Layout,
+        hidden: true,
+        children: [{
+            path: '',
+            component: () => import('@/views/app/structTask/detail/index.vue'),
+            name: 'AppStructTaskDetail',
+            meta: { title: '结构化抽取详情', activeMenu: '/app/graph/structTask' }
         }]
     },
     {

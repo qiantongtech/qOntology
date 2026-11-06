@@ -279,7 +279,11 @@
           </div></el-form-item
         ><el-form-item label="创建人"
           ><div class="form-readonly">
-            {{ formatCreator(detail) }}
+            {{ detail.createBy || "-" }}
+          </div></el-form-item
+        ><el-form-item label="联系方式"
+          ><div class="form-readonly">
+            {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
           </div></el-form-item
         ><el-form-item label="创建时间"
           ><div class="form-readonly">
@@ -312,7 +316,7 @@ const { proxy } = getCurrentInstance();
 const { om_ai_adopt_status } = proxy.useDict("om_ai_adopt_status");
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const targetPickerOpen = ref(false);

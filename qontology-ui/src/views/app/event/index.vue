@@ -1,19 +1,19 @@
 <!--
- Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
 
- This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
+  This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
 
- qOntology is licensed under Apache License 2.0 with additional qOntology terms.
- You may use qOntology for commercial purposes, but you may not remove, hide,
- modify, or replace the qOntology logo, copyright notices, license notices,
- or attribution information without a separate commercial license.
+  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+  You may use qOntology for commercial purposes, but you may not remove, hide,
+  modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
 
- White-label use, OEM distribution, rebranding, or presenting qOntology as
- another product requires separate commercial authorization from
- Jiangsu Qiantong Technology Co., Ltd.
+  White-label use, OEM distribution, rebranding, or presenting qOntology as
+  another product requires separate commercial authorization from
+  Jiangsu Qiantong Technology Co., Ltd.
 
- Business License: https://community.qknow.ai/business/policy.html
- See the LICENSE file in the project root for full license information.
+  Business License: https://community.qontology.ai/business/policy.html
+  See the LICENSE file in the project root for full license information.
 -->
 
 <template>
@@ -46,18 +46,31 @@
           v-hasPermi="['app:graph:event:remove']"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 事件名称与描述合并展示，名称在上、描述在下。 -->
+        <template #eventInfo="{ row }">
+          <div class="event-info">
+            <span class="event-info__name" :title="row.name || ''">{{
+              row.name || "-"
+            }}</span>
+            <span
+              class="event-info__description"
+              :title="row.description || ''"
+              >{{ row.description || "-" }}</span
+            >
+          </div>
+        </template>
         <!-- 事件类型沿用字典标签展示 -->
         <template #eventType="{ row }">
           <dict-tag :options="app_event_type" :value="row.type" />
         </template>
         <!-- 参与实体沿用标签换行展示的样式 -->
         <template #entityList="{ row }">
-          <div class="multiline-ellipsis">
+          <div class="entity-list multiline-ellipsis">
             <span v-if="!row.entityNameList || !row.entityNameList.length"
               >-</span
             >
@@ -178,6 +191,11 @@
         <el-form-item label="创建人" prop="createBy" class="row-full">
           <div class="form-readonly">{{ form.createBy || "-" }}</div>
         </el-form-item>
+        <el-form-item label="联系方式" class="row-full">
+          <div class="form-readonly">
+            {{ creatorPhones[String(form.creatorId)] || "-" }}
+          </div>
+        </el-form-item>
         <el-form-item label="创建时间" prop="createTime" class="row-full">
           <div class="form-readonly">
             {{ proxy.parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
@@ -256,40 +274,33 @@ const tableStore = reactive({
       sortableKey: "id",
     },
     {
-      label: "事件名称",
+      label: "事件信息",
       prop: "name",
-      minWidth: 200,
+      slot: "eventInfo",
+      minWidth: 320,
       align: "left",
-      showOverflowTooltip: { effect: "light" },
     },
-    {
-      label: "事件描述",
-      prop: "description",
-      minWidth: 250,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    { label: "事件类型", prop: "type", slot: "eventType" },
+    { label: "事件类型", minWidth: 100, prop: "type", slot: "eventType" },
     {
       label: "参与实体",
       prop: "entityNameList",
       slot: "entityList",
       minWidth: 250,
-      align: "center",
-      showOverflowTooltip: { effect: "light" },
+      align: "left",
+      headerAlign: "left",
     },
     {
       label: "发生时间",
       prop: "occurTime",
       date: true,
-      width: 180,
+      width: 160,
       sortable: "custom",
       sortableKey: "occurTime",
     },
     {
       label: "发生地点",
       prop: "occurPlace",
-      minWidth: 200,
+      minWidth: 180,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -297,7 +308,7 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 130,
+      width: 100,
       align: "left",
       headerAlign: "left",
       showOverflowTooltip: { effect: "light" },
@@ -306,7 +317,7 @@ const tableStore = reactive({
       label: "创建时间",
       prop: "createTime",
       date: true,
-      width: 180,
+      width: 160,
       align: "left",
       sortable: "custom",
       sortableKey: "createTime",
@@ -470,6 +481,37 @@ function handleDelete(row) {
 <style scoped lang="scss">
 .card-tag {
   margin: 2px;
+}
+
+.event-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--qt-space-1);
+  line-height: 1.5;
+
+  &__name,
+  &__description {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__name {
+    color: var(--qt-text-primary);
+  }
+
+  &__description {
+    color: var(--qt-text-secondary);
+    font-size: var(--qt-font-size-small);
+  }
+}
+
+.entity-list {
+  width: 100%;
+  text-align: left;
 }
 
 /* 详情参与实体标签：横向排列并自动换行。 */

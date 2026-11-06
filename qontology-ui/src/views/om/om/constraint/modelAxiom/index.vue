@@ -119,7 +119,7 @@
                 <qt-form-item label="公理名称" prop="name" >
                     <el-input v-model="form.name" placeholder="请输入公理名称" maxlength="128" />
                 </qt-form-item>
-                <qt-form-item label="类型" prop="type" tip="选择公理的约束类型，不同类型对应不同的表达配置。">
+                <qt-form-item label="类型" prop="type" >
                     <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
                         <el-option
                             v-for="item in om_axiom_type"
@@ -143,7 +143,7 @@
                         type="textarea"
                         :rows="4"
                         placeholder="请输入描述"
-                        :maxlength="512"
+                        :maxlength="256"
                         show-word-limit
                     />
                 </qt-form-item>

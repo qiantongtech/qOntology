@@ -53,7 +53,10 @@
           v-bind="getSelectProps(item)"
         >
           <template #prefix v-if="item.component.prefixSlot">
-            <slot :name="item.component.prefixSlot" v-bind="{ value: props.params[item.prop] }" />
+            <slot
+              :name="item.component.prefixSlot"
+              v-bind="{ value: props.params[item.prop] }"
+            />
           </template>
           <el-option
             v-for="(option, index) in item.component.options"
@@ -214,7 +217,7 @@ function handleResetClick() {
 }
 .extend-btn {
   .svg-icon {
-    font-size: 12px;
+    font-size: 10px;
     margin-right: 6px;
   }
 }

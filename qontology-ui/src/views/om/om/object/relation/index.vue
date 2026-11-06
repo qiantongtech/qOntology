@@ -50,27 +50,27 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
-        <!-- 关系信息列：上方 起点类型→关系名称→终点类型，下方描述，布局对齐项目管理信息列。 -->
+        <!-- 关系信息列：可逆时单个双向箭头、不可逆时单向箭头；关系名称在箭头上方，反向名称在箭头下方。 -->
         <template #relationInfo="{ row }">
           <div class="qt-table-info relation-info">
             <div class="qt-table-info__main relation-info__main">
-              <span class="relation-node text-ellipsis" :title="row.startTypeName || ''">{{ row.startTypeName || '-' }}</span>
-              <span class="relation-arrow" aria-hidden="true">→</span>
-              <span class="relation-name text-ellipsis" :title="row.name || ''">{{ row.name || '-' }}</span>
-              <span class="relation-arrow" aria-hidden="true">→</span>
-              <span class="relation-node text-ellipsis" :title="row.endTypeName || ''">{{ row.endTypeName || '-' }}</span>
+              <span class="relation-node text-ellipsis">{{ row.startTypeName || '-' }}</span>
+              <span class="relation-edge">
+                <span class="relation-name text-ellipsis">{{ row.name || '-' }}</span>
+                <svg-icon :icon-class="relationArrowIcon(row.reversibleFlag)" class="relation-arrow" />
+                <span
+                  v-if="row.reversibleFlag === 1 && row.reverseName"
+                  class="relation-reverse text-ellipsis"
+>{{ row.reverseName }}</span>
+              </span>
+              <span class="relation-node text-ellipsis">{{ row.endTypeName || '-' }}</span>
             </div>
-            <div
-              v-if="row.description"
-              class="info-desc"
-              :title="row.description"
-            >{{ row.description }}</div>
           </div>
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
+            <span class="text-ellipsis">{{ row.createBy || '-' }}</span>
             <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
           </div>
         </template>
@@ -297,6 +297,8 @@
     const { sys_yes_no } = proxy.useDict('sys_yes_no');
     /** 将 1/0 可逆标识转换为 sys_yes_no 字典值。 */
     const reversibleDictValue = (value) => (value === 1 ? 'Y' : 'N');
+    /** 可逆关系展示双向箭头，不可逆展示单向箭头。 */
+    const relationArrowIcon = (value) => (value === 1 ? 'arrow-left-right-line' : 'arrow-right-line');
     const tableRef = ref();
     const relationRef = ref();
     const selectedIds = ref([]);
@@ -339,12 +341,12 @@
         columns: [
             { type: 'selection', width: 55, minWidth: 55 },
             { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true },
-            { label: '对象类型关系信息（起点类型→关系名称→终点类型）', prop: 'name', slot: 'relationInfo', minWidth: 360, align: 'left' },
-            { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 100 },
-            { label: '反向名称', prop: 'reverseName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left' },
-            { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true },
-            { label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right' }
+            { label: '对象类型关系信息（起点类型→关系名称→终点类型）', prop: 'name', slot: 'relationInfo', minWidth: 360, align: 'left', },
+            { label: '描述', prop: 'description', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 10, showOverflowTooltip: { effect: 'light' },},
+            { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: { effect: 'light' },},
+            { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true, showOverflowTooltip: { effect: 'light' },},
+            { label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right', showOverflowTooltip: { effect: 'light' },}
         ],
         func: fetchRelations,
         params: {
@@ -356,8 +358,10 @@
     // 搜索项配置
     const searchStore = reactive({
         items: [
-            { label: '对象类型关系名称', prop: 'name', component: { is: 'input' } },
-            { label: '是否可逆', prop: 'reversibleFlag', component: { is: 'select', options: reversibleOptions } }
+            { label: '对象类型关系名称', prop: 'name', component: { is: 'input', showOverflowTooltip: { effect: 'light' },
+} },
+            { label: '是否可逆', prop: 'reversibleFlag', component: { is: 'select', options: reversibleOptions, showOverflowTooltip: { effect: 'light' },
+} }
         ]
     });
     const treeProps = { label: 'name', value: 'id', children: 'children' };
@@ -616,16 +620,29 @@
         color: var(--el-text-color-primary);
     }
     .relation-name {
-        flex: 0 1 auto;
+        max-width: 160px;
         min-width: 0;
         color: var(--el-color-primary);
         font-weight: 500;
+        line-height: 16px;
+    }
+    /* 带标签的边：关系名称在上、箭头在下，整体居中。 */
+    .relation-edge {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
     }
     .relation-arrow {
-        flex-shrink: 0;
+        width: 44px;
+        height: 22px;
         color: var(--el-text-color-secondary);
-        font-weight: 600;
-        line-height: 22px;
+    }
+    /* 反向名称：仅可逆关系展示在箭头下方。 */
+    .relation-reverse {
+        max-width: 160px;
+        color: var(--el-text-color-secondary);
+        line-height: 16px;
     }
     /* 表单控件撑满所在列宽，避免行内 style。 */
     .form-control-full {

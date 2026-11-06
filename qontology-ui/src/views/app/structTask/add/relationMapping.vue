@@ -1,18 +1,18 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
 
- This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
+ This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
 
- qKnow is licensed under Apache License 2.0 with additional qKnow terms.
- You may use qKnow for commercial purposes, but you may not remove, hide,
- modify, or replace the qKnow logo, copyright notices, license notices,
- or attribution information without a separate commercial license.
+ qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ You may use qOntology for commercial purposes, but you may not remove, hide,
+ modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
 
- White-label use, OEM distribution, rebranding, or presenting qKnow as
+ White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
 
- Business License: https://community.qknow.ai/business/policy.html
+ Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
 
@@ -30,7 +30,7 @@
       <el-row :gutter="15">
         <el-col :span="1.5" class="header-actions">
           <el-button type="primary" @click="addRelationItem" plain>
-            新增对象类型关系映射
+            <i class="iconfont-mini icon-xinzeng mr5"></i>新增对象类型关系映射
           </el-button>
         </el-col>
       </el-row>
@@ -376,13 +376,13 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-  "add-relation",
-  "delete-relation",
-  "relation-type-change",
-  "table-change",
-  "add-intermediate",
-  "remove-intermediate",
-  "intermediate-table-change",
+  "addRelation",
+  "deleteRelation",
+  "relationTypeChange",
+  "tableChange",
+  "addIntermediate",
+  "removeIntermediate",
+  "intermediateTableChange",
   "update:formData",
 ]);
 
@@ -406,37 +406,37 @@ watch(
 
 // 新增对象类型关系映射项
 const addRelationItem = () => {
-  emit("add-relation");
+  emit("addRelation");
 };
 
 // 删除关系项
 const deleteItem = (index, data) => {
-  emit("delete-relation", index, data);
+  emit("deleteRelation", index, data);
 };
 
 // 处理关系类型变化
 const handleRelationTypeChange = (index, type) => {
-  emit("relation-type-change", index, type);
+  emit("relationTypeChange", index, type);
 };
 
 // 处理表选择变化
 const handleTableChange = (index, type, tableName) => {
-  emit("table-change", index, type, tableName);
+  emit("tableChange", index, type, tableName);
 };
 
 // 添加中间表
 const addIntermediateTable = (index) => {
-  emit("add-intermediate", index);
+  emit("addIntermediate", index);
 };
 
 // 删除中间表
 const removeIntermediateTable = (index, iIndex) => {
-  emit("remove-intermediate", index, iIndex);
+  emit("removeIntermediate", index, iIndex);
 };
 
 // 处理中间表选择变化
 const handleIntermediateTableChange = (index, iIndex, tableName) => {
-  emit("intermediate-table-change", index, iIndex, tableName);
+  emit("intermediateTableChange", index, iIndex, tableName);
 };
 
 // 检查重复项
@@ -561,21 +561,21 @@ defineExpose({
   /* padding-left: 10px; */
 }
 .blue-bar {
-  background-color: #2666fb;
-  width: 5px;
-  height: 20px;
-  margin-right: 10px;
-  border-radius: 2px;
+  width: var(--qt-title-marker-width);
+  height: var(--qt-title-marker-height);
+  margin-right: var(--qt-title-marker-gap);
+  border-radius: var(--qt-title-marker-radius);
+  background-color: var(--qt-title-marker-color);
 }
 .header-text {
   margin: 8px 0;
 }
 .header-left {
-  font-size: 16px;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--qt-text-emphasis);
+  font-size: var(--qt-font-size-medium);
   display: flex;
   align-items: center;
-  font-weight: 500;
+  font-weight: var(--qt-font-weight-medium);
 }
 .header-actions {
   display: flex;
@@ -583,16 +583,16 @@ defineExpose({
 }
 
 .relation-item {
-  padding: 10px;
-  background-color: #f0f2f5;
-  margin-bottom: 10px;
+  margin-bottom: var(--qt-space-3);
+  padding: var(--qt-space-3);
+  background-color: var(--qt-page-background);
 }
 
 .relation-item.duplicate-error {
-  border: 2px solid #f56c6c;
-  border-radius: 4px;
-  padding: 15px;
-  margin-bottom: 15px;
+  margin-bottom: var(--qt-space-4);
+  padding: var(--qt-space-4);
+  border: 2px solid var(--qt-status-danger);
+  border-radius: var(--qt-radius-medium);
   position: relative;
 }
 .relation-item.duplicate-error::before {
@@ -600,19 +600,19 @@ defineExpose({
   position: absolute;
   top: -10px;
   left: 10px;
-  background: #f56c6c;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 3px;
-  font-size: 12px;
+  padding: 2px var(--qt-space-2);
+  border-radius: var(--qt-radius-small);
+  background: var(--qt-status-danger);
+  color: var(--qt-text-inverse);
+  font-size: var(--qt-font-size-small);
   z-index: 1;
 }
 
-::v-deep .el-form-item__content {
-  margin-left: 0px !important;
+:deep(.el-form-item__content) {
+  margin-left: 0;
 }
 .no-required-star :deep(.el-form-item__label::before) {
-  color: transparent !important;
+  color: transparent;
   visibility: hidden;
 }
 </style>

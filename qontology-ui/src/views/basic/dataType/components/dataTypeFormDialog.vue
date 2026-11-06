@@ -48,10 +48,10 @@
         class="column-form"
         @submit.prevent="submitForm"
     >
-      <qt-form-item label="业务数据名称" prop="name" class="row-full" tip="填写业务数据类型的名称，例如采购金额、订单编号，便于属性建模时引用。">
+      <qt-form-item label="业务数据名称" prop="name" class="row-full" >
         <el-input v-model="localForm.name" :maxlength="128" placeholder="请输入名称"/>
       </qt-form-item>
-      <qt-form-item label="业务数据类型" prop="dataType" class="row-full" tip="选择该数据类型的基础类别（文本、整数、小数、布尔、日期、枚举），下方配置项随类型变化。">
+      <qt-form-item label="业务数据类型" prop="dataType" class="row-full" >
         <!-- 类型选择只切换配置区，不触发选择框校验；点击确定时统一校验。 -->
         <el-select v-model="localForm.dataType" :validate-event="false" :disabled="fixedEnumType !== undefined" placeholder="请选择数据类型">
           <el-option v-for="item in dataTypeOptions" :key="item.value" :label="item.label" :value="item.value"/>
@@ -79,7 +79,7 @@
         <qt-form-item v-if="localForm.validationType === 'CUSTOM'" label="正则表达式" prop="validationPattern"
                       class="row-full" tip="使用兼容 JavaScript 的正则表达式，具体落地应与后端校验引擎一致。"
         >
-          <el-input v-model="localForm.validationPattern" :maxlength="512"
+          <el-input v-model="localForm.validationPattern" :maxlength="256"
                     placeholder="请输入正则表达式，如 ^[A-Za-z]+$（不含两侧 /）"
           />
         </qt-form-item>
@@ -152,7 +152,7 @@
           <el-option v-for="item in enumOptions" :key="item.enumType" :label="item.enumName" :value="item.enumType"/>
         </el-select>
       </qt-form-item>
-      <qt-form-item label="描述" prop="description" class="row-full" tip="说明该业务数据类型的用途与适用场景。">
+      <qt-form-item label="描述" prop="description" class="row-full" >
         <el-input v-model="localForm.description" type="textarea" :rows="3" maxlength="256个字符" show-word-limit
                   placeholder="请输入描述"
         />

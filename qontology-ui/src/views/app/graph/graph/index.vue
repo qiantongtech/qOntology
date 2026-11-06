@@ -18,7 +18,7 @@
 
 <template>
   <div
-    :class="['graphView', { 'is-embedded': componentProps.embedded }]"
+    :class="['graph-view', { 'is-embedded': componentProps.embedded }]"
     v-loading="appLoading"
   >
     <el-container class="wrap-container">
@@ -61,7 +61,7 @@
             <el-autocomplete
               ref="autocompleteRef"
               v-model="searchVal"
-              style="width: 240px"
+              class="graph-search"
               :fetch-suggestions="querySearchAsync"
               placeholder="请输入实体名称或关系信息"
               @select="searchSelect"
@@ -107,7 +107,7 @@
         <!--                </div>-->
         <!-- 视图容器 -->
         <div
-          :class="['gragh-container', { detailShow: detailShow }]"
+          :class="['graph-container', { 'is-detail-visible': detailShow }]"
           id="gragh-container"
         ></div>
         <transition name="el-zoom-in-right">
@@ -382,10 +382,10 @@
                       <div v-for="(doc, index) in docList" :key="index">
                         <div
                           v-if="currentNodeData.docId == doc.id"
-                          class="docItem"
+                          class="document-item"
                         >
                           <td
-                            class="docTd"
+                            class="document-name"
                             :title="doc.name"
                             @click="previewRefactoring(doc)"
                             v-track="{
@@ -479,8 +479,8 @@
         <!-- 右侧弹框 -->
         <node-dialog
           ref="nodeDialogRef"
-          @dialogClose="nodeDialogClose"
-          @handleRefresh="handleRefresh"
+          @dialog-close="nodeDialogClose"
+          @handle-refresh="handleRefresh"
         />
       </div>
     </el-container>
@@ -490,7 +490,6 @@
 <script setup name="KEresult">
 import {
   ref,
-  computed,
   watch,
   nextTick,
   onMounted,
@@ -558,7 +557,6 @@ const componentProps = defineProps({
 });
 const emit = defineEmits(["refresh"]);
 
-const { basic_data_type } = proxy.useDict("basic_data_type");
 const router = useRouter();
 // 1结构化 2非结构化 3故障 0探索,
 const taskInfo = ref({ id: "", name: "常规视图", pageType: "0" });
@@ -990,7 +988,6 @@ const nodeDialogClose = () => {
 };
 
 // tool图例
-const toolShow = ref(false);
 const toolData = ref([]);
 // #region 右侧弹框数据
 // 折叠面板
@@ -1590,14 +1587,14 @@ const handleDel = () => {
       edges.value = edges.value.filter((e) => e.from !== id && e.to !== id);
 
       // 接口
-      deleteNode(id).then((response) => {
+      deleteNode(id).then(() => {
         proxy.$modal.msgSuccess("删除成功");
       });
     })
-    .catch((err) => {});
+    .catch(() => {});
 };
 const collapseAct = ref(["1", "2", "3", "4", "5"]);
-const collapseChange = (val) => {};
+const collapseChange = () => {};
 // 属性信息
 // const getAttrData = (node) => {
 //     attrLoading.value = true;
@@ -1685,10 +1682,6 @@ const attrFormCancel = () => {
   proxy.resetForm("attrRef");
 };
 const attrFormSubmit = () => {
-  let node = currentNodeData.value;
-  const data = dictDataOption.value.find(
-    (dict) => dict.dictLabel == attrForm.value.dataValue
-  );
   // updateNodeAttribute({
   //     taskId: node.taskId,
   //     tableName: node.tableName,
@@ -1730,7 +1723,7 @@ const tripletDelete = (row) => {
       getTripletData(currentNodeData.value.id);
 
       // 接口
-      deleteRelationshipById(id).then((response) => {
+      deleteRelationshipById(id).then(() => {
         proxy.$modal.msgSuccess("删除成功");
       });
     })
@@ -1897,11 +1890,11 @@ function openTagMultiple() {
 }
 </style>
 <style scoped lang="scss">
-.graphView {
+.graph-view {
   // 与关系视图、时序视图保持同一尺寸区间，切换页签时不再出现高度跳动和滚动条
   display: flex;
   flex-direction: column;
-  margin-top: 15px;
+  margin-top: var(--qt-space-4);
   height: 70vh;
   min-height: 0;
   overflow: hidden;
@@ -1936,16 +1929,16 @@ function openTagMultiple() {
   .head-title {
     flex-shrink: 0;
     height: 46px;
-    background: #fff;
-    padding: 0px 15px;
+    background: var(--qt-surface-background);
+    padding: 0 var(--qt-space-4);
     display: flex;
     justify-content: space-between;
     align-items: center;
 
     .name {
-      font-family: PingFang SC;
-      font-size: 16px;
-      color: rgba(0, 0, 0, 0.85);
+      font-family: var(--qt-font-family);
+      font-size: var(--qt-font-size-medium);
+      color: var(--qt-text-emphasis);
       display: flex;
       align-items: center;
       font-weight: 500;
@@ -1954,10 +1947,10 @@ function openTagMultiple() {
         content: "";
         display: inline-block;
         background-color: var(--qt-primary, #2666fb);
-        width: 5px;
-        height: 20px;
-        margin-right: 10px;
-        border-radius: 2px;
+        width: var(--qt-title-marker-width);
+        height: var(--qt-title-marker-height);
+        margin-right: var(--qt-title-marker-gap);
+        border-radius: var(--qt-title-marker-radius);
       }
     }
 
@@ -2095,9 +2088,13 @@ function openTagMultiple() {
       align-items: center;
       justify-content: center;
       border-radius: 2px;
-      box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 0 8px var(--qt-overlay-shadow);
       // opacity: 0.65;
       z-index: 1;
+
+      .graph-search {
+        width: 240px;
+      }
 
       .toolbar-item {
         display: inline-block;
@@ -2122,7 +2119,7 @@ function openTagMultiple() {
           background: transparent;
 
           .el-input__inner {
-            color: #fff;
+            color: var(--qt-text-inverse);
           }
         }
       }
@@ -2142,9 +2139,9 @@ function openTagMultiple() {
       .tool-mask {
         width: 151px;
         max-height: 214px;
-        background: #1c376a;
+        background: var(--qt-graph-panel-background);
         border-radius: 4px 4px 4px 4px;
-        border: 1px solid #448fff;
+        border: 1px solid var(--qt-graph-panel-border);
         position: absolute;
         bottom: calc(100% + 8px);
         left: 0;
@@ -2173,20 +2170,20 @@ function openTagMultiple() {
             line-height: 1;
             font-family: PingFangSCs;
             font-size: 13px;
-            color: #d7e3fa;
+            color: var(--qt-graph-panel-text);
           }
         }
       }
     }
 
-    .gragh-container {
+    .graph-container {
       width: 100%;
       height: 100%;
-      background: #fff url("@/assets/ke/images/bg1.png") no-repeat;
+      background: var(--qt-surface-background) url("@/assets/ke/images/bg1.png") no-repeat;
       background-size: 100% 100%;
       transition: width 0.3s;
 
-      &.detailShow {
+      &.is-detail-visible {
         width: calc(100% - 400px);
       }
 
@@ -2207,8 +2204,8 @@ function openTagMultiple() {
       right: 0;
       width: 400px;
       height: 100%;
-      background: #fff;
-      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: var(--qt-surface-background);
+      border: 1px solid var(--qt-overlay-border);
 
       .details-title {
         height: 42px;
@@ -2216,7 +2213,7 @@ function openTagMultiple() {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #e8e8e8;
+        border-bottom: 1px solid var(--qt-graph-divider);
 
         .title-label {
           display: flex;
@@ -2314,11 +2311,11 @@ function openTagMultiple() {
             }
           }
 
-          .docItem {
+          .document-item {
             display: flex;
             justify-content: space-between;
 
-            .docTd {
+            .document-name {
               text-align: left;
               width: 80%;
               white-space: nowrap;

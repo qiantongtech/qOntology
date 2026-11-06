@@ -233,7 +233,7 @@
       :append-to="$refs['app-container']"
       draggable
     >
-      <el-form :model="form" label-width="80px" class="column-form">
+      <el-form :model="form" label-width="80px">
         <el-form-item label="版本号" prop="version">
           <div class="form-readonly">
             {{ form.version }}
@@ -244,7 +244,7 @@
             {{ form.baseVersion || "-" }}
           </div>
         </el-form-item>
-        <el-form-item label="描述" prop="description" class="row-full">
+        <el-form-item label="描述" prop="description">
           <div class="form-readonly textarea">
             {{ form.description }}
           </div>

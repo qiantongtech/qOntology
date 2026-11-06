@@ -21,7 +21,6 @@
       <template #actions-data>
         <guide-tip-panel type="plain" class="target-note">
           <template #title-append>
-            <el-icon class="target-note-icon"><InfoFilled /></el-icon>
             <span>展示当前对象类型关联的建模目标，便于核对该类型的设计是否符合目标要求。</span>
           </template>
         </guide-tip-panel>
@@ -125,13 +124,8 @@ onBeforeUnmount(() => { ++requestId; });
 
 <style scoped lang="scss">
 .target-note.guide-tip.plain :deep(.tip-header .tip-title) {
-  gap: 6px;
-  color: #909399;
-  font-family: inherit;
-  font-weight: normal;
-  font-size: 12px;
-  line-height: 18px;
-}
+        gap: 6px;
+    }
 .target-note-icon {
   flex-shrink: 0;
   font-size: 14px;

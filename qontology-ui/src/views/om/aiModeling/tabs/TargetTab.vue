@@ -229,7 +229,10 @@
               />
             </template>
             <template v-else-if="field.prop === 'createBy'">
-              {{ formatCreator(detail) }}
+              {{ detail.createBy || "-" }}
+            </template>
+            <template v-else-if="field.prop === 'contact'">
+              {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
             </template>
             <template v-else>{{ detail[field.prop] ?? "-" }}</template>
           </div>
@@ -257,7 +260,7 @@ const { om_ai_adopt_status, om_target_priority, om_accept_status } =
 
 const pageRef = ref();
 const formRef = ref();
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const saving = ref(false);
@@ -456,6 +459,7 @@ const detailFields = [
   { prop: "acceptStatus", label: "验证状态" },
   { prop: "relatedElementCount", label: "关联元素" },
   { prop: "createBy", label: "创建人" },
+  { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
 ];
 

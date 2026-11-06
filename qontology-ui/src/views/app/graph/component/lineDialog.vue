@@ -17,7 +17,7 @@
 -->
 
 <template>
-    <div class="lineDialog">
+    <div class="line-dialog">
         <el-timeline>
             <el-timeline-item
                 v-for="(item, index) in lineData"
@@ -165,12 +165,12 @@
 
 </script>
 <style lang="scss" scoped>
-    .lineDialog {
+    .line-dialog {
         height: 100%;
         width: 345px;
-        padding: 20px 12px 20px 20px;
-        background-color: #fff;
-        margin-right: 10px;
+        padding: var(--qt-space-5) var(--qt-space-3) var(--qt-space-5) var(--qt-space-5);
+        background-color: var(--qt-surface-background);
+        margin-right: var(--qt-space-3);
         overflow-y: auto;
         &::-webkit-scrollbar {
             width: 0px;
@@ -183,7 +183,7 @@
             .el-timeline-item__tail {
                 border-left-width: 1px;
                 left: 6px;
-                background: #e5e5e5;
+                background: var(--qt-border-color);
             }
             .el-timeline-item__wrapper {
                 padding-left: 24px;
@@ -199,7 +199,7 @@
         :deep(.line-card) {
             min-height: 24px;
             overflow: hidden;
-            font-family: PingFang SC;
+            font-family: var(--qt-font-family);
             .el-tag.el-tag--default .el-tag__content {
                 font-size: 12px !important;
             }
@@ -212,7 +212,7 @@
                     cursor: pointer;
                     font-weight: 600;
                     font-size: 14px;
-                    color: #262626;
+                    color: var(--qt-text-primary);
                     max-width: 100px;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -225,7 +225,7 @@
                     position: absolute;
                     right: 0;
                     transform: rotate(0deg);
-                    border: 1px solid #2666fb !important;
+                    border: 1px solid var(--qt-element-fixed-primary) !important;
                     .el-tag__content {
                         display: flex;
                         align-items: center;
@@ -257,12 +257,12 @@
                         width: 60px;
                         text-align: right;
                         margin-right: 6px;
-                        color: #262626;
+                        color: var(--qt-text-primary);
                     }
                     .line-value {
                         width: calc(100% - 66px);
                         word-break: break-all;
-                        color: #595959;
+                        color: var(--qt-text-regular);
                         text-align: justify;
                     }
                 }
@@ -276,8 +276,8 @@
                 gap: 0.5rem;
                 .el-tag {
                     cursor: pointer;
-                    background: #f4f5f5;
-                    color: #909399;
+                    background: var(--qt-divider-color);
+                    color: var(--qt-text-secondary);
                 }
             }
         }

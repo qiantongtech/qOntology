@@ -1,18 +1,18 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
 
- This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
+ This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
 
- qKnow is licensed under Apache License 2.0 with additional qKnow terms.
- You may use qKnow for commercial purposes, but you may not remove, hide,
- modify, or replace the qKnow logo, copyright notices, license notices,
- or attribution information without a separate commercial license.
+ qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ You may use qOntology for commercial purposes, but you may not remove, hide,
+ modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
 
- White-label use, OEM distribution, rebranding, or presenting qKnow as
+ White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
 
- Business License: https://community.qknow.ai/business/policy.html
+ Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
 
@@ -41,60 +41,60 @@
           @submit.prevent
         >
           <el-form-item label="对象类型" prop="concept">
-              <el-tree-select
-                v-model="form.concept"
-                @change="conceptChange"
-                :data="conceptTree"
-                :props="{ label: 'name', value: 'id', children: 'children' }"
-                value-key="id"
-                placeholder="请选择对象类型"
-                check-strictly
-                filterable
-                clearable
-              />
+            <el-tree-select
+              v-model="form.concept"
+              @change="conceptChange"
+              :data="conceptTree"
+              :props="{ label: 'name', value: 'id', children: 'children' }"
+              value-key="id"
+              placeholder="请选择对象类型"
+              check-strictly
+              filterable
+              clearable
+            />
           </el-form-item>
           <el-form-item label="实体名称字段" prop="entityNameField">
-              <el-select
-                v-model="form.entityNameField"
-                placeholder="请选择实体名称字段"
+            <el-select
+              v-model="form.entityNameField"
+              placeholder="请选择实体名称字段"
+            >
+              <el-option
+                v-for="item in attributeMappingList"
+                :key="item.field"
+                :label="item.field"
+                :value="item.field"
               >
-                <el-option
-                  v-for="item in attributeMappingList"
-                  :key="item.field"
-                  :label="item.field"
-                  :value="item.field"
-                >
-                </el-option>
-              </el-select>
+              </el-option>
+            </el-select>
           </el-form-item>
           <el-form-item label="主键" prop="primaryKey">
-              <el-select v-model="form.primaryKey" placeholder="请选择主键">
-                <el-option
-                  v-for="item in attributeMappingList"
-                  :key="item.field"
-                  :label="item.field"
-                  :value="item.field"
-                >
-                </el-option>
-              </el-select>
+            <el-select v-model="form.primaryKey" placeholder="请选择主键">
+              <el-option
+                v-for="item in attributeMappingList"
+                :key="item.field"
+                :label="item.field"
+                :value="item.field"
+              >
+              </el-option>
+            </el-select>
           </el-form-item>
           <el-form-item
             v-if="timeFieldShow"
             label="增量依据字段"
             prop="entityTimeField"
           >
-              <el-select
-                v-model="form.entityTimeField"
-                placeholder="请选择增量依据字段"
+            <el-select
+              v-model="form.entityTimeField"
+              placeholder="请选择增量依据字段"
+            >
+              <el-option
+                v-for="item in timeMappingList"
+                :key="item.field"
+                :label="item.field"
+                :value="item.field"
               >
-                <el-option
-                  v-for="item in timeMappingList"
-                  :key="item.field"
-                  :label="item.field"
-                  :value="item.field"
-                >
-                </el-option>
-              </el-select>
+              </el-option>
+            </el-select>
           </el-form-item>
         </el-form>
       </section>
@@ -106,36 +106,36 @@
           height="360px"
           stripe
         >
-                <el-table-column
-                  prop="field"
-                  label="数据表字段"
-                  :show-overflow-tooltip="{ effect: 'light' }"
+          <el-table-column
+            prop="field"
+            label="数据表字段"
+            :show-overflow-tooltip="{ effect: 'light' }"
+          >
+          </el-table-column>
+          <el-table-column
+            prop="fieldDescription"
+            label="字段描述"
+            :show-overflow-tooltip="{ effect: 'light' }"
+          >
+          </el-table-column>
+          <el-table-column prop="conceptId" label="对象类型属性">
+            <template #default="scope">
+              <el-select
+                @change="rowConceptClick(scope.row)"
+                v-model="scope.row.conceptId"
+                placeholder="请选择对象类型属性"
+                clearable
+              >
+                <el-option
+                  v-for="item in conceptualAttributeList"
+                  :key="parseInt(item.id)"
+                  :label="item.name"
+                  :value="parseInt(item.id)"
                 >
-                </el-table-column>
-                <el-table-column
-                  prop="fieldDescription"
-                  label="字段描述"
-                  :show-overflow-tooltip="{ effect: 'light' }"
-                >
-                </el-table-column>
-                <el-table-column prop="conceptId" label="对象类型属性">
-                  <template #default="scope">
-                    <el-select
-                      @change="rowConceptClick(scope.row)"
-                      v-model="scope.row.conceptId"
-                      placeholder="请选择对象类型属性"
-                      clearable
-                    >
-                      <el-option
-                        v-for="item in conceptualAttributeList"
-                        :key="parseInt(item.id)"
-                        :label="item.name"
-                        :value="parseInt(item.id)"
-                      >
-                      </el-option>
-                    </el-select>
-                  </template>
-                </el-table-column>
+                </el-option>
+              </el-select>
+            </template>
+          </el-table-column>
         </el-table>
       </section>
     </div>

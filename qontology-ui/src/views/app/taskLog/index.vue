@@ -26,7 +26,7 @@
           @click="handleDelete"
           @mousedown="(event) => event.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
@@ -48,12 +48,9 @@
           </div>
         </template>
         <template #handle="{ row }">
-          <el-button
-            link
-            type="primary"
-            icon="View"
-            @click="showDetail(row)"
-          >查看步骤</el-button>
+          <el-button link type="primary" icon="View" @click="showDetail(row)"
+            >查看步骤</el-button
+          >
         </template>
       </qt-table>
     </qt-wrap>
@@ -72,19 +69,23 @@
       <el-table
         v-loading="detailLoading"
         :data="details"
-        height="48vh"
+        :default-sort="{ prop: 'createTime', order: 'descending' }"
         stripe
         @sort-change="handleDetailSortChange"
+        class="detail-table"
       >
-        <el-table-column label="编号" type="index" width="70" align="center">
-          <template #default="scope">
-            {{ (detailParams.pageNum - 1) * detailParams.pageSize + scope.$index + 1 }}
-          </template>
-        </el-table-column>
+        <el-table-column
+          label="编号"
+          prop="id"
+          width="100"
+          align="center"
+          sortable="custom"
+          :sort-orders="['descending', 'ascending']"
+        />
         <el-table-column
           label="执行步骤"
           prop="step"
-          min-width="430"
+          min-width="330"
           align="left"
           :show-overflow-tooltip="{ effect: 'light' }"
         >
@@ -99,7 +100,10 @@
           :sort-orders="['descending', 'ascending']"
         >
           <template #default="scope">
-            {{ proxy.parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+            {{
+              proxy.parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") ||
+              "-"
+            }}
           </template>
         </el-table-column>
       </el-table>
@@ -109,6 +113,7 @@
         v-model:page="detailParams.pageNum"
         :total="detailTotal"
         @pagination="getDetails"
+        class="no-top-padding"
       />
       <template #footer>
         <div class="dialog-footer">
@@ -126,7 +131,7 @@ import { useCreatorPhones } from "@/utils/useCreatorPhones";
 const { proxy } = getCurrentInstance();
 const { app_task_log_type, app_log_status } = proxy.useDict(
   "app_task_log_type",
-  "app_log_status",
+  "app_log_status"
 );
 const { creatorPhones } = useCreatorPhones();
 
@@ -152,7 +157,13 @@ const tableStore = reactive({
   },
   columns: [
     { type: "selection", width: 55, minWidth: 55 },
-    { label: "编号", prop: "id", width: 100, minWidth: 100, sortable: "custom" },
+    {
+      label: "编号",
+      prop: "id",
+      width: 100,
+      minWidth: 100,
+      sortable: "custom",
+    },
     {
       label: "任务名称",
       prop: "taskName",
@@ -162,8 +173,20 @@ const tableStore = reactive({
     },
     { label: "执行类型", prop: "taskType", slot: "taskType", width: 150 },
     { label: "执行状态", prop: "status", slot: "status", width: 120 },
-    { label: "开始时间", prop: "startTime", date: true, width: 160, sortable: "custom" },
-    { label: "结束时间", prop: "endTime", date: true, width: 160, sortable: "custom" },
+    {
+      label: "开始时间",
+      prop: "startTime",
+      date: true,
+      width: 160,
+      sortable: "custom",
+    },
+    {
+      label: "结束时间",
+      prop: "endTime",
+      date: true,
+      width: 160,
+      sortable: "custom",
+    },
     {
       label: "创建人",
       prop: "createBy",
@@ -172,8 +195,20 @@ const tableStore = reactive({
       align: "left",
       headerAlign: "left",
     },
-    { label: "创建时间", prop: "createTime", date: true, width: 160, sortable: "custom" },
-    { label: "操作", slot: "handle", fixed: "right", width: 130, minWidth: 130 },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 160,
+      sortable: "custom",
+    },
+    {
+      label: "操作",
+      slot: "handle",
+      fixed: "right",
+      width: 240,
+      minWidth: 240,
+    },
   ],
   func: listTaskLog,
   params: {
@@ -248,3 +283,13 @@ function handleDelete() {
     .catch(() => {});
 }
 </script>
+
+<style scoped>
+.detail-table {
+  margin-bottom: 0;
+}
+.detail-table + :deep(.pagination-container),
+.no-top-padding :deep(.pagination-container) {
+  padding-top: 0;
+}
+</style>

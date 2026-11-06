@@ -1,53 +1,48 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
 
- This file is part of qKnow Intelligent Agent Building Platform (Open Source Edition).
+ This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
 
- qKnow is licensed under Apache License 2.0 with additional qKnow terms.
- You may use qKnow for commercial purposes, but you may not remove, hide,
- modify, or replace the qKnow logo, copyright notices, license notices,
- or attribution information without a separate commercial license.
+ qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ You may use qOntology for commercial purposes, but you may not remove, hide,
+ modify, or replace the qOntology logo, copyright notices, license notices,
+  or attribution information without a separate commercial license.
 
- White-label use, OEM distribution, rebranding, or presenting qKnow as
+ White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
 
- Business License: https://community.qknow.ai/business/policy.html
+ Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
 
 <!-- index.vue -->
 <template>
-  <div
-    class="app-container"
-    ref="app-container"
-    v-loading="loadingInstance"
-    style="background-color: #f0f2f5"
-  >
-    <div class="custom-card">
-      <div class="steps-inner">
-        <ul class="zl-step">
+  <div class="app-container" ref="app-container" v-loading="loadingInstance">
+    <div class="struct-task-wizard">
+      <div class="struct-task-wizard__inner">
+        <ul class="struct-task-wizard__steps">
           <li
             v-for="(item, index) in stepsList"
             :key="index"
             :class="{
-              statusEnd: activeReult === index,
-              prevStep: index < activeReult,
-              cur: index > activeReult,
+              'is-active': activeReult === index,
+              'is-completed': index < activeReult,
+              'is-pending': index > activeReult,
             }"
           >
             <div
-              class="step-circle"
+              class="struct-task-wizard__number"
               :class="{
-                active: activeReult === index,
-                prev: index < activeReult,
+                'is-active': activeReult === index,
+                'is-completed': index < activeReult,
               }"
             >
               <span>{{ index + 1 }}</span>
             </div>
 
             <!-- 步骤名称 -->
-            <span class="step-name">{{ item.name }}</span>
+            <span class="struct-task-wizard__name">{{ item.name }}</span>
           </li>
         </ul>
       </div>
@@ -55,9 +50,9 @@
 
     <div class="pagecont-top" v-show="showSearch">
       <div class="infotop">
-        <div class="main">
+        <div class="struct-task-form">
           <!-- 第一步：基础信息 -->
-          <BasicInfoForm
+          <basic-info-form
             v-show="activeReult == 0"
             ref="extStructRef"
             :form-data="form"
@@ -79,7 +74,7 @@
 
           <!-- 第二步：表映射 -->
           <div v-show="activeReult == 1">
-            <TableMapping
+            <table-mapping
               :table-data="tableData"
               :mapping-status-options="app_mapping_status"
               @import-table="openImportTable"
@@ -90,7 +85,7 @@
 
           <!-- 第三步：对象类型关系映射 -->
           <div v-show="activeReult == 2">
-            <RelationMapping
+            <relation-mapping
               ref="relationFormRef"
               :form-data="relationForm"
               :rules="relationRules"
@@ -110,9 +105,11 @@
             />
           </div>
         </div>
-        <div class="button-style">
+        <div class="struct-task-actions">
           <el-button type="primary" @click="handleSuccess">返回列表</el-button>
-          <el-button v-if="activeReult != 0" @click="handleLastStep">上一步</el-button>
+          <el-button v-if="activeReult != 0" @click="handleLastStep"
+            >上一步</el-button
+          >
           <el-button
             type="primary"
             v-if="activeReult === 2 && !route.query.info"
@@ -121,7 +118,9 @@
           >
             确定并退出
           </el-button>
-          <el-button v-if="activeReult !== 2" @click="handleNextStep">下一步</el-button>
+          <el-button v-if="activeReult !== 2" @click="handleNextStep"
+            >下一步</el-button
+          >
         </div>
       </div>
     </div>
@@ -131,27 +130,27 @@
       :append-to="$refs['app-container']"
       destroy-on-close
     >
-      <Crontab
+      <crontab
         ref="crontabRef"
         @hide="openCron = false"
         @fill="crontabFill"
         :expression="updateFrequency"
       >
-      </Crontab>
+      </crontab>
     </el-dialog>
 
-    <ImportTable
+    <import-table
       class="custom-import"
       ref="importRef"
       @importDataTable="importDataTable"
     />
-    <Mapping class="custom-mapping" ref="MappingRef" @ok="mappingOk" />
+    <mapping class="custom-mapping" ref="MappingRef" @ok="mappingOk" />
   </div>
 </template>
 
 <script setup name="qualityTask">
 import { ref, reactive, toRefs, onMounted, watch, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import Crontab from "@/components/Crontab/index.vue";
 import {
   listDaDatasource,
@@ -186,7 +185,6 @@ const { app_mapping_status, app_update_type } = proxy.useDict(
 const route = useRoute();
 const loading = ref(false);
 const showSearch = ref(true);
-const router = useRouter();
 let loadingInstance = ref(null); // 全局 loading 实例
 
 const extStructRef = ref();
@@ -197,13 +195,10 @@ const projectVersionList = ref([]);
 const updateFrequency = ref("");
 const connectionSuccess = ref(false);
 const connectionError = ref(false);
-const open = ref(false);
 const openCron = ref(false);
 const tableData = ref([]);
 const dbTableList = ref([]);
 const structTaskStatus = ref(null);
-const queryParams = ref(null);
-const emit = defineEmits(["ok", "close-dialog"]);
 
 const data = reactive({
   //基本信息
@@ -308,7 +303,11 @@ async function handleProjectChange(projectId) {
   form.value.projectVersionId = null;
   form.value.projectVersionName = null;
   const res = await getProjectVersionDict(projectId);
-  projectVersionList.value = res?.data || [];
+  projectVersionList.value = (res?.data || []).map((item) => ({
+    ...item,
+    dictValue: String(item.dictValue ?? item.value ?? item.id),
+    dictLabel: item.dictLabel || item.label || item.name,
+  }));
 }
 
 /** 记录当前项目版本名称。 */
@@ -418,6 +417,8 @@ async function getExtStructInfo(taskId) {
       description: structTask.description,
       updateType: structTask.updateType,
       updateFrequency: structTask.updateFrequency,
+      responsibleUserId: structTask.responsibleUserId,
+      responsiblePersonName: structTask.responsiblePersonName,
     };
     form.value = formData;
 
@@ -973,7 +974,7 @@ function handleRelationTypeChange(index, type) {
 }
 
 // 删除关系项
-function deleteItem(index, data) {
+function deleteItem(index) {
   relationForm.value.dataList.splice(index, 1);
 }
 
@@ -1133,9 +1134,10 @@ async function submitForm() {
           updateFrequency: form.value.updateFrequency,
           responsiblePersonName: form.value.responsiblePersonName,
           responsibleUserId:
-              form.value.responsibleUserId == null || form.value.responsibleUserId === ""
-                  ? null
-                  : Number(form.value.responsibleUserId),
+            form.value.responsibleUserId == null ||
+            form.value.responsibleUserId === ""
+              ? null
+              : Number(form.value.responsibleUserId),
           //对象类型关系映射数据
           relationData: relationData,
         };
@@ -1225,190 +1227,179 @@ function sleep(ms) {
 </script>
 
 <style lang="scss" scoped>
-.el-card ::v-deep .el-card__body {
+:deep(.el-card__body) {
   overflow-y: auto;
 }
 
+.app-container {
+  background-color: var(--qt-page-background);
+}
+
 .pagecont-top {
-  height: auto;
-  min-height: 74vh;
   position: relative;
+  min-height: 74vh;
   padding-bottom: 60px;
 }
 
-.button-style {
+.struct-task-actions {
   position: absolute;
-  left: 0;
   right: 0;
   bottom: 0;
-  padding: 0px 35px 25px 0px;
-  background: #fff;
-  text-align: right;
+  left: 0;
   z-index: 10;
+  padding: 0 35px 25px 0;
+  background: var(--qt-surface-background);
+  text-align: right;
 }
 
-.main {
+.struct-task-form {
   flex: 1;
-  background-color: white;
-  padding: 0px 25px 0;
+  padding: 0 25px;
+  background-color: var(--qt-surface-background);
 }
 
-.custom-card {
+.struct-task-wizard {
+  box-sizing: border-box;
   width: 100%;
   height: 100px;
+  margin-bottom: var(--qt-space-4);
   padding: 34px 177px 26px 189px;
-  background: #fff;
-  box-sizing: border-box;
-  margin-bottom: 15px;
+  background: var(--qt-surface-background);
+}
 
-  .steps-inner {
-    padding: 0 10px;
-    padding-left: 20px;
-    display: flex;
-    width: auto;
-    transition: 0.3s;
-    transform: translateZ(0);
+.struct-task-wizard__inner {
+  display: flex;
+  width: auto;
+  padding: 0 10px 0 var(--qt-space-5);
+  color: var(--qt-text-primary);
+  transition: var(--qt-motion-duration);
+  transform: translateZ(0);
+}
 
-    &::-webkit-scrollbar {
-      height: 5px;
-    }
+.struct-task-wizard__steps {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 20px;
+  margin: var(--qt-space-5) auto;
+  padding: 0;
+  list-style: none;
+}
 
-    .zl-step {
-      list-style: none;
-      width: 100%;
-      height: 20px;
-      padding: 0;
-      margin: 20px auto;
-      cursor: pointer;
-      display: flex;
-      align-items: flex-end;
+.struct-task-wizard__steps li {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  background: var(--qt-element-fixed-table-border);
+  color: var(--qt-element-fixed-qt-table-header-text);
+  font-weight: var(--qt-font-weight-medium);
+  transition: background var(--qt-motion-duration);
+}
 
-      li {
-        position: relative;
-        flex: 1;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #d7d8da;
-        color: #666;
-        font-weight: 500;
-        transition: background 0.3s;
+.struct-task-wizard__steps li:first-child {
+  z-index: 2;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 20px) 0,
+    100% 50%,
+    calc(100% - 20px) 100%,
+    0 100%
+  );
+}
 
-        &:first-child {
-          z-index: 2;
-          clip-path: polygon(
-            0 0,
-            calc(100% - 20px) 0,
-            100% 50%,
-            calc(100% - 20px) 100%,
-            0 100%
-          );
-        }
+.struct-task-wizard__steps li:not(:first-child):not(:last-child) {
+  z-index: 1;
+  margin-left: -10px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 20px) 0,
+    100% 50%,
+    calc(100% - 20px) 100%,
+    0 100%
+  );
+}
 
-        &:not(:first-child):not(:last-child) {
-          margin-left: -10px;
-          clip-path: polygon(
-            0 0,
-            calc(100% - 20px) 0,
-            100% 50%,
-            calc(100% - 20px) 100%,
-            0 100%
-          );
-          z-index: 1;
+.struct-task-wizard__steps li:last-child {
+  margin-left: -10px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
 
-          &::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 20px;
-            height: 100%;
-            background: #fff;
-            clip-path: polygon(0 0, 100% 50%, 0 100%);
-            z-index: 2;
-          }
-        }
+.struct-task-wizard__steps li:not(:first-child)::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 20px;
+  height: 100%;
+  background: var(--qt-surface-background);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  content: "";
+}
 
-        &:last-child {
-          margin-left: -10px;
-          z-index: 0;
-          clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+.struct-task-wizard__steps li.is-active {
+  background: linear-gradient(
+    270deg,
+    var(--qt-element-fixed-primary-light-9) 0%,
+    var(--qt-element-fixed-primary-light-3) 100%
+  );
+  color: var(--qt-element-fixed-primary);
+}
 
-          &::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 20px;
-            height: 100%;
-            background: #fff;
-            clip-path: polygon(0 0, 100% 50%, 0 100%);
-            z-index: 2;
-          }
-        }
+.struct-task-wizard__steps li.is-completed {
+  background: var(--qt-element-fixed-primary-light-9);
+  color: var(--qt-element-fixed-primary);
+  font-size: var(--qt-font-size-medium);
+  font-weight: var(--qt-font-weight-regular);
+}
 
-        &.statusEnd {
-          background: linear-gradient(270deg, #e9effe 0%, #5589fa 100%);
-          color: #2666fb !important;
-        }
+.struct-task-wizard__steps li.is-pending {
+  background: var(--qt-element-fixed-qt-table-header-background);
+  color: var(--qt-text-primary);
+}
 
-        &.prevStep {
-          background: #e9effe !important;
-          font-weight: normal;
-          font-size: 16px !important;
-          color: #2666fb !important;
-        }
+.struct-task-wizard__number {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 11px;
+  border: 1px solid var(--qt-border-color);
+  border-radius: 50%;
+  background: var(--qt-element-fixed-qt-table-header-background);
+  font-size: var(--qt-font-size-large);
+  font-weight: var(--qt-font-weight-bold);
+  transition: all var(--qt-motion-duration);
+}
 
-        &.cur {
-          background: #f1f1f5;
-          color: #404040;
-          font-weight: 500;
-        }
-      }
-    }
+.struct-task-wizard__number.is-active {
+  border-color: var(--qt-text-inverse);
+  background: var(--qt-element-fixed-primary);
+  color: var(--qt-text-inverse);
+}
 
-    .step-circle {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: #f1f1f5;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: bold;
-      margin-right: 11px;
-      border: 1px solid #b2b2b2;
-      flex-shrink: 0;
-      transition: all 0.3s;
+.struct-task-wizard__number.is-completed {
+  border-color: var(--qt-element-fixed-primary);
+  color: var(--qt-element-fixed-primary);
+}
 
-      &.active {
-        background: #2666fb;
-        color: #fff;
-        border: 1px solid #fff;
-      }
-
-      &.prev {
-        background: #f1f1f5 !important;
-        border: 1px solid #2666fb !important;
-        color: #2666fb !important;
-      }
-    }
-
-    .step-name {
-      font-family: PingFang SC, PingFang SC;
-      font-weight: 500;
-      font-size: 16px;
-    }
-  }
+.struct-task-wizard__name {
+  font-family: var(--qt-font-family);
+  font-size: var(--qt-font-size-medium);
+  font-weight: var(--qt-font-weight-medium);
 }
 
 :deep(.custom-import .el-dialog__body) {
-  height: 630px !important;
+  max-height: 630px;
+  overflow-y: auto;
 }
 
 :deep(.custom-mapping .el-dialog__body) {
-  height: 700px !important;
+  max-height: 700px;
+  overflow-y: auto;
 }
 </style>

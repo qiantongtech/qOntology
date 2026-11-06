@@ -141,7 +141,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="选择该类型所属的父级对象类型，留空时创建顶级类型。"
           v-if="!editingRoot"
           label="上级对象类型"
           prop="parentId"
@@ -174,7 +173,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="用于控制同一父级下的展示顺序，数值越小越靠前。"
           label="显示顺序"
           prop="orderNum"
         >
@@ -190,7 +188,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="说明该对象类型代表的业务概念、职责及适用范围，最多256个字符。"
           label="描述"
           prop="description"
         >
@@ -764,7 +761,6 @@
 
     .name-input {
         display: flex;
-        gap: 12px;
         width: 100%;
     }
 
