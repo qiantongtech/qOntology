@@ -45,11 +45,17 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" plain @click="handleQuery"><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询</el-button>
-          <el-button @click="resetQuery"><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button>
+          <el-button type="primary" plain @click="handleQuery"
+            ><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询</el-button
+          >
+          <el-button @click="resetQuery"
+            ><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button
+          >
         </el-form-item>
         <el-form-item style="float: right; margin-right: auto">
-          <el-button type="primary" plain @click="createAgent"><i class="iconfont-mini icon-xinzeng mr5"></i>新增智能体</el-button>
+          <el-button type="primary" plain @click="createAgent"
+            ><i class="iconfont-mini icon-xinzeng mr5"></i>新增智能体</el-button
+          >
         </el-form-item>
       </el-form>
     </div>
@@ -63,7 +69,9 @@
         >
           <div class="card-top">
             <div class="agent-info">
-              <span class="agent-logo" :class="agent.theme"><component :is="agent.icon"/></span>
+              <span class="agent-logo" :class="agent.theme"
+                ><component :is="agent.icon"
+              /></span>
               <div>
                 <div class="name-line">
                   <h3>{{ agent.name }}</h3>
@@ -81,29 +89,40 @@
               :value="agent.status"
             />
           </div>
-          <p class="description">{{ agent.description }}</p>
+          <el-tooltip
+            :content="agent.description"
+            effect="light"
+            placement="top-start"
+            popper-class="overview-text-tooltip"
+          >
+            <p class="description">{{ agent.description }}</p>
+          </el-tooltip>
           <div class="card-actions">
             <el-button
               link
               type="primary"
               :icon="Promotion"
               @click="publishAgent(agent)"
-              >{{ agent.status === "published" ? "停用" : "发布" }}</el-button><el-divider direction="vertical" /><el-button
+              >{{ agent.status === "published" ? "停用" : "发布" }}</el-button
+            ><el-divider direction="vertical" /><el-button
               link
               type="primary"
               :icon="View"
               @click="openDetail(agent)"
-              >详情</el-button><el-divider direction="vertical" /><el-button
+              >详情</el-button
+            ><el-divider direction="vertical" /><el-button
               link
               type="primary"
               :icon="Edit"
               @click="configure(agent)"
-              >修改</el-button><el-divider direction="vertical" /><el-button
+              >修改</el-button
+            ><el-divider direction="vertical" /><el-button
               link
               type="danger"
               :icon="Delete"
               @click="removeAgent(agent)"
-              >删除</el-button>
+              >删除</el-button
+            >
           </div>
         </article>
       </div>
@@ -152,16 +171,14 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="所属项目">
-              <div class="form-readonly">{{
-                detailAgent?.project || "-"
-              }}</div>
+              <div class="form-readonly">{{ detailAgent?.project || "-" }}</div>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="本体版本">
-              <div class="form-readonly">{{
-                detailAgent?.ontology || "-"
-              }}</div>
+              <div class="form-readonly">
+                {{ detailAgent?.ontology || "-" }}
+              </div>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -181,9 +198,9 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="功能描述">
-              <div class="form-readonly textarea">{{
-                detailAgent?.description || "-"
-              }}</div>
+              <div class="form-readonly textarea">
+                {{ detailAgent?.description || "-" }}
+              </div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -227,7 +244,7 @@ const query = reactive({
   pageSize: 9,
 });
 const agentStatusOptions = [
-  { label: "已发布", value: "published", elTagType: "success", elTagClass: "" },
+  { label: "已发布", value: "published", elTagType: "primary", elTagClass: "" },
   { label: "草稿", value: "draft", elTagType: "warning", elTagClass: "" },
   { label: "已停用", value: "disabled", elTagType: "info", elTagClass: "" },
 ];
@@ -254,9 +271,9 @@ const agents = ref([
     project: "安全生产管理本体",
     projectId: "2",
     ontology: "v2.1.0",
-    scope: "约束校验、异常识别、质量分析",
+    scope: "约束校验、异常识别",
     status: "published",
-    tags: ["约束校验", "异常识别", "质量分析"],
+    tags: ["约束校验", "异常识别"],
     icon: CircleCheck,
     theme: "green",
   },
@@ -264,7 +281,7 @@ const agents = ref([
     id: 3,
     name: "客户关系分析助手",
     description:
-      "围绕客户、销售机会与服务记录分析多级关联路径，沉淀客户全景画像，自动汇总高价值业务线索并形成跟进建议，助力销售团队精准触达目标客户。",
+      "分析客户、商机、服务记录关联，构建客户画像，挖掘高价值线索并给出跟进建议，支撑销售精准获客。",
     project: "客户关系管理本体",
     projectId: "3",
     ontology: "v1.3.0",
@@ -278,13 +295,13 @@ const agents = ref([
     id: 4,
     name: "项目任务协同智能体",
     description:
-      "汇总项目、任务与人员之间的协作关系，实时识别进度偏差与资源冲突风险，协助项目经理拆解形成协同任务清单，并跟踪各项任务直至闭环完成。",
+      "梳理项目、任务、人员协作关系，识别进度与资源风险，生成任务清单并跟踪闭环。",
     project: "项目管理任务本体",
     projectId: "4",
     ontology: "v1.0.0",
-    scope: "进度汇总、风险识别、任务协同",
+    scope: "进度汇总",
     status: "published",
-    tags: ["进度汇总", "风险识别", "任务协同"],
+    tags: ["进度汇总"],
     icon: Setting,
     theme: "orange",
   },
@@ -292,7 +309,7 @@ const agents = ref([
     id: 5,
     name: "对象关系追溯助手",
     description:
-      "根据业务对象逐级追溯上下游多级关联关系，完整呈现关系路径、中间节点以及每一跳的数据来源依据，广泛支撑合规审计与业务影响分析场景。",
+      "逐级追溯业务对象上下游关联链路，展示关系路径与数据来源，用于合规审计和影响分析。",
     project: "企业经营分析本体",
     projectId: "5",
     ontology: "v1.2.0",
@@ -310,9 +327,9 @@ const agents = ref([
     project: "经营活动管理本体",
     projectId: "6",
     ontology: "v1.0.0",
-    scope: "事件识别、状态分析、趋势汇总",
+    scope: "事件识别、状态分析",
     status: "disabled",
-    tags: ["事件识别", "状态分析", "趋势汇总"],
+    tags: ["事件识别", "状态分析"],
     icon: Operation,
     theme: "red",
   },
@@ -338,9 +355,9 @@ const agents = ref([
     project: "供应链采购与仓储协同本体",
     projectId: "1",
     ontology: "v1.0.0",
-    scope: "绩效评估、风险画像、分级管理",
+    scope: "绩效评估、风险画像",
     status: "draft",
-    tags: ["绩效评估", "风险画像", "分级管理"],
+    tags: ["绩效评估", "风险画像"],
     icon: TrendCharts,
     theme: "green",
   },
@@ -465,7 +482,7 @@ onMounted(async () => {
   display: grid;
   flex: 1;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 15px;
   align-content: start;
   padding: 16px;
   border-radius: 2px;
@@ -475,15 +492,16 @@ onMounted(async () => {
   display: flex;
   min-height: 190px;
   flex-direction: column;
-  padding: 18px 20px;
-  border: 1px solid #dfe4ec;
+  padding: 18px 20px 16px;
+  border: 1px solid #e4e7ed;
   border-radius: 2px;
   background: #fff;
+  box-sizing: border-box;
 }
-.agent-card:hover {
-  border-color: #9ab8f7;
-  box-shadow: 0 3px 12px rgba(38, 102, 251, 0.07);
-}
+// .agent-card:hover {
+//   border-color: #b9cff8;
+//   box-shadow: 0 3px 12px rgba(42, 91, 165, 0.08);
+// }
 .card-top {
   display: flex;
   align-items: flex-start;
@@ -532,29 +550,32 @@ onMounted(async () => {
 }
 .name-line h3 {
   margin: 0;
-  color: #303133;
-  font-size: 15px;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 16px;
   font-weight: 600;
+  line-height: 22px;
 }
 .tag-line {
   display: flex;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 5px;
 }
-.tag-line :deep(.el-tag) {
-  height: 22px;
-  border: 0;
-  border-radius: 2px;
-  color: #2666fb;
-  background: #edf3ff;
-  font-size: 11px;
-}
+
 .description {
+  display: -webkit-box;
   min-height: 40px;
   margin: 15px 0;
-  color: #606266;
-  font-size: 12px;
-  line-height: 1.7;
+  padding: 0;
+  overflow: hidden;
+  color: var(--qt-text-regular);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  cursor: default;
 }
 .card-actions {
   display: flex;
@@ -562,10 +583,15 @@ onMounted(async () => {
   justify-content: flex-end;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid #ebeef5;
+  border-top: 1px solid #e8e8e8;
+  font-size: 14px;
 }
 .card-actions :deep(.el-divider--vertical) {
   margin: 0 6px;
+}
+.card-actions :deep(.el-button) {
+  font-size: 14px;
+  padding: 4px 0;
 }
 .agent-detail-form {
   padding: 0;
@@ -579,7 +605,8 @@ onMounted(async () => {
   padding: 0 10px;
   border: 1px solid #f1f1f1;
   border-radius: 2px;
-  color: #333;
+  color: #303133;
+  font-size: 14px;
   background-color: #fcfcfc;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -620,13 +647,13 @@ onMounted(async () => {
 }
 .agent-page :deep(.agent-detail-dialog .el-dialog__footer) {
   padding: 10px 20px 20px;
-  border-top: 1px solid #f1f1f1;
+  border-top: 1px solid #e8e8e8;
 }
 .agent-page :deep(.agent-detail-dialog .el-dialog__footer .el-button) {
   min-width: 56px;
   height: 32px;
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: 8px 16px;
+  font-size: 14px;
 }
 
 @media (max-width: 1500px) {

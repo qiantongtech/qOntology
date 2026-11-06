@@ -343,6 +343,24 @@ import {
 
 defineOptions({ name: "OmQualityValidation" });
 
+/* 语义颜色统一读取系统变量，与 variables.scss 中的定义保持一致。 */
+function readToken(name, fallback) {
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  return value || fallback;
+}
+
+const statusColors = {
+  success: readToken("--qt-status-success", "#67C23A"),
+  warning: readToken("--qt-status-warning", "#E6A23C"),
+  danger: readToken("--qt-status-danger", "#F56C6C"),
+  info: readToken("--qt-status-info", "#909399"),
+};
+const textPrimary = readToken("--qt-element-fixed-primary", "#303133");
+const textSecondary = readToken("--qt-text-secondary", "#909399");
+const primaryColor = readToken("--el-color-primary", "#2666FB");
+
 const { proxy } = getCurrentInstance();
 const { om_accept_status } = proxy.useDict("om_accept_status");
 const route = useRoute();
@@ -365,9 +383,9 @@ const constraintScore = 50;
 const lastVerifyTime = "2026-10-26 10:26";
 
 const severityMap = {
-  severe: { label: "严重", tagType: "danger", color: "#F56C6C" },
-  moderate: { label: "一般", tagType: "warning", color: "#E6A23C" },
-  minor: { label: "提示", tagType: "info", color: "#909399" },
+  severe: { label: "严重", tagType: "danger", color: statusColors.danger },
+  moderate: { label: "一般", tagType: "warning", color: statusColors.warning },
+  minor: { label: "提示", tagType: "info", color: statusColors.info },
 };
 
 // 严重程度字典（dict-tag 组件使用）
@@ -378,26 +396,26 @@ const severityOptions = [
 ];
 
 const metrics = [
-  { label: "验证项总数", value: "16", unit: "项", color: "#303133" },
-  { label: "验证通过率", value: "75", unit: "%", color: "#E6A23C" },
+  { label: "验证项总数", value: "16", unit: "项", color: textPrimary },
+  { label: "验证通过率", value: "75", unit: "%", color: statusColors.warning },
   {
     label: "发现问题",
     value: "4",
     unit: "个",
-    color: "#F56C6C",
+    color: statusColors.danger,
     sub: "严重 2 · 一般 2",
   },
-  { label: "目标覆盖率", value: "100", unit: "%", color: "#67C23A" },
+  { label: "目标覆盖率", value: "100", unit: "%", color: statusColors.success },
 ];
 
 const aiSummary =
   "本次 AI 质量验证共检查 16 项验证项与 245 个建模目标，发现 4 类问题（严重 2 类、一般 2 类），建模目标覆盖率 100%。模型结构存在等价冲突风险，建议优先处理；枚举值与格式约束问题可前往对应模块快速修复。整体建模质量一般，修复严重问题后评分预计可提升至 90 分以上。";
 
 function scoreColor(score) {
-  if (score >= 90) return "#67C23A";
-  if (score >= 75) return "#409EFF";
-  if (score >= 60) return "#E6A23C";
-  return "#F56C6C";
+  if (score >= 90) return statusColors.success;
+  if (score >= 75) return primaryColor;
+  if (score >= 60) return statusColors.warning;
+  return statusColors.danger;
 }
 
 function ratingOf(score) {
@@ -437,10 +455,22 @@ const gaugeRef = ref();
 let gaugeChart = null;
 
 const scoreGradients = {
-  "#67C23A": ["#B3E19D", "#67C23A"],
-  "#409EFF": ["#A0CFFF", "#409EFF"],
-  "#E6A23C": ["#F3D19E", "#E6A23C"],
-  "#F56C6C": ["#FAB6B6", "#F56C6C"],
+  [statusColors.success]: [
+    readToken("--el-color-success-light-3", "#B3E19D"),
+    statusColors.success,
+  ],
+  [primaryColor]: [
+    readToken("--el-color-primary-light-3", "#A0CFFF"),
+    primaryColor,
+  ],
+  [statusColors.warning]: [
+    readToken("--el-color-warning-light-3", "#F3D19E"),
+    statusColors.warning,
+  ],
+  [statusColors.danger]: [
+    readToken("--el-color-danger-light-3", "#FAB6B6"),
+    statusColors.danger,
+  ],
 };
 
 function initGauge() {
@@ -478,7 +508,7 @@ function initGauge() {
         title: {
           offsetCenter: [0, "32%"],
           fontSize: 12,
-          color: "#909399",
+          color: textSecondary,
           fontFamily: "PingFang SC",
         },
         detail: {
@@ -626,12 +656,22 @@ function showDeveloping() {
 </script>
 
 <style scoped lang="scss">
+/*
+ * 设计 Token 对齐首页 (system/index.vue)
+ * 字号体系：30px(Sharp数字) → 16px(板块标题/500~600) → 14px(正文/辅助/描述)
+ * 颜色：重点 var(--qt-text-primary) | 正文 var(--qt-text-regular) | 辅助 var(--qt-text-secondary);
+ * 分隔线：板块 #e8e8e8 | 卡片内 #e8e8e8
+ * 圆角：统一 2px
+ * 主色：var(--el-color-primary)
+ */
 .quality-validation-page {
   min-width: 1120px;
   font-family: PingFang SC;
   font-size: 14px;
+  background: #f0f2f5;
 }
 
+/* ---- 顶部 section-header ---- */
 .section-header {
   display: flex;
   align-items: center;
@@ -644,9 +684,10 @@ function showDeveloping() {
   align-items: center;
   gap: 0;
   font-size: 16px;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--qt-text-primary);
   font-family: PingFang SC;
   font-weight: 500;
+  line-height: 22px;
 }
 
 .header-actions {
@@ -654,11 +695,12 @@ function showDeveloping() {
   flex-shrink: 0;
 }
 
+/* ---- 质量总览面板 ---- */
 .overview-panel {
   margin-top: 16px;
   padding: 16px 20px;
-  border: 1px solid var(--el-border-color);
-  background: var(--el-bg-color);
+  border-radius: 2px;
+  background: #fff;
 }
 
 .overview-head {
@@ -670,14 +712,16 @@ function showDeveloping() {
 .overview-title {
   display: flex;
   align-items: center;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--qt-text-primary);
   font-size: 16px;
   font-weight: 500;
+  line-height: 22px;
 }
 
 .verify-time {
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .overview-main {
@@ -705,54 +749,56 @@ function showDeveloping() {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 15px;
 }
 
 .metric-card {
   padding: 14px 16px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 4px;
-  background: var(--el-fill-color-light);
+  border-radius: 2px;
+  background: #fafbfc;
+  border: 1px solid #e8e8e8;
+  box-sizing: border-box;
 }
 
 .metric-value {
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 28px;
+  font-family: Sharp;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 38px;
 }
 
 .metric-unit {
   margin-left: 2px;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
   font-weight: 400;
+  line-height: 22px;
 }
 
 .metric-label {
   margin-top: 4px;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .metric-sub {
   margin-top: 4px;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 
+/* ---- AI 结论 ---- */
 .ai-summary {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   margin-top: 14px;
   padding: 10px 14px;
-  border: 1px solid rgba(64, 158, 255, 0.18);
-  border-radius: 4px;
-  background: linear-gradient(
-    90deg,
-    rgba(64, 158, 255, 0.06),
-    rgba(125, 91, 255, 0.08)
-  );
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
+  background: #fafbfc;
 }
 
 .ai-badge {
@@ -760,10 +806,10 @@ function showDeveloping() {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  color: #5a54d1;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 20px;
+  color: var(--el-color-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 
 .ai-icon {
@@ -772,23 +818,26 @@ function showDeveloping() {
 
 .ai-text {
   margin: 0;
-  color: var(--el-text-color-regular);
-  font-size: 12px;
-  line-height: 20px;
+  color: var(--qt-text-regular);
+  font-size: 14px;
+  line-height: 22px;
 }
 
+/* ---- 三列验证面板 ---- */
 .validation-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 15px;
   margin-top: 16px;
 }
 
 .validation-panel {
   min-width: 0;
   padding: 16px;
-  border: 1px solid var(--el-border-color);
-  background: var(--el-bg-color);
+  border-radius: 2px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  box-sizing: border-box;
 }
 
 .panel-header {
@@ -797,11 +846,12 @@ function showDeveloping() {
   justify-content: space-between;
   gap: 10px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  color: var(--el-text-color-primary);
+  border-bottom: 1px solid #e8e8e8;
+  color: var(--qt-text-primary);
   font-size: 16px;
   font-family: PingFang SC;
   font-weight: 500;
+  line-height: 22px;
 }
 
 .panel-title {
@@ -814,14 +864,14 @@ function showDeveloping() {
 }
 
 .panel-score :deep(.el-progress__text) {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--qt-text-primary);
   margin-left: -3px;
 }
 
 .panel-index {
-  color: var(--el-text-color-regular);
+  color: var(--qt-text-regular);
 }
 
 .panel-subhead {
@@ -829,29 +879,30 @@ function showDeveloping() {
   align-items: center;
   gap: 0;
   font-size: 16px;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--qt-text-primary);
   font-family: PingFang SC;
   font-weight: 500;
+  line-height: 22px;
   margin: 14px 0 10px;
 }
 
 .panel-subhead .block-marker {
-  margin-right: 6px;
+  margin-right: 8px;
 }
 
 .panel-subhead .sub-count {
   margin-left: 8px;
   padding: 0 7px;
-  border-radius: 9px;
-  background: var(--el-color-danger-light-9);
-  color: var(--el-color-danger);
-  font-size: 12px;
-  line-height: 18px;
+  border-radius: 2px;
+  background: #fff0f2;
+  color: var(--qt-status-danger);
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .sub-count.normal {
-  background: var(--el-color-success-light-9);
-  color: var(--el-color-success);
+  background: #ebf9ee;
+  color: var(--qt-status-success);
 }
 
 .block-marker {
@@ -863,6 +914,7 @@ function showDeveloping() {
   background: var(--el-color-primary);
 }
 
+/* ---- 验证结果 summary ---- */
 .summary-line {
   display: flex;
   align-items: center;
@@ -870,9 +922,10 @@ function showDeveloping() {
   gap: 10px;
   min-height: 36px;
   padding: 8px 10px;
-  background: var(--el-fill-color-light);
-  color: var(--el-text-color-regular);
-  font-size: 12px;
+  background: #fafbfc;
+  color: var(--qt-text-regular);
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .summary-table {
@@ -888,13 +941,13 @@ function showDeveloping() {
 }
 
 .success-text {
-  color: var(--el-color-success);
+  color: var(--qt-status-success);
 }
-
 .danger-text {
-  color: var(--el-color-danger);
+  color: var(--qt-status-danger);
 }
 
+/* ---- 问题列表 ---- */
 .issue-list,
 .target-list,
 .constraint-list {
@@ -912,9 +965,8 @@ function showDeveloping() {
 .issue-list {
   max-height: 430px;
 }
-
 .constraint-list {
-  max-height: 490px;
+  max-height: 430px;
 }
 
 .issue-list::-webkit-scrollbar,
@@ -925,7 +977,7 @@ function showDeveloping() {
 .issue-list::-webkit-scrollbar-thumb,
 .constraint-list::-webkit-scrollbar-thumb {
   border-radius: 3px;
-  background: var(--el-border-color-dark);
+  background: #c0c4cc;
 }
 
 .issue-list::-webkit-scrollbar-track,
@@ -936,23 +988,25 @@ function showDeveloping() {
 .issue-card,
 .constraint-card,
 .target-item {
-  border: 1px solid var(--el-border-color-lighter);
-  background: var(--el-bg-color);
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
+  background: #fff;
+  box-sizing: border-box;
 }
 
 .issue-card.sev-severe,
 .constraint-card.sev-severe {
-  border-left: 3px solid var(--el-color-danger);
+  border-left: 3px solid var(--qt-status-danger);
 }
 
 .issue-card.sev-moderate,
 .constraint-card.sev-moderate {
-  border-left: 3px solid var(--el-color-warning);
+  border-left: 3px solid var(--qt-status-warning);
 }
 
 .issue-card.sev-minor,
 .constraint-card.sev-minor {
-  border-left: 3px solid var(--el-color-info);
+  border-left: 3px solid var(--qt-status-info);
 }
 
 .issue-head {
@@ -962,9 +1016,11 @@ function showDeveloping() {
   gap: 10px;
   min-height: 36px;
   padding: 7px 10px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
+  border-bottom: 1px solid #e8e8e8;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
+  line-height: 22px;
+  color: var(--qt-text-primary);
 }
 
 .issue-head > span:first-child {
@@ -975,18 +1031,19 @@ function showDeveloping() {
 }
 
 .issue-category {
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
   font-weight: 400;
+  line-height: 22px;
 }
 
 .issue-card p,
 .constraint-card p {
   margin: 0;
   padding: 9px 10px;
-  color: var(--el-text-color-regular);
-  font-size: 12px;
-  line-height: 20px;
+  color: var(--qt-text-regular);
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .issue-foot {
@@ -995,6 +1052,7 @@ function showDeveloping() {
   justify-content: flex-end;
   gap: 10px;
   padding: 0 10px 8px;
+  font-size: 14px;
 }
 
 .issue-foot .constraint-source {
@@ -1011,6 +1069,7 @@ function showDeveloping() {
   -webkit-line-clamp: 2;
 }
 
+/* ---- 目标列表 ---- */
 .target-item {
   padding: 9px 12px;
 }
@@ -1020,10 +1079,11 @@ function showDeveloping() {
   align-items: center;
   gap: 6px;
   font-size: 14px;
+  line-height: 22px;
 }
 
 .target-item-head .el-icon {
-  color: var(--el-color-success);
+  color: var(--qt-status-success);
   flex-shrink: 0;
 }
 
@@ -1033,27 +1093,43 @@ function showDeveloping() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--qt-text-primary);
 }
 
 .target-item-stats {
   margin-top: 6px;
   padding-left: 21px;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  line-height: 18px;
+  color: var(--qt-text-regular);
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .constraint-source {
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+/* ---- 表格表头覆盖 ---- */
+.summary-table :deep(.el-table__header th) {
+  background: #f1f1f5;
+  color: var(--qt-text-primary);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.summary-table :deep(.el-table__cell) {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--qt-text-regular);
 }
 
 @media (max-width: 1440px) {
   .validation-grid {
     gap: 12px;
   }
-
   .validation-panel {
     padding: 12px;
   }

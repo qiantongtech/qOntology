@@ -81,7 +81,7 @@
     </section>
 
     <section ref="allApplicationsRef" class="content-panel">
-      <div class="application-toolbar pagecont-top">
+      <div class="application-toolbar pagecont-all-top">
         <div class="toolbar-left">
           <div class="h2-titles">全部应用</div>
         </div>
@@ -385,15 +385,21 @@ function scrollToAll() {
 </script>
 
 <style scoped lang="scss">
+/*
+ * 设计 Token 对齐首页 (system/index.vue)
+ * 字号体系：21px(banner大标题) → 16px(板块标题/500~600) → 14px(正文/辅助/标签/描述)
+ * 颜色：重点 rgba(0,0,0,0.85) | 正文 rgba(0,0,0,0.65) | 辅助 #888888
+ * 分隔线：板块 #e8e8e8 | 卡片内 #e2e2e2
+ * 圆角：统一 2px
+ * 主色：var(--el-color-primary)
+ */
 .application-center {
   min-height: calc(100vh - 84px);
   padding: 15px;
-  background: #f2f4f7;
+  background: #f0f2f5;
   box-sizing: border-box;
 }
-.overview-panel,
-.content-panel {
-}
+/* ---- 顶部 Banner ---- */
 .overview-banner {
   position: relative;
   height: 120px;
@@ -401,9 +407,9 @@ function scrollToAll() {
   overflow: hidden;
   background: #eaf3ff url("@/assets/system/images/index/banner.png") right
     center/auto 100% no-repeat;
-  border: 1px solid #dce8f8;
   box-sizing: border-box;
   margin-bottom: 15px;
+  border-radius: 2px;
 }
 .overview-banner:after {
   position: absolute;
@@ -425,24 +431,26 @@ function scrollToAll() {
   justify-content: center;
 }
 .banner-content .h1-titles {
-  color: #333;
-  font-family: PingFangSC, PingFang SC, sans-serif;
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.85);
+  font-family: PingFang SC;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 29px;
 }
 .banner-content .p-titles {
   margin-top: 8px;
-  color: #000000a6;
+  color: var(--qt-text-regular);
   font-size: 14px;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 22px;
 }
+/* ---- module-item 统计卡片 ---- */
 .module-3 {
   display: flex;
   justify-content: space-between;
   height: 150px;
   margin-bottom: 15px;
+  gap: 15px;
 }
 .module-3 .module-item {
   flex: 1;
@@ -450,10 +458,6 @@ function scrollToAll() {
   border-radius: 2px;
   padding: 20px;
   background: #fff;
-  margin-right: 15px;
-}
-.module-3 .module-item:last-of-type {
-  margin-right: 0px;
 }
 .module-3 .module-item .module-item-t {
   display: flex;
@@ -476,7 +480,7 @@ function scrollToAll() {
 .module-3 .module-item .module-item-t .module-item-t-l span {
   font-family: Sharp;
   font-size: 30px;
-  color: #000;
+  color: rgba(0, 0, 0, 0.85);
 }
 .module-3 .module-item .module-item-t .module-item-t-r {
   width: 48px;
@@ -490,13 +494,15 @@ function scrollToAll() {
 .module-3 .module-item .module-item-data {
   display: flex;
   align-items: center;
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--qt-text-regular);
   font-size: 14px;
+  line-height: 22px;
 }
 .module-3 .module-item .module-item-data .data-up,
 .module-3 .module-item .module-item-data .data-down,
 .module-3 .module-item .module-item-data .data-equal {
   font-size: 14px;
+  line-height: 22px;
   margin: 0 10px;
   color: rgba(0, 0, 0, 0.85);
   position: relative;
@@ -504,7 +510,7 @@ function scrollToAll() {
 .module-3 .module-item .module-item-data .data-up:after {
   content: "";
   position: absolute;
-  top: -2px;
+  top: 1px;
   right: -16px;
   width: 0;
   height: 12px;
@@ -518,18 +524,20 @@ function scrollToAll() {
   right: -16px;
   width: 0;
   height: 12px;
-  border: 6px solid #f5222d;
-  border-color: #52c41a transparent transparent transparent;
+  border: 6px solid #52c41a;
+  border-color: transparent transparent transparent #52c41a;
 }
 .application-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   flex: none;
   object-fit: contain;
 }
+/* ---- content panel ---- */
 .content-panel {
   padding: 18px 20px 20px;
   background: #fff;
+  border-radius: 2px;
   margin-bottom: 15px;
 }
 .section-header {
@@ -538,28 +546,31 @@ function scrollToAll() {
   justify-content: space-between;
   margin-bottom: 15px;
   padding-bottom: 13px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid #e8e8e8;
 }
 .section-header .h2-titles {
   margin: 0;
 }
 .section-header p {
   margin: 6px 0 0 14px;
-  color: #909399;
-  font-size: 11px;
+  color: #888888;
+  font-size: 14px;
+  line-height: 22px;
 }
 .section-header :deep(.el-button) {
   height: 24px;
   padding: 0;
+  font-size: 14px;
 }
 .section-header :deep(.el-button svg) {
   width: 13px;
   margin-left: 3px;
 }
+/* ---- featured & application grid ---- */
 .featured-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 15px;
 }
 .featured-card,
 .application-card {
@@ -567,19 +578,13 @@ function scrollToAll() {
   min-height: 198px;
   flex-direction: column;
   padding: 18px 20px 16px;
-  border: 1px solid #dfe4ec;
   border-radius: 2px;
   background: #fff;
   box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  border: 1px solid #e8e8e8;
 }
 .featured-card {
   cursor: pointer;
-}
-.featured-card:hover,
-.application-card:hover {
-  border-color: #9cbcf7;
-  box-shadow: 0 4px 14px rgba(33, 89, 180, 0.07);
 }
 .featured-card__top,
 .application-card__head,
@@ -587,7 +592,7 @@ function scrollToAll() {
 .featured-card__footer,
 .detail-name {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 .featured-title,
@@ -600,9 +605,10 @@ function scrollToAll() {
 .featured-card h3,
 .application-title h3 {
   margin: 0 0 7px;
-  color: #202938;
-  font-size: 15px;
-  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 19px;
 }
 .tag-list {
   display: flex;
@@ -614,9 +620,9 @@ function scrollToAll() {
   height: 42px;
   margin: 15px 0 14px;
   overflow: hidden;
-  color: #4f5d70;
-  font-size: 11px;
-  line-height: 1.8;
+  color: var(--qt-text-regular);
+  font-size: 14px;
+  line-height: 22px;
 }
 .featured-card__footer,
 .application-card__footer {
@@ -630,33 +636,22 @@ function scrollToAll() {
   width: 100%;
   height: 31px;
   margin: 0;
-  border-radius: 0;
+  border-radius: 2px;
+  font-size: 14px;
+}
+/* ---- toolbar ---- */
+.application-toolbar.pagecont-all-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #e8e8e8;
 }
 .toolbar-left {
   display: flex;
   align-items: center;
   gap: 24px;
-}
-.application-toolbar.pagecont-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0;
-  padding: 0px;
-  border-bottom: 1px solid #ebeef5;
-}
-.category-tabs {
-  height: 54px;
-}
-.category-tabs :deep(.el-tabs__header) {
-  margin: 0;
-}
-.category-tabs :deep(.el-tabs__nav-wrap:after) {
-  display: none;
-}
-.category-tabs :deep(.el-tabs__item) {
-  height: 54px;
-  font-size: 12px;
 }
 .toolbar-right {
   display: flex;
@@ -664,8 +659,9 @@ function scrollToAll() {
   gap: 14px;
 }
 .toolbar-right > span {
-  color: #909399;
-  font-size: 10px;
+  color: #888888;
+  font-size: 14px;
+  line-height: 22px;
 }
 .application-toolbar :deep(.el-input) {
   width: 220px;
@@ -673,7 +669,7 @@ function scrollToAll() {
 .application-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 15px;
   margin-top: 14px;
 }
 .application-card {
@@ -685,11 +681,12 @@ function scrollToAll() {
 .application-grid > :deep(.el-empty) {
   grid-column: 1/-1;
 }
+/* ---- 详情弹框 ---- */
 .detail-head {
   display: flex;
   gap: 14px;
   padding: 2px 0 18px;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid #e8e8e8;
 }
 .detail-head > div {
   flex: 1;
@@ -700,14 +697,16 @@ function scrollToAll() {
   gap: 10px;
 }
 .detail-name strong {
-  color: #303133;
+  color: rgba(0, 0, 0, 0.85);
   font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .detail-head p {
   margin: 8px 0 0;
-  color: #667085;
-  font-size: 12px;
-  line-height: 1.75;
+  color: var(--qt-text-regular);
+  font-size: 14px;
+  line-height: 22px;
 }
 .detail-block {
   margin-top: 20px;
@@ -726,10 +725,12 @@ function scrollToAll() {
   align-items: center;
   gap: 6px;
   padding: 10px;
-  border: 1px solid #e5e9ef;
-  color: #606266;
-  background: #fafbfc;
-  font-size: 11px;
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
+  color: var(--qt-text-regular);
+  background: #fff;
+  font-size: 14px;
+  line-height: 22px;
 }
 .detail-features svg,
 .detail-scope svg {

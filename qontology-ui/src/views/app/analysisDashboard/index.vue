@@ -1,67 +1,68 @@
 <template>
   <div class="analysis-dashboard app-container">
-    <section class="dashboard-toolbar">
-      <div class="page-heading">
-        <div class="heading-icon"><DataAnalysis /></div>
-        <div>
-          <h1>项目本体分析看板</h1>
-          <p>基于项目绑定本体，分析对象、关系、规则与实例数据</p>
+    <header class="page-header">
+      <section class="dashboard-toolbar">
+        <div class="page-heading">
+          <div class="heading-icon"><DataAnalysis /></div>
+          <div>
+            <h1>项目本体分析看板</h1>
+            <p>基于项目绑定本体，分析对象、关系、规则与实例数据</p>
+          </div>
         </div>
-      </div>
-      <div class="toolbar-filters">
-        <div class="filter-item">
-          <el-select v-model="selectedProjectId" @change="handleProjectChange"
-            ><el-option
-              v-for="item in projectOptions"
-              :key="item.dictValue"
-              :label="item.dictLabel"
-              :value="item.dictValue"
-          /></el-select>
+        <div class="toolbar-filters">
+          <div class="filter-item">
+            <el-select v-model="selectedProjectId" @change="handleProjectChange"
+              ><el-option
+                v-for="item in projectOptions"
+                :key="item.dictValue"
+                :label="item.dictLabel"
+                :value="item.dictValue"
+            /></el-select>
+          </div>
+          <div class="range-toggle">
+            <button :class="{ active: period === 7 }" @click="changePeriod(7)">
+              近7天</button
+            ><button
+              :class="{ active: period === 30 }"
+              @click="changePeriod(30)"
+            >
+              近30天
+            </button>
+          </div>
+          <el-button :icon="Refresh" size="mini" @click="refreshCharts"
+            >刷新</el-button
+          >
         </div>
-        <div class="range-toggle">
-          <button :class="{ active: period === 7 }" @click="changePeriod(7)">
-            近7天</button
-          ><button :class="{ active: period === 30 }" @click="changePeriod(30)">
-            近30天
-          </button>
-        </div>
-        <el-button :icon="Refresh" size="mini" @click="refreshCharts"
-          >刷新</el-button
-        >
-      </div>
-    </section>
+      </section>
 
-    <div class="scope-strip">
-      <span
-        ><CollectionTag />当前项目：<b>{{ selectedProjectLabel }}</b></span
-      ><i></i>
-      <span
-        ><Connection />项目版本：<b>{{ boundOntologyVersion }}</b></span
-      ><i></i>
-      <span
-        ><DataAnalysis />分析对象集：<b>{{ scopeLabel }}</b></span
-      ><i></i>
-      <span><CircleCheck />数据更新时间：<b>今天 10:42</b></span>
-      <dict-tag class="scope-status" :options="dataStatusOptions" value="1" />
-    </div>
+      <div class="scope-strip">
+        <span
+          ><CollectionTag />当前项目：<b>{{ selectedProjectLabel }}</b></span
+        ><i></i>
+        <span
+          ><Connection />项目版本：<b>{{ boundOntologyVersion }}</b></span
+        ><i></i>
+        <span
+          ><DataAnalysis />分析对象集：<b>{{ scopeLabel }}</b></span
+        ><i></i>
+        <span><CircleCheck />数据更新时间：<b>今天 10:42</b></span>
+        <dict-tag class="scope-status" :options="dataStatusOptions" value="1" />
+      </div>
+    </header>
 
     <div class="metric-grid">
       <article
         v-for="card in metricCards"
         :key="card.label"
         class="metric-card"
-        :class="{ selected: activeMetric === card.key }"
-        @click="activeMetric = card.key"
       >
         <div class="metric-label">{{ card.label }}</div>
         <div class="metric-value">
           {{ card.value }}<small>{{ card.unit }}</small>
         </div>
         <div class="metric-foot">
-          <span>{{ card.note }}</span
-          ><em :class="{ down: !card.up }"
-            >{{ card.trend }} {{ card.up ? "▲" : "▼" }}</em
-          >
+          <span>{{ card.note }}</span>
+          <em :class="card.up ? 'trend-up' : 'trend-down'">{{ card.trend }}</em>
         </div>
         <div
           class="metric-badge"
@@ -111,18 +112,18 @@
             ><span class="section-title">本体语义关系网络</span
             ><span class="section-subtitle">沿本体关系展开 2 跳</span>
           </div>
-          <el-button text type="primary" @click="graphExpanded = !graphExpanded"
+          <!-- <el-button text type="primary" @click="graphExpanded = !graphExpanded"
             >{{ graphExpanded ? "收起详情" : "查看全图" }} <ArrowRight
-          /></el-button>
+          /></el-button> -->
         </div>
         <div class="graph-body">
           <div ref="graphRef" class="chart-canvas graph-chart"></div>
           <aside class="object-detail" :class="{ expanded: graphExpanded }">
             <div class="object-title">
               <span class="object-icon"><Cpu /></span>
-              <div>
-                <strong>核心业务对象 OBJ-2048</strong>
-                <p>对象类型：核心对象类型</p>
+              <div class="object-info">
+                <span class="object-name">核心业务对象 OBJ-2048</span>
+                <span class="object-type">对象类型：核心对象类型</span>
               </div>
             </div>
             <dl>
@@ -171,14 +172,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="rule-summary">
-          <WarningFilled />
-          <div>
-            <strong>今日新增 6 条质量问题</strong>
-            <p>其中 2 条为高优先级问题</p>
-          </div>
-          <el-button type="primary" plain size="small">查看问题</el-button>
         </div>
       </section>
     </div>
@@ -278,7 +271,6 @@ import {
 const selectedProjectId = ref("");
 const scope = ref("all");
 const period = ref(7);
-const activeMetric = ref("instances");
 const graphExpanded = ref(false);
 const keyword = ref("");
 const riskFilter = ref("all");
@@ -361,7 +353,7 @@ const metricCards = [
     label: "对象类型",
     value: "128",
     unit: "类",
-    note: "较上个版本新增 6 类",
+    note: "较上个版本新增 6 类：",
     trend: "1.6%",
     up: true,
     color: "#3478f6",
@@ -372,7 +364,7 @@ const metricCards = [
     label: "关系类型",
     value: "46",
     unit: "类",
-    note: "已使用关系 42 类",
+    note: "已使用关系 42 类：",
     trend: "0.8%",
     up: true,
     color: "#35bfc3",
@@ -383,7 +375,7 @@ const metricCards = [
     label: "对象实例",
     value: "2,486",
     unit: "个",
-    note: "较上周新增 38 个",
+    note: "较上周新增 38 个：",
     trend: "1.6%",
     up: true,
     color: "#f29a45",
@@ -394,7 +386,7 @@ const metricCards = [
     label: "规则校验通过率",
     value: "96.8",
     unit: "%",
-    note: "待处理问题 37 项",
+    note: "待处理问题 37 项：",
     trend: "0.8%",
     up: true,
     color: "#7b6cf0",
@@ -584,7 +576,7 @@ function initDonut() {
         top: "middle",
         itemWidth: 8,
         itemHeight: 8,
-        textStyle: { color: "#68768a", fontSize: 11 },
+        textStyle: { color: "#68768a", fontSize: 14 },
       },
       series: [
         {
@@ -616,7 +608,7 @@ function initDonut() {
                 color: "#25344a",
                 lineHeight: 34,
               },
-              name: { fontSize: 11, color: "#8995a7" },
+              name: { fontSize: 14, color: "#8995a7" },
             },
           },
           data: [{ value: 1 }],
@@ -630,30 +622,118 @@ function initGraph() {
   if (!graphRef.value) return;
   graphChart ||= echarts.init(graphRef.value);
   const nodes = [
-    { name: "项目本体", category: 0, symbolSize: 54 },
-    { name: "核心对象类型", category: 1, symbolSize: 62 },
-    { name: "关联对象类型 A", category: 1, symbolSize: 50 },
-    { name: "对象属性", category: 2, symbolSize: 44 },
-    { name: "关系类型", category: 3, symbolSize: 48 },
-    { name: "业务对象集", category: 4, symbolSize: 48 },
-    { name: "约束规则", category: 3, symbolSize: 46 },
+    {
+      name: "项目本体",
+      category: 0,
+      x: 140,
+      y: 150,
+      itemStyle: {
+        color: "#e8f1ff",
+        borderColor: "#2f73f5",
+        borderWidth: 1.6,
+      },
+      label: { color: "#1d4ed8" },
+    },
+    {
+      name: "对象类型",
+      category: 1,
+      x: 300,
+      y: 150,
+      symbolSize: 62,
+      itemStyle: {
+        color: "#2f73f5",
+        shadowColor: "rgba(47,115,245,.35)",
+        shadowBlur: 14,
+      },
+      label: { color: "#fff", fontWeight: 600 },
+    },
+    {
+      name: "关联对象类型",
+      category: 1,
+      x: 190,
+      y: 240,
+      itemStyle: {
+        color: "#e6f8f6",
+        borderColor: "#37bec2",
+        borderWidth: 1.6,
+      },
+      label: { color: "#0f8a86" },
+    },
+    {
+      name: "对象属性",
+      category: 2,
+      x: 410,
+      y: 240,
+      itemStyle: {
+        color: "#eef1ff",
+        borderColor: "#7b6cf0",
+        borderWidth: 1.6,
+      },
+      label: { color: "#4a3fb8" },
+    },
+    {
+      name: "关系类型",
+      category: 3,
+      x: 300,
+      y: 50,
+      itemStyle: {
+        color: "#fff3e6",
+        borderColor: "#f29a45",
+        borderWidth: 1.6,
+      },
+      label: { color: "#b26112" },
+    },
+    {
+      name: "业务对象集",
+      category: 4,
+      x: 460,
+      y: 150,
+      itemStyle: {
+        color: "#fff0f2",
+        borderColor: "#ef6b75",
+        borderWidth: 1.6,
+      },
+      label: { color: "#c43d4a" },
+    },
+    {
+      name: "约束规则",
+      category: 3,
+      x: 170,
+      y: 55,
+      itemStyle: {
+        color: "#fff3e6",
+        borderColor: "#f29a45",
+        borderWidth: 1.6,
+      },
+      label: { color: "#b26112" },
+    },
   ];
   graphChart.setOption(
     {
+      animationDuration: 900,
+      animationEasing: "cubicOut",
       color: ["#3478f6", "#35bfc3", "#7b6cf0", "#f29a45", "#ef6b75"],
-      tooltip: {},
+      tooltip: { show: false },
       legend: {
         bottom: 2,
         data: ["本体", "对象类型", "属性", "关系/规则", "对象集"],
-        textStyle: { fontSize: 10, color: "#748196" },
+        textStyle: { fontSize: 14, color: "#748196" },
         itemWidth: 10,
         itemHeight: 10,
       },
       series: [
         {
           type: "graph",
-          layout: "force",
-          roam: true,
+          layout: "none",
+          roam: false,
+          top: 18,
+          right: "18%",
+          bottom: 38,
+          left: "18%",
+          symbol: "circle",
+          symbolSize: 56,
+          edgeSymbol: ["none", "arrow"],
+          edgeSymbolSize: 8,
           categories: [
             { name: "本体" },
             { name: "对象类型" },
@@ -663,22 +743,23 @@ function initGraph() {
           ],
           data: nodes,
           links: [
-            { source: 0, target: 1, name: "定义" },
-            { source: 0, target: 2, name: "定义" },
-            { source: 1, target: 3, name: "拥有属性" },
-            { source: 1, target: 4, name: "关联" },
-            { source: 1, target: 5, name: "组成" },
-            { source: 1, target: 6, name: "受约束于" },
+            { source: 0, target: 1, value: "定义" },
+            { source: 0, target: 2, value: "定义" },
+            { source: 1, target: 3, value: "拥有属性" },
+            { source: 1, target: 4, value: "关联" },
+            { source: 1, target: 5, value: "组成" },
+            { source: 1, target: 6, value: "受约束于" },
           ],
-          force: { repulsion: 220, edgeLength: [70, 110] },
-          label: { show: true, fontSize: 10, color: "#344258" },
+          label: { show: true, position: "inside", fontSize: 12 },
           edgeLabel: {
             show: true,
-            formatter: (params) => params.data?.name || "",
-            fontSize: 9,
-            color: "#8a96a8",
+            formatter: "{c}",
+            fontSize: 14,
+            color: "#606266",
+            padding: [1, 3],
+            borderRadius: 2,
           },
-          lineStyle: { color: "#aebfdd", curveness: 0.08 },
+          lineStyle: { color: "#606266", width: 1.4, curveness: 0.14 },
         },
       ],
     },
@@ -699,23 +780,33 @@ onBeforeUnmount(() => {
 </script>
  
 <style lang="scss" scoped>
+/*
+ * 设计 Token 对齐首页 (system/index.vue)
+ * 字号体系：30px(Sharp数字) → 20px(页面大标题) → 16px(板块标题/500) → 14px(正文/列表/辅助)
+ * 颜色：标题 rgba(0,0,0,0.85) | 正文 rgba(0,0,0,0.65) | 辅助 var(--qt-text-secondary);
+ * 分隔线：板块 #e8e8e8 | 卡片内 #e2e2e2
+ * 圆角：2px | 板块marker：6×16px 主色 3px圆角
+ */
 .analysis-dashboard {
   min-height: calc(100vh - 84px);
   padding: 15px;
-  background: #f2f4f7;
-  color: #26344a;
-  font-family: "PingFang SC", sans-serif;
+  background: #f0f2f5;
+  color: var(--qt-text-primary);
+  font-family: PingFang SC;
   box-sizing: border-box;
+}
+/* 顶部合一块的白容器 */
+.page-header {
+  background: #fff;
+  border-radius: 2px;
+  margin-bottom: 15px;
 }
 .dashboard-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 68px;
-  margin-bottom: 1px;
-  padding: 0 20px;
-  background: #fff;
-  border-radius: 2px 2px 0 0;
+  min-height: 50px;
+  padding: 15px;
 }
 .page-heading {
   display: flex;
@@ -725,26 +816,28 @@ onBeforeUnmount(() => {
 .heading-icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   color: #fff;
   background: linear-gradient(135deg, #3478f6, #638ae9);
-  box-shadow: 0 6px 14px rgba(45, 105, 223, 0.17);
+  // box-shadow: 0 6px 14px rgba(45, 105, 223, 0.17);
 }
 .heading-icon svg {
   width: 21px;
 }
 .page-heading h1 {
   margin: 0;
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--qt-text-primary);
   font-size: 16px;
   font-weight: 600;
+  line-height: 22px;
 }
 .page-heading p {
-  margin: 5px 0 0;
-  color: #8a95a5;
-  font-size: 12px;
+  margin: 4px 0 0;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .toolbar-filters {
   display: flex;
@@ -757,8 +850,9 @@ onBeforeUnmount(() => {
   gap: 5px;
 }
 .filter-item > span {
-  color: #758196;
-  font-size: 11px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .filter-item .el-select {
   width: 190px;
@@ -769,25 +863,26 @@ onBeforeUnmount(() => {
 .filter-item :deep(.el-select__wrapper) {
   min-height: 32px;
   border-radius: 2px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .range-toggle {
   display: inline-flex;
   overflow: hidden;
   height: 32px;
-  border: 1px solid #d7e0ec;
-  border-radius: 3px;
+  border: 1px solid #e4e7ed;
+  border-radius: 2px;
 }
 .range-toggle button {
   padding: 0 12px;
   border: 0;
   background: #fff;
-  color: #657388;
-  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
+  line-height: 32px;
   cursor: pointer;
 }
 .range-toggle button + button {
-  border-left: 1px solid #d7e0ec;
+  border-left: 1px solid #e4e7ed;
 }
 .range-toggle button.active {
   color: #fff;
@@ -798,12 +893,11 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 16px;
   min-height: 42px;
-  margin-bottom: 15px;
-  padding: 0 20px;
-  color: #7b8798;
-  background: #fff;
-  border-top: 1px solid #edf0f4;
-  font-size: 12px;
+  padding: 15px;
+  color: var(--qt-text-secondary);
+  border-top: 1px solid #e8e8e8;
+  font-size: 14px;
+  line-height: 22px;
 }
 .scope-strip span {
   display: inline-flex;
@@ -812,16 +906,16 @@ onBeforeUnmount(() => {
 }
 .scope-strip svg {
   width: 14px;
-  color: #3478f6;
+  color: var(--qt-element-fixed-primary);
 }
 .scope-strip b {
-  color: #4c5a70;
+  color: var(--qt-text-primary);
   font-weight: 500;
 }
 .scope-strip > i {
   width: 1px;
   height: 15px;
-  background: #e2e7ee;
+  background: #e8e8e8;
 }
 .scope-status {
   margin-left: auto;
@@ -833,7 +927,7 @@ onBeforeUnmount(() => {
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 15px;
   margin-bottom: 15px;
 }
 .metric-card {
@@ -841,34 +935,28 @@ onBeforeUnmount(() => {
   min-height: 128px;
   padding: 16px 17px 13px;
   overflow: hidden;
-  border: 1px solid transparent;
   border-radius: 2px;
   background: #fff;
-  cursor: pointer;
   box-sizing: border-box;
-  transition: 0.2s;
-}
-.metric-card:hover,
-.metric-card.selected {
-  border-color: #b9cff8;
-  box-shadow: 0 5px 15px rgba(42, 91, 165, 0.08);
 }
 .metric-label {
-  color: #7b8798;
+  color: var(--qt-text-secondary);
   font-size: 14px;
+  line-height: 22px;
 }
 .metric-value {
   margin-top: 5px;
-  color: #1e2d42;
-  font-family: Sharp, "PingFang SC", sans-serif;
-  font-size: 28px;
+  color: #000000;
+  font-family: Sharp;
+  font-size: 30px;
   line-height: 38px;
   font-weight: 600;
 }
 .metric-value small {
   margin-left: 4px;
-  color: #657388;
-  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+  font-family: PingFang SC;
+  font-size: 14px;
   font-weight: 400;
 }
 .metric-foot {
@@ -876,16 +964,42 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px solid #edf0f4;
-  color: #758196;
-  font-size: 12px;
+  border-top: 1px solid #e2e2e2;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .metric-foot em {
-  color: #32b8bb;
+  color: var(--qt-text-primary);
   font-style: normal;
+  font-size: 14px;
+  margin: 0 10px;
+  position: relative;
 }
-.metric-foot em.down {
-  color: #ef6b75;
+
+.metric-foot .trend-up::after,
+.metric-foot .trend-down::after {
+  content: "";
+  position: absolute;
+  right: -16px;
+  width: 0;
+  height: 12px;
+  border: 6px solid transparent;
+}
+
+.metric-foot .trend-up::after {
+  top: 0px;
+  border-bottom-color: #f5222d;
+}
+
+.metric-foot .trend-down::after {
+  top: 6px;
+  border-top-color: #52c41a;
+}
+
+.metric-foot--stats {
+  overflow: hidden;
+  gap: 0;
 }
 .metric-badge {
   position: absolute;
@@ -895,9 +1009,9 @@ onBeforeUnmount(() => {
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #fff;
-  box-shadow: 0 6px 14px rgba(45, 105, 223, 0.17);
+  // box-shadow: 0 6px 14px rgba(45, 105, 223, 0.17);
 }
 .metric-badge svg {
   width: 22px;
@@ -944,14 +1058,16 @@ onBeforeUnmount(() => {
   background: var(--el-color-primary);
 }
 .section-title {
-  color: rgba(0, 0, 0, 0.85);
+  color: var(--qt-text-primary);
   font-size: 16px;
+  font-family: PingFang SC;
   font-weight: 500;
 }
 .section-subtitle {
   margin-left: 10px;
-  color: #929dad;
-  font-size: 12px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .chart-canvas {
   width: 100%;
@@ -963,8 +1079,9 @@ onBeforeUnmount(() => {
 .legend-summary {
   display: flex;
   gap: 14px;
-  color: #748196;
-  font-size: 11px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .legend-summary span {
   display: flex;
@@ -990,12 +1107,13 @@ onBeforeUnmount(() => {
   justify-content: space-around;
   margin-top: -8px;
   padding-top: 9px;
-  border-top: 1px solid #edf0f4;
-  color: #7d899b;
-  font-size: 11px;
+  border-top: 1px solid #e2e2e2;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .distribution-foot b {
-  color: #3478f6;
+  color: var(--el-color-primary);
   font-weight: 500;
 }
 .graph-section {
@@ -1004,43 +1122,50 @@ onBeforeUnmount(() => {
 .graph-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 230px;
-  height: 286px;
+  height: 300px;
 }
 .graph-chart {
-  height: 286px;
+  height: 300px;
 }
 .object-detail {
   padding: 14px;
-  border-left: 1px solid #edf0f4;
-  background: #fafbfc;
-  transition: 0.2s;
+  border-left: 1px solid #e2e2e2;
+  background: #fff;
+  height: 250px;
 }
 .object-title {
   display: flex;
+  align-items: center;
   gap: 9px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e8edf3;
+  border-bottom: 1px solid #e8e8e8;
 }
 .object-icon {
   display: grid;
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #fff;
   background: #3478f6;
 }
 .object-icon svg {
   width: 18px;
 }
-.object-title strong {
-  color: #2f3d52;
-  font-size: 12px;
+.object-title .object-info {
+  display: flex;
+  flex-direction: column;
 }
-.object-title p {
-  margin: 4px 0 0;
-  color: #929dad;
-  font-size: 10px;
+.object-title .object-name {
+  color: var(--qt-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+}
+.object-title .object-type {
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .object-detail dl {
   margin: 10px 0;
@@ -1050,32 +1175,34 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   min-height: 30px;
-  font-size: 11px;
+  font-size: 14px;
+  line-height: 22px;
 }
 .object-detail dt {
-  color: #8a96a8;
+  color: var(--qt-text-secondary);
 }
 .object-detail dd {
   margin: 0;
-  color: #526075;
+  color: rgba(0, 0, 0, 0.65);
 }
 .danger-text {
-  color: #ef6b75 !important;
+  color: #f5222d !important;
 }
 .relation-path {
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 8px;
-  color: #708096;
+  color: rgba(0, 0, 0, 0.65);
   background: #eef4ff;
-  font-size: 9px;
+  font-size: 14px;
+  line-height: 22px;
 }
 .relation-path svg {
   width: 10px;
 }
 .relation-path b {
-  color: #3478f6;
+  color: var(--el-color-primary);
   font-weight: 500;
 }
 .rule-list {
@@ -1092,14 +1219,15 @@ onBeforeUnmount(() => {
   width: 23px;
   height: 23px;
   flex: 0 0 auto;
-  border-radius: 4px;
-  color: #6e7b8e;
-  background: #eef1f5;
-  font-size: 11px;
+  border-radius: 2px;
+  color: rgba(0, 0, 0, 0.65);
+  background: #f0f2f5;
+  font-size: 14px;
+  line-height: 22px;
 }
 .rank-1 {
   color: #fff;
-  background: #3478f6;
+  background: var(--el-color-primary);
 }
 .rank-2 {
   color: #fff;
@@ -1118,29 +1246,33 @@ onBeforeUnmount(() => {
   justify-content: space-between;
 }
 .rule-main strong {
-  color: #445267;
-  font-size: 11px;
+  color: var(--qt-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .rule-main b {
-  color: #6b788b;
-  font-size: 10px;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
   font-weight: 500;
+  line-height: 22px;
 }
 .rule-main p {
   margin: 3px 0 6px;
-  color: #9aa4b3;
-  font-size: 9px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 .rule-progress {
   height: 4px;
   overflow: hidden;
-  border-radius: 3px;
-  background: #edf1f6;
+  border-radius: 2px;
+  background: #e2e2e2;
 }
 .rule-progress i {
   display: block;
   height: 100%;
-  border-radius: 3px;
+  border-radius: 2px;
   background: linear-gradient(90deg, #3478f6, #69a3ff);
 }
 .rule-summary {
@@ -1150,7 +1282,7 @@ onBeforeUnmount(() => {
   margin-top: 4px;
   padding: 10px;
   border: 1px solid #f7dba6;
-  border-radius: 3px;
+  border-radius: 2px;
   background: #fffaf0;
 }
 .rule-summary > svg {
@@ -1163,12 +1295,15 @@ onBeforeUnmount(() => {
 .rule-summary strong {
   display: block;
   color: #7d6030;
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .rule-summary p {
   margin: 3px 0 0;
   color: #a28c68;
-  font-size: 9px;
+  font-size: 14px;
+  line-height: 22px;
 }
 .table-section {
   padding-bottom: 12px;
@@ -1187,11 +1322,13 @@ onBeforeUnmount(() => {
 .table-actions :deep(.el-select__wrapper) {
   min-height: 32px;
   border-radius: 2px;
+  font-size: 14px;
 }
 .dashboard-table :deep(.el-table__header th) {
-  background: #f3f5f8;
-  color: #566477;
+  background: #f1f1f5;
+  color: #666666;
   font-weight: 600;
+  font-size: 14px;
 }
 .dashboard-table :deep(.el-table__cell) {
   padding: 6px 0;
@@ -1206,7 +1343,7 @@ onBeforeUnmount(() => {
   place-items: center;
   width: 30px;
   height: 30px;
-  border-radius: 5px;
+  border-radius: 2px;
   color: #fff;
 }
 .object-cell svg {
@@ -1214,14 +1351,17 @@ onBeforeUnmount(() => {
 }
 .object-cell strong {
   display: block;
-  color: #3e4d63;
-  font-size: 12px;
+  color: var(--qt-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .object-cell small {
   display: block;
   margin-top: 2px;
-  color: #99a4b3;
-  font-size: 9px;
+  color: var(--qt-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
 }
 @media (max-width: 1400px) {
   .toolbar-filters .filter-item > span {

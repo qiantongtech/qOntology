@@ -170,9 +170,6 @@ watch(
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 8px;
-  span {
-    color: #303133;
-  }
 }
 .stage-summary {
   color: #606266;
