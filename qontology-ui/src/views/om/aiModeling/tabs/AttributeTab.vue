@@ -182,7 +182,7 @@
             type="textarea"
             :rows="4"
             placeholder="请输入描述"
-            :maxlength="500"
+            :maxlength="256"
             show-word-limit
           />
         </el-form-item>

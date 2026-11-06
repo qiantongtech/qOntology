@@ -100,10 +100,11 @@ const { om_ai_task_status } = proxy.useDict("om_ai_task_status");
 
 const task = ref({});
 const files = ref([]);
-const activeTab = ref("target");
+const activeTab = ref("timeline");
 
 /** 详情页签与系统正式菜单字段保持一致。 */
 const tabs = [
+  { name: "timeline", label: "解析过程", component: TimelineTab },
   { name: "target", label: "建模目标", component: TargetTab },
   { name: "term", label: "术语管理", component: TermTab },
   { name: "enum_type", label: "枚举管理", component: EnumTab },
@@ -112,7 +113,6 @@ const tabs = [
   { name: "relation", label: "对象类型关系", component: RelationTab },
   { name: "axiom", label: "模型公理", component: AxiomTab },
   { name: "rule", label: "数据规则", component: DataRuleTab },
-  { name: "timeline", label: "解析过程", component: TimelineTab },
 ];
 
 const currentTab = computed(
