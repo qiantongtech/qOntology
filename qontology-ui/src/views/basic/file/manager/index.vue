@@ -28,7 +28,7 @@
         :dept-options="categoryOptions"
         :default-expand-level="2"
         v-model:leftWidth="leftWidth"
-        placeholder="请输入分类名称"
+        placeholder="请输入文件分类名称"
         @node-click="handleNodeClick"
       />
       <el-main>
@@ -109,34 +109,36 @@
               </el-button>
               <el-popover
                 placement="bottom"
-                :width="107"
+                :width="150"
                 popper-class="handle-popover"
                 trigger="click"
               >
                 <template #reference>
                   <el-button link type="primary" icon="ArrowDown">更多</el-button>
                 </template>
-                <el-button
-                  link
-                  type="primary"
-                  icon="View"
-                  @click="handlePreview(row)"
-                  >预览</el-button>
+                <div class="task-action-list">
                   <el-button
                     link
                     type="primary"
-                    icon="Download"
-                    @click="handleDownload(row)"
-                    >下载</el-button>
+                    icon="View"
+                    @click="handlePreview(row)"
+                    >预览</el-button>
                   <el-button
-                    v-hasPermi="['basic:file:manager:remove']"
-                    link
-                    type="danger"
-                    icon="Delete"
-                    @click="handleDelete(row)"
-                    >删除
-                  </el-button
-                >
+                      link
+                      type="primary"
+                      icon="Download"
+                      @click="handleDownload(row)"
+                      >下载</el-button>
+                  <el-button
+                      v-hasPermi="['basic:file:manager:remove']"
+                      link
+                      type="danger"
+                      icon="Delete"
+                      @click="handleDelete(row)"
+                      >删除
+                    </el-button
+                  >
+                </div>
               </el-popover>
             </template>
           </qt-table>

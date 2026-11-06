@@ -49,7 +49,7 @@
       class="column-form"
       @submit.prevent="submitForm"
     >
-      <qt-form-item label="项目名称" prop="name" class="row-full" tip="填写本体项目的名称，用于在项目列表和建模上下文中识别项目。">
+      <qt-form-item label="项目名称" prop="name" class="row-full">
         <el-input v-model="localForm.name" placeholder="请输入项目名称" />
       </qt-form-item>
       <!-- 图标上传沿用数据板块表单：未上传时展示默认图标，上传后可预览或删除。 -->
@@ -57,7 +57,8 @@
         label="图标"
         prop="icon"
         class="row-full"
-        tip="请上传大小不超过 5MB、格式为 png/jpg/jpeg 的图片，用于在项目列表中快速识别项目。"
+        tip="请上传大小不超过 <span style='color: #f56c6c'>5MB</span>、
+        格式为 <span style='color: #f56c6c'>png/jpg/jpeg</span> 的图片，用于在项目列表中快速识别项目。"
       >
         <ImageUpload
           v-model="localForm.icon"
@@ -73,8 +74,8 @@
           :is-show-tip="false"
         />
       </qt-form-item>
-      <qt-form-item label="项目领域" prop="domain" class="row-full" tip="填写项目所属的业务领域，例如电力、医疗或政务，便于界定建模范围。">
-        <el-input v-model="localForm.domain" placeholder="请输入项目领域" />
+      <qt-form-item label="项目领域" prop="domain" class="row-full">
+        <el-input v-model="localForm.domain" placeholder="请输入项目领域，项目所属的业务领域，例如电力、医疗或政务，便于界定建模范围。" />
       </qt-form-item>
       <qt-form-item
         label="命名空间"
@@ -84,15 +85,15 @@
       >
         <el-input v-model="localForm.namespace" placeholder="请输入命名空间" />
       </qt-form-item>
-      <qt-form-item label="初始版本" prop="currentVersion" class="row-full" tip="填写项目的首个版本号，例如 V1.0，仅在新增时录入，编辑时沿用已有版本。">
+      <qt-form-item label="初始版本" prop="currentVersion" class="row-full">
         <!-- 初始版本仅在新增时录入，编辑项目时沿用已有版本。 -->
         <el-input
           v-model="localForm.currentVersion"
           :disabled="mode === 'edit'"
-          placeholder="请输入初始版本"
+          placeholder="请输入初始版本，例如 V1.0"
         />
       </qt-form-item>
-      <qt-form-item label="责任人" prop="responsibleUserId" class="row-full" tip="选择该项目的负责人，可从系统用户中检索，选定后自动带出联系电话。">
+      <qt-form-item label="责任人" prop="responsibleUserId" class="row-full">
         <el-select
           v-model="localForm.responsibleUserId"
           placeholder="请选择责任人"
@@ -108,27 +109,27 @@
           />
         </el-select>
       </qt-form-item>
-      <qt-form-item label="联系电话" class="row-full" tip="展示所选责任人的联系电话，随责任人自动填充，无需手动修改。">
+      <qt-form-item label="联系电话" class="row-full">
         <el-input
           :model-value="responsiblePhone"
           disabled
           placeholder="请输入联系电话"
         />
       </qt-form-item>
-      <qt-form-item label="状态" prop="status" class="row-full" tip="启用后项目可正常开展建模，停用后保留历史数据但不再参与新建。">
+      <qt-form-item label="状态" prop="status" class="row-full">
         <el-radio-group v-model="localForm.status">
           <el-radio v-for="dict in statusOptions" :key="Number(dict.value)" :value="Number(dict.value)">
             {{ dict.label }}
           </el-radio>
         </el-radio-group>
       </qt-form-item>
-      <qt-form-item label="包含范围" prop="includeRange" class="row-full" tip="说明本项目本体建模覆盖的业务范围与主题域。">
-        <el-input v-model="localForm.includeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入包含范围"/>
+      <qt-form-item label="包含范围" prop="includeRange" class="row-full">
+        <el-input v-model="localForm.includeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入包含范围，说明本项目本体建模覆盖的业务范围与主题域。"/>
       </qt-form-item>
-      <qt-form-item label="排除范围" prop="excludeRange" class="row-full" tip="说明本项目明确不纳入建模的业务范围，避免边界歧义。">
-        <el-input v-model="localForm.excludeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入排除范围"/>
+      <qt-form-item label="排除范围" prop="excludeRange" class="row-full">
+        <el-input v-model="localForm.excludeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入排除范围，说明本项目明确不纳入建模的业务范围，避免边界歧义。"/>
       </qt-form-item>
-      <qt-form-item label="描述" prop="description" class="row-full" tip="补充项目的整体背景、目标与说明信息。">
+      <qt-form-item label="描述" prop="description" class="row-full">
         <el-input v-model="localForm.description" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入描述"/>
       </qt-form-item>
     </el-form>

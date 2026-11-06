@@ -145,29 +145,31 @@
               ])
             "
             placement="bottom"
-            :width="107"
+            :width="100"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-                v-if="auth.hasPermi('basic:project:project:edit')"
-                link
-                type="primary"
-                icon="Edit"
-                @click="handleUpdate(row)"
-                >修改</el-button
-              >
+            <div class="task-action-list">
               <el-button
-                v-if="auth.hasPermi('basic:project:project:remove')"
-                link
-                type="danger"
-                icon="Delete"
-                @click="handleDelete(row)"
-                >删除</el-button
+                  v-if="auth.hasPermi('basic:project:project:edit')"
+                  link
+                  type="primary"
+                  icon="Edit"
+                  @click="handleUpdate(row)"
+              >修改
+              </el-button>
+              <el-button
+                  v-if="auth.hasPermi('basic:project:project:remove')"
+                  link
+                  type="danger"
+                  icon="Delete"
+                  @click="handleDelete(row)"
+              >删除</el-button
               >
+            </div>
 
           </el-popover>
         </template>
@@ -527,6 +529,8 @@ const tableStore = reactive({
       width: 240,
       align: "left",
       showOverflowTooltip: { effect: "light" },
+      headerTooltip: '数据元：表示一个具体的数值字段<br>代码表：表示一组枚举值',
+      showHeaderTooltip: true,
     },
     {
       label: "责任人",

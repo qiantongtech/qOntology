@@ -175,33 +175,33 @@ export const guideTipConfig = {
         version: '1.0'
     },
     'basic/datasource.list': {
-        title: '数据源',
+        title: '数据源<span class="tip-unbold"> —— 统一管理外部数据源连接</span>',
         content: '统一管理外部数据源连接，配置数据库类型、主机、端口与认证信息，为本体建模与数据处理提供稳定的数据接入能力。',
         type: 'remind',
         version: '1.0'
     },
     // 模型市场负责提供方接入与密钥配置，区别于具体业务功能中的模型选择。
     'basic/llm/modelMarket.list': {
-        title: '模型市场-接入并配置 AI 模型服务',
-        content: '统一管理通义千问、DeepSeek、OpenAI 和 Ollama 等模型平台的连接与密钥，为本体智能建模、信息抽取等 AI 功能提供模型服务。首次使用请先点击“密钥设置”配置连接，完成后进入“模型详情”查看可用模型，再在业务功能的模型配置中选择使用。可通过模型名称、模型平台、模型能力和配置状态快速定位接入入口。',
+        title: '模型市场<span class="tip-unbold"> —— 接入并配置 AI 模型服务</span>',
+        content: '统一管理通义千问、DeepSeek、OpenAI 和 Ollama 等模型平台的连接与密钥。首次使用请先点击“密钥设置”配置连接，完成后进入“模型详情”查看可用模型。',
         type: 'remind',
         version: '1.0'
     },
     // 我的模型只展示已配置且有效的提供方，帮助用户定位业务功能可选的模型入口。
     'basic/llm/myModel.list': {
-        title: '我的模型-查看和维护已接入的 AI 模型',
-        content: '集中展示已配置有效连接的模型平台，可按模型名称、模型平台和模型能力查找，进入“模型详情”查看可用模型，并在本体智能建模、信息抽取等业务功能的模型配置中选择使用。首次使用或需要接入新平台时，请先到“模型市场”完成密钥及服务地址配置；已有连接可在此通过“密钥设置”维护。',
+        title: '我的模型<span class="tip-unbold"> —— 查看和维护已接入的 AI 模型</span>',
+        content: '集中展示已配置有效连接的模型平台。首次使用或需要接入新平台时，请先到“模型市场”完成密钥及服务地址配置；已有连接可在此通过“密钥设置”维护。',
         type: 'remind',
         version: '1.0'
     },
     'basic/file/category.list': {
-        title: '文件分类 - 构建数据文件的多级分类树',
+        title: '文件分类 <span class="tip-unbold"> —— 构建数据文件的多级分类树</span>',
         content: '构建模型数据文件的多级分类树，支持分类的新增、修改与删除，为文件管理中的文件提供按类归集与检索的基础。',
         type: 'remind',
         version: '1.0'
     },
     'basic/file/manager.list': {
-        title: '文件管理- 集中维护模型数据文件',
+        title: '文件管理<span class="tip-unbold"> —— 集中维护模型数据文件</span>',
         content: '集中维护模型数据文件，支持按分类树与文件名称快速定位，提供文件的新增、预览、下载、修改与删除能力。',
         type: 'remind',
         version: '1.0'

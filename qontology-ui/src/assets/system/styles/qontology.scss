@@ -1436,19 +1436,3 @@ input:-internal-autofill-selected {
     margin-bottom: 0 !important;
   }
 }
-
-.butgdlist {
-  width: 100px;
-  margin: 0 auto;
-  display: flex !important;
-  flex-direction: column;
-  align-items: center !important;
-}
-
-.butgdlist .el-button {
-  width: 100%;
-  justify-content: center;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}

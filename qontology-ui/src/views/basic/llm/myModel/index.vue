@@ -29,12 +29,15 @@
       />
     </div>
 
-    <div v-loading="loading">
+    <div class="pagecont-main" v-loading="loading">
       <Card :data="keyList" @handleUpdate="handleUpdate" @routeTo="routeTo"/>
-      <el-empty v-if="!loading && keyList.length === 0" description="暂无匹配的已配置模型平台"/>
+      <div v-if="!loading && keyList.length === 0" class="emptyBg">
+        <img src="@/assets/common/images/empty-state/noData.png" alt="" />
+        <p>暂无记录</p>
+      </div>
     </div>
 
-    <div class="pagecont-bottom">
+    <div v-if="total > 0" class="pagecont-bottom">
       <pagination
         v-show="total > 0"
         :total="total"
@@ -374,12 +377,21 @@ getList();
 
 <style scoped lang="scss">
 .app-container {
-  padding-bottom: 45px;
+  //padding-bottom: 45px;
   overflow-x: hidden;
 
+  // 内容区撑满搜索栏与分页之间的剩余高度，无数据时页面不塌缩。
+  .pagecont-main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   .pagecont-bottom {
-    position: fixed;
-    bottom: 0;
+    flex: none;
+    //position: fixed;
+    //bottom: 0;
     width: 100%;
     left: 0;
     height: 60px;
@@ -415,5 +427,16 @@ getList();
   overflow: auto;
   padding: 20px 40px 5px 40px !important;
 }
+.emptyBg {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  // 与 QtTable 一致：图片靠顶部（由全局 .emptyBg img 的 margin-top 控制），不垂直居中。
+  justify-content: flex-start;
+  background-color: #ffffff;
+  border-radius: 2px;
+}
+
 
 </style>

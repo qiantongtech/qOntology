@@ -75,30 +75,32 @@
           <!-- 低频操作收起到更多菜单，启用中的分类与参考页一致禁止删除。 -->
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              v-hasPermi="['basic:file:category:add']"
-              link
-              type="primary"
-              icon="Plus"
-              @click="handleAdd(row)"
-              >新增子级</el-button
-            >
-            <el-button
-              v-hasPermi="['basic:file:category:remove']"
-              link
-              type="danger"
-              icon="Delete"
-              :disabled="row.validFlag === true"
-              @click="handleDelete(row)"
-              >删除</el-button
-            >
+            <div class="task-action-list">
+              <el-button
+                v-hasPermi="['basic:file:category:add']"
+                link
+                type="primary"
+                icon="Plus"
+                @click="handleAdd(row)"
+                >新增子级</el-button
+              >
+              <el-button
+                v-hasPermi="['basic:file:category:remove']"
+                link
+                type="danger"
+                icon="Delete"
+                :disabled="row.validFlag === true"
+                @click="handleDelete(row)"
+                >删除</el-button
+              >
+            </div>
           </el-popover>
         </template>
         <template #empty>
@@ -261,7 +263,7 @@ async function loadCategoryOptions() {
 async function handleAdd(row) {
   await loadCategoryOptions();
   categoryDialogRef.value.openDialog({
-    title: '新增分类',
+    title: '新增文件分类',
     parentId: row?.id ?? 0,
     categoryOptions: categoryOptions.value
   });
@@ -270,14 +272,14 @@ async function handleAdd(row) {
 /** 修改时由独立弹窗请求最新详情，确保表单回显服务端数据。 */
 async function handleUpdate(row) {
   await loadCategoryOptions();
-  categoryDialogRef.value.openDialog({title: '修改分类', id: row.id, categoryOptions: categoryOptions.value});
+  categoryDialogRef.value.openDialog({title: '修改文件分类', id: row.id, categoryOptions: categoryOptions.value});
 }
 
 /** 详情沿用同一字段布局，以只读模式展示分类信息。 */
 async function handleDetail(row) {
   await loadCategoryOptions();
   categoryDialogRef.value.openDialog({
-    title: '分类详情',
+    title: '文件分类详情',
     id: row.id,
     readonly: true,
     categoryOptions: categoryOptions.value

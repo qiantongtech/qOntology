@@ -29,12 +29,15 @@
       />
     </div>
 
-    <div v-loading="loading">
+    <div class="pagecont-main" v-loading="loading">
       <Card :data="keyList" @handleUpdate="handleUpdate" @routeTo="routeTo"/>
-      <el-empty v-if="!loading && keyList.length === 0" description="暂无匹配的模型平台"/>
+      <div v-if="!loading && keyList.length === 0" class="emptyBg">
+        <img src="@/assets/common/images/empty-state/noData.png" alt="" />
+        <p>暂无记录</p>
+      </div>
     </div>
 
-    <div class="pagecont-bottom">
+    <div v-if="total > 0" class="pagecont-bottom">
       <pagination
         v-show="total > 0"
         :total="total"
@@ -418,6 +421,24 @@ getList();
 :deep(.key-config-dialog .el-dialog__body) {
   overflow: auto;
   padding: 20px 40px 5px 40px !important;
+}
+// 内容区撑满搜索栏与分页之间的剩余高度，无数据时页面不塌缩。
+.pagecont-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyBg {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 2px;
 }
 
 </style>

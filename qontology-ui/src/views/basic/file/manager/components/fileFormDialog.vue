@@ -29,13 +29,6 @@
     :show-close="!saving"
     :before-close="handleBeforeClose"
   >
-    <guide-tip-panel
-      v-if="!readonly"
-      type="hint"
-      class="mb15"
-      allow-wrap
-      title="上传并维护模型数据文件，选择归属分类并填写名称与描述，支持后续解析与引用。"
-    />
     <el-form
       ref="formRef"
       :model="form"
@@ -45,7 +38,7 @@
       class="column-form"
       @submit.prevent="submitForm"
     >
-      <qt-form-item class="row-full" label="文件分类" prop="categoryId" tip="选择文件归属的分类目录。">
+      <qt-form-item class="row-full" label="文件分类" prop="categoryId">
         <div v-if="readonly" class="form-readonly">
           {{ categoryName }}
         </div>
@@ -62,7 +55,7 @@
         />
       </qt-form-item>
       <!-- 详情态不展示上传控件，文件信息统一在名称与描述字段中只读呈现。 -->
-      <qt-form-item v-if="!readonly" class="row-full" label="上传文件" prop="filePath" tip="上传模型相关文档，支持 txt、pdf、excel、word、markdown 等格式。">
+      <qt-form-item v-if="!readonly" class="row-full" label="上传文件" prop="filePath">
         <FileUpload2
           v-model="form.filePath"
           :file-name="form.fileName"
@@ -90,7 +83,6 @@
         class="row-full"
         label="文件名称"
         prop="fileName"
-        tip="文件展示名称，默认取上传文件名，可手动修改。"
       >
         <div v-if="readonly" class="form-readonly">
           {{ form.fileName || "—" }}
@@ -101,7 +93,7 @@
           placeholder="请输入文件名称"
         />
       </qt-form-item>
-      <qt-form-item class="row-full" label="描述" prop="description" tip="补充文件的内容说明或用途。">
+      <qt-form-item class="row-full" label="描述" prop="description">
         <div v-if="readonly" class="form-readonly textarea">
           {{ form.description || "—" }}
         </div>
@@ -118,7 +110,10 @@
       </qt-form-item>
       <!-- 详情态补齐审计信息，创建人展示规则与枚举详情一致。 -->
       <el-form-item v-if="readonly" class="row-full" label="创建人">
-        <div class="form-readonly">{{ formatCreator(form) }}</div>
+        <div class="form-readonly">{{ form.createBy || "—" }}</div>
+      </el-form-item>
+      <el-form-item v-if="readonly" class="row-full" label="联系方式">
+        <div class="form-readonly">{{ getPhoneNum(form) || "—" }}</div>
       </el-form-item>
       <el-form-item v-if="readonly" class="row-full" label="创建时间">
         <div class="form-readonly">{{ form.createTime || "—" }}</div>
@@ -198,6 +193,10 @@ const categoryName = computed(() => {
 function formatCreator(record) {
   const phone = creatorPhones.value[record.creatorId];
   return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
+}
+function getPhoneNum(record) {
+  const phone = creatorPhones.value[record.creatorId];
+  return phone ? `${phone}` : "-";
 }
 
 /** 打开时加载最新详情或创建空白草稿，忽略快速切换记录后返回的旧请求。 */

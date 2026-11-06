@@ -163,8 +163,8 @@ const methods = {
 };
 </script>
 <style lang="less" scoped>
-@font-title: "PingFang SC", "Microsoft YaHei";
-@font-content: "Microsoft YaHei";
+@font-title: "PingFang SC", "PingFang SC";
+@font-content: "PingFang SC";
 @color-text-title: #000;
 @color-text-content: #666;
 
