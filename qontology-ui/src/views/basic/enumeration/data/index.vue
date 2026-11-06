@@ -220,7 +220,7 @@
             class="character-count"
             type="textarea"
             :rows="3"
-            :maxlength="512"
+            :maxlength="256"
             show-word-limit
             placeholder="请输入备注"
           />
@@ -457,7 +457,7 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
-    remark: [{ max: 512, message: "备注不能超过512个字符", trigger: "blur" }],
+    remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });
 const { form, rules } = toRefs(data);

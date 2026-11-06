@@ -79,7 +79,7 @@
         <qt-form-item v-if="localForm.validationType === 'CUSTOM'" label="正则表达式" prop="validationPattern"
                       class="row-full" tip="使用兼容 JavaScript 的正则表达式，具体落地应与后端校验引擎一致。"
         >
-          <el-input v-model="localForm.validationPattern" :maxlength="512"
+          <el-input v-model="localForm.validationPattern" :maxlength="256"
                     placeholder="请输入正则表达式，如 ^[A-Za-z]+$（不含两侧 /）"
           />
         </qt-form-item>

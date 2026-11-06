@@ -151,7 +151,7 @@
             maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item label="类型" prop="type" required tip="选择公理的约束类型，不同类型对应不同的表达配置。">
+        <qt-form-item label="类型" prop="type" required >
           <el-select
             v-model="form.type"
             placeholder="请选择类型"
@@ -172,14 +172,14 @@
             }}</el-radio>
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="描述" prop="description" tip="补充该公理的业务含义与适用场景，最多512个字符。">
+        <qt-form-item label="描述" prop="description" >
           <el-input
             v-model="form.description"
             class="character-count"
             type="textarea"
             :rows="4"
             placeholder="请输入描述"
-            :maxlength="512"
+            :maxlength="256"
             show-word-limit
           />
         </qt-form-item>

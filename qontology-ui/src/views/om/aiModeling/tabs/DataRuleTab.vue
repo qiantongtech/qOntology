@@ -151,7 +151,7 @@
             maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item label="类型" prop="type" required tip="选择规则的校验类型，决定下方条件的配置方式。">
+        <qt-form-item label="类型" prop="type" required >
           <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
             <el-option
               v-for="i in om_data_rule_type"
@@ -161,32 +161,32 @@
             />
           </el-select>
         </qt-form-item>
-        <qt-form-item label="级别" prop="level" required tip="设置规则的约束强度，决定校验失败时的处理方式。">
+        <qt-form-item label="级别" prop="level" required >
           <el-radio-group v-model="form.level">
             <el-radio v-for="i in om_rule_level" :key="i.value" :value="i.value">{{
               i.label
             }}</el-radio>
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="描述" prop="description" tip="补充该规则的业务含义与适用场景，最多512个字符。">
+        <qt-form-item label="描述" prop="description" >
           <el-input
             v-model="form.description"
             class="character-count"
             type="textarea"
             :rows="4"
             placeholder="请输入描述"
-            :maxlength="512"
+            :maxlength="256"
             show-word-limit
           />
         </qt-form-item>
         <div class="h2-title">执行条件</div>
-        <qt-form-item label="条件关系" prop="conditionRelation" required tip="设置多条失败条件之间的逻辑组合方式。">
+        <qt-form-item label="条件关系" prop="conditionRelation" required >
           <el-radio-group v-model="form.conditionRelation">
             <el-radio value="OR">任一满足（OR）</el-radio>
             <el-radio value="AND">全部满足（AND）</el-radio>
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="失败条件" required tip="逐条配置触发校验失败的对象类型、属性与取值条件。">
+        <qt-form-item label="失败条件" required >
           <div class="conditions">
             <div v-for="(condition, index) in form.conditionItems" :key="condition.key" class="condition-row">
               <div class="condition-label">条件 {{ index + 1 }}：</div>
@@ -236,7 +236,7 @@
           <el-input
             v-model="form.failureMessage"
             placeholder="请输入失败提示"
-            :maxlength="512"
+            :maxlength="256"
           />
         </qt-form-item>
         <template v-if="readonly">

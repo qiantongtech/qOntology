@@ -392,7 +392,7 @@
                                 v-model="form.remark"
                                 type="textarea"
                                 placeholder="请输入备注"
-                                maxlength="512个字符"
+                                maxlength="256个字符"
                                 show-word-limit
                             />
                         </el-form-item>
