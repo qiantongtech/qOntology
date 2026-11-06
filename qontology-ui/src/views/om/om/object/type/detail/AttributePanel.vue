@@ -326,9 +326,14 @@
             {{ attributeDetail.description || "-" }}
           </div></el-form-item>
 
-        <el-form-item label="创建人"><div class="form-readonly">
-            {{ attributeDetail.createBy || "-" }}
-          </div></el-form-item>
+        <el-form-item label="创建人">
+          <div class="form-readonly">
+            <div class="flex-column overflow-hidden">
+              <span class="text-ellipsis" :title="attributeDetail.createBy || ''">{{ attributeDetail.createBy || '-' }}</span>
+              <span v-if="creatorPhones[attributeDetail.creatorId]" class="desc-text">{{ creatorPhones[attributeDetail.creatorId] }}</span>
+            </div>
+          </div>
+        </el-form-item>
 
         <el-form-item label="创建时间"><div class="form-readonly">
             {{
@@ -398,6 +403,8 @@ import {
   listAttributeEnums,
 } from "@/api/om/object/attribute";
 
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+
 const props = defineProps({
   objectTypeId: { type: [String, Number], required: true },
 
@@ -407,6 +414,7 @@ const props = defineProps({
 const emit = defineEmits(["changed"]);
 
 const { proxy } = getCurrentInstance();
+const { creatorPhones } = useCreatorPhones();
 
 const panelRef = ref();
 

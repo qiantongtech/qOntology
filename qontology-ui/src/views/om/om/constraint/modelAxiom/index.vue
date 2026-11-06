@@ -116,7 +116,7 @@
                 @submit.prevent="submitForm"
             >
                 <div class="h2-title">基本信息</div>
-                <qt-form-item label="公理名称" prop="name" tip="填写公理的业务名称，便于在列表中识别与检索。">
+                <qt-form-item label="公理名称" prop="name" >
                     <el-input v-model="form.name" placeholder="请输入公理名称" maxlength="128" />
                 </qt-form-item>
                 <qt-form-item label="类型" prop="type" tip="选择公理的约束类型，不同类型对应不同的表达配置。">
@@ -129,14 +129,14 @@
                         />
                     </el-select>
                 </qt-form-item>
-                <qt-form-item label="级别" prop="level" tip="设置公理的约束强度，决定校验失败时的处理方式。">
+                <qt-form-item label="级别" prop="level">
                     <el-radio-group v-model="form.level">
                         <el-radio v-for="item in om_rule_level" :key="item.value" :value="item.value">{{
                             item.label
                         }}</el-radio>
                     </el-radio-group>
                 </qt-form-item>
-                <qt-form-item label="描述" prop="description" tip="补充该公理的业务含义与适用场景，最多512个字符。">
+                <qt-form-item label="描述" prop="description">
                     <el-input
                         v-model="form.description"
                         class="character-count"
@@ -301,8 +301,13 @@
             draggable
             destroy-on-close
         >
-            <el-form label-width="120px">
-                <el-form-item v-for="field in detailFields" :key="field.label" :label="field.label">
+            <el-form label-width="120px" class="column-form">
+                <el-form-item
+                    v-for="field in detailFields"
+                    :key="field.label"
+                    :label="field.label"
+                    :class="{ 'row-full': field.multiline }"
+                >
                     <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
                 </el-form-item>
                 <AttributeTypeConfig
@@ -551,12 +556,13 @@
     );
 
     const detailFields = computed(() => [
-        { label: '名称', value: detail.value.name },
+        { label: '公理名称', value: detail.value.name },
         { label: '类型', value: typeLabel(detail.value.type) },
         { label: '级别', value: levelLabel(detail.value.level) },
-        { label: '描述', value: detail.value.description, multiline: true },
         ...getDetailFields(detail.value),
-        { label: '创建人', value: formatCreator(detail.value) },
+        { label: '描述', value: detail.value.description, multiline: true },
+        { label: '创建人', value: detail.value.createBy || '-' },
+        { label: '联系方式', value: creatorPhones.value[detail.value.creatorId] || '-' },
         { label: '创建时间', value: proxy.parseTime(detail.value.createTime, '{y}-{m}-{d} {h}:{i}') }
     ]);
 

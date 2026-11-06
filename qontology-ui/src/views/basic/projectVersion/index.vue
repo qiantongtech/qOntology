@@ -180,7 +180,7 @@
             </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <qt-form-item label="状态" prop="status" tip="启用后该版本可用于建模，停用后保留历史数据。">
+            <qt-form-item label="状态" prop="status" >
               <el-radio-group v-model="form.status">
                 <el-radio
                     v-for="dict in project_status"
@@ -193,12 +193,12 @@
             </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <qt-form-item label="描述" prop="description" tip="补充本版本的变更说明或用途，最多200个字符。">
+            <qt-form-item label="描述" prop="description" >
               <el-input
                 v-model="form.description"
                 type="textarea"
                 placeholder="请输入描述"
-                maxlength="200 个字符"
+                maxlength="256 个字符"
                 show-word-limit
               />
             </qt-form-item>
@@ -254,7 +254,12 @@
         </el-form-item>
         <el-form-item label="创建人" prop="createBy">
           <div class="form-readonly">
-            {{ formatCreator(form) }}
+            {{ form.createBy || "-" }}
+          </div>
+        </el-form-item>
+        <el-form-item label="联系方式">
+          <div class="form-readonly">
+            {{ creatorPhones[form.creatorId] || "-" }}
           </div>
         </el-form-item>
         <el-form-item label="创建时间" prop="createTime">

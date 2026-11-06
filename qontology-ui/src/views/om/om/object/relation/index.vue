@@ -134,7 +134,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="选择关系的发起对象，例如“供应商提供物料”中的供应商。"
           label="起点类型"
           prop="startTypeId"
         >
@@ -207,7 +206,6 @@
 
         <qt-form-item
           class="row-full"
-          tip="描述关系适用的业务场景、职责或关联规则，最多256个字符。"
           label="描述"
           prop="description"
         >
@@ -217,7 +215,7 @@
             type="textarea"
             :rows="4"
             placeholder="请输入关系描述，说明业务联系和适用场景"
-            maxlength="256"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>

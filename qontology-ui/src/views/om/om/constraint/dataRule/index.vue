@@ -80,7 +80,7 @@
                @submit.prevent="submitForm"
       >
         <div class="h2-title">基本信息</div>
-        <qt-form-item label="规则名称" prop="name" tip="填写数据规则的业务名称，便于在列表中识别与检索。">
+        <qt-form-item label="规则名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入规则名称" maxlength="128"/>
         </qt-form-item>
         <qt-form-item label="类型" prop="type" tip="选择规则的校验类型，决定下方条件的配置方式。">
@@ -93,7 +93,7 @@
             <el-radio v-for="item in om_rule_level" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="描述" prop="description" tip="补充该规则的业务含义与适用场景，最多512个字符。">
+        <qt-form-item label="描述" prop="description" >
           <el-input v-model="form.description" class="character-count" type="textarea" :rows="4"
                     placeholder="请输入描述" :maxlength="512" show-word-limit
           />
@@ -813,7 +813,8 @@ const basicDetailFields = computed(() => [
   {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, detail.value.type)},
   {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, detail.value.level)},
   {label: '描述', value: detail.value.description, multiline: true},
-  {label: '创建人', value: formatCreator(detail.value)},
+  {label: '创建人', value: detail.value.createBy || '-'},
+  {label: '联系方式', value: creatorPhones.value[detail.value.creatorId] || '-'},
   {label: '创建时间', value: proxy.parseTime(detail.value.createTime, '{y}-{m}-{d} {h}:{i}')}
 ]);
 const conditionDetailFields = computed(() => [

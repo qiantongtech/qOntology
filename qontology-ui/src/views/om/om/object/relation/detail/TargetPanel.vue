@@ -19,10 +19,11 @@
 <template>
     <div v-loading="loading">
         <div class="target-toolbar mb15">
-            <div class="target-note">
-                <el-icon class="target-note-icon"><InfoFilled /></el-icon>
-                <span>展示当前对象关系关联的建模目标，便于核对该关系的设计是否符合目标要求。</span>
-            </div>
+            <guide-tip-panel type="plain" class="target-note">
+                <template #title-append>
+                    <span>展示当前对象关系关联的建模目标，便于核对该关系的设计是否符合目标要求。</span>
+                </template>
+            </guide-tip-panel>
             <right-toolbar :search="false" :columns="columns" @queryTable="getList" />
         </div>
         <TargetTable :targets="targets" :columns="columns" @sort-change="handleSortChange" />
@@ -111,13 +112,8 @@
         flex-wrap: wrap;
         gap: 12px;
     }
-    .target-note {
-        display: flex;
-        align-items: center;
+    .target-note.guide-tip.plain :deep(.tip-header .tip-title) {
         gap: 6px;
-        color: #909399;
-        font-size: 12px;
-        line-height: 18px;
     }
     .target-note-icon {
         flex-shrink: 0;
