@@ -186,7 +186,6 @@
           class="row-full"
           label="关系名称"
           prop="name"
-          tip="填写表达业务联系的动词或动宾短语，例如“提供”“采购物料”。"
         >
           <el-input
             v-model="form.name"

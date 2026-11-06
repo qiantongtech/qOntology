@@ -203,23 +203,6 @@
                 @input="syncAliases"
                 @keydown.enter.stop.prevent="addAliasRow"
               />
-              <el-button
-                v-if="aliasRows.length > 1"
-                size="small"
-                type="danger"
-                icon="Delete"
-                :disabled="saving"
-                :aria-label="`删除第${index + 1}个术语别名`"
-                @click="removeAliasRow(index)"
-              />
-              <el-button
-                v-if="index === aliasRows.length - 1"
-                size="small"
-                type="primary"
-                :disabled="saving"
-                aria-label="新增术语别名"
-                @click="addAliasRow"
-              >+</el-button>
             </div>
           </div>
         </qt-form-item>

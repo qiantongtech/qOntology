@@ -71,7 +71,7 @@
     let requestId = 0;
     
     const detailItems = computed(() => [
-        { label: '起点类型', key: 'startTypeName' },
+        { label: '起点类型', key: 'startTypeName', className: 'mb2'},
         { label: '终点类型', key: 'endTypeName' },
         { label: '是否可逆', key: 'reversibleFlag', formatter: (val) => reversibleLabel(val) },
         { label: '描述', key: 'description', span: 24, className: 'mb2', slot: 'description' },

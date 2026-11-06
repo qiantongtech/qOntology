@@ -298,16 +298,17 @@
             </el-select>
           </qt-form-item>
           <qt-form-item v-else label="业务数据类型" prop="businessTypeId" required tip="按当前项目与全局两个分类展开，选择属性关联的业务数据类型。">
-            <el-select v-model="businessKey" filterable clearable placeholder="请选择业务数据类型">
-              <template #label>
-                <span class="business-type-label">{{ selectedBusinessType?.name }}
-                  <el-tag v-if="selectedBusinessType" :type="selectedBusinessType.businessTypeSource === 'PROJECT' ? 'primary' : 'info'" size="small">{{ selectedBusinessType.businessTypeSource === 'PROJECT' ? '当前项目' : '全局' }}</el-tag>
-                </span>
-              </template>
-              <el-option-group v-for="group in businessTypeGroups" :key="group.source" :label="group.label">
-                <el-option v-for="item in group.options" :key="group.source + ':' + item.id" :label="item.name" :value="group.source + ':' + item.id" />
-              </el-option-group>
-            </el-select>
+            <el-tree-select
+              v-model="businessKey"
+              :data="businessTypeTree"
+              :props="businessTypeTreeProps"
+              value-key="id"
+              check-strictly
+              filterable
+              clearable
+              default-expand-all
+              placeholder="请选择业务数据类型"
+            />
           </qt-form-item>
           <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
             <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
@@ -558,7 +559,27 @@ const businessKey = computed({
     form.value.businessTypeId = id || undefined;
   },
 });
-const businessTypeGroups = computed(() => [{ source: "PROJECT", label: "当前项目" }, { source: "GLOBAL", label: "全局" }].map((group) => ({ ...group, options: businessTypes.value.filter((item) => item.businessTypeSource === group.source) })).filter((group) => group.options.length));
+
+const businessTypeTreeProps = { label: 'name', value: 'id', children: 'children', disabled: 'disabled' };
+const businessTypeTree = computed(() =>
+  [
+    { source: 'PROJECT', label: '当前项目' },
+    { source: 'GLOBAL', label: '全局' }
+  ]
+    .map((group) => ({
+      id: group.source,
+      name: group.label,
+      disabled: true,
+      children: businessTypes.value
+        .filter((item) => item.businessTypeSource === group.source)
+        .map((item) => ({
+          id: `${item.businessTypeSource}:${item.id}`,
+          name: item.name,
+          businessTypeSource: item.businessTypeSource
+        }))
+    }))
+    .filter((group) => group.children.length)
+);
 const basicTypeLabel = (value) => proxy.selectDictLabel(basic_data_type.value, value) || "-";
 const rules = {
   name: [{ required: true, whitespace: true, message: "模型公理名称不能为空", trigger: "blur" }],
@@ -765,11 +786,6 @@ loadSupportData();
 }
 
 .character-count :deep(.el-textarea__inner) {
-  padding-bottom: 24px;
-}
-.business-type-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+        padding-bottom: 24px;
+    }
 </style>
