@@ -49,5 +49,6 @@ public class BasicFileCategoryPageReqVO extends PageParam {
     @Schema(description = "祖级列表", example = "")
     private String ancestors;
 
-
+    @Schema(description = "状态：0 禁用，1 启用", example = "")
+    private Integer status;
 }

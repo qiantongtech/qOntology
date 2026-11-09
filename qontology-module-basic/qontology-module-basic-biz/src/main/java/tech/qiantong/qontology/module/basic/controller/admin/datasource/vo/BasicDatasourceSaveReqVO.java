@@ -82,5 +82,7 @@ public class BasicDatasourceSaveReqVO extends BaseEntity {
     @Size(max = 256, message = "备注长度不能超过256个字符")
     private String remark;
 
+    @Schema(description = "状态", example = "")
+    private Integer status;
 
 }

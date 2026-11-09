@@ -311,7 +311,14 @@
           <el-col :span="24">
             <el-form-item label="创建人" prop="createBy">
               <div class="form-readonly">
-                {{ formatCreator(form) }}
+                {{ form.createBy || "-" }}
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="联系方式" prop="creatorPhone">
+              <div class="form-readonly">
+                {{ getPhoneNum(form.creatorId) || "-" }}
               </div>
             </el-form-item>
           </el-col>
@@ -398,13 +405,7 @@ const textValidationLabels = {
 };
 
 const tableRef = ref();
-const { creatorPhones } = useCreatorPhones();
-
-/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
-function formatCreator(record) {
-  const phone = creatorPhones.value[record.creatorId];
-  return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
-}
+const { creatorPhones,getPhoneNum } = useCreatorPhones();
 
 // 将已提交名称与输入草稿分开，保证翻页、排序和刷新沿用最近一次查询的条件。
 const appliedFilters = reactive({ name: "", dataType: "", status: null });

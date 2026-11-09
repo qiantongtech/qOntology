@@ -37,5 +37,10 @@ export function useCreatorPhones() {
     return phone ? `${name}/${phone}` : name;
   }
 
-  return {creatorPhones, formatCreator};
+  function getPhoneNum(userId) {
+    const phone = creatorPhones.value[userId];
+    return phone ? `${phone}` : "-";
+  }
+
+  return {creatorPhones, formatCreator,getPhoneNum};
 }

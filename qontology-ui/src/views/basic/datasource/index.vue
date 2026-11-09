@@ -137,6 +137,15 @@
             </div>
           </el-popover>
         </template>
+        <template #status="{ row }">
+                  <el-switch
+                      v-model="row.status"
+                      :active-value="1"
+                      :inactive-value="0"
+                      @change="value => handleStatusChange(row, value)"
+                  >
+                  </el-switch>
+        </template>
       </qt-table>
     </qt-wrap>
 
@@ -214,8 +223,8 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <qt-form-item label="地址" prop="ip">
-              <el-input v-model="form.ip" placeholder="请输入地址" />
+            <qt-form-item label="数据源地址" prop="ip">
+              <el-input v-model="form.ip" placeholder="请输入数据源地址" />
             </qt-form-item>
           </el-col>
           <el-col :span="12">
@@ -267,10 +276,10 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <qt-form-item label="状态" prop="validFlag">
-              <el-radio-group v-model="form.validFlag">
-                <el-radio :value="true">启用</el-radio>
-                <el-radio :value="false">禁用</el-radio>
+            <qt-form-item label="状态" prop="status">
+              <el-radio-group v-model="form.status">
+                <el-radio :value="1">启用</el-radio>
+                <el-radio :value="0">禁用</el-radio>
               </el-radio-group>
             </qt-form-item>
           </el-col>
@@ -373,7 +382,7 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="地址" prop="ip">
+            <el-form-item label="数据源地址" prop="ip">
               <div class="form-readonly">{{ form.ip || "-" }}</div>
             </el-form-item>
           </el-col>
@@ -504,7 +513,7 @@ const datasourceTypeMap = computed(() =>
 // 搜索项配置
 const searchStore = reactive({
   items: [
-    { label: "名称", prop: "datasourceName", component: { is: "input" } },
+    { label: "数据源名称", prop: "datasourceName", component: { is: "input" } },
     {
       label: "类型",
       prop: "datasourceType",
@@ -546,7 +555,7 @@ const tableStore = reactive({
       sortOrders: ["descending", "ascending"],
     },
     {
-      label: "名称",
+      label: "数据源名称",
       prop: "datasourceName",
       width: 200,
       align: "left",
@@ -560,13 +569,17 @@ const tableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     {
-      label: "地址",
+      label: "数据源地址",
       prop: "ip",
       width: 250,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
     { label: "类型", slot: "datasourceType", width: 120 },
+    {
+      label: "状态", prop: "status", slot: "status",
+      width: 100, minWidth: 100,
+    },
     {
       label: "创建人",
       prop: "createBy",
@@ -602,7 +615,7 @@ const data = reactive({
   form: {},
   rules: {
     datasourceName: [
-      { required: true, message: "名称不能为空", trigger: "blur" },
+      { required: true, message: "数据源名称不能为空", trigger: "blur" },
     ],
     datasourceType: [
       { required: true, message: "类型不能为空", trigger: "change" },
@@ -614,7 +627,7 @@ const data = reactive({
         trigger: "blur",
       },
     ],
-    ip: [{ required: true, message: "地址不能为空", trigger: "blur" }],
+    ip: [{ required: true, message: "数据源地址不能为空", trigger: "blur" }],
     port: [{ required: true, message: "端口号不能为空", trigger: "blur" }],
     username: [{ required: true, message: "账号不能为空", trigger: "blur" }],
     password: [{ required: true, message: "密码不能为空", trigger: "blur" }],
@@ -877,6 +890,23 @@ function submitForm() {
   });
 }
 
+async function handleStatusChange(row, value) {
+  let data = {
+    ...row,
+    status: value
+  }
+  proxy.$modal
+      .confirm(`确认要${value === 1 ? "启用" : "禁用"}数据源“${row.datasourceName}”吗？`)
+      .then(function () {
+        return updateDaDatasource(data);
+      })
+      .then(() => {
+        proxy.$modal.msgSuccess("操作成功");
+      })
+      .catch(function () {
+        row.status = row.status === 1 ? 0 : 1;
+      });
+}
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _ids = row.id || ids.value;

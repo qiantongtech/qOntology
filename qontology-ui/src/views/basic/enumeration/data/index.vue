@@ -259,7 +259,10 @@
           <div class="form-readonly textarea">{{ detail.remark || "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="创建人">
-          <div class="form-readonly">{{ formatCreator(detail) }}</div>
+          <div class="form-readonly">{{ detail.createBy || "-" }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="联系电话">
+          <div class="form-readonly">{{ getPhoneNum(detail.creatorId) }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
@@ -306,7 +309,7 @@ const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones ,getPhoneNum} = useCreatorPhones();
 const route = useRoute();
 const pageRef = ref();
 const tableRef = ref();

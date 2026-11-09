@@ -66,5 +66,6 @@ public class BasicDatasourcePageReqVO extends PageParam {
     @Schema(description = "描述", example = "")
     private String description;
 
-
+    @Schema(description = "状态", example = "")
+    private Integer status;
 }
