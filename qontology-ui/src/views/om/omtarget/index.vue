@@ -213,7 +213,7 @@ const tableStore = reactive({
     table: {
       stripe: true,
       rowKey: "id",
-      defaultSort: { prop: "id", order: "descending" },
+      defaultSort: { prop: "createTime", order: "descending" },
       onSelectionChange: handleSelectionChange,
     },
   },
