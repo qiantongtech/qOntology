@@ -499,11 +499,20 @@ async function submitForm(payload) {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _ids = row.id || ids.value;
+  const _ids = row.id != null ? [row.id] : ids.value;
+  console.log(_ids);
+  if (!_ids.length) {
+    proxy.$modal.msgWarning("请选择要删除的事件");
+    return;
+  }
+  const confirmText =
+    _ids.length > 1
+      ? `可删除${_ids.length}个，不可删除0个，是否删除可删部分？`
+      : `是否确认删除事件编号为“${row.id}”的数据项？`;
   proxy.$modal
-    .confirm('是否确认删除事件管理编号为"' + _ids + '"的数据项？')
+    .confirm(confirmText)
     .then(function () {
-      return delEvent(_ids);
+      return delEvent(_ids.join(","));
     })
     .then(() => {
       tableRef.value?.getList();
