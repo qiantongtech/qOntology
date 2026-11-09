@@ -71,7 +71,7 @@
     const detail = ref({});
     const loading = ref(false);
     const loadFailed = ref(false);
-    const activeTab = ref('attributes');
+    const   activeTab = ref('attributes');
     const descriptionOverflow = ref(false);
     let requestId = 0;
 
@@ -129,10 +129,11 @@
         let previousUrl;
         if (currentPath.includes('target/detail/object/type/detail')) {
             previousUrl = `/om/${route.params.versionId}/target/detail`;
-        } else {
-            previousUrl = `/om/${route.params.versionId}/ontology/objectType`;
+            // 还原进入时的建模目标 id，否则目标详情页因缺少 query.id 而不加载数据
+            router.push({ path: previousUrl, query: { id: route.query.targetId } });
+            return;
         }
-        router.push({ path: previousUrl, query: {} });
+        router.push({ path: `/om/${route.params.versionId}/ontology/objectType`, query: {} });
     }
     async function refreshAttributeCount() {
         const request = requestId;

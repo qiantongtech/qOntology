@@ -50,6 +50,8 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+        <!-- 反向名称为空时展示占位横线。 -->
+        <template #reverseName="{ row }">{{ row.reverseName || '-' }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -318,9 +320,9 @@
             { label: '起点类型', prop: 'startTypeName', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '关系名称', prop: 'name', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '终点类型', prop: 'endTypeName', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '反向名称', prop: 'reverseName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '描述', prop: 'description', slot: 'text', minWidth: 256, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 10, showOverflowTooltip: { effect: 'light' },},
+            { label: '反向名称', prop: 'reverseName', slot: 'reverseName', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: { effect: 'light' },},
             { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true, showOverflowTooltip: { effect: 'light' },},
             { label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right', showOverflowTooltip: { effect: 'light' },}

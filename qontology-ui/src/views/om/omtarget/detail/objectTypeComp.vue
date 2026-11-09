@@ -518,7 +518,9 @@ async function handleUpdate(row) {
 function handleDetail(row) {
   router.push({
     name: 'OmTargetDetailObjectType',
-    params: {id: row.id, versionId: versionId.value}
+    params: {id: row.id, versionId: versionId.value},
+    // 携带当前建模目标 id，供对象类型详情页“返回”时还原目标详情上下文
+    query: {targetId: props.targetDetail?.id}
   });
 }
 
