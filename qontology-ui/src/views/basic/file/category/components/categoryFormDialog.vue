@@ -77,19 +77,16 @@
           style="width: 100%"
         />
       </qt-form-item>
-      <qt-form-item class="row-full" label="状态" prop="validFlag">
-        <div v-if="readonly" class="form-readonly">
-          {{
-            form.validFlag === true
-              ? "启用"
-              : form.validFlag === false
-              ? "禁用"
-              : "-"
-          }}
+      <qt-form-item class="row-full" label="状态" prop="status">
+        <div v-if="readonly">
+          <dict-tag :options="sys_normal_disable" :value="form.status" />
         </div>
-        <el-radio-group v-else v-model="form.validFlag">
-          <el-radio :value="true">启用</el-radio>
-          <el-radio :value="false">禁用</el-radio>
+        <el-radio-group v-else v-model="form.status">
+          <el-radio
+            v-for="dict in sys_normal_disable"
+            :key="dict.value"
+            :label="Number(dict.value)"
+          >{{ dict.label }}</el-radio>
         </el-radio-group>
       </qt-form-item>
       <qt-form-item class="row-full" label="描述" prop="remark">
@@ -115,7 +112,7 @@
         <div class="form-readonly">{{ getPhoneNum(form) || "—" }}</div>
       </el-form-item>
       <el-form-item v-if="readonly" class="row-full" label="创建时间">
-        <div class="form-readonly">{{ form.createTime || "—" }}</div>
+        <div class="form-readonly">{{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "—" }}</div>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -149,6 +146,7 @@ import { useCreatorPhones } from "@/utils/useCreatorPhones";
 const emit = defineEmits(["success"]);
 const { proxy } = getCurrentInstance();
 const { creatorPhones } = useCreatorPhones();
+const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 const visible = ref(false);
 const title = ref("");
 const readonly = ref(false);
@@ -160,10 +158,9 @@ const categoryOptions = ref([]);
 let openRequest = 0;
 const rules = {
   name: [{ required: true, message: "文件分类名称不能为空", trigger: "blur" }],
-  // false 也是合法状态，必须显式使用布尔类型校验。
-  validFlag: [
+  status: [
     {
-      type: "boolean",
+      type: "number",
       required: true,
       message: "请选择状态",
       trigger: "change",
@@ -206,7 +203,7 @@ async function openDialog(options) {
         name: "",
         parentId: options.parentId ?? 0,
         orderNum: 0,
-        validFlag: true,
+        status: 0,
         remark: "",
       };
   visible.value = true;

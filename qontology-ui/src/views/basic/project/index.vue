@@ -48,7 +48,7 @@
           v-hasPermi="['basic:project:project:remove']"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
       <qt-table v-bind="tableStore" ref="tableRef">
@@ -264,105 +264,6 @@
       @cancel="cancel"
       @submit="submitForm"
     />
-    <!-- 项目详情对话框 -->
-    <el-dialog
-      :title="title"
-      v-model="openDetail"
-      width="800px"
-      :append-to="$refs['app-container']"
-      draggable
-    >
-      <template #header>
-        <span role="heading" aria-level="2" class="el-dialog__title">
-          {{ title }}
-        </span>
-      </template>
-      <el-form
-        ref="projectRef"
-        :model="form"
-        label-width="80px"
-        class="column-form"
-      >
-        <el-form-item label="项目名称" prop="name">
-          <div class="form-readonly">
-            {{ form.name }}
-          </div>
-        </el-form-item>
-        <el-form-item label="项目领域" prop="domain">
-          <div class="form-readonly">
-            {{ form.domain }}
-          </div>
-        </el-form-item>
-        <el-form-item label="命名空间" prop="namespace" class="row-full">
-          <div class="form-readonly">
-            {{ form.namespace }}
-          </div>
-        </el-form-item>
-        <el-form-item label="当前版本" prop="currentVersion" class="row-full">
-          <div class="form-readonly">
-            {{ form.currentVersion }}
-          </div>
-        </el-form-item>
-        <el-form-item label="责任人" class="row-full">
-          <div class="form-readonly">
-            {{ form.responsiblePersonName || "-" }}
-          </div>
-        </el-form-item>
-        <el-form-item label="联系电话" class="row-full">
-          <div class="form-readonly">
-            {{ form.responsiblePersonPhone || "-" }}
-          </div>
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <dict-tag
-            :options="project_status"
-            :value="form.status"
-            class="con-value access-tag"
-          />
-        </el-form-item>
-
-        <el-form-item label="包含范围" prop="includeRange" class="row-full">
-          <div class="form-readonly textarea">
-            {{ form.includeRange }}
-          </div>
-        </el-form-item>
-        <el-form-item label="排除范围" prop="excludeRange" class="row-full">
-          <div class="form-readonly textarea">
-            {{ form.excludeRange }}
-          </div>
-        </el-form-item>
-        <el-form-item label="描述" prop="description" class="row-full">
-          <div class="form-readonly textarea">
-            {{ form.description }}
-          </div>
-        </el-form-item>
-<!--        <el-form-item label="修改人" prop="updateBy">-->
-<!--          <div class="form-readonly">-->
-<!--            {{ form.updateBy }}-->
-<!--          </div>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="修改时间" prop="updateTime">-->
-<!--          <div class="form-readonly">-->
-<!--            {{ form.updateTime }}-->
-<!--          </div>-->
-<!--        </el-form-item>-->
-        <el-form-item label="创建人" prop="createBy">
-          <div class="form-readonly">
-            {{ formatCreator(form) }}
-          </div>
-        </el-form-item>
-        <el-form-item label="创建时间" prop="createTime">
-          <div class="form-readonly">
-            {{ form.createTime }}
-          </div>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">关 闭</el-button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -378,12 +279,14 @@ import {
 } from "@/api/basic/project/project";
 import { saveAs } from "file-saver";
 import { onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import defaultProjectIcon from "@/assets/images/project-default.svg";
 import ProjectFormDialog from "./components/projectFormDialog.vue";
 
 const { proxy } = getCurrentInstance();
+const router = useRouter();
 const { creatorPhones } = useCreatorPhones();
 const { project_status } = proxy.useDict("project_status");
 
@@ -600,11 +503,10 @@ const searchStore = reactive({
 });
 
 const open = ref(false);
-const openDetail = ref(false);
 const ids = ref([]);
 const multiple = ref(true);
 const title = ref("");
-const dialogMode = ref("add"); // add, edit, detail
+const dialogMode = ref("add"); // add, edit
 // 父页面持有保存状态，供表单组件统一禁用提交和关闭操作。
 const projectSaving = ref(false);
 
@@ -649,7 +551,6 @@ const { form, rules } = toRefs(data);
 function cancel() {
   if (projectSaving.value) return;
   open.value = false;
-  openDetail.value = false;
   reset();
 }
 
@@ -663,7 +564,6 @@ function getProjectIcon(icon) {
 
 /** 初始化项目表单，避免上一次编辑的范围或描述残留到新增操作。 */
 function reset() {
-  proxy.resetForm("projectRef");
   form.value = {
     id: null,
     name: null,
@@ -729,22 +629,12 @@ function handleUpdate(row) {
   });
 }
 
-/** 详情按钮操作 */
+/** 携带项目编号跳转独立详情页，由详情页统一加载概要及项目版本。 */
 function handleDetail(row) {
-  reset();
-  const _id = row.id || ids.value;
-  getProject(_id).then((response) => {
-    form.value = response.data;
-    openDetail.value = true;
-    dialogMode.value = "detail";
-    title.value = "项目详情";
+  router.push({
+    name: "BasicProjectDetail",
+    query: { projectId: row.id },
   });
-}
-
-/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
-function formatCreator(record) {
-  const phone = creatorPhones.value[record.creatorId];
-  return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
 }
 
 /** 接收组件校验后的表单快照，保存成功后关闭弹窗并刷新当前项目列表。 */

@@ -116,10 +116,10 @@
         <div class="form-readonly">{{ getPhoneNum(form) || "—" }}</div>
       </el-form-item>
       <el-form-item v-if="readonly" class="row-full" label="创建时间">
-        <div class="form-readonly">{{ form.createTime || "—" }}</div>
+        <div class="form-readonly">{{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "—" }}</div>
       </el-form-item>
       <el-form-item v-if="readonly" class="row-full" label="更新时间">
-        <div class="form-readonly">{{ form.updateTime || "—" }}</div>
+        <div class="form-readonly">{{ parseTime(form.updateTime, "{y}-{m}-{d} {h}:{i}") || "—" }}</div>
       </el-form-item>
     </el-form>
     <template #footer>

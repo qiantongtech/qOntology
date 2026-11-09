@@ -47,8 +47,8 @@
         <template #status="{ row }">
           <el-switch
               v-model="row.status"
-              :active-value="1"
-              :inactive-value="0"
+              :active-value="0"
+              :inactive-value="1"
               @change="value => handleStatusChange(row, value)"
           >
           </el-switch>
@@ -93,7 +93,7 @@
                 link
                 type="danger"
                 icon="Delete"
-                :disabled="row.validFlag === true"
+                :disabled="row.status === 0"
                 @click="handleDelete(row)"
                 >删除</el-button
               >
@@ -221,7 +221,7 @@ function formatListParams(params) {
 
 /** 转换树结构并规范文本空值，显示顺序为零时仍正常展示。 */
 function formatListData(rows) {
-  const fields = ['name', 'orderNum', 'remark', 'validFlag', 'createBy', 'createTime'];
+  const fields = ['name', 'orderNum', 'remark', 'status', 'createBy', 'createTime'];
   const records = rows.map(row => {
     const record = {...row};
     fields.forEach(field => {
@@ -311,7 +311,7 @@ async function handleStatusChange(row, value) {
     status: value
   }
   proxy.$modal
-      .confirm(`确认要${value === 1 ? "启用" : "禁用"}文件分类“${row.name}”吗？`)
+      .confirm(`确认要${value === 0 ? "启用" : "禁用"}文件分类“${row.name}”吗？`)
       .then(function () {
         return updateModelDataCategory(data);
       })

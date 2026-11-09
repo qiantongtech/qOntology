@@ -18,6 +18,26 @@
 
 <template>
   <div class="app-container" v-loading="loading">
+    <!--  顶部操作条：与详情页一致，右侧提供返回入口  -->
+    <div class="pagecont-top diff-header">
+      <div class="infotop">
+        <div class="infotop-title">
+          <span class="h2-titles">版本对比</span>
+          <div class="btn-style">
+            <el-button
+                type="primary"
+                plain
+                class="fh_btn"
+                @mousedown="(e) => e.preventDefault()"
+                @click="handleBack"
+            >
+              <svg-icon icon-class="fhs" />
+              返回
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!--  版本信息  -->
     <div class="version-info">
       <!--   基准版本（左侧）   -->
@@ -202,13 +222,15 @@
 </template>
 
 <script setup name="ModelVersionDiff">
-import {onMounted, ref} from "vue";
-import {useRoute} from "vue-router";
+import {getCurrentInstance, onMounted, ref} from "vue";
+import {useRoute, useRouter} from "vue-router";
 import {parseTime} from "@/utils/anivia.js";
 
 import {getProjectVersionDict, getVersionDiffStats} from "@/api/basic/project/projectVersion";
 
+const { proxy } = getCurrentInstance();
 const route = useRoute();
+const router = useRouter();
 
 const loading = ref(true)
 
@@ -259,7 +281,12 @@ async function compareVersionChange(val) {
 
 // 初始化数据
 async function initData() {
-  currentVersion.value = route.params.versionId || "";
+  if(route.path === '/basic/project/detail/versionDiff'){
+    currentVersion.value = route.query.currentVersion || "";
+  }else{
+    currentVersion.value = route.params.versionId || "";
+  }
+
   compareVersion.value = route.query.compareVersion || "";
   getProjectVersionDict(projectId).then((res) => {
     projectVersionDict.value = res.data;
@@ -280,6 +307,27 @@ async function initData() {
 
   diffData();
   loading.value = false;
+}
+
+/**
+ * 返回来源页面：项目详情页内嵌进入时回到项目详情，其余场景回到版本管理列表。
+ * 走 closeOpenPage 关闭本页签，避免版本对比页签带着旧版本堆积；缺少上下文时才退回浏览器历史。
+ */
+function handleBack() {
+  if(route.path === '/basic/project/detail/versionDiff'){
+  proxy.$tab.closeOpenPage({ path: `/basic/project/detail` ,
+  query: {
+      projectId: projectId
+    }});
+    return;
+  }
+
+  const backVersionId = route.params.versionId;
+  if (backVersionId) {
+    proxy.$tab.closeOpenPage({ path: `/om/${backVersionId}/projectVersion` });
+    return;
+  }
+  router.back();
 }
 
 // 表格行样式
@@ -328,6 +376,24 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+// 顶部操作条沿用详情样式，但间距对齐本页卡片节奏（叠加全局类提高优先级）
+.diff-header.pagecont-top {
+  padding: 15px;
+  margin-bottom: 8px;
+
+  // 返回按钮图标对齐文字，与通用详情头部保持一致
+  .fh_btn .svg-icon {
+    font-size: 12px;
+    margin-right: 5px;
+    vertical-align: middle;
+    margin-top: -3px;
+  }
+
+  .fh_btn:hover .svg-icon {
+    filter: brightness(0) invert(1) !important;
+  }
+}
+
 .border-item {
   width: 100%;
   background: #fff;

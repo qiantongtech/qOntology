@@ -45,7 +45,7 @@
       class="pagecont-bottom"
     >
       <el-tabs v-model="activeName">
-        <el-tab-pane label="项目版本" name="version">
+        <el-tab-pane label="版本管理" name="version">
           <!-- 直接复用项目版本页面；内嵌模式固定查询当前项目，并保留版本增删改查能力。 -->
           <ProjectVersion
             :key="detail.id"
@@ -73,7 +73,7 @@ const versionListPermission = "basic:project:projectversion:list";
 const { proxy } = getCurrentInstance();
 const { project_status } = proxy.useDict("project_status");
 const route = useRoute();
-const { creatorPhones } = useCreatorPhones();
+const { formatCreator } = useCreatorPhones();
 const detail = ref({});
 const loading = ref(false);
 const activeName = ref("version");
@@ -81,38 +81,29 @@ const emptyMessage = ref("项目已不存在");
 
 // 自由布局完整声明概要字段，避免通用组件默认追加与项目无关的字段。
 const detailItems = computed(() => [
-  { label: "项目名称", key: "name" },
-  { label: "项目领域", key: "domain" },
-  { label: "命名空间", key: "namespace" },
-  { label: "责任人", key: "responsiblePersonName",formatter: formatCreator },
+  { label: "项目领域",span: 8, key: "domain" },
+  { label: "命名空间",span: 8, key: "namespace" },
+  { label: "责任人",span: 8, key: "responsiblePersonName",formatter: formatCreator },
   {
     label: "包含范围",
     key: "includeRange",
     span: 24,
-    className: "mt2 mb2",
-    ellipsisClass: "ellipsis-2",
+    className: "mt2",
   },
   {
     label: "排除范围",
     key: "excludeRange",
     span: 24,
-    className: "mt2 mb2",
-    ellipsisClass: "ellipsis-2",
+    className: "mt2",
   },
 ]);
-
-/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
-function formatCreator(name, record) {
-  const phone = creatorPhones.value[record.creatorId];
-  return phone ? `${name || "-"} / ${phone}` : name || "-";
-}
 
 // 记录请求版本，防止切换项目后旧的详情响应回写页面。
 let requestVersion = 0;
 
 /** 跟随路由重新加载项目概要，切换项目时清空旧数据并重置页签。 */
 watch(
-  () => route.params.projectId,
+  () => route.query.projectId,
   async (projectId) => {
     const request = ++requestVersion;
     detail.value = {};

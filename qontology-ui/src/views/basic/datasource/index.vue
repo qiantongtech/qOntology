@@ -66,7 +66,7 @@
           v-hasPermi="['basic:datasource:datasource:remove']"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
@@ -138,13 +138,12 @@
           </el-popover>
         </template>
         <template #status="{ row }">
-                  <el-switch
-                      v-model="row.status"
-                      :active-value="1"
-                      :inactive-value="0"
-                      @change="value => handleStatusChange(row, value)"
-                  >
-                  </el-switch>
+          <el-switch
+              v-model="row.status"
+              :active-value="0"
+              :inactive-value="1"
+              @change="value => handleStatusChange(row, value)"
+          ></el-switch>
         </template>
       </qt-table>
     </qt-wrap>
@@ -278,8 +277,11 @@
           <el-col :span="12">
             <qt-form-item label="状态" prop="status">
               <el-radio-group v-model="form.status">
-                <el-radio :value="1">启用</el-radio>
-                <el-radio :value="0">禁用</el-radio>
+                <el-radio
+                  v-for="dict in sys_normal_disable"
+                  :key="dict.value"
+                  :label="Number(dict.value)"
+                >{{ dict.label }}</el-radio>
               </el-radio-group>
             </qt-form-item>
           </el-col>
@@ -422,15 +424,7 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="状态" prop="validFlag">
-              <div class="form-readonly">
-                {{
-                  form.validFlag === true
-                    ? "启用"
-                    : form.validFlag === false
-                    ? "禁用"
-                    : "-"
-                }}
-              </div>
+              <dict-tag :options="sys_normal_disable" :value="form.status" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -464,7 +458,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="创建时间" prop="createTime">
-              <div class="form-readonly">{{ form.createTime || "-" }}</div>
+              <div class="form-readonly">{{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}</div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -493,7 +487,7 @@ import { getDatasourceIcon } from "@/utils/datasource.js";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 const { proxy } = getCurrentInstance();
-const { datasource_type } = proxy.useDict("datasource_type");
+const { datasource_type,sys_normal_disable  } = proxy.useDict("datasource_type","sys_normal_disable");
 const route = useRoute();
 const tableRef = ref(null);
 const { creatorPhones } = useCreatorPhones();
@@ -515,7 +509,7 @@ const searchStore = reactive({
   items: [
     { label: "数据源名称", prop: "datasourceName", component: { is: "input" } },
     {
-      label: "类型",
+      label: "数据源类型",
       prop: "datasourceType",
       component: {
         is: "select",
@@ -575,7 +569,7 @@ const tableStore = reactive({
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
-    { label: "类型", slot: "datasourceType", width: 120 },
+    { label: "数据源类型", slot: "datasourceType", width: 120 },
     {
       label: "状态", prop: "status", slot: "status",
       width: 100, minWidth: 100,
@@ -618,7 +612,7 @@ const data = reactive({
       { required: true, message: "数据源名称不能为空", trigger: "blur" },
     ],
     datasourceType: [
-      { required: true, message: "类型不能为空", trigger: "change" },
+      { required: true, message: "数据源类型不能为空", trigger: "change" },
     ],
     datasourceConfig: [
       {
@@ -896,7 +890,7 @@ async function handleStatusChange(row, value) {
     status: value
   }
   proxy.$modal
-      .confirm(`确认要${value === 1 ? "启用" : "禁用"}数据源“${row.datasourceName}”吗？`)
+      .confirm(`确认要${value === 0 ? "启用" : "禁用"}数据源“${row.datasourceName}”吗？`)
       .then(function () {
         return updateDaDatasource(data);
       })
@@ -904,7 +898,7 @@ async function handleStatusChange(row, value) {
         proxy.$modal.msgSuccess("操作成功");
       })
       .catch(function () {
-        row.status = row.status === 1 ? 0 : 1;
+        row.status = row.status === 0 ? 1 : 0;
       });
 }
 /** 删除按钮操作 */
