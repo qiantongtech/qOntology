@@ -1024,43 +1024,75 @@ async function submitForm(draft) {
 }
 
 /** 删除按钮操作 */
-function handleDelete(row) {
+async function handleDelete(row) {
   const deletingVersion = versionId.value;
   const recordIds = row ? [row.id] : [...ids.value];
   if (!recordIds.length) return;
-  // 启用中或被对象类型属性、公理/规则引用的业务数据类型不可删，删除前统一取回原因。
-  checkDataTypeDeletable(recordIds, deletingVersion)
-    .then(({ data }) => {
+  // 单条删除：先弹“是否确认删除编号为X 的数据项？”，点击确定后再调后端校验取回不可删原因。
+  if (row) {
+    try {
+      await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
+    } catch {
+      return;
+    }
+    let blockedMap = {};
+    try {
+      const { data } = await checkDataTypeDeletable(recordIds, deletingVersion);
       if (deletingVersion !== versionId.value) return;
-      const blockedMap = data || {};
-      const reasonOf = (id) => blockedMap[String(id)];
-      if (row && reasonOf(row.id)) {
-        proxy.$modal.msgWarning(reasonOf(row.id));
-        return;
-      }
-      const deletableIds = recordIds.filter((id) => !reasonOf(id));
-      const cannotDeleteCount = recordIds.length - deletableIds.length;
-      if (!deletableIds.length) {
-        return proxy.$modal.confirm(`可删除0个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`);
-      }
-      const confirmText = cannotDeleteCount
-        ? `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
-        : row
-          ? `是否确认删除编号为${row.id} 的数据项？`
-          : `是否确认删除选中的${deletableIds.length}个业务数据类型？`;
-      return proxy.$modal
-        .confirm(confirmText)
-        .then(function () {
-          if (deletingVersion !== versionId.value) return;
-          return delDataType(deletableIds.join(","), deletingVersion);
-        })
-        .then(() => {
-          if (deletingVersion !== versionId.value) return;
-          getList();
-          proxy.$modal.msgSuccess("删除成功");
-        });
-    })
-    .catch(() => {});
+      blockedMap = data || {};
+    } catch {
+      return;
+    }
+    // 确认后才校验：启用中或被对象类型属性、公理/规则引用时提示原因并终止。
+    const reason = blockedMap[String(row.id)];
+    if (reason) {
+      proxy.$modal.msgWarning(reason);
+      return;
+    }
+    try {
+      await delDataType(recordIds.join(","), deletingVersion);
+    } catch {
+      return;
+    }
+    if (deletingVersion !== versionId.value) return;
+    getList();
+    proxy.$modal.msgSuccess("删除成功");
+    return;
+  }
+  // 批量删除：先向后端校验可删性，再弹“可删除X/不可删除Y”确认，确认后只删可删部分。
+  let blockedMap = {};
+  try {
+    const { data } = await checkDataTypeDeletable(recordIds, deletingVersion);
+    if (deletingVersion !== versionId.value) return;
+    blockedMap = data || {};
+  } catch {
+    return;
+  }
+  const reasonOf = (id) => blockedMap[String(id)];
+  const deletableIds = recordIds.filter((id) => !reasonOf(id));
+  const cannotDeleteCount = recordIds.length - deletableIds.length;
+  if (!deletableIds.length) {
+    try {
+      await proxy.$modal.confirm(`可删除0个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`);
+    } catch {}
+    return;
+  }
+  const confirmText = cannotDeleteCount
+    ? `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
+    : `是否确认删除选中的${deletableIds.length}个业务数据类型？`;
+  try {
+    await proxy.$modal.confirm(confirmText);
+  } catch {
+    return;
+  }
+  try {
+    await delDataType(deletableIds.join(","), deletingVersion);
+  } catch {
+    return;
+  }
+  if (deletingVersion !== versionId.value) return;
+  getList();
+  proxy.$modal.msgSuccess("删除成功");
 }
 </script>
 

@@ -403,7 +403,7 @@ function canDeleteTarget(row) {
   return !row || Number(row.relatedElementCount || 0) === 0;
 }
 
-/** 删除按钮操作（单条与批量共用）：统一先弹“可删除X/不可删除Y”确认框，确认后只删除未被关联绑定的可删部分。 */
+/** 删除按钮操作：单条删除弹“是否确认删除编号为X 的数据项？”，批量删除弹“可删除X/不可删除Y”确认后只删未被关联绑定的可删部分。 */
 function handleDelete(row) {
   const records = row ? [row] : selectedRows.value;
   if (!records.length) return;
@@ -412,10 +412,19 @@ function handleDelete(row) {
   const canDeleteIds = canDeleteRows.map((item) => item.id);
   const canDeleteCount = canDeleteRows.length;
   const cannotDeleteCount = records.length - canDeleteCount;
+  // 单条删除统一先弹“是否确认删除编号为X 的数据项？”（与批量删除同为系统提示风格）；点击确定后再判断可删性。
+  const confirmText = row
+    ? `是否确认删除编号为${row.id} 的数据项？`
+    : `可删除${canDeleteCount}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`;
 
   proxy.$modal
-    .confirm(`可删除${canDeleteCount}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`)
+    .confirm(confirmText)
     .then(function () {
+      // 确认后才校验：单条已被对象类型或关系绑定时提示原因并终止，不发起删除。
+      if (row && !canDeleteCount) {
+        proxy.$modal.msgWarning("该建模目标已被对象类型或关系引用，无法删除");
+        return;
+      }
       if (!canDeleteCount) return;
       return delTarget(canDeleteIds.join(","));
     })

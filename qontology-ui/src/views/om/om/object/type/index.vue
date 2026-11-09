@@ -642,12 +642,18 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
         if (!saving.value) done();
     }
 
+    /** 单条删除：先弹“是否确认删除编号为X 的数据项？”，点击确定后再调校验接口取回不可删原因。 */
     async function handleDelete(row) {
         const context = contextRequest;
         const deletingVersion = versionId.value;
         if (deleting.value || row?.id == null) return;
         const recordIds = [row.id];
-        // 删除前先调用校验接口，取回不可删除原因（下级/属性/关系/公理规则），再弹“可删除X/不可删除Y”确认。
+        try {
+            await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
+        } catch {
+            return;
+        }
+        // 确认后才校验：取回不可删除原因（下级/属性/关系/公理规则），被引用时提示原因并终止。
         let blockedMap = {};
         try {
             const response = await checkTypeDeletable(recordIds);
@@ -656,23 +662,15 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
         } catch {
             return;
         }
-        const reasonOf = (id) => blockedMap[String(id)];
-        const deletableIds = recordIds.filter((id) => !reasonOf(id));
-        // 单条删除：不可删时提示原因，可删时统一弹编号确认框（与批量删除同为系统提示风格）。
-        if (reasonOf(row.id)) {
-            proxy.$modal.msgWarning(reasonOf(row.id));
+        const reason = blockedMap[String(row.id)];
+        if (reason) {
+            proxy.$modal.msgWarning(reason);
             return;
         }
-        try {
-            await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
-        } catch {
-            return;
-        }
-        if (!deletableIds.length) return;
         if (deleting.value || context !== contextRequest || deletingVersion !== versionId.value) return;
         deleting.value = true;
         try {
-            await delType(deletableIds.join(','));
+            await delType(recordIds.join(','));
             if (context !== contextRequest || deletingVersion !== versionId.value) return;
             ElMessage.success('删除成功');
             await getList();

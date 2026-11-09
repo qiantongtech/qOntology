@@ -621,12 +621,44 @@ async function submitForm() {
   }
 }
 
-/** 删除单行或勾选记录；先向后端校验可删性，批量时对齐“可删除X/不可删除Y”只删可删部分。 */
+/** 删除单行或勾选记录；单条先弹确认框、点击确定后再校验，批量先校验再弹“可删除X/不可删除Y”只删可删部分。 */
 async function handleDelete(row) {
   const context = contextRequest;
   const recordIds = row ? [row.enumId] : [...ids.value];
   if (!recordIds.length || deleting.value) return;
-  // 启用中、有枚举数据或被属性/业务数据类型/公理引用的枚举不可删，删除前统一取回原因。
+  // 单条删除：先弹“是否确认删除编号为X 的数据项？”，点击确定后再调后端校验取回不可删原因。
+  if (row) {
+    try {
+      await proxy.$modal.confirm(`是否确认删除编号为${row.enumId} 的数据项？`);
+    } catch {
+      return;
+    }
+    let blockedMap = {};
+    try {
+      const { data } = await checkEnumDeletable(recordIds);
+      blockedMap = data || {};
+    } catch {
+      return;
+    }
+    if (context !== contextRequest) return;
+    // 确认后才校验：启用中、有枚举数据或被引用时提示原因并终止。
+    const reason = blockedMap[String(row.enumId)];
+    if (reason) {
+      proxy.$modal.msgWarning(reason);
+      return;
+    }
+    deleting.value = true;
+    try {
+      await delType(recordIds.join(","));
+      if (context !== contextRequest) return;
+      tableRef.value?.resetQuery();
+      proxy.$modal.msgSuccess("删除成功");
+    } finally {
+      deleting.value = false;
+    }
+    return;
+  }
+  // 批量删除：先向后端校验可删性，再弹“可删除X/不可删除Y”确认，确认后只删可删部分。
   let blockedMap = {};
   try {
     const { data } = await checkEnumDeletable(recordIds);
@@ -636,10 +668,6 @@ async function handleDelete(row) {
   }
   if (context !== contextRequest) return;
   const reasonOf = (id) => blockedMap[String(id)];
-  if (row && reasonOf(row.enumId)) {
-    proxy.$modal.msgWarning(reasonOf(row.enumId));
-    return;
-  }
   const deletableIds = recordIds.filter((id) => !reasonOf(id));
   const cannotDeleteCount = recordIds.length - deletableIds.length;
   if (!deletableIds.length) {
@@ -652,9 +680,7 @@ async function handleDelete(row) {
   }
   const confirmText = cannotDeleteCount
     ? `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
-    : row
-      ? `是否确认删除编号为${row.enumId} 的数据项？`
-      : `是否确认删除选中的${deletableIds.length}个枚举？`;
+    : `是否确认删除选中的${deletableIds.length}个枚举？`;
   try {
     await proxy.$modal.confirm(confirmText);
   } catch {

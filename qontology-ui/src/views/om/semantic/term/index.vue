@@ -776,13 +776,9 @@ async function handleDelete(row) {
     ids = [row.id];
     confirmText = `是否确认删除编号为${row.id} 的数据项？`;
   } else {
-    // 批量删除：仅删除停用（可删）部分，启用中的计入不可删除并拦截。
+    // 批量删除：仅删除停用（可删）部分，启用中的计入不可删除；即使可删数为 0 也统一弹“可删除X/不可删除Y”确认框。
     const canDeleteRows = selectedRows.value.filter(canDeleteTerm);
     const cannotDeleteCount = selectedRows.value.length - canDeleteRows.length;
-    if (!canDeleteRows.length) {
-      ElMessage.warning("选中的术语均处于启用状态，无法删除，请先停用");
-      return;
-    }
     ids = canDeleteRows.map((item) => item.id);
     confirmText = cannotDeleteCount
       ? `可删除${canDeleteRows.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
@@ -794,6 +790,8 @@ async function handleDelete(row) {
   } catch {
     return;
   }
+  // 确认后可删部分为空（如全部启用）时不再发起删除请求。
+  if (!ids.length) return;
   if (
     deleting.value ||
     context !== contextRequest ||

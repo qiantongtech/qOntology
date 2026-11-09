@@ -525,7 +525,7 @@
 
     /**
      * 删除按钮操作：行内删除取当前行编号，顶部批量删除取多选编号。
-     * 删除前先调校验接口，统一弹“可删除X/不可删除Y”确认框，确认后只删除未被公理/规则引用的可删部分。
+     * 单条删除先弹编号确认框、点击确定后再校验；批量删除先校验再弹“可删除X/不可删除Y”确认，确认后只删未被公理/规则引用的可删部分。
      * @param {Object} [row] 当前行数据，顶部批量按钮点击时为空
      */
     async function handleDelete(row) {
@@ -533,30 +533,42 @@
         const ids = row ? [row.id] : [...selectedIds.value];
         if (!ids.length) return;
         const context = contextRequest;
-        // 关系仅在被模型公理 / 数据规则引用时不可删，删除前先取回不可删原因。
-        let blockedMap = {};
-        try {
-            const response = await checkRelationDeletable(ids);
-            if (context !== contextRequest) return;
-            blockedMap = response.data || {};
-        } catch {
-            return;
-        }
-        const reasonOf = (id) => blockedMap[String(id)];
-        const deletableIds = ids.filter((id) => !reasonOf(id));
-        const cannotDeleteCount = ids.length - deletableIds.length;
-        // 单条删除：不可删时提示原因，可删时统一弹编号确认框；批量删除保留“可删除X/不可删除Y”确认，两者同为系统提示风格。
+        let deletableIds = [];
         if (row) {
-            if (reasonOf(row.id)) {
-                proxy.$modal.msgWarning(reasonOf(row.id));
-                return;
-            }
+            // 单条删除：先弹“是否确认删除编号为X 的数据项？”，点击确定后再调校验接口取回不可删原因。
             try {
                 await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
             } catch {
                 return;
             }
+            let blockedMap = {};
+            try {
+                const response = await checkRelationDeletable(ids);
+                if (context !== contextRequest) return;
+                blockedMap = response.data || {};
+            } catch {
+                return;
+            }
+            // 确认后才校验：被模型公理 / 数据规则引用时提示原因并终止。
+            const reason = blockedMap[String(row.id)];
+            if (reason) {
+                proxy.$modal.msgWarning(reason);
+                return;
+            }
+            deletableIds = ids;
         } else {
+            // 批量删除：先校验再弹“可删除X/不可删除Y”确认，确认后只删可删部分。
+            let blockedMap = {};
+            try {
+                const response = await checkRelationDeletable(ids);
+                if (context !== contextRequest) return;
+                blockedMap = response.data || {};
+            } catch {
+                return;
+            }
+            const reasonOf = (id) => blockedMap[String(id)];
+            deletableIds = ids.filter((id) => !reasonOf(id));
+            const cannotDeleteCount = ids.length - deletableIds.length;
             try {
                 await proxy.$modal.confirm(
                     `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`
