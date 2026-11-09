@@ -16,7 +16,7 @@
       }"
       :items="detailItems"
       mode="free"
-      time-format="{y}-{m}-{d} {h}:{i}:{s}"
+      time-format="{y}-{m}-{d} {h}:{i}"
       @back="goBack"
     >
       <template #taskStatus>
@@ -179,19 +179,19 @@ const logTableStore = reactive({
     },
   },
   columns: [
-    { label: "编号", prop: "id", width: 80, sortable: "custom" },
+    { label: "编号", prop: "id", width: 60, sortable: "custom" },
     { label: "执行状态", prop: "status", slot: "status", width: 130 },
     {
       label: "开始时间",
       prop: "startTime",
-      date: "{y}-{m}-{d} {h}:{i}:{s}",
+      date: "{y}-{m}-{d} {h}:{i}",
       width: 190,
       sortable: "custom",
     },
     {
       label: "结束时间",
       prop: "endTime",
-      date: "{y}-{m}-{d} {h}:{i}:{s}",
+      date: "{y}-{m}-{d} {h}:{i}",
       width: 190,
       sortable: "custom",
     },
@@ -208,7 +208,7 @@ const stepTableStore = reactive({
     table: { stripe: true, rowKey: "id" },
   },
   columns: [
-    { label: "编号", prop: "id", width: 100, sortable: "custom" },
+    { label: "编号", prop: "id", width: 60, sortable: "custom" },
     {
       label: "执行步骤",
       prop: "step",
@@ -219,7 +219,7 @@ const stepTableStore = reactive({
     {
       label: "执行时间",
       prop: "createTime",
-      date: "{y}-{m}-{d} {h}:{i}:{s}",
+      date: "{y}-{m}-{d} {h}:{i}",
       width: 190,
       sortable: "custom",
     },

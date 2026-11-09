@@ -23,7 +23,6 @@
     v-model="visible"
     width="1200px"
     top="5vh"
-    :append-to="$refs['app-container']"
     draggable
     destroy-on-close
     @close="handleClose"
@@ -100,43 +99,23 @@
       </section>
       <section class="mapping-section mapping-section--table">
         <div class="h2-titles mb15">属性映射</div>
-        <el-table
-          v-loading="loading"
-          :data="attributeMappingList"
-          height="360px"
-          stripe
-        >
-          <el-table-column
-            prop="field"
-            label="数据表字段"
-            :show-overflow-tooltip="{ effect: 'light' }"
-          >
-          </el-table-column>
-          <el-table-column
-            prop="fieldDescription"
-            label="字段描述"
-            :show-overflow-tooltip="{ effect: 'light' }"
-          >
-          </el-table-column>
-          <el-table-column prop="conceptId" label="对象类型属性">
-            <template #default="scope">
-              <el-select
-                @change="rowConceptClick(scope.row)"
-                v-model="scope.row.conceptId"
-                placeholder="请选择对象类型属性"
-                clearable
-              >
-                <el-option
-                  v-for="item in conceptualAttributeList"
-                  :key="parseInt(item.id)"
-                  :label="item.name"
-                  :value="parseInt(item.id)"
-                >
-                </el-option>
-              </el-select>
-            </template>
-          </el-table-column>
-        </el-table>
+        <qt-table v-bind="attributeTableStore" ref="attributeTableRef">
+          <template #conceptId="{ row }">
+            <el-select
+              v-model="row.conceptId"
+              placeholder="请选择对象类型属性"
+              clearable
+              @change="rowConceptClick(row)"
+            >
+              <el-option
+                v-for="item in conceptualAttributeList"
+                :key="parseInt(item.id)"
+                :label="item.name"
+                :value="parseInt(item.id)"
+              />
+            </el-select>
+          </template>
+        </qt-table>
       </section>
     </div>
     <template #footer>
@@ -174,6 +153,16 @@ function buildTree(items) {
   return roots;
 }
 const attributeMappingList = ref([]);
+const attributeTableRef = ref();
+const attributeTableStore = reactive({
+  config: { initResquest: false, notPagination: true, table: { height: 360, stripe: true } },
+  columns: [
+    { label: "数据表字段", prop: "field", align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "字段描述", prop: "fieldDescription", align: "left", showOverflowTooltip: { effect: "light" } },
+    { label: "对象类型属性", slot: "conceptId", align: "left" },
+  ],
+  func: () => Promise.resolve({ data: attributeMappingList.value }),
+});
 const timeMappingList = ref([]);
 const conceptualAttributeList = ref([]);
 const associationTables = ref([]);
@@ -232,7 +221,7 @@ async function show(val) {
   conceptualAttributeList.value = [];
   //获取对象类型列表
   await getSchemaList();
-  await getTableDetail(); //TODO
+  await getTableDetail();
 
   title.value = val.title;
   visible.value = true;
@@ -246,7 +235,6 @@ async function show(val) {
     form.entityTimeField = val.mappingData.entityTimeField;
     //查询对应对象类型的属性
     await conceptChange();
-    // console.log('-------attributeMappingList.value-----', attributeMappingList.value)
 
     //属性映射
     attributeMappingList.value.forEach((e) => {
@@ -282,9 +270,9 @@ async function show(val) {
 
     customMappingList.value = val.mappingData.customList;
   }
+  await nextTick();
+  attributeTableRef.value?.getList();
 
-  // title.value = val.title
-  // visible.value = true;
 }
 
 /**

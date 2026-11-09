@@ -121,12 +121,9 @@
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" :disabled="saving" @click="handleCancel"
-          >取 消</el-button
-        >
+        <el-button :disabled="saving" @click="handleCancel">取 消</el-button>
         <el-button
           type="primary"
-          size="mini"
           :loading="saving"
           :disabled="validating"
           @click="submitForm"
@@ -149,111 +146,20 @@
         entityTitle
       }}</span>
     </template>
-    <el-form
-      class="btn-style"
-      :model="queryParamsEntity"
-      ref="queryRef"
-      :inline="true"
-      label-width="68px"
-    >
-      <el-form-item label="实体名称" prop="name">
-        <el-input
-          class="el-form-input-width"
-          v-model="queryParamsEntity.name"
-          placeholder="请输入实体名称"
-          clearable
-          @keyup.enter="handleQueryEntity"
-        />
-      </el-form-item>
-      <el-form-item label="概念名称" prop="schema">
-        <el-input
-          class="el-form-input-width"
-          v-model="queryParamsEntity.schema"
-          placeholder="请输入概念名称"
-          clearable
-          @keyup.enter="handleQueryEntity"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button
-          plain
-          type="primary"
-          @click="handleQueryEntity"
-          @mousedown="(e) => e.preventDefault()"
-        >
-          <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-        </el-button>
-        <el-button
-          @click="resetQueryEntity"
-          @mousedown="(e) => e.preventDefault()"
-        >
-          <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
-        </el-button>
-      </el-form-item>
-    </el-form>
-    <el-table
-      stripe
-      ref="entityTableRef"
-      v-loading="entityLoading"
-      :data="entityList"
-      reserve-selection
-      row-key="id"
-      @selection-change="handleEntitySelectionChange"
-      @row-click="handleRowClick"
-      @sort-change="handleEntitySortChange"
-    >
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column
-        label="实体名称"
-        prop="name"
-        align="left"
-        header-align="left"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      />
-      <el-table-column
-        label="概念名称"
-        prop="schemaName"
-        align="center"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      />
-      <el-table-column
-        label="来源"
-        prop="entityType"
-        align="center"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      >
-        <template #default="scope">
-          <dict-tag :options="entityOptions" :value="scope.row.entityType" />
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="创建时间"
-        prop="createTime"
-        align="center"
-        sortable="custom"
-      >
-        <template #default="scope">
-          <span>{{
-            scope.row.createTime
-              ? parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}")
-              : "-"
-          }}</span>
-        </template>
-      </el-table-column>
-    </el-table>
-    <pagination
-      v-show="entityTotal > 0"
-      :total="entityTotal"
-      v-model:page="queryParamsEntity.pageNum"
-      v-model:limit="queryParamsEntity.pageSize"
-      @pagination="getGraphData"
+    <qt-search-bar
+      :items="entitySearchItems"
+      :params="queryParamsEntity"
+      :table-ref="entityTableRef"
     />
+    <qt-table v-bind="entityTableStore" ref="entityTableRef">
+      <template #entityType="{ row }">
+        <dict-tag :options="entityOptions" :value="row.entityType" />
+      </template>
+    </qt-table>
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" @click="entityOpen = false">取 消</el-button>
-        <el-button type="primary" size="mini" @click="submitEntityForm"
-          >确 定</el-button
-        >
+        <el-button @click="entityOpen = false">取 消</el-button>
+        <el-button type="primary" @click="submitEntityForm">确 定</el-button>
       </div>
     </template>
   </el-dialog>
@@ -371,19 +277,13 @@ async function submitForm() {
 /* ------------------------------ 参与实体选择 ------------------------------ */
 const entityTitle = ref("");
 const entityOpen = ref(false);
-const entityLoading = ref(true);
 const entityList = ref([]);
-const entityTotal = ref(0);
 // 当前已勾选的实体（跨分页记忆）
 const entity = ref([]);
-// 上次勾选数据，用于对比取消选择
-const oldSelection = ref([]);
 // 是否分页切换导致的选中变化
 const isAuto = ref(false);
-const entityTableRef = ref([]);
-const queryParamsEntity = ref({
-  pageNum: 1,
-  pageSize: 10,
+const entityTableRef = ref();
+const queryParamsEntity = reactive({
   name: null,
   graphId: null,
   entityType: "0",
@@ -391,27 +291,70 @@ const queryParamsEntity = ref({
   orderByColumn: "createTime",
   isAsc: "descending",
 });
+const entitySearchItems = [
+  { label: "实体名称", prop: "name", component: { is: "input" } },
+  { label: "概念名称", prop: "schema", component: { is: "input" } },
+];
+const entityTableStore = reactive({
+  config: {
+    initResquest: false,
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleEntitySelectionChange,
+      onRowClick: handleRowClick,
+    },
+    pagination: { notAutoScroll: true },
+  },
+  columns: [
+    { type: "selection", width: 55, minWidth: 55 },
+    {
+      label: "实体名称",
+      prop: "name",
+      align: "left",
+      headerAlign: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "概念名称",
+      prop: "schemaName",
+      showOverflowTooltip: { effect: "light" },
+    },
+    { label: "来源", prop: "entityType", slot: "entityType" },
+    { label: "创建时间", prop: "createTime", sortable: "custom", date: true },
+  ],
+  func: (params) =>
+    getGraphPage(params).then((response) => ({
+      ...response,
+      data: {
+        rows: response.data.list || response.data.rows || [],
+        total: response.data.total || 0,
+      },
+    })),
+  params: queryParamsEntity,
+  events: {
+    formatData: (rows) => {
+      isAuto.value = true;
+      return rows;
+    },
+    onDataLoaded: restoreEntitySelection,
+  },
+});
 
 async function openGraphData() {
   entityOpen.value = true;
   entityTitle.value = "选择实体";
-  entityLoading.value = true;
-  queryParamsEntity.value.pageNum = 1;
-  entity.value = localForm.value.entityList || [];
-  getGraphData();
+  queryParamsEntity.graphId = props.graphId;
+  entity.value = [...(localForm.value.entityList || [])];
+  nextTick(() => entityTableRef.value?.resetQuery());
 }
 
-// 查询图谱实体分页数据
-function getGraphData() {
-  entityLoading.value = true;
-  queryParamsEntity.value.graphId = props.graphId;
-  getGraphPage(queryParamsEntity.value).then(async (response) => {
-    entityLoading.value = false;
-    entityList.value = response.data.list;
-    entityTotal.value = response.data.total;
-    // 表格加载完成后，恢复之前选中的实体（含分页切换场景）
-    isAuto.value = true;
-    await nextTick();
+// 表格加载完成后恢复跨页选择。
+function restoreEntitySelection(rows) {
+  entityList.value = rows;
+  nextTick(() => {
     setSelectionRow(entity.value);
     isAuto.value = false;
   });
@@ -429,9 +372,9 @@ function setSelectionRow(rows, ignoreSelectable) {
         (item) => item.id == row.entityId
       );
       if (matched.length > 0) {
-        entityTableRef.value.toggleRowSelection(
+        entityTableRef.value?.elTableRef?.toggleRowSelection(
           matched[0],
-          undefined,
+          true,
           ignoreSelectable
         );
       }
@@ -441,99 +384,38 @@ function setSelectionRow(rows, ignoreSelectable) {
 
 // 多选框选中数据（含跨分页记忆与取消对比）
 function handleEntitySelectionChange(selection) {
-  entity.value = entity.value || [];
-  const selectionList = (selection || []).map((item) => ({
-    id: item.id,
-    name: item.name,
-    entityId: item.id,
-    entityName: item.name,
-  }));
-  if (selectionList.length > 0) {
-    // 少选：移除本次未选中但上次选中的数据
-    if (oldSelection.value.length > selectionList.length) {
-      oldSelection.value.forEach((item) => {
-        const index = selectionList.findIndex((ece) => ece.id == item.entityId);
-        if (index == -1) {
-          entity.value = entity.value.filter((ece) => item.id != ece.entityId);
-        }
+  if (isAuto.value) return;
+  const selectedIds = new Set((selection || []).map((item) => String(item.id)));
+  const pageIds = new Set(entityList.value.map((item) => String(item.id)));
+  entity.value = entity.value.filter(
+    (item) =>
+      !pageIds.has(String(item.entityId)) ||
+      selectedIds.has(String(item.entityId))
+  );
+  entityList.value.forEach((row) => {
+    if (
+      selectedIds.has(String(row.id)) &&
+      !entity.value.some((item) => String(item.entityId) === String(row.id))
+    ) {
+      entity.value.push({
+        id: row.id,
+        name: row.name,
+        entityId: row.id,
+        entityName: row.name,
       });
     }
-    if (entity.value.length > 0) {
-      selectionList.forEach((item) => {
-        const index = entity.value.findIndex((ece) => ece.entityId == item.id);
-        if (index == -1) {
-          entity.value.push({
-            id: item.id,
-            name: item.name,
-            entityId: item.id,
-            entityName: item.name,
-          });
-        }
-      });
-    } else {
-      entity.value.push(...selectionList);
-    }
-  } else if (!isAuto.value) {
-    // 取消到没有选择任何值且非分页导致
-    oldSelection.value.forEach((item) => {
-      const index = selectionList.findIndex(
-        (ece) => ece.entityId == item.entityId
-      );
-      if (index == -1) {
-        entity.value = entity.value.filter(
-          (ece) => item.entityId != ece.entityId
-        );
-      }
-    });
-  }
-  oldSelection.value = selectionList;
+  });
 }
 
 /** 行点击切换选中状态 */
 function handleRowClick(row) {
-  entity.value = entity.value || [];
-  const index = entity.value.findIndex((item) => item.entityId === row.id);
-  if (index > -1) {
-    entity.value = entity.value.filter((item) => item.entityId !== row.id);
-  } else {
-    entity.value.push({
-      id: row.id,
-      name: row.name,
-      entityId: row.id,
-      entityName: row.name,
-    });
-  }
-  entityTableRef.value.toggleRowSelection(row, index === -1);
+  entityTableRef.value?.elTableRef?.toggleRowSelection(row);
 }
 
 function submitEntityForm() {
   entityOpen.value = false;
   localForm.value.entityList = entity.value;
   localForm.value.entityNameList = entity.value.map((item) => item.entityName);
-}
-
-function handleQueryEntity() {
-  queryParamsEntity.value.pageNum = 1;
-  getGraphData();
-}
-
-/** 按创建时间切换实体列表排序，取消排序时恢复默认倒序。 */
-function handleEntitySortChange({ prop, order }) {
-  queryParamsEntity.value.orderByColumn = order ? prop : "createTime";
-  queryParamsEntity.value.isAsc = order || "descending";
-  queryParamsEntity.value.pageNum = 1;
-  getGraphData();
-}
-
-function resetQueryEntity() {
-  queryParamsEntity.value.pageNum = 1;
-  queryParamsEntity.value.pageSize = 10;
-  queryParamsEntity.value.name = null;
-  queryParamsEntity.value.entityType = null;
-  queryParamsEntity.value.schema = null;
-  queryParamsEntity.value.orderByColumn = "createTime";
-  queryParamsEntity.value.isAsc = "descending";
-  getGraphData();
 }
 </script>
 

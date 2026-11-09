@@ -167,6 +167,13 @@
     height: 50px;
   }
 
+  .el-table th .cell {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: initial !important;
+    padding: 0 10px !important;
+  }
+
   //一级标题
   .firsttitle {
     display: flex;

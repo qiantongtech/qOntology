@@ -17,7 +17,7 @@
 -->
 
 <template>
-    <div>
+    <div class="schedule-crontab">
         <el-tabs type="border-card">
             <el-tab-pane label="秒" v-if="shouldHide('second')">
                 <CrontabSecond
@@ -160,12 +160,11 @@
                 </table>
             </div>
             <CrontabResult :ex="crontabValueString"></CrontabResult>
-
-            <div class="pop_btn">
-                <el-button type="primary" @click="submitFill">确定</el-button>
-                <el-button type="warning" @click="clearCron">重置</el-button>
-                <el-button @click="hidePopup">取消</el-button>
-            </div>
+        </div>
+        <div class="pop_btn">
+            <el-button type="warning" plain @click="clearCron">重置</el-button>
+            <el-button @click="hidePopup">取消</el-button>
+            <el-button type="primary" @click="submitFill">确定</el-button>
         </div>
     </div>
 </template>
@@ -296,9 +295,53 @@
 </script>
 
 <style lang="scss" scoped>
+    :global(.el-dialog:has(.schedule-crontab)) {
+        padding: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    :global(.el-dialog:has(.schedule-crontab) .el-dialog__header) {
+        height: 42px;
+        margin: 0 !important;
+        padding: 0 20px !important;
+        background: #f8f8f8;
+        box-shadow: 0 1px 0 #efefef;
+        display: flex;
+        align-items: center;
+    }
+    :global(.el-dialog:has(.schedule-crontab) .el-dialog__title) {
+        color: #3f3f3f;
+        font-family: Microsoft YaHei, Microsoft YaHei;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+    :global(.el-dialog:has(.schedule-crontab) .el-dialog__headerbtn) {
+        top: 0 !important;
+        right: 0 !important;
+        width: 42px !important;
+        height: 42px;
+        padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    :global(.el-dialog:has(.schedule-crontab) .el-dialog__body) {
+        padding: 20px 40px !important;
+        box-sizing: border-box;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    .pop_btn :deep(.el-button) {
+        --el-border-radius-base: 2px;
+        border-radius: 2px !important;
+    }
     .pop_btn {
-        text-align: center;
-        margin-top: 20px;
+        margin: 20px -40px -20px;
+        padding: 15px 20px;
+        border-top: 1px solid #efefef;
+        text-align: right;
     }
     .popup-main {
         position: relative;

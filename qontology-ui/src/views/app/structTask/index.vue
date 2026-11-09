@@ -109,7 +109,7 @@
                   row.lastExecuteTime
                     ? proxy.parseTime(
                         row.lastExecuteTime,
-                        "{y}-{m}-{d} {h}:{i}:{s}"
+                        "{y}-{m}-{d} {h}:{i}"
                       )
                     : "-"
                 }}</span>
@@ -262,11 +262,16 @@ const tableStore = reactive({
     },
   },
   columns: [
-    { type: "selection", width: 55, minWidth: 55 },
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      selectable: (row) => Number(row.publishStatus) !== 1,
+    },
     {
       label: "编号",
       prop: "id",
-      width: 80,
+      width: 60,
       sortable: "custom",
       sortableKey: "id",
       sortOrders: ["descending", "ascending"],
@@ -305,7 +310,7 @@ const tableStore = reactive({
     },
     {
       label: "发布人",
-      width: 100,
+      width: 120,
       align: "left",
       slot: "publishBy",
     },

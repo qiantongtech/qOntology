@@ -184,7 +184,6 @@
                 ]"
               >
                 <el-button
-                  size="small"
                   type="primary"
                   @click="addIntermediateTable(index)"
                   plain

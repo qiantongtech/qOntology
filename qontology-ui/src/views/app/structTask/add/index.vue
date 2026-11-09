@@ -18,7 +18,7 @@
 
 <!-- index.vue -->
 <template>
-  <div class="app-container" ref="app-container" v-loading="loadingInstance">
+  <div class="app-container" ref="appContainer" v-loading="loadingInstance">
     <div class="struct-task-wizard">
       <div class="struct-task-wizard__inner">
         <ul class="struct-task-wizard__steps">
@@ -107,9 +107,7 @@
         </div>
         <div class="struct-task-actions">
           <el-button type="primary" @click="handleSuccess">返回列表</el-button>
-          <el-button v-if="activeReult != 0" @click="handleLastStep"
-            >上一步</el-button
-          >
+          <el-button v-if="activeReult != 0" @click="handleLastStep">上一步</el-button>
           <el-button
             type="primary"
             v-if="activeReult === 2 && !route.query.info"
@@ -118,16 +116,14 @@
           >
             确定并退出
           </el-button>
-          <el-button v-if="activeReult !== 2" @click="handleNextStep"
-            >下一步</el-button
-          >
+          <el-button v-if="activeReult !== 2" @click="handleNextStep">下一步</el-button>
         </div>
       </div>
     </div>
     <el-dialog
       title="Cron表达式生成器"
       v-model="openCron"
-      :append-to="$refs['app-container']"
+      :append-to="appContainer"
       destroy-on-close
     >
       <crontab
@@ -148,7 +144,7 @@
   </div>
 </template>
 
-<script setup name="qualityTask">
+<script setup name="StructTaskAdd">
 import { ref, reactive, toRefs, onMounted, watch, computed } from "vue";
 import { useRoute } from "vue-router";
 import Crontab from "@/components/Crontab/index.vue";
@@ -183,6 +179,7 @@ const { app_mapping_status, app_update_type } = proxy.useDict(
   "app_update_type"
 );
 const route = useRoute();
+const appContainer = ref();
 const loading = ref(false);
 const showSearch = ref(true);
 let loadingInstance = ref(null); // 全局 loading 实例
@@ -476,8 +473,6 @@ async function getExtStructInfo(taskId) {
       e.mappingData = mappingData;
     });
     tableData.value = tableMappingList;
-
-    console.log("--回显任务数据---", tableData.value);
   });
 }
 
@@ -499,8 +494,6 @@ const getTableName = async (datasourceId) => {
 
     // 更新 dbTableList 只包含未被剔除的表
     dbTableList.value = filteredTables;
-
-    console.log("--数据源表---dbTableList---", dbTableList.value);
   } catch (error) {
     console.error("Error fetching table names:", error);
   }
@@ -570,7 +563,6 @@ function openImportTable() {
  * @param val
  */
 function importDataTable(val) {
-  console.log("-------dataTableList---111------", val);
   val.forEach((e) => {
     // 检查 tableData 中是否已经包含该 tableName
     const exists = tableData.value.some(
@@ -594,7 +586,6 @@ function importDataTable(val) {
  * @param row
  */
 function mappingClick(row) {
-  console.log("--点击映射--mappingClick----row---", row);
   let tables = [];
   tableData.value.forEach((e) => {
     tables.push({
@@ -630,7 +621,6 @@ function tableDataDeleteClick(row) {
  * @param row
  */
 const mappingOk = (val) => {
-  console.log("-----mappingData----", val);
   tableData.value.forEach((tableItem) => {
     if (tableItem.tableName == val.tableName) {
       tableItem.operate = val.conceptName;
@@ -1064,8 +1054,6 @@ async function handleNextStep() {
 
     //给对象类型关系映射页面赋值
     getRealtionMappingList();
-
-    console.log("对象类型关系映射页面数据---", relationForm.value.dataList);
   }
 
   activeReult.value++;
@@ -1100,13 +1088,10 @@ async function submitForm() {
 
     //对象类型关系映射数据
     const relationData = formatRelationData();
-    console.log("对象类型关系映射数据：", relationData);
 
     //基础信息数据
-    console.log("基础信息数据：", form.value);
 
     //表映射数据
-    console.log("表映射数据：", tableData.value);
     //执行数据保存逻辑
     //提交之前测试数据库连通性
     clientsTest(form.value.dataSourceId).then((res) => {
@@ -1142,8 +1127,6 @@ async function submitForm() {
           relationData: relationData,
         };
 
-        console.log("最终保存数据", dataList);
-
         if (form.value.id) {
           let data = tableData.value.filter((e) => e.status == 1);
           //表映射数据
@@ -1173,7 +1156,6 @@ async function submitForm() {
               );
             });
           }
-          console.log("新增保存数据", dataList);
           addExtStructDataMapping(dataList).then((res) => {
             if (res && res.code == 200) {
               // 显示消息

@@ -40,12 +40,8 @@
         <dict-tag :options="app_mapping_status" :value="row.status" />
       </template>
       <template #handle="{ row }">
-        <el-button link type="primary" icon="Edit" @click="onMappingClick(row)"
-          >映射</el-button
-        >
-        <el-button link type="danger" icon="Delete" @click="onDeleteClick(row)"
-          >删除</el-button
-        >
+        <el-button link type="primary" icon="Edit" @click="onMappingClick(row)">映射</el-button>
+        <el-button link type="danger" icon="Delete" @click="onDeleteClick(row)">删除</el-button>
       </template>
     </qt-table>
   </div>

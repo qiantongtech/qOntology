@@ -170,7 +170,7 @@
       v-model="open"
       :append-to="appContainer"
       draggable
-      width="800px"
+      width="900px"
       top="5vh"
       class="unstruct-task-dialog"
       @closed="resetTaskForm"
@@ -247,7 +247,7 @@
                 plain
                 type="primary"
                 @click="selectFiles"
-                class="unstruct-task__source-files__btn"
+                class="unstruct-task__source-files-btn"
               >
                 <i class="iconfont icon-upload-cloud-line mr5" />导入文件
               </el-button>
@@ -285,12 +285,8 @@
       </el-form>
       <template #footer
         ><div class="dialog-footer">
-          <el-button size="mini" @click="open = false">取 消</el-button
-          ><el-button
-            :loading="submitting"
-            type="primary"
-            size="mini"
-            @click="submitForm"
+          <el-button @click="open = false">取 消</el-button
+          ><el-button :loading="submitting" type="primary" @click="submitForm"
             >确 定</el-button
           >
         </div></template
@@ -386,11 +382,16 @@ const tableStore = reactive({
     },
   },
   columns: [
-    { type: "selection", width: 55, minWidth: 55 },
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      selectable: (row) => Number(row.publishStatus) !== 1,
+    },
     {
       label: "编号",
       prop: "id",
-      width: 70,
+      width: 60,
       sortable: "custom",
       sortableKey: "id",
       sortOrders: ["descending", "ascending"],
@@ -415,13 +416,13 @@ const tableStore = reactive({
     { label: "发布状态", slot: "taskStatus", width: 90 },
     {
       label: "发布人",
-      width: 110,
+      width: 120,
       align: "left",
       slot: "publishBy",
     },
     {
       label: "负责人",
-      width: 110,
+      width: 120,
       slot: "responsibleUser",
       align: "left",
     },
@@ -429,7 +430,7 @@ const tableStore = reactive({
       label: "发布时间",
       prop: "publishTime",
       date: true,
-      width: 165,
+      width: 150,
       sortable: "custom",
       sortableKey: "publish_time",
     },
@@ -437,12 +438,12 @@ const tableStore = reactive({
       label: "创建时间",
       prop: "createTime",
       date: true,
-      width: 160,
+      width: 150,
       sortable: "custom",
       sortableKey: "create_time",
       sortOrders: ["descending", "ascending"],
     },
-    { label: "操作", slot: "action", width: 250, fixed: "right" },
+    { label: "操作", slot: "action", width: 240, fixed: "right" },
   ],
   func: listUnstructTask,
   params: {
@@ -573,7 +574,7 @@ function formatDuration(value) {
 
 /** 详情时间统一展示到秒，兼容接口返回的 ISO 时间字符串。 */
 function formatDetailTime(value) {
-  return value ? proxy.parseTime(value, "{y}-{m}-{d} {h}:{i}:{s}") || "-" : "-";
+  return value ? proxy.parseTime(value, "{y}-{m}-{d} {h}:{i}") || "-" : "-";
 }
 
 /** 任务状态开关：接口未返回 validFlag 时按启用展示，publishStatus 为空时归一为未发布(0)。 */

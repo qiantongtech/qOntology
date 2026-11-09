@@ -35,18 +35,16 @@
           link
           type="primary"
           @click="showError(row)"
-        >查看错误日志</el-button>
-        <el-button
-          icon="View"
-          link
-          type="primary"
-          @click="showLogDetail(row)"
-        >查看具体步骤</el-button>
+          >查看错误日志</el-button
+        >
+        <el-button icon="View" link type="primary" @click="showLogDetail(row)"
+          >查看具体步骤</el-button
+        >
       </template>
     </qt-table>
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" @click="logVisible = false">关 闭</el-button>
+        <el-button @click="logVisible = false">关 闭</el-button>
       </div>
     </template>
   </el-dialog>
@@ -58,66 +56,10 @@
     :append-to="appendTo"
     draggable
   >
-    <el-table
-      v-loading="detailLoading"
-      :data="detailList"
-      :default-sort="detailDefaultSort"
-      stripe
-      @sort-change="handleDetailSortChange"
-      class="detail-table"
-    >
-      <el-table-column
-        align="center"
-        label="编号"
-        prop="id"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending']"
-        width="100"
-      />
-      <el-table-column
-        align="left"
-        label="执行步骤"
-        prop="step"
-        min-width="330"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      >
-        <template #default="scope">{{ scope.row.step || "-" }}</template>
-      </el-table-column>
-      <el-table-column
-        align="center"
-        label="执行时间"
-        prop="createTime"
-        sortable="custom"
-        :sort-orders="['descending', 'ascending']"
-        width="190"
-      >
-        <template #default="scope">
-          {{
-            proxy.parseTime(
-              scope.row.createTime,
-              "{y}-{m}-{d} {h}:{i}:{s}",
-            ) || "-"
-          }}
-        </template>
-      </el-table-column>
-      <template #empty>
-        <div class="emptyBg">
-          <img src="@/assets/common/images/empty-state/noData.png" alt="" />
-          <p>暂无记录</p>
-        </div>
-      </template>
-    </el-table>
-    <pagination
-      v-show="detailTotal > 0"
-      v-model:limit="detailParams.pageSize"
-      v-model:page="detailParams.pageNum"
-      :total="detailTotal"
-      @pagination="getLogDetails"
-      class="no-top-margin"
-    />
+    <qt-table v-bind="detailTableStore" ref="detailTableRef" />
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" @click="detailVisible = false">关 闭</el-button>
+        <el-button @click="detailVisible = false">关 闭</el-button>
       </div>
     </template>
   </el-dialog>
@@ -132,7 +74,7 @@
     <div class="wrap-line">{{ errorMessage }}</div>
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" @click="errorVisible = false">关 闭</el-button>
+        <el-button @click="errorVisible = false">关 闭</el-button>
       </div>
     </template>
   </el-dialog>
@@ -152,13 +94,10 @@ const { app_log_status } = proxy.useDict("app_log_status");
 const logVisible = ref(false);
 const detailVisible = ref(false);
 const errorVisible = ref(false);
-const detailLoading = ref(false);
 const logTableRef = ref();
-const detailList = ref([]);
-const detailTotal = ref(0);
+const detailTableRef = ref();
 const errorMessage = ref("");
 const currentLogId = ref();
-const detailDefaultSort = { prop: "createTime", order: "descending" };
 
 const logTableStore = reactive({
   config: {
@@ -174,19 +113,19 @@ const logTableStore = reactive({
     },
   },
   columns: [
-    { label: "编号", prop: "id", width: 100, sortable: "custom" },
+    { label: "编号", prop: "id", width: 60, sortable: "custom" },
     { label: "执行状态", prop: "status", slot: "status", width: 130 },
     {
       label: "执行开始时间",
       prop: "startTime",
-      date: "{y}-{m}-{d} {h}:{i}:{s}",
+      date: "{y}-{m}-{d} {h}:{i}",
       width: 190,
       sortable: "custom",
     },
     {
       label: "执行结束时间",
       prop: "endTime",
-      date: "{y}-{m}-{d} {h}:{i}:{s}",
+      date: "{y}-{m}-{d} {h}:{i}",
       width: 190,
       sortable: "custom",
     },
@@ -199,12 +138,35 @@ const logTableStore = reactive({
   },
 });
 
-const detailParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
-  logId: undefined,
-  orderByColumn: "createTime",
-  isAsc: "descending",
+const detailTableStore = reactive({
+  config: {
+    initResquest: false,
+    sort: true,
+    table: {
+      stripe: true,
+      defaultSort: { prop: "createTime", order: "descending" },
+    },
+    pagination: { notAutoScroll: true },
+  },
+  columns: [
+    { label: "编号", prop: "id", width: 60, sortable: "custom" },
+    {
+      label: "执行步骤",
+      prop: "step",
+      minWidth: 330,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "执行时间",
+      prop: "createTime",
+      width: 190,
+      sortable: "custom",
+      date: "{y}-{m}-{d} {h}:{i}",
+    },
+  ],
+  func: getDetailPage,
+  params: { logId: undefined },
 });
 
 /** 打开执行日志弹框，并按当前任务重新加载日志。 */
@@ -215,38 +177,16 @@ function show(taskId, taskType = 1) {
   nextTick(() => logTableRef.value?.resetQuery());
 }
 
-/** 查询当前日志执行步骤。 */
-function getLogDetails() {
-  detailLoading.value = true;
-  detailParams.logId = currentLogId.value;
-  getDetailPage(detailParams)
-    .then(({ data }) => {
-      detailList.value = data.rows;
-      detailTotal.value = data.total;
-      detailVisible.value = true;
-    })
-    .finally(() => {
-      detailLoading.value = false;
-    });
-}
-
 function showLogDetail(row) {
   currentLogId.value = row.id;
-  detailParams.pageNum = 1;
-  detailParams.orderByColumn = "createTime";
-  detailParams.isAsc = "descending";
-  getLogDetails();
+  detailTableStore.params.logId = currentLogId.value;
+  detailVisible.value = true;
+  nextTick(() => detailTableRef.value?.resetQuery());
 }
 
 function showError(row) {
   errorMessage.value = row.errorMsg;
   errorVisible.value = true;
-}
-
-function handleDetailSortChange({ prop, order }) {
-  detailParams.orderByColumn = order ? prop : "createTime";
-  detailParams.isAsc = order || "descending";
-  getLogDetails();
 }
 
 defineExpose({ show });
@@ -255,13 +195,5 @@ defineExpose({ show });
 <style scoped>
 .wrap-line {
   white-space: pre-wrap;
-}
-/* 操作步骤弹框内：消除 el-table 默认的底部外边距，
-   并让分页容器紧贴表格（去掉其上 padding）。 */
-.detail-table {
-  margin-bottom: 0;
-}
-.detail-table + :deep(.pagination-container) {
-  padding-top: 0;
 }
 </style>

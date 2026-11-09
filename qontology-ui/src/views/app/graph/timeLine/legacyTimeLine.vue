@@ -41,7 +41,7 @@
   </div>
 </template>
 
-<script setup name="TimeLineView">
+<script setup name="LegacyTimeLineView">
 // 引入组件
 import LineDialog from "../component/lineDialog.vue";
 import NodeDialog from "../component/nodeDialog.vue";

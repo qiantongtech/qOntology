@@ -147,7 +147,7 @@
             >
             </el-input>
             <div class="data-source-btn">
-              <el-button type="primary" @click="onShowCron"> 生成 </el-button>
+              <el-button type="primary" @click="onShowCron"> 配置 </el-button>
             </div>
           </div>
         </el-form-item>

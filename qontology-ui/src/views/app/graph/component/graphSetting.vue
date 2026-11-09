@@ -175,7 +175,7 @@ import { reactive, toRefs } from 'vue';
     const getImage = (key) => {
         return new URL(`/src/assets/kg/explore/tool_${key}.svg`, import.meta.url).href;
     };
-    const gaphSetting = reactive({
+    const graphSetting = reactive({
         toggle: true,
         config: {
             layout: 'force-g6',
@@ -316,12 +316,11 @@ import { reactive, toRefs } from 'vue';
         ]
     });
     const { toggle, layout_options, tools_options, loadAnimation_options, effect_options } =
-        toRefs(gaphSetting);
+        toRefs(graphSetting);
     const config = reactive({
         ...toRefs(props.setting) // 保持与父组件数据的响应式关联
     });
     const syncConfig = (label, e) => {
-        console.log('🚀 ~ syncConfig ~ label, e:', label, e);
         // 力导向布局重置g6配置
         if (e == 'force') {
             config.loadAnimation = 'none';
@@ -343,9 +342,9 @@ import { reactive, toRefs } from 'vue';
         emit('updateSetting', label, { ...config }); // 传递最新的表单对象
     };
     const handleToggle = () => {
-        gaphSetting.toggle = !gaphSetting.toggle;
+        graphSetting.toggle = !graphSetting.toggle;
     };
-    defineExpose({ gaphSetting, toggle });
+    defineExpose({ graphSetting, toggle });
 </script>
 <style lang="scss" scoped>
     .graph-setting {
@@ -551,7 +550,7 @@ import { reactive, toRefs } from 'vue';
                     }
 
                     .tool-hover-wrap:hover {
-                        background-color: var(--qt-primary, #3367fc); /* 悬浮时div背景色（可自定义） */
+                        background-color: var(--qt-title-marker-color);
                     }
                     .tool-hover-wrap:hover .hover-img {
                         display: block; /* 显示悬浮图片 */

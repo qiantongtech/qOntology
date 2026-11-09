@@ -29,7 +29,7 @@
     <div
       :class="[
         'tool',
-        { 'is-collapsed': graphSettingRef?.gaphSetting?.toggle },
+        { 'is-collapsed': graphSettingRef?.graphSetting?.toggle },
       ]"
       @click="toolShow = !toolShow"
     >
@@ -47,7 +47,7 @@
     </div>
     <!-- 视图容器 -->
     <div
-      id="gragh-container"
+      id="graph-container"
       class="relation-container"
       ref="relationRef"
     ></div>
@@ -66,7 +66,7 @@ import NodeDialog from "../component/nodeDialog.vue";
 // 接口
 import { getGraph } from "@/api/app/graph";
 import { getUnstructTaskTextList } from "@/api/app/unstructTask";
-// 引入gragh方法
+// 引入graph方法
 import { VisNetwork, DEFAULT_OPTIONS } from "@/utils/graph/visNetwork";
 import { G6Network } from "@/utils/graph/g6Network";
 import { pickColorByEntityId } from "@/utils/graph/entityColor";
@@ -84,7 +84,7 @@ const relationData = reactive({
   toolData: [
     {
       label: "其他",
-      icon: "#7DBFFA",
+      icon: "var(--qt-graph-node-default)",
     },
   ],
   // 图谱参数-unselectAll方法异常
@@ -295,24 +295,24 @@ const getGraphData = async () => {
       });
     })
     .finally(() => {
-      initGragh();
+      initGraph();
       loading.value = false;
     });
 };
-const initGragh = () => {
+const initGraph = () => {
   if (relationGraph) {
     relationGraph.destroy();
     relationGraph = null;
   }
   nextTick(() => {
     if (settingValue.layout == "force") {
-      initVisGragh();
+      initVisGraph();
     } else {
-      initG6Gragh();
+      initG6Graph();
     }
   });
 };
-const initVisGragh = () => {
+const initVisGraph = () => {
   let data = {
     nodes: nodes.value.map((item) => {
       return {
@@ -349,12 +349,13 @@ const initVisGragh = () => {
   relationGraph.moveTo({ scale: 1.1 });
   relationGraph.on("hoverNode", function (t) {
     let node = relationGraph.graphData.nodes.get(t.node);
+    const graphStyle = getComputedStyle(document.documentElement);
     node.borderWidth = 15;
     node.size = settingValue.entitySize + 10;
     // 选中后的相邻节点hover颜色
     node.color.hover = {
-      background: node.step != -1 ? node.rowBackground : "#89b8ff",
-      border: node.step != -1 ? node.rowBorder : "#89b8ff4d",
+      background: node.step != -1 ? node.rowBackground : graphStyle.getPropertyValue("--qt-graph-node-default").trim(),
+      border: node.step != -1 ? node.rowBorder : graphStyle.getPropertyValue("--qt-graph-node-default-border").trim(),
     };
     relationGraph.nodes("update", node);
   });
@@ -367,7 +368,6 @@ const initVisGragh = () => {
     relationGraph.nodes("update", node);
   });
   relationGraph.on("click", function (d) {
-    console.log(d, data, relationGraph.graphData.nodes, "===dd");
     // 恢复颜色
     relationGraph.resetColor();
     if (d.nodes.length == 0) {
@@ -432,15 +432,11 @@ const initVisGragh = () => {
           },
         },
       ]);
-      console.log(
-        "---------currentNodeData.value-------",
-        currentNodeData.value
-      );
       openNodeDialog(currentNodeData.value);
     }
   });
 };
-const initG6Gragh = (option) => {
+const initG6Graph = (option) => {
   let data = {
     nodes: nodes.value.map((item) => {
       return {
@@ -543,7 +539,6 @@ const initG6Gragh = (option) => {
         key: "clickControl",
         state: "click",
         onClick: (d) => {
-          console.log(d, "===dd");
           if (d.target.nodeName === "document") {
             nodeDialogRef.value.dialogClose();
             currentNodeData.value = null;
@@ -558,7 +553,7 @@ const initG6Gragh = (option) => {
     ],
     ...option,
   };
-  relationGraph = new G6Network("gragh-container", data, options);
+  relationGraph = new G6Network("graph-container", data, options);
   relationGraph.triggerNodeClick = function (nodeId) {
     handleNodeClickId(nodeId);
   };
@@ -586,10 +581,9 @@ const settingValue = reactive({
   effect: "circle",
 });
 const handleUpdateSetting = (type, newData) => {
-  console.log("🚀 ~ handleUpdateSetting ~ type, newData:", type, newData);
   Object.assign(settingValue, newData);
   if (type == "layout") {
-    initGragh();
+    initGraph();
   } else {
     if (newData.layout == "force") {
       visUpdate(type, newData);
@@ -752,7 +746,7 @@ const g6Update = async (type, newData) => {
       const easing = newData.loadAnimation;
       relationGraph.destroy();
       relationGraph = null;
-      initG6Gragh({
+      initG6Graph({
         animation: {
           duration,
           easing,
@@ -775,7 +769,6 @@ const g6Update = async (type, newData) => {
   }
 };
 const handleToolClick = (e) => {
-  console.log("🚀 ~ handleToolClick ~ e:", e);
   if (settingValue.layout == "force") {
     visUpdate(e);
   } else {
@@ -875,7 +868,7 @@ onMounted(() => {
           max-width: 100px;
           line-height: 1;
           font-family: var(--qt-font-family);
-          font-size: 13px;
+          font-size: var(--qt-font-size-small);
           color: var(--qt-graph-panel-text);
         }
       }

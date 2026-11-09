@@ -51,7 +51,7 @@
       </div>
       <!-- 时间线 -->
       <div
-        v-loading="graghLoading"
+        v-loading="graphLoading"
         class="timeline-container"
         ref="timelineRef"
       ></div>
@@ -73,7 +73,7 @@ import NodeDialog from "../component/nodeDialog.vue";
 import { getGraph, getDynamicEntityList } from "@/api/app/graph";
 import { getUnstructTaskTextList } from "@/api/app/unstructTask";
 import { listEvent } from "@/api/app/event/event";
-// 引入gragh方法
+// 引入graph方法
 import { G6Network } from "@/utils/graph/g6Network";
 import { pickColorByEntityId } from "@/utils/graph/entityColor";
 
@@ -154,14 +154,14 @@ const timelineRef = ref();
 const nodeDialogRef = ref();
 let relationGraph = null;
 const relationData = reactive({
-  graghLoading: false,
+  graphLoading: false,
   // schema&tool图例
   schemaList: { data: { rows: [] } },
   toolShow: false,
   toolData: [
     {
       label: "其他",
-      icon: "#7DBFFA",
+      icon: "var(--qt-graph-node-default)",
     },
   ],
   // 图谱参数-unselectAll方法异常
@@ -177,7 +177,7 @@ const {
   schemaList,
   toolShow,
   toolData,
-  graghLoading,
+  graphLoading,
   nodes,
   edges,
   currentNodeData,
@@ -330,7 +330,7 @@ const toolbarClick = async (item) => {
   }
 };
 const getGraphData = async () => {
-  graghLoading.value = true;
+  graphLoading.value = true;
   const params = {
     entityType: 0,
     graphId: route.params.kgId,
@@ -386,8 +386,8 @@ const getGraphData = async () => {
       });
     })
     .finally(() => {
-      initG6Gragh({ nodes: nodes.value, edges: edges.value });
-      graghLoading.value = false;
+      initG6Graph({ nodes: nodes.value, edges: edges.value });
+      graphLoading.value = false;
     });
 };
 const settingValue = reactive({
@@ -399,7 +399,7 @@ const settingValue = reactive({
   loadTime: "1000",
   effect: "circle",
 });
-const initG6Gragh = (option) => {
+const initG6Graph = (option) => {
   if (relationGraph) {
     relationGraph.destroy();
     relationGraph = null;
@@ -512,8 +512,8 @@ function handleEntityClick(data) {
         {
           id: node.id,
           color: {
-            background: "#0006ff",
-            border: "rgba(0, 6, 255, 0.3)",
+            background: getComputedStyle(document.documentElement).getPropertyValue("--qt-graph-node-highlight").trim(),
+            border: getComputedStyle(document.documentElement).getPropertyValue("--qt-graph-node-highlight-border").trim(),
           },
         },
       ]);
@@ -548,7 +548,7 @@ function handleEventClick(data) {
     proxy.$modal.msgWarning("该事件没有参与实体！");
     return;
   }
-  graghLoading.value = true;
+  graphLoading.value = true;
   getDynamicEntityList({ entityIds: idsArray })
     .then((response) => {
       const res = response && response.data;
@@ -612,13 +612,13 @@ function handleEventClick(data) {
       searchData.value = nodes.value.map((item) => {
         return { ...item, value: item.name, name: item.name };
       });
-      initG6Gragh({ nodes: nodes.value, edges: edges.value });
+      initG6Graph({ nodes: nodes.value, edges: edges.value });
     })
     .catch(() => {
       proxy.$modal.msgWarning("筛选事件参与实体失败！");
     })
     .finally(() => {
-      graghLoading.value = false;
+      graphLoading.value = false;
     });
 }
 
@@ -718,7 +718,7 @@ onBeforeUnmount(() => {
           max-width: 100px;
           line-height: 1;
           font-family: var(--qt-font-family);
-          font-size: 13px;
+          font-size: var(--qt-font-size-small);
           color: var(--qt-graph-panel-text);
         }
       }
