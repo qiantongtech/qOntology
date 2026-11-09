@@ -729,8 +729,8 @@ const valueTableStore = reactive({
     {
       label: "操作",
       slot: "valueHandle",
-      width: 200,
-      minWidth: 200,
+      width: 240,
+      minWidth: 240,
       align: "center",
       fixed: "right",
     },
