@@ -523,8 +523,8 @@
     }
 
     /**
-     * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
-     * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+     * 删除按钮操作：行内删除取当前行编号，顶部批量删除取多选编号。
+     * @param {Object} [row] 当前行数据，顶部批量按钮点击时为空
      */
     async function handleDelete(row) {
         if (deleting.value) return;
@@ -546,6 +546,7 @@
             await delRelation(ids);
             if (context !== contextRequest) return;
             ElMessage.success('删除成功');
+            selectedIds.value = [];
             refreshList();
         } finally {
             deleting.value = false;

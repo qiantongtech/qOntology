@@ -73,6 +73,17 @@ public interface IOmDataTypeService extends IService<OmDataTypeDO> {
     int removeOmDataType(Collection<Long> idList, Long versionId);
 
     /**
+     * 批量校验业务数据类型是否可删除。
+     *
+     * <p>启用中、被对象类型属性引用、被公理/规则引用的业务数据类型不可删除。</p>
+     *
+     * @param idList 待校验的数据类型编号集合
+     * @param versionId 项目版本 ID
+     * @return 编号到不可删除原因的映射，仅包含不可删除的数据类型
+     */
+    Map<Long, String> checkDeletable(Collection<Long> idList, Long versionId);
+
+    /**
      * 获得数据类型详情
      *
      * @param id 数据类型编号

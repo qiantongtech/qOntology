@@ -254,6 +254,7 @@ import {
   addType,
   updateType,
   delType,
+  checkEnumDeletable,
 } from "@/api/om/enumeration/type.js";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 import { loadProjectEnumReferences } from "@/utils/projectEnumDataTypes";
@@ -618,22 +619,49 @@ async function submitForm() {
   }
 }
 
-/** 删除单行或勾选记录；成功后回到第一页，避免删除末页全部记录后出现空页。 */
+/** 删除单行或勾选记录；先向后端校验可删性，批量时对齐“可删除X/不可删除Y”只删可删部分。 */
 async function handleDelete(row) {
   const context = contextRequest;
   const recordIds = row ? [row.enumId] : [...ids.value];
   if (!recordIds.length || deleting.value) return;
+  // 启用中、有枚举数据或被属性/业务数据类型/公理引用的枚举不可删，删除前统一取回原因。
+  let blockedMap = {};
   try {
-    await proxy.$modal.confirm(
-      '是否确认删除枚举编号为"' + recordIds.join(",") + '"的数据项？'
-    );
+    const { data } = await checkEnumDeletable(recordIds);
+    blockedMap = data || {};
+  } catch {
+    return;
+  }
+  if (context !== contextRequest) return;
+  const reasonOf = (id) => blockedMap[String(id)];
+  if (row && reasonOf(row.enumId)) {
+    proxy.$modal.msgWarning(reasonOf(row.enumId));
+    return;
+  }
+  const deletableIds = recordIds.filter((id) => !reasonOf(id));
+  const cannotDeleteCount = recordIds.length - deletableIds.length;
+  if (!deletableIds.length) {
+    try {
+      await proxy.$modal.confirm(`可删除0个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`);
+    } catch {
+      return;
+    }
+    return;
+  }
+  const confirmText = cannotDeleteCount
+    ? `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
+    : row
+      ? '是否确认删除枚举编号为"' + deletableIds.join(",") + '"的数据项？'
+      : `是否确认删除选中的${deletableIds.length}个枚举？`;
+  try {
+    await proxy.$modal.confirm(confirmText);
   } catch {
     return;
   }
   if (deleting.value || context !== contextRequest) return;
   deleting.value = true;
   try {
-    await delType(recordIds.join(","));
+    await delType(deletableIds.join(","));
     if (context !== contextRequest) return;
     tableRef.value?.resetQuery();
     proxy.$modal.msgSuccess("删除成功");

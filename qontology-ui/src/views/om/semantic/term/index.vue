@@ -344,6 +344,7 @@ const dialogTitle = ref("新增术语");
 const termList = ref([]);
 const total = ref(0);
 const selectedIds = ref([]);
+const selectedRows = ref([]);
 const detail = ref({});
 const defaultSort = ref({ prop: "createTime", order: "descending" });
 const queryParams = reactive({
@@ -640,6 +641,7 @@ async function getList() {
     termList.value = response.data.rows;
     total.value = response.data.total;
     selectedIds.value = [];
+    selectedRows.value = [];
     tableRef.value?.elTableRef?.clearSelection();
   } finally {
     if (requestId === listRequest) loading.value = false;
@@ -662,6 +664,7 @@ function handleQuery() {
 }
 
 function handleSelectionChange(selection) {
+  selectedRows.value = selection;
   selectedIds.value = selection.map((row) => row.id);
 }
 
@@ -751,16 +754,42 @@ async function submitForm() {
   }
 }
 
+/** 术语是否可删除：启用中（status=1）不允许删除，需先停用。 */
+function canDeleteTerm(row) {
+  return !!row && Number(row.status) === 0;
+}
+
 async function handleDelete(row) {
   const context = contextRequest;
   const deletingVersion = versionId.value;
   if (deleting.value) return;
-  const ids = row ? [row.id] : [...selectedIds.value];
-  if (!ids.length) return;
+
+  let ids;
+  let confirmText;
+  if (row) {
+    // 单条删除：启用中的术语直接拦截。
+    if (!canDeleteTerm(row)) {
+      ElMessage.warning("启用中的术语不允许删除，请先停用后再删除");
+      return;
+    }
+    ids = [row.id];
+    confirmText = '是否确认删除术语编号为"' + row.id + '"的数据项？';
+  } else {
+    // 批量删除：仅删除停用（可删）部分，启用中的计入不可删除并拦截。
+    const canDeleteRows = selectedRows.value.filter(canDeleteTerm);
+    const cannotDeleteCount = selectedRows.value.length - canDeleteRows.length;
+    if (!canDeleteRows.length) {
+      ElMessage.warning("选中的术语均处于启用状态，无法删除，请先停用");
+      return;
+    }
+    ids = canDeleteRows.map((item) => item.id);
+    confirmText = cannotDeleteCount
+      ? `可删除${canDeleteRows.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
+      : `是否确认删除选中的${canDeleteRows.length}个术语？`;
+  }
+
   try {
-    await proxy.$modal.confirm(
-      '是否确认删除术语编号为"' + ids.join(",") + '"的数据项？'
-    );
+    await proxy.$modal.confirm(confirmText);
   } catch {
     return;
   }
@@ -792,6 +821,7 @@ watch(
     open.value = false;
     detailOpen.value = false;
     selectedIds.value = [];
+    selectedRows.value = [];
     termList.value = [];
     queryParams.pageNum = 1;
     getList();

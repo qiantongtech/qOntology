@@ -60,3 +60,12 @@ export function delType(enumId) {
         method: 'delete'
     });
 }
+
+// 批量校验枚举类型是否可删除，返回编号到不可删除原因的映射
+export function checkEnumDeletable(enumIds) {
+    return request({
+        url: '/om/enumType/checkDeletable',
+        method: 'post',
+        data: enumIds
+    });
+}

@@ -100,8 +100,21 @@ public class OmTermServiceImpl extends ServiceImpl<OmTermMapper, OmTermDO> imple
 
     @Override
     public int removeOmTerm(Collection<Long> idList) {
+        if (idList == null || idList.isEmpty()) {
+            return 0;
+        }
+        // 启用状态（status=1）的术语不允许删除，这里仅删除停用（status=0）部分，作为服务端兜底。
+        List<Long> deletableIds = omTermMapper
+            .selectList(new QueryWrapper<OmTermDO>().in("id", idList))
+            .stream()
+            .filter(term -> term.getStatus() != null && term.getStatus() == 0)
+            .map(OmTermDO::getId)
+            .collect(Collectors.toList());
+        if (deletableIds.isEmpty()) {
+            return 0;
+        }
         // 批量删除术语
-        return omTermMapper.deleteBatchIds(idList);
+        return omTermMapper.deleteBatchIds(deletableIds);
     }
 
     @Override

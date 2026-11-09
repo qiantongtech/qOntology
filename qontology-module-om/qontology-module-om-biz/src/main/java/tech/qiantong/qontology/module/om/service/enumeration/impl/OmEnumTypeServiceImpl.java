@@ -18,12 +18,14 @@
 
 package tech.qiantong.qontology.module.om.service.enumeration.impl;
 
+import tech.qiantong.qontology.common.enums.DataConstant;
 import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,7 +40,10 @@ import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumT
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumTypeRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.enumeration.vo.OmEnumTypeSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumTypeDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttributeDO;
 import tech.qiantong.qontology.module.om.dal.mapper.enumeration.OmEnumTypeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeAttributeMapper;
+import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
 import tech.qiantong.qontology.module.om.service.enumeration.IOmEnumTypeService;
 
 /**
@@ -63,6 +68,9 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
 
     @Resource
     private tech.qiantong.qontology.module.om.dal.mapper.enumeration.OmEnumDataMapper omEnumDataMapper;
+
+    @Resource
+    private OmObjectTypeAttributeMapper omObjectTypeAttributeMapper;
 
     @Override
     public PageResult<OmEnumTypeDO> getOmEnumTypePage(OmEnumTypePageReqVO pageReqVO) {
@@ -111,29 +119,89 @@ public class OmEnumTypeServiceImpl extends ServiceImpl<OmEnumTypeMapper, OmEnumT
 
     @Override
     public int removeOmEnumType(Collection<Long> idList) {
+        if (idList == null || idList.isEmpty()) {
+            return 0;
+        }
+        // 仅删除可删除（停用且未被引用）的枚举，不可删除部分交由前端“删除可删部分”交互过滤，服务端兜底。
+        List<OmEnumTypeDO> deletableTypes = new ArrayList<>();
         for (Long id : idList) {
             OmEnumTypeDO type = omEnumTypeMapper.selectById(id);
-            if (
-                type != null &&
-                omEnumDataMapper.selectCount(
-                    new QueryWrapper<tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumDataDO>()
-                        .eq("enum_type", type.getEnumType())
-                        .eq(type.getWorkspaceId() != null, "workspace_id", type.getWorkspaceId())
-                        .isNull(type.getWorkspaceId() == null, "workspace_id")
-                        .eq(type.getVersionId() != null, "version_id", type.getVersionId())
-                        .isNull(type.getVersionId() == null, "version_id")
-                ) >
-                0
-            ) {
-                throw new ServiceException("枚举类型“" + type.getEnumName() + "”存在枚举数据，请先删除数据", 601);
+            if (type != null && enumDeleteBlockReason(type) == null) {
+                deletableTypes.add(type);
             }
         }
-        for (Long id : idList) {
-            OmEnumTypeDO type = omEnumTypeMapper.selectById(id);
-            if (type != null) constraintReferenceGuard.checkEnum(type.getEnumType(), "PROJECT", type.getVersionId());
+        if (deletableTypes.isEmpty()) {
+            return 0;
         }
-        // 批量删除枚举类型
-        return omEnumTypeMapper.deleteBatchIds(idList);
+        // 级联清理枚举自身的取值数据，避免残留孤儿记录（枚举数据属于枚举类型自身，不作为删除拦截条件）。
+        for (OmEnumTypeDO type : deletableTypes) {
+            omEnumDataMapper.delete(
+                new QueryWrapper<tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumDataDO>()
+                    .eq("enum_type", type.getEnumType())
+                    .eq(type.getWorkspaceId() != null, "workspace_id", type.getWorkspaceId())
+                    .isNull(type.getWorkspaceId() == null, "workspace_id")
+                    .eq(type.getVersionId() != null, "version_id", type.getVersionId())
+                    .isNull(type.getVersionId() == null, "version_id")
+            );
+        }
+        List<Long> deletableIds = deletableTypes
+            .stream()
+            .map(OmEnumTypeDO::getEnumId)
+            .collect(Collectors.toList());
+        return omEnumTypeMapper.deleteBatchIds(deletableIds);
+    }
+
+    @Override
+    public Map<Long, String> checkDeletable(Collection<Long> idList) {
+        Map<Long, String> blocked = new LinkedHashMap<>();
+        if (idList == null || idList.isEmpty()) {
+            return blocked;
+        }
+        for (Long id : idList) {
+            if (id == null) continue;
+            String reason = enumDeleteBlockReason(omEnumTypeMapper.selectById(id));
+            if (reason != null) {
+                blocked.put(id, reason);
+            }
+        }
+        return blocked;
+    }
+
+    /**
+     * 计算枚举不可删除的原因，可删除时返回 null。
+     *
+     * @param type 枚举类型，不存在时视为不可删除
+     * @return 不可删除原因；可删除时为 null
+     */
+    private String enumDeleteBlockReason(OmEnumTypeDO type) {
+        if (type == null) {
+            return "枚举类型不存在或已删除";
+        }
+        // 枚举状态反向："0" 启用、"1" 停用；启用中不允许删除。
+        if (type.getStatus() != null && DataConstant.EnableState.DISABLE.getKey().equals(type.getStatus())) {
+            return "枚举“" + type.getEnumName() + "”处于启用状态，请先停用后再删除";
+        }
+
+        // 被对象类型属性引用（基础数据类型=枚举，同版本，项目来源）。
+        if (
+            omObjectTypeAttributeMapper.selectCount(
+                new QueryWrapper<OmObjectTypeAttributeDO>()
+                    .eq("basic_type_code", DataTypeEnum.ENUM.getCode())
+                    .eq("enum_type", type.getEnumType())
+                    .eq("version_id", type.getVersionId())
+                    .and(q -> q.eq("enum_source", "PROJECT").or().isNull("enum_source").or().eq("enum_source", ""))
+            ) >
+            0
+        ) {
+            return "枚举“" + type.getEnumName() + "”已被对象类型属性引用，无法删除";
+        }
+        // 被公理/数据规则引用（复用约束守卫，命中时抛出异常转为原因）。
+        try {
+            constraintReferenceGuard.checkEnum(type.getEnumType(), "PROJECT", type.getVersionId());
+        } catch (ServiceException ex) {
+            return ex.getMessage();
+        }
+        return null;
     }
 
     @Override

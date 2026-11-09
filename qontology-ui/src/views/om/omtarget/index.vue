@@ -275,6 +275,7 @@ const searchStore = reactive({
 const open = ref(false);
 const openDetail = ref(false);
 const ids = ref([]);
+const selectedRows = ref([]);
 const multiple = ref(true);
 const title = ref("");
 
@@ -297,6 +298,7 @@ watch(
     versionId.value = route.params.versionId || null;
     tableStore.params.versionId = versionId.value;
     ids.value = [];
+    selectedRows.value = [];
     multiple.value = true;
     tableRef.value?.resetQuery();
   },
@@ -350,6 +352,7 @@ function reset() {
 
 // 多选框选中数据
 function handleSelectionChange(selection) {
+  selectedRows.value = selection;
   ids.value = selection.map((item) => item.id);
   multiple.value = !selection.length;
 }
@@ -395,16 +398,55 @@ function submitForm() {
   });
 }
 
-/** 删除按钮操作 */
+/** 建模目标是否可删除：未被对象类型或对象类型关系绑定（关联元素数为 0）才能删。 */
+function canDeleteTarget(row) {
+  return !row || Number(row.relatedElementCount || 0) === 0;
+}
+
+/** 删除按钮操作（单条与批量共用） */
 function handleDelete(row) {
-  const _ids = row?.id || ids.value;
-  proxy.$modal.confirm('是否确认删除建模目标编号为"' + _ids + '"的数据项？').then(function () {
-    return delTarget(_ids);
-  }).then(() => {
-    getList();
-    proxy.$modal.msgSuccess("删除成功");
-  }).catch(() => {
-  });
+  if (row) {
+    if (!canDeleteTarget(row)) {
+      proxy.$modal.msgWarning("该建模目标已被对象类型或对象类型关系关联，无法删除");
+      return;
+    }
+    proxy.$modal
+      .confirm('是否确认删除建模目标编号为"' + row.id + '"的数据项？')
+      .then(function () {
+        return delTarget(row.id);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  const canDeleteRows = selectedRows.value.filter(canDeleteTarget);
+  const canDeleteIds = canDeleteRows.map((item) => item.id);
+  const canDeleteCount = canDeleteRows.length;
+  const cannotDeleteCount = selectedRows.value.length - canDeleteCount;
+
+  if (!canDeleteCount) {
+    proxy.$modal.msgWarning("选中的建模目标均已被关联，无法删除");
+    return;
+  }
+
+  const confirmText = cannotDeleteCount
+    ? `可删除${canDeleteCount}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`
+    : `是否确认删除选中的${canDeleteCount}个建模目标？`;
+
+  proxy.$modal
+    .confirm(confirmText)
+    .then(function () {
+      return delTarget(canDeleteIds);
+    })
+    .then(() => {
+      getList();
+      proxy.$modal.msgSuccess("删除成功");
+    })
+    .catch(() => {});
 }
 
 function routeTo(link, row) {

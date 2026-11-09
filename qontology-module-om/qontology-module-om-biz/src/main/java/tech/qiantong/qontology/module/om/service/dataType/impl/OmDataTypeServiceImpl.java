@@ -18,6 +18,7 @@
 
 package tech.qiantong.qontology.module.om.service.dataType.impl;
 
+import tech.qiantong.qontology.common.enums.DataConstant;
 import tech.qiantong.qontology.module.om.api.constraint.ConstraintReferenceGuard;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -25,7 +26,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,9 +41,12 @@ import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataType
 import tech.qiantong.qontology.module.om.controller.admin.dataType.vo.OmDataTypeSaveReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.dataType.OmDataTypeDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.enumeration.OmEnumTypeDO;
+import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeAttributeDO;
 import tech.qiantong.qontology.module.om.dal.mapper.dataType.OmDataTypeMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.enumeration.OmEnumTypeMapper;
+import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeAttributeMapper;
 import tech.qiantong.qontology.module.om.enums.DataTypeEnum;
+import tech.qiantong.qontology.module.om.enums.TypeCategoryEnum;
 import tech.qiantong.qontology.module.om.service.dataType.IOmDataTypeService;
 
 /**
@@ -65,6 +71,9 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
 
     @Resource
     private IBasicEnumTypeApiService basicEnumTypeApiService;
+
+    @Resource
+    private OmObjectTypeAttributeMapper omObjectTypeAttributeMapper;
 
     @Override
     public List<OmDataTypeEnumOptionRespVO> getEnumOptions(Long versionId, String enumSource) {
@@ -137,11 +146,77 @@ public class OmDataTypeServiceImpl extends ServiceImpl<OmDataTypeMapper, OmDataT
 
     @Override
     public int removeOmDataType(Collection<Long> idList, Long versionId) {
+        if (idList == null || idList.isEmpty()) {
+            return 0;
+        }
         requireVersion(versionId);
-        for (Long id : idList) getOmDataTypeById(id, versionId);
-        constraintReferenceGuard.checkBusinessTypes(idList, "PROJECT");
-        // 批量删除数据类型
-        return omDataTypeMapper.deleteBatchIds(idList);
+        // 仅删除可删除（停用且未被引用）的数据类型，不可删除部分交由前端“删除可删部分”交互过滤。
+        List<Long> deletableIds = new ArrayList<>();
+        for (Long id : idList) {
+            if (dataTypeDeleteBlockReason(omDataTypeMapper.selectById(id), versionId) == null) {
+                deletableIds.add(id);
+            }
+        }
+        if (deletableIds.isEmpty()) {
+            return 0;
+        }
+        return omDataTypeMapper.deleteBatchIds(deletableIds);
+    }
+
+    @Override
+    public Map<Long, String> checkDeletable(Collection<Long> idList, Long versionId) {
+        Map<Long, String> blocked = new LinkedHashMap<>();
+        if (idList == null || idList.isEmpty()) {
+            return blocked;
+        }
+        requireVersion(versionId);
+        for (Long id : idList) {
+            if (id == null) {
+                continue;
+            }
+            String reason = dataTypeDeleteBlockReason(omDataTypeMapper.selectById(id), versionId);
+            if (reason != null) {
+                blocked.put(id, reason);
+            }
+        }
+        return blocked;
+    }
+
+    /**
+     * 计算业务数据类型不可删除的原因，可删除时返回 null。
+     *
+     * @param record 业务数据类型，不存在或不属于当前版本时视为不可删除
+     * @param versionId 项目版本 ID
+     * @return 不可删除原因；可删除时为 null
+     */
+    private String dataTypeDeleteBlockReason(OmDataTypeDO record, Long versionId) {
+        if (record == null || !java.util.Objects.equals(record.getVersionId(), versionId)) {
+            return "业务数据类型不存在或不属于当前项目版本";
+        }
+        // 启用中（status=1）不允许删除。
+        if (record.getStatus() != null && DataConstant.EnableState.ENABLE.getKey().equals(record.getStatus().toString())) {
+            return "业务数据类型“" + record.getName() + "”处于启用状态，请先停用后再删除";
+        }
+        // 被对象类型属性引用（类型分类=业务数据类型，同版本，项目来源）。
+        if (
+            omObjectTypeAttributeMapper.selectCount(
+                new QueryWrapper<OmObjectTypeAttributeDO>()
+                    .eq("type_category", TypeCategoryEnum.BUSINESS.getCode())
+                    .eq("business_type_id", record.getId())
+                    .eq("version_id", versionId)
+                    .and(q -> q.eq("business_type_source", "PROJECT").or().isNull("business_type_source").or().eq("business_type_source", ""))
+            ) >
+            0
+        ) {
+            return "业务数据类型“" + record.getName() + "”已被对象类型属性引用，无法删除";
+        }
+        // 被公理/规则引用（复用约束守卫，命中时抛出异常转为原因）。
+        try {
+            constraintReferenceGuard.checkBusinessTypes(java.util.Collections.singletonList(record.getId()), "PROJECT");
+        } catch (ServiceException ex) {
+            return ex.getMessage();
+        }
+        return null;
     }
 
     @Override

@@ -150,6 +150,8 @@ public class OmObjectTypeRelationServiceImpl
             throw new ServiceException("部分关系已不存在，请刷新后重试", 601);
         }
         constraintReferenceGuard.checkRelations(ids);
+        // 关系定义本身就要求关联建模目标，删除时级联清理其与建模目标的绑定，
+        // 不再把“存在绑定”当作拦截条件（否则任何关系都无法删除）；真正的拦截依据是上方被公理/数据规则引用校验。
         relationTargetService.removeByRelations(ids, workspaceId);
         return omObjectTypeRelationMapper.delete(
             new QueryWrapper<OmObjectTypeRelationDO>().eq("workspace_id", workspaceId).in("id", ids)

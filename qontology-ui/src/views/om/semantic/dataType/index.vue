@@ -49,7 +49,7 @@
           type="danger"
           plain
           :disabled="multiple"
-          @click="handleDelete"
+          @click="handleDelete()"
           v-hasPermi="['om:dataType:datatype:remove']"
           @mousedown="(e) => e.preventDefault()"
         >
@@ -409,6 +409,7 @@ import {
   listDataType,
   updateDataTypeStatus,
   updateDataType,
+  checkDataTypeDeletable,
 } from "@/api/om/dataType/dataType";
 import { getEnumTypeDict } from "@/api/om/dataType/dataType";
 import DataTypeFormDialog from "@/views/basic/dataType/components/dataTypeFormDialog.vue";
@@ -1023,17 +1024,39 @@ async function submitForm(draft) {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const deletingVersion = versionId.value;
-  const _ids = row?.id || [...ids.value];
-  proxy.$modal
-    .confirm('是否确认删除数据类型编号为"' + _ids + '"的数据项？')
-    .then(function () {
+  const recordIds = row ? [row.id] : [...ids.value];
+  if (!recordIds.length) return;
+  // 启用中或被对象类型属性、公理/规则引用的业务数据类型不可删，删除前统一取回原因。
+  checkDataTypeDeletable(recordIds, deletingVersion)
+    .then(({ data }) => {
       if (deletingVersion !== versionId.value) return;
-      return delDataType(_ids, deletingVersion);
-    })
-    .then(() => {
-      if (deletingVersion !== versionId.value) return;
-      getList();
-      proxy.$modal.msgSuccess("删除成功");
+      const blockedMap = data || {};
+      const reasonOf = (id) => blockedMap[String(id)];
+      if (row && reasonOf(row.id)) {
+        proxy.$modal.msgWarning(reasonOf(row.id));
+        return;
+      }
+      const deletableIds = recordIds.filter((id) => !reasonOf(id));
+      const cannotDeleteCount = recordIds.length - deletableIds.length;
+      if (!deletableIds.length) {
+        return proxy.$modal.confirm(`可删除0个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`);
+      }
+      const confirmText = cannotDeleteCount
+        ? `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
+        : row
+          ? '是否确认删除数据类型编号为"' + deletableIds.join(",") + '"的数据项？'
+          : `是否确认删除选中的${deletableIds.length}个业务数据类型？`;
+      return proxy.$modal
+        .confirm(confirmText)
+        .then(function () {
+          if (deletingVersion !== versionId.value) return;
+          return delDataType(deletableIds.join(","), deletingVersion);
+        })
+        .then(() => {
+          if (deletingVersion !== versionId.value) return;
+          getList();
+          proxy.$modal.msgSuccess("删除成功");
+        });
     })
     .catch(() => {});
 }
