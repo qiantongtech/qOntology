@@ -68,3 +68,5 @@ storybook-static/
 # 忽略neo4j产生的大文件
 **/transactions/
 **/neostore.transaction.db.0
+
+.vscode/

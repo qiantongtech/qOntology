@@ -96,4 +96,6 @@ public class BasicFileCategoryRespVO implements Serializable {
     @Schema(description = "备注", example = "")
     private String remark;
 
+    @Schema(description = "状态：0 禁用，1 启用", example = "")
+    private Integer status;
 }

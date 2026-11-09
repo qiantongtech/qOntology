@@ -34,6 +34,22 @@ export default [
                 name: 'BasicEnumDetail',
                 meta: { title: '枚举详情', activeMenu: '/basic/basicEnum', noCache: true }
             },
+            // 项目详情沿用列表菜单高亮；禁用缓存，重新进入时加载最新概要与项目版本。
+            {
+                path: 'project/detail',
+                component: () => import('@/views/basic/project/detail/index.vue'),
+                permissions: ['basic:project:project:query'],
+                name: 'BasicProjectDetail',
+                meta: { title: '项目详情', activeMenu: '/basic/project', noCache: true }
+            },
+            {
+                path: 'project/detail/versionDiff',
+                hidden: true,
+                component: () => import('@/views/basic/projectVersion/versionDiff.vue'),
+                name: 'projectDetailVersionDiff',
+                // 版本对比不属于项目详情入口，侧栏始终高亮版本管理；禁用缓存，避免对比结果沿用旧版本。
+                meta: { title: '版本对比', activeMenu: '/basic/project', noCache: true }
+            },
             // 文件详情已改为列表页弹窗只读态，不再占用独立路由。
             {
                 path: 'basicEnum/enum/data/:enumId(\\d+)',

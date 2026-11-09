@@ -124,7 +124,7 @@
         </el-radio-group>
       </qt-form-item>
       <qt-form-item label="包含范围" prop="includeRange" class="row-full">
-        <el-input v-model="localForm.includeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入包含范围，说明本项目本体建模覆盖的业务范围与主题域。"/>
+        <el-input v-model="localForm.includeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入包含范围，说明本项目本体建模覆盖的业务范围。"/>
       </qt-form-item>
       <qt-form-item label="排除范围" prop="excludeRange" class="row-full">
         <el-input v-model="localForm.excludeRange" type="textarea" maxlength="256个字符" show-word-limit placeholder="请输入排除范围，说明本项目明确不纳入建模的业务范围，避免边界歧义。"/>

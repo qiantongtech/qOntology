@@ -116,6 +116,7 @@
               link
               type="primary"
               icon="Edit"
+              :disabled="row.status === '0'"
               @click="handleUpdate(row)"
               >修改</el-button>
             <el-button
@@ -123,7 +124,7 @@
               link
               type="danger"
               icon="Delete"
-              :disabled="deleting"
+              :disabled="deleting || row.status === '0'"
               @click="handleDelete(row)"
               >删除</el-button>
         </template>
@@ -259,7 +260,10 @@
           <div class="form-readonly textarea">{{ detail.remark || "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="创建人">
-          <div class="form-readonly">{{ formatCreator(detail) }}</div>
+          <div class="form-readonly">{{ detail.createBy || "-" }}</div>
+        </el-form-item>
+        <el-form-item class="row-full" label="联系电话">
+          <div class="form-readonly">{{ getPhoneNum(detail.creatorId) }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
@@ -306,7 +310,7 @@ const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones ,getPhoneNum} = useCreatorPhones();
 const route = useRoute();
 const pageRef = ref();
 const tableRef = ref();
@@ -317,6 +321,7 @@ const saving = ref(false);
 const deleting = ref(false);
 const ids = ref([]);
 const multiple = ref(true);
+const selectedRows = ref([]);
 const title = ref("");
 const detail = ref({});
 const defaultEnumType = ref("");
@@ -567,6 +572,7 @@ function handleStatusChange(row, status) {
 /** 同步当前选中的枚举数据编码，并控制批量删除按钮状态。 */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.enumCode);
+  selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
@@ -647,22 +653,55 @@ async function submitForm() {
 /** 确认并删除选中数据，仅在枚举上下文未改变时刷新列表和父级计数。 */
 async function handleDelete(row) {
   const context = contextRequest;
-  const recordIds = row ? [row.enumCode] : [...ids.value];
-  if (!recordIds.length || deleting.value) return;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.enumCode 区分）
+  if (row?.enumCode != null) {
+    const recordIds = [row.enumCode];
+    if (!recordIds.length || deleting.value) return;
+    try {
+      await proxy.$modal.confirm(
+        '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
+      );
+    } catch {
+      return;
+    }
+    if (deleting.value || context !== contextRequest) return;
+    deleting.value = true;
+    try {
+      await delData(recordIds.join(","));
+      if (context !== contextRequest) return;
+      emit("dataChange");
+      // 删除后回到第一页，避免删除末页全部数据后保留空页。
+      tableRef.value?.resetQuery();
+      proxy.$modal.msgSuccess("删除成功");
+    } finally {
+      deleting.value = false;
+    }
+    return;
+  }
+
+  // 批量删除：根据状态（'0'=正常/启用不可删除，'1'=停用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length || deleting.value) return;
+  const deletableRows = rows.filter((item) => item.status === "1");
+  const undeletableCount = rows.length - deletableRows.length;
+  const recordIds = deletableRows.map((item) => item.enumCode);
   try {
     await proxy.$modal.confirm(
-      '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
     );
   } catch {
     return;
   }
   if (deleting.value || context !== contextRequest) return;
+  if (!recordIds.length) {
+    proxy.$modal.msgWarning("无可删除的数据");
+    return;
+  }
   deleting.value = true;
   try {
     await delData(recordIds.join(","));
     if (context !== contextRequest) return;
     emit("dataChange");
-    // 删除后回到第一页，避免删除末页全部数据后保留空页。
     tableRef.value?.resetQuery();
     proxy.$modal.msgSuccess("删除成功");
   } finally {

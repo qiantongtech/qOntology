@@ -17,11 +17,24 @@
 -->
 
 <template>
-  <div class="app-container" ref="app-container">
-    <GuideTip tip-id="basic/projectVersion.list" />
+  <div
+    :class="props.embedded ? 'project-version-embedded' : 'app-container'"
+    ref="app-container"
+  >
+    <GuideTip v-if="!props.embedded" tip-id="basic/projectVersion.list" />
 
-    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
-      <template #search>
+    <!-- 独立页面使用完整布局，内嵌模式由详情页提供外层卡片。 -->
+    <qt-wrap
+      :columns="tableStore.columns"
+      :table-ref="tableRef"
+      :config="{
+        fullContent: !props.embedded,
+        searchShadow: !props.embedded,
+        actions: { table: { search: !props.embedded } },
+      }"
+    >
+      <!-- 详情页只关心当前项目的全部版本，不展示版本号和状态筛选。 -->
+      <template v-if="!props.embedded" #search>
         <qt-search-bar
           :items="searchStore.items"
           :params="tableStore.params"
@@ -61,11 +74,7 @@
           <span class="text-ellipsis" :title="row.version || ''">{{
             row.version || "-"
           }}</span>
-          <el-tag
-            v-if="Number(versionId) === Number(row.id)"
-            type="primary"
-            class="ml4"
-          >
+          <el-tag v-if="isCurrentVersion(row)" type="primary" class="ml4">
             当前版本
           </el-tag>
         </template>
@@ -135,6 +144,7 @@
               link
               type="primary"
               icon="Edit"
+              :disabled="row.status === 1"
               @click="handleUpdate(row)"
               >修改</el-button
             >
@@ -143,6 +153,7 @@
               link
               type="danger"
               icon="Delete"
+              :disabled="row.status === 1"
               @click="handleDelete(row)"
               >删除</el-button
             >
@@ -296,6 +307,13 @@ const { project_status } = proxy.useDict("project_status");
 const route = useRoute();
 const router = useRouter();
 
+// 项目详情页以页签形式内嵌本页，固定项目编号与项目当前版本号；不传参数时保持路由驱动的独立页面行为。
+const props = defineProps({
+  embedded: { type: Boolean, default: false },
+  projectId: { type: [String, Number], default: undefined },
+  currentVersion: { type: String, default: "" },
+});
+
 const tableRef = ref();
 const projectVersionRef = ref();
 const statusSaving = reactive({});
@@ -304,7 +322,7 @@ const statusSaving = reactive({});
 const tableStore = reactive({
   config: {
     sort: true,
-    // 首查延迟到路由 versionId 解析出 projectId 之后，由 watch 手动触发。
+    // 首查延迟到项目编号落定之后（独立页面取路由 versionId，内嵌模式取 projectId 入参），由 watch 手动触发。
     initResquest: false,
     table: {
       stripe: true,
@@ -383,9 +401,9 @@ const tableStore = reactive({
       fixed: "right",
     },
   ],
-  func: listProjectVersion,
+  func: loadProjectVersionList,
   params: {
-    projectId: null,
+    projectId: props.embedded ? props.projectId ?? null : null,
     version: null,
     status: null,
   },
@@ -408,10 +426,25 @@ const openDetail = ref(false);
 const saving = ref(false);
 const ids = ref([]);
 const multiple = ref(true);
+const selectedRows = ref([]);
 const title = ref("");
 
 const versionId = ref(route.params.versionId || null);
-const currentVersion = ref(null);
+// 独立页面当前路由对应的版本记录；命名避开内嵌模式的 currentVersion 版本号入参。
+const routeVersion = ref(null);
+
+/** 内嵌模式缺少项目编号时直接返回空页，避免接口忽略空筛选后返回全部项目的版本。 */
+function loadProjectVersionList(params) {
+  if (!params.projectId)
+    return Promise.resolve({ data: { rows: [], total: 0 } });
+  return listProjectVersion(params);
+}
+
+/** 独立页面按导航栏当前版本标记，项目详情页按项目概要的当前版本号标记。 */
+function isCurrentVersion(row) {
+  if (props.embedded) return false;
+  return Number(versionId.value) === Number(row.id);
+}
 
 const data = reactive({
   form: {},
@@ -431,15 +464,28 @@ const data = reactive({
 
 const { form, rules } = toRefs(data);
 
-// 路由版本变化时先取当前版本信息，落定 projectId 后再刷新列表。
+// 独立页面：路由版本变化时先取当前版本信息，落定 projectId 后再刷新列表。
 watch(
   () => route.params.versionId,
   async () => {
+    if (props.embedded) return;
     versionId.value = route.params.versionId || null;
     if (!versionId.value) return;
     const response = await getProjectVersion(versionId.value);
-    currentVersion.value = response.data;
-    tableStore.params.projectId = currentVersion.value.projectId;
+    routeVersion.value = response.data;
+    tableStore.params.projectId = routeVersion.value.projectId;
+    await nextTick();
+    tableRef.value?.resetQuery();
+  },
+  { immediate: true }
+);
+
+// 内嵌页面：项目编号由项目详情传入，变更时重置分页并重新拉取当前项目的版本。
+watch(
+  () => props.projectId,
+  async (projectId) => {
+    if (!props.embedded || !projectId) return;
+    tableStore.params.projectId = projectId;
     await nextTick();
     tableRef.value?.resetQuery();
   },
@@ -453,11 +499,11 @@ function cancel() {
   reset();
 }
 
-/** 重置表单字段，基准版本默认取当前路由版本。 */
+/** 重置表单字段；独立页面基准版本取当前路由版本，详情页取项目当前版本。 */
 function reset() {
   form.value = {
     id: null,
-    projectId: currentVersion.value?.projectId,
+    projectId: props.embedded ? props.projectId : routeVersion.value?.projectId,
     version: null,
     description: null,
     status: 1,
@@ -468,8 +514,10 @@ function reset() {
     updaterId: null,
     updateTime: null,
     remark: null,
-    baseVersion: currentVersion.value?.version,
-    baseVersionId: currentVersion.value?.id,
+    baseVersion: props.embedded
+      ? props.currentVersion || null
+      : routeVersion.value?.version,
+    baseVersionId: props.embedded ? null : routeVersion.value?.id,
   };
   projectVersionRef.value?.resetFields();
 }
@@ -480,6 +528,7 @@ function reset() {
  */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.id);
+  selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
@@ -575,11 +624,39 @@ async function submitForm() {
  * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
  */
 function handleDelete(row) {
-  const deleteIds = row?.id ?? ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.id 区分）
+  if (row?.id != null) {
+    const deleteIds = row.id;
+    proxy.$modal
+      .confirm('是否确认删除项目版本编号为"' + deleteIds + '"的数据项？')
+      .then(function () {
+        return delProjectVersion(deleteIds);
+      })
+      .then(() => {
+        tableRef.value?.getList();
+        notifyProjectVersionChanged();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（1=启用不可删除，0=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === 0);
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.id);
   proxy.$modal
-    .confirm('是否确认删除项目版本编号为"' + deleteIds + '"的数据项？')
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delProjectVersion(deleteIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delProjectVersion(deletableIds);
     })
     .then(() => {
       tableRef.value?.getList();
@@ -591,16 +668,35 @@ function handleDelete(row) {
 
 /**
  * 跳转版本对比页，携带项目编号与待对比版本编号。
+ * 项目详情页没有导航栏当前版本，改以点击的版本作为基准版本，并标记来源供对比页返回详情页。
  * @param {Object} row 当前行数据
  */
 function handleDiff(row) {
-  router.push({
-    path: `/om/${versionId.value}/projectVersion/diff`,
+  console.log(route.path);
+  let versionId = props.embedded ? row.id : route.params.versionId;
+  let projectId = props.embedded ? props.projectId : routeVersion.value.projectId;
+  let compareVersion = row.id;
+  if(route.path === '/basic/project/detail'){
+    router.push({
+    path: `/basic/project/detail/versionDiff`,
     query: {
-      projectId: currentVersion.value.projectId,
-      compareVersion: row.id,
+      projectId: projectId,
+      currentVersion: versionId,
+      compareVersion: compareVersion
     },
   });
+  } else{
+    router.push({
+      path: `/om/${props.embedded ? row.id : versionId}/projectVersion/diff`,
+      query: {
+        projectId: projectId,
+        ...(props.embedded
+          ? { from: "projectDetail" }
+          : { compareVersion: compareVersion }),
+      },
+    });
+  }
+
 }
 </script>
 

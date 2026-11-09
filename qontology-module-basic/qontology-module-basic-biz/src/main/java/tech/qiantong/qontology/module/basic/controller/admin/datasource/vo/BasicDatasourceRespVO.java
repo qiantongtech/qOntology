@@ -115,4 +115,7 @@ public class BasicDatasourceRespVO implements Serializable {
     @Schema(description = "备注", example = "")
     private String remark;
 
+    @Excel(name = "状态")
+    @Schema(description = "状态", example = "")
+    private Integer status;
 }

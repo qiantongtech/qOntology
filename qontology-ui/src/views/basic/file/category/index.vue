@@ -44,15 +44,12 @@
       </template>
       <qt-table v-bind="tableStore" ref="tableRef">
         <template #text="{row, column_data}">{{ row[column_data.prop] }}</template>
-        <template #status="{row}">
-          <dict-tag v-if="row.validFlag !== '-'" :options="categoryStatusOptions" :value="row.validFlag"/>
-          <span v-else>—</span>
-        </template>
-        <template #validFlag="{ row }">
+        <template #status="{ row }">
           <el-switch
-              v-model="row.validFlag"
-              active-color="#13ce66"
-              inactive-color="#ff4949"
+              v-model="row.status"
+              :active-value="0"
+              :inactive-value="1"
+              @change="value => handleStatusChange(row, value)"
           >
           </el-switch>
         </template>
@@ -64,11 +61,12 @@
           </div>
         </template>
         <template #createTime="{row}">
-          {{ row.createTime === '-' ? '-' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-') }}
+          {{row.createTime === '-' ? '-' : (parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-') }}
         </template>
         <template #handle="{row}">
           <el-button link type="primary" icon="View" @click="handleDetail(row)">详情</el-button>
           <el-button v-hasPermi="['basic:file:category:edit']" link type="primary" icon="Edit"
+                     :disabled="row.status === 0"
                      @click="handleUpdate(row)"
           >修改
           </el-button>
@@ -96,7 +94,7 @@
                 link
                 type="danger"
                 icon="Delete"
-                :disabled="row.validFlag === true"
+                :disabled="row.status === 0"
                 @click="handleDelete(row)"
                 >删除</el-button
               >
@@ -121,7 +119,7 @@
 import {computed, getCurrentInstance, onMounted, reactive, ref} from "vue";
 import {
   delModelDataCategory,
-  listModelDataCategory,
+  listModelDataCategory, updateModelDataCategory,
 } from "@/api/basic/file/basicFileCategory.js";
 
 import CategoryFormDialog from "./components/categoryFormDialog.vue";
@@ -130,11 +128,6 @@ import {useCreatorPhones} from '@/utils/useCreatorPhones';
 
 const {proxy} = getCurrentInstance();
 
-// 状态选项使用字符串字典值，DictTag 会将后端布尔值转换为字符串后匹配。
-const categoryStatusOptions = [
-  {label: '启用', value: 'true', elTagType: 'success'},
-  {label: '禁用', value: 'false', elTagType: 'danger'}
-];
 const categoryList = ref([]);
 const categoryOptions = ref([]);
 const categoryDialogRef = ref();
@@ -142,6 +135,7 @@ const isExpandAll = ref(true);
 const defaultSort = {prop: 'orderNum', order: 'ascending'};
 const tableRef = ref();
 const {creatorPhones} = useCreatorPhones();
+import {parseTime} from "@/utils/anivia";
 
 let appliedName = '';
 let appliedParentId;
@@ -172,7 +166,7 @@ const tableStore = reactive({
     },
     {label: '描述', prop: 'remark', slot: 'text', minWidth: 220, align: 'left', showOverflowTooltip: {effect: 'light'}},
     {
-      label: "状态", prop: "validFlag", slot: "validFlag",
+      label: "状态", prop: "status", slot: "status",
       width: 100, minWidth: 100,
     },
     {label: '排序', prop: 'orderNum', slot: 'text', width: 150, sortable: true},
@@ -228,7 +222,7 @@ function formatListParams(params) {
 
 /** 转换树结构并规范文本空值，显示顺序为零时仍正常展示。 */
 function formatListData(rows) {
-  const fields = ['name', 'orderNum', 'remark', 'validFlag', 'createBy', 'createTime'];
+  const fields = ['name', 'orderNum', 'remark', 'status', 'createBy', 'createTime'];
   const records = rows.map(row => {
     const record = {...row};
     fields.forEach(field => {
@@ -310,6 +304,24 @@ function toggleExpandAll() {
     });
   };
   toggleRows(categoryList.value);
+}
+async function handleStatusChange(row, value) {
+
+  let data = {
+    ...row,
+    status: value
+  }
+  proxy.$modal
+      .confirm(`确认要${value === 0 ? "启用" : "禁用"}文件分类“${row.name}”吗？`)
+      .then(function () {
+        return updateModelDataCategory(data);
+      })
+      .then(() => {
+        proxy.$modal.msgSuccess("操作成功");
+      })
+      .catch(function () {
+        row.status = row.status === 1 ? 0 : 1;
+      });
 }
 
 // 首次进入加载完整父级选项，列表查询仍由公共表格负责。

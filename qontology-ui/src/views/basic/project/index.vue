@@ -48,7 +48,7 @@
           v-hasPermi="['basic:project:project:remove']"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
       <qt-table v-bind="tableStore" ref="tableRef">
@@ -158,6 +158,7 @@
                   link
                   type="primary"
                   icon="Edit"
+                  :disabled="row.status === 1"
                   @click="handleUpdate(row)"
               >修改
               </el-button>
@@ -166,6 +167,7 @@
                   link
                   type="danger"
                   icon="Delete"
+                  :disabled="row.status === 1"
                   @click="handleDelete(row)"
               >删除</el-button
               >
@@ -264,105 +266,6 @@
       @cancel="cancel"
       @submit="submitForm"
     />
-    <!-- 项目详情对话框 -->
-    <el-dialog
-      :title="title"
-      v-model="openDetail"
-      width="800px"
-      :append-to="$refs['app-container']"
-      draggable
-    >
-      <template #header>
-        <span role="heading" aria-level="2" class="el-dialog__title">
-          {{ title }}
-        </span>
-      </template>
-      <el-form
-        ref="projectRef"
-        :model="form"
-        label-width="80px"
-        class="column-form"
-      >
-        <el-form-item label="项目名称" prop="name">
-          <div class="form-readonly">
-            {{ form.name }}
-          </div>
-        </el-form-item>
-        <el-form-item label="项目领域" prop="domain">
-          <div class="form-readonly">
-            {{ form.domain }}
-          </div>
-        </el-form-item>
-        <el-form-item label="命名空间" prop="namespace" class="row-full">
-          <div class="form-readonly">
-            {{ form.namespace }}
-          </div>
-        </el-form-item>
-        <el-form-item label="当前版本" prop="currentVersion" class="row-full">
-          <div class="form-readonly">
-            {{ form.currentVersion }}
-          </div>
-        </el-form-item>
-        <el-form-item label="责任人" class="row-full">
-          <div class="form-readonly">
-            {{ form.responsiblePersonName || "-" }}
-          </div>
-        </el-form-item>
-        <el-form-item label="联系电话" class="row-full">
-          <div class="form-readonly">
-            {{ form.responsiblePersonPhone || "-" }}
-          </div>
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <dict-tag
-            :options="project_status"
-            :value="form.status"
-            class="con-value access-tag"
-          />
-        </el-form-item>
-
-        <el-form-item label="包含范围" prop="includeRange" class="row-full">
-          <div class="form-readonly textarea">
-            {{ form.includeRange }}
-          </div>
-        </el-form-item>
-        <el-form-item label="排除范围" prop="excludeRange" class="row-full">
-          <div class="form-readonly textarea">
-            {{ form.excludeRange }}
-          </div>
-        </el-form-item>
-        <el-form-item label="描述" prop="description" class="row-full">
-          <div class="form-readonly textarea">
-            {{ form.description }}
-          </div>
-        </el-form-item>
-<!--        <el-form-item label="修改人" prop="updateBy">-->
-<!--          <div class="form-readonly">-->
-<!--            {{ form.updateBy }}-->
-<!--          </div>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="修改时间" prop="updateTime">-->
-<!--          <div class="form-readonly">-->
-<!--            {{ form.updateTime }}-->
-<!--          </div>-->
-<!--        </el-form-item>-->
-        <el-form-item label="创建人" prop="createBy">
-          <div class="form-readonly">
-            {{ formatCreator(form) }}
-          </div>
-        </el-form-item>
-        <el-form-item label="创建时间" prop="createTime">
-          <div class="form-readonly">
-            {{ form.createTime }}
-          </div>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">关 闭</el-button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -378,12 +281,14 @@ import {
 } from "@/api/basic/project/project";
 import { saveAs } from "file-saver";
 import { onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import defaultProjectIcon from "@/assets/images/project-default.svg";
 import ProjectFormDialog from "./components/projectFormDialog.vue";
 
 const { proxy } = getCurrentInstance();
+const router = useRouter();
 const { creatorPhones } = useCreatorPhones();
 const { project_status } = proxy.useDict("project_status");
 
@@ -600,11 +505,11 @@ const searchStore = reactive({
 });
 
 const open = ref(false);
-const openDetail = ref(false);
 const ids = ref([]);
 const multiple = ref(true);
+const selectedRows = ref([]);
 const title = ref("");
-const dialogMode = ref("add"); // add, edit, detail
+const dialogMode = ref("add"); // add, edit
 // 父页面持有保存状态，供表单组件统一禁用提交和关闭操作。
 const projectSaving = ref(false);
 
@@ -649,7 +554,6 @@ const { form, rules } = toRefs(data);
 function cancel() {
   if (projectSaving.value) return;
   open.value = false;
-  openDetail.value = false;
   reset();
 }
 
@@ -663,7 +567,6 @@ function getProjectIcon(icon) {
 
 /** 初始化项目表单，避免上一次编辑的范围或描述残留到新增操作。 */
 function reset() {
-  proxy.resetForm("projectRef");
   form.value = {
     id: null,
     name: null,
@@ -690,6 +593,7 @@ function reset() {
 // 多选框选中数据
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.id);
+  selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
@@ -729,22 +633,12 @@ function handleUpdate(row) {
   });
 }
 
-/** 详情按钮操作 */
+/** 携带项目编号跳转独立详情页，由详情页统一加载概要及项目版本。 */
 function handleDetail(row) {
-  reset();
-  const _id = row.id || ids.value;
-  getProject(_id).then((response) => {
-    form.value = response.data;
-    openDetail.value = true;
-    dialogMode.value = "detail";
-    title.value = "项目详情";
+  router.push({
+    name: "BasicProjectDetail",
+    query: { projectId: row.id },
   });
-}
-
-/** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
-function formatCreator(record) {
-  const phone = creatorPhones.value[record.creatorId];
-  return phone ? `${record.createBy || "-"} / ${phone}` : record.createBy || "-";
 }
 
 /** 接收组件校验后的表单快照，保存成功后关闭弹窗并刷新当前项目列表。 */
@@ -770,11 +664,38 @@ async function submitForm(payload) {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _ids = row.id || ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.id 区分）
+  if (row?.id != null) {
+    const _ids = row.id;
+    proxy.$modal
+      .confirm('是否确认删除项目编号为"' + _ids + '"的数据项？')
+      .then(function () {
+        return delProject(_ids);
+      })
+      .then(() => {
+        tableRef.value.getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（1=启用不可删除，0=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === 0);
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.id);
   proxy.$modal
-    .confirm('是否确认删除项目编号为"' + _ids + '"的数据项？')
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delProject(_ids);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delProject(deletableIds);
     })
     .then(() => {
       tableRef.value.getList();
