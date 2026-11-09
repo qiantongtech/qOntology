@@ -1,6 +1,7 @@
 package tech.qiantong.qontology.module.om.service.ai.aiModeling;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -337,6 +338,11 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         task.setFinishedTime(null);
         task.setFailureReason(null);
         taskMapper.updateById(task);
+        // updateById 默认忽略 null 字段，重新解析时需显式清除上一轮完成时间和失败原因。
+        taskMapper.update(null, new UpdateWrapper<OmAiTaskDO>()
+                .eq("id", id)
+                .set("finished_time", null)
+                .set("failure_reason", null));
         asyncProcessor.initializeStages(task);
         if (!asyncProcessor.reserve(id)) {
             throw new ServiceException("任务正在解析");
