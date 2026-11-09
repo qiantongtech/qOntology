@@ -1015,31 +1015,59 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     /** 读取整数值，空值按零处理。 */
     private int integerValue(Map<String, Object> row, String key) {
-        Object value = row.get(key);
+        Object value = mapValue(row, key);
         return value == null ? 0 : ((Number) value).intValue();
     }
 
     /** 读取可空整数值。 */
     private Integer nullableIntegerValue(Map<String, Object> row, String key) {
-        Object value = row.get(key);
+        Object value = mapValue(row, key);
         return value == null ? null : ((Number) value).intValue();
     }
 
     /** 读取必填长整数值。 */
     private Long longValue(Map<String, Object> row, String key) {
-        return ((Number) row.get(key)).longValue();
+        Object value = mapValue(row, key);
+        if (value == null) {
+            throw new ServiceException("候选数据缺少必填字段：" + key);
+        }
+        return ((Number) value).longValue();
     }
 
     /** 读取可空长整数值。 */
     private Long nullableLongValue(Map<String, Object> row, String key) {
-        Object value = row.get(key);
+        Object value = mapValue(row, key);
         return value == null ? null : ((Number) value).longValue();
     }
 
     /** 读取可空字符串值。 */
     private String stringValue(Map<String, Object> row, String key) {
-        Object value = row.get(key);
+        Object value = mapValue(row, key);
         return value == null ? null : String.valueOf(value);
+    }
+
+    /**
+     * 兼容 Mapper 查询结果的下划线键名和实体 JSON 序列化后的驼峰键名。
+     * 采纳流程统一使用数据库字段名，候选实体通过 JSON 转 Map 后则使用 Java 属性名。
+     */
+    private Object mapValue(Map<String, Object> row, String key) {
+        if (row.containsKey(key)) {
+            return row.get(key);
+        }
+        StringBuilder camelKey = new StringBuilder(key.length());
+        boolean upperNext = false;
+        for (int i = 0; i < key.length(); i++) {
+            char current = key.charAt(i);
+            if (current == '_') {
+                upperNext = true;
+            } else if (upperNext) {
+                camelKey.append(Character.toUpperCase(current));
+                upperNext = false;
+            } else {
+                camelKey.append(current);
+            }
+        }
+        return row.get(camelKey.toString());
     }
 
     /** 采纳前校验正式功能必填文本，提示用户先修改候选数据。 */
@@ -1057,7 +1085,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     /** 兼容 Boolean、bit 和数值形式的布尔值。 */
     private boolean booleanValue(Map<String, Object> row, String key) {
-        Object value = row.get(key);
+        Object value = mapValue(row, key);
         return Boolean.TRUE.equals(value) || value instanceof Number number && number.intValue() == 1;
     }
 
