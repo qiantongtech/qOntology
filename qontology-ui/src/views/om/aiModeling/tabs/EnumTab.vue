@@ -60,7 +60,7 @@
 
       <qt-table v-bind="typeTableStore" ref="tableRef">
         <template #text="{ row, column_data }">{{
-          row[column_data.prop] === 0 ? 0 : row[column_data.prop] || "-"
+          row[column_data.prop] === "" ? "-" : row[column_data.prop]
         }}</template>
         <!-- 枚举类型列可点击下钻到该类型的枚举数据。 -->
         <template #enumName="{ row }">
@@ -183,7 +183,7 @@
 
       <qt-table v-bind="valueTableStore" ref="valueTableRef" :key="currentType.id">
         <template #text="{ row, column_data }">{{
-          row[column_data.prop] === 0 ? 0 : row[column_data.prop] || "-"
+          row[column_data.prop] === "" ? "-" : row[column_data.prop]
         }}</template>
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
