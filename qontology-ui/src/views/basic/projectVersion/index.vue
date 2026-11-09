@@ -39,7 +39,7 @@
         />
       </template>
 
-      <template #actions-data v-if="!props.embedded">
+      <template #actions-data>
         <el-button
           type="primary"
           plain
@@ -633,7 +633,6 @@ function handleDelete(row) {
  * @param {Object} row 当前行数据
  */
 function handleDiff(row) {
-  console.log(route.path);
   let versionId = props.embedded ? row.id : route.params.versionId;
   let projectId = props.embedded ? props.projectId : routeVersion.value.projectId;
   let compareVersion = row.id;
