@@ -40,11 +40,12 @@
                     v-hasPermi="['om:constraint:modelaxi:remove']"
                     type="danger"
                     plain
+                    :loading="batchDeleteLoading"
                     :disabled="!selectedIds.length || deleting"
                     @click="handleDelete()"
                     @mousedown="(e) => e.preventDefault()"
                 >
-                    <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+                    <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
                 </el-button>
             </template>
 
@@ -82,6 +83,7 @@
                         link
                         type="danger"
                         icon="Delete"
+                        :loading="deleteLoading[row.id]"
                         :disabled="deleting"
                         @click="handleDelete(row)"
                         >删除</el-button
@@ -329,7 +331,7 @@
 
 <script setup>
     import { computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
-    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { ElMessage } from 'element-plus';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
     import { listModelAxiom, getModelAxiom, addModelAxiom, updateModelAxiom, delModelAxiom } from '@/api/om/constraint/modelAxiom';
     import { listRelationTypes } from '@/api/om/object/relation';
@@ -353,6 +355,8 @@
     const selectedIds = ref([]);
     const saving = ref(false);
     const deleting = ref(false);
+    const deleteLoading = ref({});
+    const batchDeleteLoading = ref(false);
     const open = ref(false);
     const detailOpen = ref(false);
     const dialogTitle = ref('新增模型公理');
@@ -834,31 +838,36 @@
 
     /**
      * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
-     * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+     * @param {Object} [row] 当前行数据，顶部删除按钮点击时不传参
      */
     async function handleDelete(row) {
-        if (!requireVersion() || deleting.value) return;
-        const ids = row ? [row.id] : [...selectedIds.value];
-        if (!ids.length) return;
-        const context = contextRequest;
+      if (!requireVersion() || deleting.value) return;
+      const isSingle = row?.id != null;
+      const ids = isSingle ? [row.id] : [...selectedIds.value];
+      if (!ids.length) return;
+      const context = contextRequest;
+      const message = isSingle
+        ? `是否确认删除编号为${row.id} 的数据项？`
+        : `可删除${ids.length}个，不可删除0个，是否删除可删部分`;
+      deleting.value = true;
+      try {
         try {
-            const message = row
-                ? '是否删除模型公理“' + row.name + '”？'
-                : '是否删除选中的 ' + ids.length + ' 条模型公理？';
-            await ElMessageBox.confirm(message, '删除确认', { type: 'warning' });
+          await proxy.$modal.confirm(message);
         } catch {
-            return;
+          return;
         }
-        if (context !== contextRequest || deleting.value) return;
-        deleting.value = true;
-        try {
-            await delModelAxiom(ids);
-            if (context !== contextRequest) return;
-            ElMessage.success('删除成功');
-            refreshList();
-        } finally {
-            deleting.value = false;
-        }
+        if (context !== contextRequest) return;
+        if (isSingle) deleteLoading.value[row.id] = true;
+        else batchDeleteLoading.value = true;
+        await delModelAxiom(ids);
+        if (context !== contextRequest) return;
+        proxy.$modal.msgSuccess('删除成功');
+        refreshList();
+      } finally {
+        deleting.value = false;
+        if (isSingle) deleteLoading.value[row.id] = false;
+        else batchDeleteLoading.value = false;
+      }
     }
 
     /** 关闭新增/修改弹窗；保存中禁止关闭。 */

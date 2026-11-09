@@ -24,6 +24,14 @@
       :table-ref="tableRef"
       :config="wrapConfig"
     >
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="typeTableStore.params"
+          :table-ref="tableRef"
+        />
+      </template>
+
       <template #actions-data>
         <el-button
           type="primary"
@@ -32,16 +40,21 @@
           @click="adoptBatch"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-queren mr5"></i>批量采纳
+          <template #icon>
+            <svg-icon icon-class="adopt" />
+          </template>
+          批量采纳
         </el-button>
         <el-button
           type="danger"
+          icon="Delete"
           plain
-          :disabled="!selectedIds.length"
+          :loading="batchDeleteLoading"
+          :disabled="!selectedIds.length || deleting"
           @click="remove()"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          批量删除
         </el-button>
       </template>
 
@@ -79,11 +92,14 @@
           <el-button
             link
             type="primary"
-            icon="Check"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >采纳</el-button
-          >
+            >
+            <template #icon>
+              <svg-icon icon-class="adopt" />
+            </template>
+            采纳
+          </el-button>
           <el-button
             link
             type="primary"
@@ -119,7 +135,8 @@
               link
               type="danger"
               icon="Delete"
-              :disabled="row.adoptStatus === 1"
+              :loading="deleteLoading[row.id]"
+              :disabled="row.adoptStatus === 1 || deleting"
               @click="remove(row)"
               >删除</el-button
             >
@@ -135,15 +152,24 @@
       :table-ref="valueTableRef"
       :config="wrapConfig"
     >
+      <template #search>
+        <qt-search-bar
+          :items="valueSearchStore.items"
+          :params="valueTableStore.params"
+          :table-ref="valueTableRef"
+        />
+      </template>
+
       <template #actions-data>
         <el-button
           type="danger"
           plain
-          :disabled="!valueSelectedIds.length"
+          :loading="valueBatchDeleteLoading"
+          :disabled="!valueSelectedIds.length || valueDeleting"
           @click="removeValue()"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
         <el-button type="warning" plain icon="Close" @click="closeValues"
           >关闭</el-button
@@ -206,7 +232,8 @@
               link
               type="danger"
               icon="Delete"
-              :disabled="row.adoptStatus === 1"
+              :loading="valueDeleteLoading[row.id]"
+              :disabled="row.adoptStatus === 1 || valueDeleting"
               @click="removeValue(row)"
               >删除</el-button
             >
@@ -373,7 +400,6 @@
 <script setup>
 import {
   createCandidate,
-  deleteCandidate,
   getCandidateEvidence,
   listCandidates,
   updateCandidate,
@@ -401,8 +427,16 @@ const typeForm = ref({});
 const typeDetail = ref({});
 const valueForm = ref({});
 const valueDetail = ref({});
-const valueTableRef = ref(null);
-const valueSelectedIds = ref([]);
+// 枚举数据复用候选批量删除逻辑，确认提示和加载时机与各页签一致。
+const {
+  tableRef: valueTableRef,
+  selectedIds: valueSelectedIds,
+  deleting: valueDeleting,
+  deleteLoading: valueDeleteLoading,
+  batchDeleteLoading: valueBatchDeleteLoading,
+  select: selectValues,
+  remove: removeValue,
+} = useCandidateTab("enum_data", props.taskId);
 const valueEvidenceVisible = ref(false);
 const valueEvidences = ref([]);
 
@@ -431,21 +465,44 @@ const {
   select: handleSelectionChange,
   adoptOne,
   adoptBatch,
+  deleting,
+  deleteLoading,
+  batchDeleteLoading,
   remove,
   showEvidence,
 } = tab;
 
 /**
  * 页签嵌在宿主容器内：详情页的外层卡片已带白底与内边距，开启 full 会重复一层间距和阴影并把内容强撑高；
- * 页签内又没有搜索区，所以同时关闭操作栏的“隐藏搜索”按钮。
+ * 搜索区由 QtWrap 管理，复用操作栏的搜索显隐按钮。
  */
+// 候选列表搜索：字段与接口契约一致，查询和重置由 QtSearchBar 回到第一页。
+const searchStore = reactive({
+  items: [
+    { label: "枚举名称", prop: "enumName", component: { is: "input" } },
+    { label: "枚举类型", prop: "enumType", component: { is: "input" } },
+    { label: "状态", prop: "status", component: { is: "select", options: sys_normal_disable } },
+    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+  ],
+});
+
+// 候选列表搜索：字段与接口契约一致，查询和重置由 QtSearchBar 回到第一页。
+const valueSearchStore = reactive({
+  items: [
+    { label: "枚举标签", prop: "enumLabel", component: { is: "input" } },
+    { label: "状态", prop: "status", component: { is: "select", options: sys_normal_disable } },
+    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+  ],
+});
+
 const wrapConfig = {
   fullContent: false,
-  actions: { table: { search: false } },
+  searchShadow: false,
 };
 
 // 枚举类型表格配置。
 const typeTableStore = reactive({
+  params: { enumName: null, enumType: null, status: null, adoptStatus: null },
   config: {
     sort: true,
     table: {
@@ -562,13 +619,12 @@ function fetchValues(params) {
  * @param {Array<Object>} selection 当前勾选行
  */
 function handleValueSelection(selection) {
-  valueSelectedIds.value = selection
-    .filter((row) => row.adoptStatus !== 1)
-    .map((row) => row.id);
+  selectValues(selection);
 }
 
 // 枚举数据表格配置。
 const valueTableStore = reactive({
+  params: { enumLabel: null, status: null, adoptStatus: null },
   config: {
     sort: true,
     table: {
@@ -797,21 +853,6 @@ async function saveValue() {
 }
 
 /**
- * 删除单条或批量删除枚举数据。
- * @param {Object} [row] 指定行，缺省时删除已勾选行
- */
-async function removeValue(row) {
-  const ids = row ? [row.id] : valueSelectedIds.value;
-  if (!ids.length) return;
-  await proxy.$modal.confirm(
-    `是否确认删除选中的 ${ids.length} 条候选枚举数据？`
-  );
-  await deleteCandidate("enum_data", ids.join(","));
-  proxy.$modal.msgSuccess("删除成功");
-  valueTableRef.value?.getList();
-}
-
-/**
  * 查看枚举数据的来源证据。
  * @param {Object} row 当前行数据
  */
@@ -823,6 +864,11 @@ async function showValueEvidence(row) {
 </script>
 
 <style scoped lang="scss">
+/* 与建模目标详情一致：嵌入页签的搜索区不重复添加容器内边距。 */
+.candidate-tab-page :deep(.qt-wrap--search) {
+  padding: 0;
+}
+
 :deep(.el-input-number) {
   width: 100%;
 }

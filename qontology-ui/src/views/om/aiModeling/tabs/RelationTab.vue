@@ -22,6 +22,14 @@
       :table-ref="tableRef"
       :config="wrapConfig"
     >
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+        />
+      </template>
+
       <template #actions-data>
         <el-button
           type="primary"
@@ -30,16 +38,21 @@
           @click="adoptBatch"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-queren mr5"></i>批量采纳
+          <template #icon>
+            <svg-icon icon-class="adopt" />
+          </template>
+          批量采纳
         </el-button>
         <el-button
           type="danger"
+          icon="Delete"
           plain
-          :disabled="!selectedIds.length"
+          :loading="batchDeleteLoading"
+          :disabled="!selectedIds.length || deleting"
           @click="remove()"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          批量删除
         </el-button>
       </template>
 
@@ -72,10 +85,14 @@
           <el-button
             link
             type="primary"
-            icon="Check"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >采纳</el-button>
+            >
+            <template #icon>
+              <svg-icon icon-class="adopt" />
+            </template>
+            采纳
+          </el-button>
           <el-button
             link
             type="primary"
@@ -108,7 +125,8 @@
               link
               type="danger"
               icon="Delete"
-              :disabled="row.adoptStatus === 1"
+              :loading="deleteLoading[row.id]"
+              :disabled="row.adoptStatus === 1 || deleting"
               @click="remove(row)"
               >删除</el-button>
           </el-popover>
@@ -396,21 +414,33 @@ const {
   select: handleSelectionChange,
   adoptOne,
   adoptBatch,
+  deleting,
+  deleteLoading,
+  batchDeleteLoading,
   remove,
   showEvidence,
 } = tab;
 
 /**
  * 页签嵌在宿主容器内：详情页的外层卡片已带白底与内边距，开启 full 会重复一层间距和阴影并把内容强撑高；
- * 页签内又没有搜索区，所以同时关闭操作栏的“隐藏搜索”按钮。
+ * 搜索区由 QtWrap 管理，复用操作栏的搜索显隐按钮。
  */
+// 候选列表搜索：字段与接口契约一致，查询和重置由 QtSearchBar 回到第一页。
+const searchStore = reactive({
+  items: [
+    { label: "对象类型关系名称", prop: "name", component: { is: "input" } },
+    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+  ],
+});
+
 const wrapConfig = {
   fullContent: false,
-  actions: { table: { search: false } },
+  searchShadow: false,
 };
 
 // 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
 const tableStore = reactive({
+  params: { name: null, adoptStatus: null },
   config: {
     sort: true,
     table: {
@@ -640,6 +670,10 @@ loadObjects();
 </script>
 
 <style scoped lang="scss">
+/* 与建模目标详情一致：嵌入页签的搜索区不重复添加容器内边距。 */
+.candidate-tab-page :deep(.qt-wrap--search) {
+  padding: 0;
+}
 
 .target-table {
   margin: 0 0 10px 120px;

@@ -16,7 +16,7 @@
  See the LICENSE file in the project root for full license information.
 -->
 <template>
-  <div class="app-container wizard-page" style="background-color: #f0f2f5">
+  <div class="app-container ai-modeling-page wizard-page" style="background-color: #f0f2f5">
     <div class="custom-card">
       <div class="steps-inner">
         <ul class="zl-step">
@@ -231,9 +231,14 @@
               <el-button
                 v-hasPermi="['om:aiModeling:adopt']"
                 type="primary"
+                class="adopt-all-button"
                 @click="adoptEverything"
-                >一键采纳</el-button
-              >
+                >
+                  <template #icon>
+                    <svg-icon icon-class="adopt" />
+                  </template>
+                  一键采纳
+                </el-button>
             </div>
             <el-tabs v-model="activeTab">
               <el-tab-pane
@@ -1062,5 +1067,22 @@ onMounted(async () => {
     margin-left: 18px;
     padding-left: 18px;
   }
+}
+
+/* 模块内 SVG 使用按钮图标的 1em 尺寸，避免通用 SvgIcon 的 1.2em 放大。
+ * 图文间距由 Element Plus icon 插槽处理；同时统一旧返回图标的尺寸与垂直对齐。
+ */
+.ai-modeling-page :deep(.el-button .svg-icon) {
+  width: 1em;
+  height: 1em;
+  margin-top: 0;
+  vertical-align: middle;
+}
+
+/* 顶部主操作与返回图标匹配视觉尺寸；列表操作继续沿用紧凑图标尺寸。
+ * 仅调整图标容器，不改变共用 SVG 画布及按钮文字字号。
+ */
+.ai-modeling-page :deep(.adopt-all-button > .el-icon) {
+  font-size: var(--el-font-size-base);
 }
 </style>

@@ -32,10 +32,11 @@
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
         <el-button v-hasPermi="['om:constraint:datarule:remove']" type="danger" plain
-                   :disabled="!selectedIds.length || deleting" @click="handleDelete()"
+                   :loading="batchDeleteLoading"
+                :disabled="!selectedIds.length || deleting" @click="handleDelete()"
                    @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
@@ -60,7 +61,8 @@
           >修改
           </el-button>
           <el-button v-if="auth.hasPermi('om:constraint:datarule:remove')" link type="danger" icon="Delete"
-                     :disabled="deleting" @click="handleDelete(row)"
+                     :loading="deleteLoading[row.id]"
+                    :disabled="deleting" @click="handleDelete(row)"
           >删除
           </el-button>
         </template>
@@ -250,7 +252,7 @@
 <script setup>
 import { createRowKey } from "@/utils/rowKey";
 import {computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
-import {ElMessage, ElMessageBox} from 'element-plus';
+import {ElMessage} from 'element-plus';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
 import { listDataRule, getDataRule, addDataRule, updateDataRule, delDataRule } from '@/api/om/constraint/dataRule';
 import {listRelationTypes} from '@/api/om/object/relation';
@@ -271,6 +273,8 @@ const ruleRef = ref();
 const selectedIds = ref([]);
 const saving = ref(false);
 const deleting = ref(false);
+const deleteLoading = ref({});
+const batchDeleteLoading = ref(false);
 const open = ref(false);
 const detailOpen = ref(false);
 const dialogTitle = ref('新增数据规则');
@@ -653,28 +657,35 @@ async function submitForm() {
 
 /**
  * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
- * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+ * @param {Object} [row] 当前行数据，顶部删除按钮点击时不传参
  */
 async function handleDelete(row) {
   if (!requireVersion() || deleting.value) return;
-  const ids = row ? [row.id] : [...selectedIds.value];
+  const isSingle = row?.id != null;
+  const ids = isSingle ? [row.id] : [...selectedIds.value];
   if (!ids.length) return;
   const context = contextRequest;
-  try {
-    const message = row ? '是否删除数据规则“' + row.name + '”？' : '是否删除选中的 ' + ids.length + ' 条数据规则？';
-    await ElMessageBox.confirm(message, '删除确认', {type: 'warning'});
-  } catch {
-    return;
-  }
-  if (context !== contextRequest || deleting.value) return;
+  const message = isSingle
+    ? `是否确认删除编号为${row.id} 的数据项？`
+    : `可删除${ids.length}个，不可删除0个，是否删除可删部分`;
   deleting.value = true;
   try {
+    try {
+      await proxy.$modal.confirm(message);
+    } catch {
+      return;
+    }
+    if (context !== contextRequest) return;
+    if (isSingle) deleteLoading.value[row.id] = true;
+    else batchDeleteLoading.value = true;
     await delDataRule(ids);
     if (context !== contextRequest) return;
-    ElMessage.success('删除成功');
+    proxy.$modal.msgSuccess('删除成功');
     refreshList();
   } finally {
     deleting.value = false;
+    if (isSingle) deleteLoading.value[row.id] = false;
+    else batchDeleteLoading.value = false;
   }
 }
 

@@ -6,6 +6,9 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
   const rows = ref([])
   const total = ref(0)
   const loading = ref(false)
+  const deleting = ref(false)
+  const deleteLoading = ref({})
+  const batchDeleteLoading = ref(false)
   const selectedIds = ref([])
   const selectedRows = ref([])
   const pageSize = options.pageSize ?? 10
@@ -95,13 +98,33 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     await refresh()
   }
 
+  /** 删除当前行或所选可删除候选；确认期间不显示加载状态。 */
   async function remove(row) {
-    const ids = row ? [row.id] : selectedRows.value.filter(item => item.adoptStatus !== 1).map(item => item.id)
+    if (deleting.value) return
+    const isSingle = row?.id != null
+    const candidates = isSingle ? [row] : [...selectedRows.value]
+    const ids = candidates.filter(item => Number(item.adoptStatus) !== 1).map(item => item.id)
     if (!ids.length) return
-    await proxy.$modal.confirm(`是否确认删除选中的 ${ids.length} 条候选数据？`)
-    await deleteCandidate(type, ids.join(','))
-    proxy.$modal.msgSuccess('删除成功')
-    await refresh()
+    const message = isSingle
+      ? `是否确认删除编号为${row.id} 的数据项？`
+      : `可删除${ids.length}个，不可删除${candidates.length - ids.length}个，是否删除可删部分`
+    deleting.value = true
+    try {
+      try {
+        await proxy.$modal.confirm(message)
+      } catch {
+        return
+      }
+      if (isSingle) deleteLoading.value[row.id] = true
+      else batchDeleteLoading.value = true
+      await deleteCandidate(type, ids.join(','))
+      proxy.$modal.msgSuccess('删除成功')
+      await refresh()
+    } finally {
+      deleting.value = false
+      if (isSingle) deleteLoading.value[row.id] = false
+      else batchDeleteLoading.value = false
+    }
   }
 
   async function showEvidence(row) {
@@ -110,5 +133,5 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     evidenceVisible.value = true
   }
 
-  return { rows, total, loading, selectedIds, selectedRows, query, evidenceVisible, evidences, tableRef, pageSize, fetchRows, refresh, load, select, handleSortChange, adoptOne, adoptBatch, remove, showEvidence }
+  return { rows, total, loading, deleting, deleteLoading, batchDeleteLoading, selectedIds, selectedRows, query, evidenceVisible, evidences, tableRef, pageSize, fetchRows, refresh, load, select, handleSortChange, adoptOne, adoptBatch, remove, showEvidence }
 }

@@ -16,7 +16,7 @@
  See the LICENSE file in the project root for full license information.
 -->
 <template>
-  <div class="app-container">
+  <div class="app-container ai-modeling-page">
     <detail-info
       :data="task"
       :header="{ className: 'clearfixs', idKey: 'id', nameKey: 'taskName', statusKey: 'status', statusOptions: om_ai_task_status, routerBack: false }"
@@ -28,10 +28,15 @@
         <el-button
           v-hasPermi="['om:aiModeling:adopt']"
           type="primary"
-          class="mr10"
+          class="mr10 adopt-all-button"
           :disabled="!canAdopt"
           @click="adoptEverything"
-        >一键采纳</el-button>
+        >
+          <template #icon>
+            <svg-icon icon-class="adopt" />
+          </template>
+          一键采纳
+        </el-button>
       </template>
       <template #documents>
         <div v-if="files.length" class="document-list">
@@ -121,17 +126,16 @@ const currentTab = computed(
 const canAdopt = computed(
   () => task.value.status === 2 && Number(task.value.candidateCount || 0) > 0
 );
-/** 顶部信息表字段，复用 DetailInfo 自由模式与建模目标详情一致；行间距通过 mt2/mb2 与建模目标保持同样的上下节奏。 */
+/** 顶部信息表沿用建模目标详情分组：基础信息、整行描述及创建更新信息。 */
 const detailItems = [
   { label: "开始时间", key: "startedTime", type: "time" },
   { label: "完成时间", key: "finishedTime", type: "time" },
-  { label: "失败原因", key: "failureReason", className: "mb2" },
+  { label: "候选数量", key: "candidateCount", formatter: (val) => val ?? 0 },
   { label: "任务描述", key: "description", span: 24, className: "mt2 mb2" },
-  { label: "候选数量", key: "candidateCount", className: "mb2", formatter: (val) => val ?? 0 },
-  { label: "文档名称", slot: "documents", className: "mb2" },
+  { label: "文档名称", slot: "documents", span: 16, className: "mb2" },
+  { label: "更新人", key: "updateBy", className: "mb2" },
   { label: "创建人", key: "createBy", formatter: (_name, record) => formatCreator(record) },
   { label: "创建时间", key: "createTime", type: "time" },
-    { label: "更新人", key: "createBy", formatter: (_name, record) => formatCreator(record) },
   { label: "更新时间", key: "updateTime", type: "time" },
 ];
 /** 加载任务详情。 */
@@ -189,5 +193,22 @@ onUnmounted(() => clearInterval(refreshTimer));
   width: 100%;
   overflow-wrap: anywhere;
   line-height: 22px;
+}
+
+/* 模块内 SVG 使用按钮图标的 1em 尺寸，避免通用 SvgIcon 的 1.2em 放大。
+ * 图文间距由 Element Plus icon 插槽处理；同时统一旧返回图标的尺寸与垂直对齐。
+ */
+.ai-modeling-page :deep(.el-button .svg-icon) {
+  width: 1em;
+  height: 1em;
+  margin-top: 0;
+  vertical-align: middle;
+}
+
+/* 顶部主操作与返回图标匹配视觉尺寸；列表操作继续沿用紧凑图标尺寸。
+ * 仅调整图标容器，不改变共用 SVG 画布及按钮文字字号。
+ */
+.ai-modeling-page :deep(.adopt-all-button > .el-icon) {
+  font-size: var(--el-font-size-base);
 }
 </style>
