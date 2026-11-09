@@ -249,7 +249,7 @@
     import { computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
-    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { ElMessage } from 'element-plus';
     import {
         listRelations,
         getRelation,
@@ -545,14 +545,25 @@
         const reasonOf = (id) => blockedMap[String(id)];
         const deletableIds = ids.filter((id) => !reasonOf(id));
         const cannotDeleteCount = ids.length - deletableIds.length;
-        try {
-            await ElMessageBox.confirm(
-                `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`,
-                '删除确认',
-                { type: 'warning' }
-            );
-        } catch {
-            return;
+        // 单条删除：不可删时提示原因，可删时统一弹编号确认框；批量删除保留“可删除X/不可删除Y”确认，两者同为系统提示风格。
+        if (row) {
+            if (reasonOf(row.id)) {
+                proxy.$modal.msgWarning(reasonOf(row.id));
+                return;
+            }
+            try {
+                await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
+            } catch {
+                return;
+            }
+        } else {
+            try {
+                await proxy.$modal.confirm(
+                    `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`
+                );
+            } catch {
+                return;
+            }
         }
         if (!deletableIds.length) return;
         if (context !== contextRequest || deleting.value) return;

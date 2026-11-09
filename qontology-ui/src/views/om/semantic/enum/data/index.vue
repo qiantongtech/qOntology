@@ -119,6 +119,7 @@
             link
             type="primary"
             icon="Edit"
+            :disabled="String(row.status) === '0'"
             @click="handleUpdate(row)"
             >修改</el-button>
           <el-button
@@ -126,7 +127,7 @@
             link
             type="danger"
             icon="Delete"
-            :disabled="deleting"
+            :disabled="deleting || String(row.status) === '0'"
             @click="handleDelete(row)"
             >删除</el-button>
         </template>
@@ -719,7 +720,9 @@ async function handleDelete(row) {
   if (!recordIds.length || deleting.value) return;
   try {
     await proxy.$modal.confirm(
-      '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
+      row
+        ? `是否确认删除编号为${row.enumCode} 的数据项？`
+        : '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
     );
   } catch {
     return;

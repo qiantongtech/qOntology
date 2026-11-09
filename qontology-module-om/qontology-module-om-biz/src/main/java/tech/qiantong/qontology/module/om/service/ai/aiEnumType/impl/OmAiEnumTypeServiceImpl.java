@@ -27,6 +27,7 @@ import tech.qiantong.qontology.module.om.controller.admin.ai.aiEnumType.vo.*;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiEnumType.OmAiEnumTypeDO;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiEnumType.OmAiEnumTypeMapper;
 import tech.qiantong.qontology.module.om.service.ai.aiEnumType.IOmAiEnumTypeService;
+import tech.qiantong.qontology.module.om.service.ai.OmAiCandidateDeleteGuard;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiAdoptStatusEnum;
 import tech.qiantong.qontology.common.exception.ServiceException;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -38,6 +39,9 @@ import tech.qiantong.qontology.core.utils.object.BeanUtils;
 public class OmAiEnumTypeServiceImpl extends ServiceImpl<OmAiEnumTypeMapper, OmAiEnumTypeDO> implements IOmAiEnumTypeService {
     @Resource
     private OmAiEnumTypeMapper mapper;
+
+    @Resource
+    private OmAiCandidateDeleteGuard deleteGuard;
 
     /** 获得AI候选枚举类型分页列表。 */
     @Override
@@ -75,15 +79,10 @@ public class OmAiEnumTypeServiceImpl extends ServiceImpl<OmAiEnumTypeMapper, OmA
         return mapper.updateById(data);
     }
 
-    /** 批量删除AI候选枚举类型。 */
+    /** 批量删除AI候选枚举类型：只删除可删部分。 */
     @Override
     public int removeOmAiEnumType(Collection<Long> ids) {
-        for (Long id : ids) {
-            if (OmAiAdoptStatusEnum.ADOPTED.getCode().equals(getRequired(id).getAdoptStatus())) {
-                throw new ServiceException("已采纳数据不可删除");
-            }
-        }
-        return mapper.deleteBatchIds(ids);
+        return deleteGuard.deleteCandidates("enum_type", ids);
     }
 
     /** 获得AI候选枚举类型详情。 */

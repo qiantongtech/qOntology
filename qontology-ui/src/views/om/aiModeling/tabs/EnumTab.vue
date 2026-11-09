@@ -136,7 +136,7 @@
               type="danger"
               icon="Delete"
               :loading="deleteLoading[row.id]"
-              :disabled="row.adoptStatus === 1 || deleting"
+              :disabled="deleting"
               @click="remove(row)"
               >删除</el-button
             >
@@ -233,7 +233,7 @@
               type="danger"
               icon="Delete"
               :loading="valueDeleteLoading[row.id]"
-              :disabled="row.adoptStatus === 1 || valueDeleting"
+              :disabled="valueDeleting"
               @click="removeValue(row)"
               >删除</el-button
             >
@@ -518,7 +518,7 @@ const typeTableStore = reactive({
       width: 55,
       minWidth: 55,
       align: "center",
-      selectable: (row) => row.adoptStatus !== 1,
+      selectable: () => true,
     },
     {
       label: "编号",
@@ -640,7 +640,7 @@ const valueTableStore = reactive({
       width: 55,
       minWidth: 55,
       align: "center",
-      selectable: (row) => row.adoptStatus !== 1,
+      selectable: () => true,
     },
     {
       label: "编号",

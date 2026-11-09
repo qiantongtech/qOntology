@@ -340,7 +340,7 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
     import { onBeforeUnmount, computed, getCurrentInstance, nextTick, reactive, ref, watch, onMounted } from 'vue';
     import { useRouter } from 'vue-router';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
-    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { ElMessage } from 'element-plus';
     import {
         listType,
         listTypeExcludeChild,
@@ -658,13 +658,13 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
         }
         const reasonOf = (id) => blockedMap[String(id)];
         const deletableIds = recordIds.filter((id) => !reasonOf(id));
-        const cannotDeleteCount = recordIds.length - deletableIds.length;
+        // 单条删除：不可删时提示原因，可删时统一弹编号确认框（与批量删除同为系统提示风格）。
+        if (reasonOf(row.id)) {
+            proxy.$modal.msgWarning(reasonOf(row.id));
+            return;
+        }
         try {
-            await ElMessageBox.confirm(
-                `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`,
-                '删除确认',
-                { type: 'warning' }
-            );
+            await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
         } catch {
             return;
         }

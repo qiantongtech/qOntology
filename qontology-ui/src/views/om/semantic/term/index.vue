@@ -101,6 +101,7 @@
               link
               type="primary"
               icon="Edit"
+              :disabled="Number(row.status) === 1"
               @click="handleUpdate(row)"
             >
               修改
@@ -110,7 +111,7 @@
               link
               type="danger"
               icon="Delete"
-              :disabled="deleting"
+              :disabled="deleting || Number(row.status) === 1"
               @click="handleDelete(row)"
               >删除
             </el-button>
@@ -773,7 +774,7 @@ async function handleDelete(row) {
       return;
     }
     ids = [row.id];
-    confirmText = '是否确认删除术语编号为"' + row.id + '"的数据项？';
+    confirmText = `是否确认删除编号为${row.id} 的数据项？`;
   } else {
     // 批量删除：仅删除停用（可删）部分，启用中的计入不可删除并拦截。
     const canDeleteRows = selectedRows.value.filter(canDeleteTerm);

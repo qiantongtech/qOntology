@@ -133,6 +133,7 @@
             link
             type="primary"
             icon="Edit"
+            :disabled="String(row.status) === '0'"
             @click="handleUpdate(row)"
             v-hasPermi="['om:enumeration:type:edit']"
             >修改
@@ -141,6 +142,7 @@
             link
             type="danger"
             icon="Delete"
+            :disabled="String(row.status) === '0'"
             @click="handleDelete(row)"
             v-hasPermi="['om:enumeration:type:remove']"
             >删除
@@ -651,7 +653,7 @@ async function handleDelete(row) {
   const confirmText = cannotDeleteCount
     ? `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
     : row
-      ? '是否确认删除枚举编号为"' + deletableIds.join(",") + '"的数据项？'
+      ? `是否确认删除编号为${row.enumId} 的数据项？`
       : `是否确认删除选中的${deletableIds.length}个枚举？`;
   try {
     await proxy.$modal.confirm(confirmText);

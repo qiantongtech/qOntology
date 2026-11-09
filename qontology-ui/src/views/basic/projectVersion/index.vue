@@ -135,6 +135,7 @@
               link
               type="primary"
               icon="Edit"
+              :disabled="Number(row.status) === 1"
               @click="handleUpdate(row)"
               >修改</el-button
             >
@@ -143,6 +144,7 @@
               link
               type="danger"
               icon="Delete"
+              :disabled="Number(row.status) === 1"
               @click="handleDelete(row)"
               >删除</el-button
             >
@@ -576,8 +578,12 @@ async function submitForm() {
  */
 function handleDelete(row) {
   const deleteIds = row?.id ?? ids.value;
+  // 单条删除统一为“是否确认删除编号为X 的数据项？”（与批量删除同为系统提示风格）。
+  const confirmText = row?.id
+    ? `是否确认删除编号为${row.id} 的数据项？`
+    : '是否确认删除项目版本编号为"' + deleteIds + '"的数据项？';
   proxy.$modal
-    .confirm('是否确认删除项目版本编号为"' + deleteIds + '"的数据项？')
+    .confirm(confirmText)
     .then(function () {
       return delProjectVersion(deleteIds);
     })

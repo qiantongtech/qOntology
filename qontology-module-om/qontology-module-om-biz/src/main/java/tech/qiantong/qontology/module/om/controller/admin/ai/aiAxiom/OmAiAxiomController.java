@@ -25,6 +25,7 @@ import tech.qiantong.qontology.module.om.controller.admin.ai.aiAxiom.vo.OmAiAxio
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiAxiom.vo.OmAiAxiomRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiAxiom.vo.OmAiAxiomSaveReqVO;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiCandidateTypeEnum;
+import tech.qiantong.qontology.module.om.service.ai.OmAiCandidateDeleteGuard;
 import tech.qiantong.qontology.module.om.service.ai.aiAxiom.IOmAiAxiomService;
 import tech.qiantong.qontology.module.om.service.ai.aiModeling.IOmAiModelingService;
 
@@ -38,6 +39,9 @@ public class OmAiAxiomController {
     private IOmAiAxiomService service;
     @Resource
     private IOmAiModelingService modelingService;
+
+    @Resource
+    private OmAiCandidateDeleteGuard deleteGuard;
 
     /** 查询候选模型公理。 */
     @Operation(summary = "查询候选模型公理")
@@ -72,6 +76,13 @@ public class OmAiAxiomController {
     @Log(title = "AI候选模型公理", businessType = BusinessType.DELETE)
     public CommonResult<Integer> remove(@PathVariable Long[] ids) {
         return CommonResult.toAjax(service.remove(Arrays.asList(ids)));
+    }
+
+    /** 删除前校验AI候选模型公理是否可删除，返回逐条不可删原因。 */
+    @Operation(summary = "校验AI候选模型公理是否可删除")
+    @PostMapping("/checkDeletable")
+    public CommonResult<Map<Long, String>> checkDeletable(@RequestBody List<Long> ids) {
+        return CommonResult.success(deleteGuard.checkDeletable(OmAiCandidateTypeEnum.AXIOM.getCode(), ids));
     }
 
     /** 查询候选模型公理的证据。 */

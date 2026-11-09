@@ -36,6 +36,7 @@ import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.core.utils.object.BeanUtils;
 import java.util.List;
 import java.util.Map;
+import tech.qiantong.qontology.module.om.service.ai.OmAiCandidateDeleteGuard;
 import tech.qiantong.qontology.module.om.service.ai.aiModeling.IOmAiModelingService;
 
 
@@ -50,6 +51,9 @@ public class OmAiAttributeController extends BaseController {
 
     @Resource
     private IOmAiModelingService modelingService;
+
+    @Resource
+    private OmAiCandidateDeleteGuard deleteGuard;
 
 
     /** 查询AI候选对象类型属性列表。 */
@@ -93,6 +97,14 @@ public class OmAiAttributeController extends BaseController {
     @DeleteMapping("/{ids}")
     public CommonResult<Integer> remove(@PathVariable Long[] ids) {
         return CommonResult.toAjax(service.removeOmAiAttribute(Arrays.asList(ids)));
+    }
+
+    /** 删除前校验AI候选对象类型属性是否可删除，返回逐条不可删原因。 */
+    @Operation(summary = "校验AI候选对象类型属性是否可删除")
+    @PreAuthorize("@ss.hasPermi('om:aiModeling:remove')")
+    @PostMapping("/checkDeletable")
+    public CommonResult<Map<Long, String>> checkDeletable(@RequestBody List<Long> ids) {
+        return CommonResult.success(deleteGuard.checkDeletable("attribute", ids));
     }
 
     /** 查看AI候选对象类型属性来源证据。 */

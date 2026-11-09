@@ -313,7 +313,7 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
 import {computed, getCurrentInstance, nextTick, reactive, ref, watch, onMounted} from 'vue';
 import {useRouter} from 'vue-router';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
-import {ElMessage, ElMessageBox} from 'element-plus';
+import {ElMessage} from 'element-plus';
 import {listType, listTypeExcludeChild, getType, addType, updateType, delType, listTypeTargets} from '@/api/om/object/type';
 import {listTerm} from '@/api/om/term/term';
 import auth from '@/plugins/auth';
@@ -561,7 +561,7 @@ function beforeClose(done) {
 async function handleDelete(row) {
   if (deleting.value || row?.id == null) return;
   try {
-    await ElMessageBox.confirm(`是否删除对象类型“${row.name}”？`, '删除确认', {type: 'warning'});
+    await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
   } catch {
     return;
   }

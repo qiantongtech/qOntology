@@ -50,7 +50,10 @@
           :func="readRows"
         >
           <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
-          <template #reversibleFlag="{ row }">{{ Number(row.reversibleFlag) === 1 ? '是' : '否' }}</template>
+          <!-- 是否可逆接口用 1/0 存储，这里映射为 sys_yes_no 字典值渲染。 -->
+          <template #reversible="{ row }">
+            <dict-tag :options="sys_yes_no" :value="reversibleDictValue(row.reversibleFlag)" />
+          </template>
           <template #creator="{ row }"><div class="flex-column overflow-hidden"><span class="text-ellipsis" :title="row.createBy">{{ row.createBy }}</span><span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span></div></template>
           <template #createTime="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
           <template #operation="{ row }">
@@ -159,7 +162,13 @@
         prop="reversibleFlag"
         class="row-full"
       >
-        <el-radio-group v-model="form.reversibleFlag"><el-radio :value="1">是</el-radio><el-radio :value="0">否</el-radio></el-radio-group>
+        <el-radio-group v-model="form.reversibleFlag">
+          <el-radio
+            v-for="dict in sys_yes_no"
+            :key="dict.value"
+            :value="dict.value === 'Y' ? 1 : 0"
+          >{{ dict.label }}</el-radio>
+        </el-radio-group>
       </qt-form-item>
       <qt-form-item
         label="反向名称"
@@ -201,10 +210,10 @@
 
 <script setup>
 import { useCreatorPhones } from '@/utils/useCreatorPhones';
-import {getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
+import {computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
-import {ElMessage, ElMessageBox} from 'element-plus';
+import {ElMessage} from 'element-plus';
 import {
   listRelations,
   getRelation,
@@ -212,6 +221,7 @@ import {
   addRelation,
   updateRelation,
   delRelation,
+  checkRelationDeletable,
   listRelationTargets
 } from '@/api/om/object/relation';
 
@@ -222,7 +232,14 @@ const props = defineProps({
 });
 const router = useRouter();
 const {versionId, requireVersion} = useOntologyVersion(() => props.versionId);
-const {proxy} = getCurrentInstance();
+const { proxy } = getCurrentInstance();
+const { sys_yes_no } = proxy.useDict('sys_yes_no');
+/** 将 1/0 可逆标识转换为 sys_yes_no 字典值。 */
+const reversibleDictValue = (value) => (Number(value) === 1 ? 'Y' : 'N');
+// 搜索下拉复用 sys_yes_no 字典，接口用 1/0 标识可逆。
+const reversibleOptions = computed(() =>
+    sys_yes_no.value.map((dict) => ({ label: dict.label, value: dict.value === 'Y' ? 1 : 0 }))
+);
 const pageRef = ref();
 const tableRef = ref();
 const relationRef = ref();
@@ -246,9 +263,9 @@ const columns = reactive([
   { prop: 'startTypeName', label: '起点类型', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
   { prop: 'name', label: '关系名称', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
   { prop: 'endTypeName', label: '终点类型', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
-  { prop: 'reverseName', label: '反向名称', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
   { prop: 'description', label: '描述', slot: 'text', minWidth: 240, align: 'left' },
-  { prop: 'reversibleFlag', label: '是否可逆', slot: 'reversibleFlag', width: 100 },
+  { prop: 'reversibleFlag', label: '是否可逆', slot: 'reversible', width: 100 },
+  { prop: 'reverseName', label: '反向名称', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
   { prop: 'createBy', label: '创建人', slot: 'creator', width: 130, align: 'left', headerAlign: 'left' },
   { prop: 'createTime', label: '创建时间', slot: 'createTime', width: 160, sortable: 'custom' },
   { label: '操作', slot: 'operation', width: 220, minWidth: 220, fixed: 'right' },
@@ -258,7 +275,7 @@ const tableEvents = { onSortChange: ({ orderByColumn, isAsc }) => handleSortChan
 const listActions = { getList };
 const searchItems = [
   { label: '对象类型关系名称', prop: 'name', component: { is: 'input' } },
-  { label: '是否可逆', prop: 'reversibleFlag', component: { is: 'select', options: [{ label: '是', value: 1 }, { label: '否', value: 0 }] } },
+  { label: '是否可逆', prop: 'reversibleFlag', component: { is: 'select', options: reversibleOptions } },
 ];
 function readRows() {
   return Promise.resolve({ data: rows.value.map(row => {
@@ -430,16 +447,42 @@ async function handleDelete(row) {
   const ids = row ? [row.id] : [...selectedIds.value];
   if (!ids.length) return;
   const context = contextRequest;
+  // 关系仅在被模型公理 / 数据规则引用时不可删，删除前先取回不可删原因。
+  let blockedMap = {};
   try {
-    await ElMessageBox.confirm(row ? `是否删除关系“${row.name}”？` : `是否删除选中的 ${ids.length} 条关系？`,
-        '删除确认', {type: 'warning'});
+    const response = await checkRelationDeletable(ids);
+    if (context !== contextRequest) return;
+    blockedMap = response.data || {};
   } catch {
     return;
   }
+  const reasonOf = (id) => blockedMap[String(id)];
+  const deletableIds = ids.filter((id) => !reasonOf(id));
+  const cannotDeleteCount = ids.length - deletableIds.length;
+  // 单条删除：不可删时提示原因，可删时统一弹编号确认框；批量删除保留“可删除X/不可删除Y”确认，两者同为系统提示风格。
+  if (row) {
+    if (reasonOf(row.id)) {
+      proxy.$modal.msgWarning(reasonOf(row.id));
+      return;
+    }
+    try {
+      await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
+    } catch {
+      return;
+    }
+  } else {
+    try {
+      await proxy.$modal.confirm(
+        `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`);
+    } catch {
+      return;
+    }
+  }
+  if (!deletableIds.length) return;
   if (context !== contextRequest || deleting.value) return;
   deleting.value = true;
   try {
-    await delRelation(ids);
+    await delRelation(deletableIds);
     if (context !== contextRequest) return;
     ElMessage.success('删除成功');
     await getList();

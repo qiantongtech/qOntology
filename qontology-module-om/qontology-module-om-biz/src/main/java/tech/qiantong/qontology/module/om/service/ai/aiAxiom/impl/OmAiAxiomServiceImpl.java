@@ -1,6 +1,7 @@
 package tech.qiantong.qontology.module.om.service.ai.aiAxiom.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import jakarta.annotation.Resource;
 import java.util.Collection;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,11 +14,15 @@ import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiAxiom.OmAiAxiomDO;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiAxiom.OmAiAxiomMapper;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiAdoptStatusEnum;
 import tech.qiantong.qontology.module.om.service.ai.aiAxiom.IOmAiAxiomService;
+import tech.qiantong.qontology.module.om.service.ai.OmAiCandidateDeleteGuard;
 
 /** AI候选模型公理服务实现。 */
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class OmAiAxiomServiceImpl extends ServiceImpl<OmAiAxiomMapper, OmAiAxiomDO> implements IOmAiAxiomService {
+
+    @Resource
+    private OmAiCandidateDeleteGuard deleteGuard;
 
     @Override
     public PageResult<OmAiAxiomDO> getPage(OmAiAxiomPageReqVO reqVO) {
@@ -48,12 +53,7 @@ public class OmAiAxiomServiceImpl extends ServiceImpl<OmAiAxiomMapper, OmAiAxiom
 
     @Override
     public int remove(Collection<Long> ids) {
-        for (Long id : ids) {
-            if (OmAiAdoptStatusEnum.ADOPTED.getCode().equals(get(id).getAdoptStatus())) {
-                throw new ServiceException("已采纳数据不可删除");
-            }
-        }
-        return baseMapper.deleteBatchIds(ids);
+        return deleteGuard.deleteCandidates("axiom", ids);
     }
 
     @Override

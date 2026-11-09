@@ -27,6 +27,7 @@ import tech.qiantong.qontology.module.om.controller.admin.ai.aiAttribute.vo.*;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiAttribute.OmAiAttributeDO;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiAttribute.OmAiAttributeMapper;
 import tech.qiantong.qontology.module.om.service.ai.aiAttribute.IOmAiAttributeService;
+import tech.qiantong.qontology.module.om.service.ai.OmAiCandidateDeleteGuard;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiAdoptStatusEnum;
 import tech.qiantong.qontology.common.exception.ServiceException;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -38,6 +39,9 @@ import tech.qiantong.qontology.core.utils.object.BeanUtils;
 public class OmAiAttributeServiceImpl extends ServiceImpl<OmAiAttributeMapper, OmAiAttributeDO> implements IOmAiAttributeService {
     @Resource
     private OmAiAttributeMapper mapper;
+
+    @Resource
+    private OmAiCandidateDeleteGuard deleteGuard;
 
     /** 获得AI候选对象类型属性分页列表。 */
     @Override
@@ -69,15 +73,10 @@ public class OmAiAttributeServiceImpl extends ServiceImpl<OmAiAttributeMapper, O
         return mapper.updateById(data);
     }
 
-    /** 批量删除AI候选对象类型属性。 */
+    /** 批量删除AI候选对象类型属性：只删除可删部分。 */
     @Override
     public int removeOmAiAttribute(Collection<Long> ids) {
-        for (Long id : ids) {
-            if (OmAiAdoptStatusEnum.ADOPTED.getCode().equals(getRequired(id).getAdoptStatus())) {
-                throw new ServiceException("已采纳数据不可删除");
-            }
-        }
-        return mapper.deleteBatchIds(ids);
+        return deleteGuard.deleteCandidates("attribute", ids);
     }
 
     /** 获得AI候选对象类型属性详情。 */

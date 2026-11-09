@@ -127,6 +127,7 @@
               link
               type="primary"
               icon="Edit"
+              :disabled="Number(scope.row.status) === 1"
               @click="handleUpdate(scope.row)"
               v-hasPermi="['om:dataType:datatype:edit']"
               >修改
@@ -135,6 +136,7 @@
               link
               type="danger"
               icon="Delete"
+              :disabled="Number(scope.row.status) === 1"
               @click="handleDelete(scope.row)"
               v-hasPermi="['om:dataType:datatype:remove']"
               >删除
@@ -1044,7 +1046,7 @@ function handleDelete(row) {
       const confirmText = cannotDeleteCount
         ? `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
         : row
-          ? '是否确认删除数据类型编号为"' + deletableIds.join(",") + '"的数据项？'
+          ? `是否确认删除编号为${row.id} 的数据项？`
           : `是否确认删除选中的${deletableIds.length}个业务数据类型？`;
       return proxy.$modal
         .confirm(confirmText)

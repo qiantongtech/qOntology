@@ -390,7 +390,7 @@ import {
   watch,
 } from "vue";
 
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage } from "element-plus";
 
 import AttributeTypeConfig from "./AttributeTypeConfig.vue";
 
@@ -1132,15 +1132,12 @@ async function handleDelete(row) {
 
   const objectTypeId = props.objectTypeId;
 
+  // 属性沿用原有删除逻辑，无删除前可删性校验；确认弹窗参考术语管理统一为 $modal.confirm。
   try {
-    await ElMessageBox.confirm(
+    await proxy.$modal.confirm(
       row
-        ? `是否删除属性“${row.name}”？`
-        : `是否删除选中的 ${ids.length} 条属性？`,
-
-      "删除确认",
-
-      { type: "warning" }
+        ? `是否确认删除编号为${row.id} 的数据项？`
+        : `是否确认删除选中的 ${ids.length} 个属性？`
     );
   } catch {
     return;

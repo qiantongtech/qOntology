@@ -23,6 +23,7 @@ import tech.qiantong.qontology.module.om.controller.admin.ai.aiDataRule.vo.OmAiD
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiDataRule.vo.OmAiDataRuleRespVO;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiDataRule.vo.OmAiDataRuleSaveReqVO;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiCandidateTypeEnum;
+import tech.qiantong.qontology.module.om.service.ai.OmAiCandidateDeleteGuard;
 import tech.qiantong.qontology.module.om.service.ai.aiDataRule.IOmAiDataRuleService;
 import tech.qiantong.qontology.module.om.service.ai.aiModeling.IOmAiModelingService;
 
@@ -35,6 +36,9 @@ public class OmAiDataRuleController {
     private IOmAiDataRuleService service;
     @Resource
     private IOmAiModelingService modelingService;
+
+    @Resource
+    private OmAiCandidateDeleteGuard deleteGuard;
 
     @GetMapping("/list")
     public CommonResult<PageResult<OmAiDataRuleRespVO>> list(OmAiDataRulePageReqVO request) {
@@ -62,6 +66,12 @@ public class OmAiDataRuleController {
     @Log(title = "AI候选数据规则", businessType = BusinessType.DELETE)
     public CommonResult<Integer> remove(@PathVariable Long[] ids) {
         return CommonResult.toAjax(service.remove(Arrays.asList(ids)));
+    }
+
+    /** 删除前校验AI候选数据规则是否可删除，返回逐条不可删原因。 */
+    @PostMapping("/checkDeletable")
+    public CommonResult<Map<Long, String>> checkDeletable(@RequestBody List<Long> ids) {
+        return CommonResult.success(deleteGuard.checkDeletable(OmAiCandidateTypeEnum.DATA_RULE.getCode(), ids));
     }
 
     @GetMapping("/{id}/evidence")
