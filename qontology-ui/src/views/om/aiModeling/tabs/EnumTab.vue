@@ -60,9 +60,14 @@
 
       <qt-table v-bind="typeTableStore" ref="tableRef">
         <template #text="{ row, column_data }">{{
-          row[column_data.prop]
+          row[column_data.prop] === 0 ? 0 : row[column_data.prop] || "-"
         }}</template>
         <!-- 枚举类型列可点击下钻到该类型的枚举数据。 -->
+        <template #enumName="{ row }">
+          <el-link type="primary" :underline="false" @click="showTypeDetail(row)">
+            {{ row.enumName || "-" }}
+          </el-link>
+        </template>
         <template #enumType="{ row }">
           <el-button link type="primary" @click="openValues(row)">{{
             row.enumType || "-"
@@ -178,7 +183,7 @@
 
       <qt-table v-bind="valueTableStore" ref="valueTableRef" :key="currentType.id">
         <template #text="{ row, column_data }">{{
-          row[column_data.prop]
+          row[column_data.prop] === 0 ? 0 : row[column_data.prop] || "-"
         }}</template>
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -533,15 +538,7 @@ const typeTableStore = reactive({
     {
       label: "枚举名称",
       prop: "enumName",
-      slot: "text",
-      minWidth: 150,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
-    {
-      label: "枚举类型",
-      prop: "enumType",
-      slot: "enumType",
+      slot: "enumName",
       minWidth: 150,
       align: "left",
       showOverflowTooltip: { effect: "light" },
@@ -551,6 +548,14 @@ const typeTableStore = reactive({
       prop: "description",
       slot: "text",
       minWidth: 256,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "枚举类型",
+      prop: "enumType",
+      slot: "enumType",
+      minWidth: 150,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -592,8 +597,8 @@ const typeTableStore = reactive({
     {
       label: "操作",
       slot: "handle",
-      width: 240,
-      minWidth: 240,
+      width: 245,
+      minWidth: 245,
       align: "center",
       fixed: "right",
     },
@@ -657,6 +662,14 @@ const valueTableStore = reactive({
       prop: "enumLabel",
       slot: "text",
       minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "描述",
+      prop: "remark",
+      slot: "text",
+      minWidth: 200,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -743,7 +756,6 @@ const valueRules = {
   status: [{ required: true, message: "请选择状态" }],
 };
 const typeDetailFields = [
-  { prop: "id", label: "编号" },
   { prop: "enumName", label: "枚举名称" },
   { prop: "enumType", label: "枚举类型" },
   { prop: "status", label: "状态" },
@@ -753,7 +765,6 @@ const typeDetailFields = [
   { prop: "remark", label: "备注" },
 ];
 const valueDetailFields = [
-  { prop: "id", label: "编号" },
   { prop: "enumType", label: "枚举类型" },
   { prop: "enumLabel", label: "枚举标签" },
   { prop: "enumValue", label: "枚举键值" },

@@ -480,7 +480,6 @@ const rules = {
   priority: [{ required: true, message: "优先级不能为空" }],
 };
 const detailFields = [
-  { prop: "id", label: "编号" },
   { prop: "question", label: "目标问题", textarea: true },
   { prop: "questionSource", label: "问题来源", textarea: true },
   { prop: "businessScenarios", label: "业务场景", textarea: true },

@@ -67,14 +67,8 @@
             <div class="qt-table-info__main">
               <span
                 class="info-title"
-                :title="
-                  row.enName
-                    ? `${row.stdName || '-'}（${row.enName}）`
-                    : row.stdName
-                "
-                >{{ row.stdName || "-"
-                }}<template v-if="row.enName">（{{ row.enName }}）</template></span
-              >
+                :title="`${row.stdName || '-'}（${row.enName || '-'}）`"
+              >{{ row.stdName || "-" }}（{{ row.enName || "-" }}）</span>
             </div>
             <div class="info-desc" :title="row.description">
               {{ row.description || "-" }}

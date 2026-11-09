@@ -207,6 +207,7 @@ public class BasicProjectVersionServiceImpl extends ServiceImpl<BasicProjectVers
             SysDictData dictData = new SysDictData();
             dictData.setDictLabel(item.getVersion());
             dictData.setDictValue(item.getId().toString());
+            dictData.setStatus(item.getStatus() == null ? null : item.getStatus().toString());
             return dictData;
         }).collect(Collectors.toList());
     }

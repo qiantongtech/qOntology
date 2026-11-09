@@ -273,6 +273,7 @@ const ruleRef = ref();
 const selectedIds = ref([]);
 const saving = ref(false);
 const deleting = ref(false);
+const deleteConfirming = ref(false);
 const deleteLoading = ref({});
 const batchDeleteLoading = ref(false);
 const open = ref(false);
@@ -660,7 +661,7 @@ async function submitForm() {
  * @param {Object} [row] 当前行数据，顶部删除按钮点击时不传参
  */
 async function handleDelete(row) {
-  if (!requireVersion() || deleting.value) return;
+  if (!requireVersion() || deleting.value || deleteConfirming.value) return;
   const isSingle = row?.id != null;
   const ids = isSingle ? [row.id] : [...selectedIds.value];
   if (!ids.length) return;
@@ -668,7 +669,7 @@ async function handleDelete(row) {
   const message = isSingle
     ? `是否确认删除编号为${row.id} 的数据项？`
     : `可删除${ids.length}个，不可删除0个，是否删除可删部分`;
-  deleting.value = true;
+  deleteConfirming.value = true;
   try {
     try {
       await proxy.$modal.confirm(message);
@@ -676,6 +677,7 @@ async function handleDelete(row) {
       return;
     }
     if (context !== contextRequest) return;
+    deleting.value = true;
     if (isSingle) deleteLoading.value[row.id] = true;
     else batchDeleteLoading.value = true;
     await delDataRule(ids);
@@ -683,6 +685,7 @@ async function handleDelete(row) {
     proxy.$modal.msgSuccess('删除成功');
     refreshList();
   } finally {
+    deleteConfirming.value = false;
     deleting.value = false;
     if (isSingle) deleteLoading.value[row.id] = false;
     else batchDeleteLoading.value = false;
