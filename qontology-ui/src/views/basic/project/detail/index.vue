@@ -49,7 +49,7 @@
           <!-- 直接复用项目版本页面；内嵌模式固定查询当前项目，并保留版本增删改查能力。 -->
           <ProjectVersion
             :key="detail.id"
-            embedded
+            :embedded="true"
             :project-id="detail.id"
             :current-version="detail.currentVersion"
           />

@@ -17,11 +17,21 @@
 -->
 
 <template>
-  <div class="app-container" ref="app-container">
-    <GuideTip tip-id="basic/projectVersion.list" />
+  <div
+    :class="props.embedded ? 'project-version-embedded' : 'app-container'"
+    ref="app-container"
+  >
+    <GuideTip v-if="!props.embedded" tip-id="basic/projectVersion.list" />
 
-    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
-      <template #search>
+    <qt-wrap
+      :columns="tableStore.columns"
+      :table-ref="tableRef"
+      :config="{
+        fullContent: !props.embedded,
+        searchShadow: !props.embedded,
+      }"
+    >
+      <template #search v-if="!props.embedded">
         <qt-search-bar
           :items="searchStore.items"
           :params="tableStore.params"
@@ -29,7 +39,7 @@
         />
       </template>
 
-      <template #actions-data>
+      <template #actions-data v-if="!props.embedded">
         <el-button
           type="primary"
           plain
@@ -69,9 +79,10 @@
             当前版本
           </el-tag>
         </template>
-        <!-- 状态列放在创建人之前，启停交互与术语管理一致。 -->
+        <!-- 状态列：独立页用开关交互，嵌入详情页时只读展示。 -->
         <template #status="{ row }">
           <el-switch
+            v-if="!props.embedded"
             v-model="row.status"
             :active-value="1"
             :inactive-value="0"
@@ -83,6 +94,7 @@
             :aria-label="`${row.version}状态`"
             @change="(value) => handleStatusChange(row, value)"
           />
+          <dict-tag v-else :options="project_status" :value="row.status" />
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -292,6 +304,13 @@ import {
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
+// 项目详情页以页签形式内嵌本页，固定项目编号与项目当前版本号；不传参数时保持路由驱动的独立页面行为。
+const props = defineProps({
+  embedded: { type: Boolean, default: false },
+  projectId: { type: [String, Number], default: undefined },
+  currentVersion: { type: String, default: "" },
+});
+
 const { proxy } = getCurrentInstance();
 const { creatorPhones, formatCreator } = useCreatorPhones();
 const { project_status } = proxy.useDict("project_status");
@@ -433,15 +452,28 @@ const data = reactive({
 
 const { form, rules } = toRefs(data);
 
-// 路由版本变化时先取当前版本信息，落定 projectId 后再刷新列表。
+// 独立页面：路由版本变化时先取当前版本信息，落定 projectId 后再刷新列表。
 watch(
   () => route.params.versionId,
   async () => {
+    if (props.embedded) return;
     versionId.value = route.params.versionId || null;
     if (!versionId.value) return;
     const response = await getProjectVersion(versionId.value);
     currentVersion.value = response.data;
     tableStore.params.projectId = currentVersion.value.projectId;
+    await nextTick();
+    tableRef.value?.resetQuery();
+  },
+  { immediate: true }
+);
+
+// 内嵌页面：项目编号由项目详情传入，变更时重置分页并重新拉取当前项目的版本。
+watch(
+  () => props.projectId,
+  async (pid) => {
+    if (!props.embedded || !pid) return;
+    tableStore.params.projectId = pid;
     await nextTick();
     tableRef.value?.resetQuery();
   },
@@ -597,16 +629,35 @@ function handleDelete(row) {
 
 /**
  * 跳转版本对比页，携带项目编号与待对比版本编号。
+ * 项目详情页没有导航栏当前版本，改以点击的版本作为基准版本，并标记来源供对比页返回详情页。
  * @param {Object} row 当前行数据
  */
 function handleDiff(row) {
-  router.push({
-    path: `/om/${versionId.value}/projectVersion/diff`,
+  console.log(route.path);
+  let versionId = props.embedded ? row.id : route.params.versionId;
+  let projectId = props.embedded ? props.projectId : routeVersion.value.projectId;
+  let compareVersion = row.id;
+  if(route.path === '/basic/project/detail'){
+    router.push({
+    path: `/basic/project/detail/versionDiff`,
     query: {
-      projectId: currentVersion.value.projectId,
-      compareVersion: row.id,
+      projectId: projectId,
+      currentVersion: versionId,
+      compareVersion: compareVersion
     },
   });
+  } else{
+    router.push({
+      path: `/om/${props.embedded ? row.id : versionId}/projectVersion/diff`,
+      query: {
+        projectId: projectId,
+        ...(props.embedded
+          ? { from: "projectDetail" }
+          : { compareVersion: compareVersion }),
+      },
+    });
+  }
+
 }
 </script>
 
@@ -625,5 +676,22 @@ function handleDiff(row) {
 /* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
 .version-form :deep(.el-form-item.has-tip) {
   margin-bottom: 25px;
+}
+
+/* 内嵌详情页时去除容器边框与内边距，避免与详情卡片双层包裹。 */
+.project-version-embedded {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+
+  :deep(.qt-wrap) {
+    padding: 0;
+  }
+
+  :deep(.el-table) {
+    border: none;
+  }
 }
 </style>
