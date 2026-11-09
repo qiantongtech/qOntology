@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -165,5 +166,18 @@ public class OmEnumTypeController extends BaseController {
     @DeleteMapping("/{enumIds}")
     public CommonResult<Integer> remove(@PathVariable("enumIds") Long[] ids) {
         return CommonResult.toAjax(omEnumTypeService.removeOmEnumType(Arrays.asList(ids)));
+    }
+
+    /**
+     * 批量校验枚举类型是否可删除，返回编号到不可删除原因的映射（仅包含不可删除项）。
+     *
+     * @param ids 待校验的枚举类型编号集合
+     * @return 编号到不可删除原因的映射
+     */
+    @Operation(summary = "校验枚举类型是否可删除")
+    @PreAuthorize("@ss.hasPermi('om:enumeration:type:remove')")
+    @PostMapping("/checkDeletable")
+    public CommonResult<Map<Long, String>> checkDeletable(@RequestBody List<Long> ids) {
+        return CommonResult.success(omEnumTypeService.checkDeletable(ids));
     }
 }

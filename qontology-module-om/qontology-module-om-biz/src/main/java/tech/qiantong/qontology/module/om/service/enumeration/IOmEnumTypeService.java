@@ -68,6 +68,16 @@ public interface IOmEnumTypeService extends IService<OmEnumTypeDO> {
     int removeOmEnumType(Collection<Long> idList);
 
     /**
+     * 批量校验枚举类型是否可删除。
+     *
+     * <p>启用中、存在枚举数据、被对象类型属性引用、被业务数据类型引用、被公理/规则引用的枚举不可删除。</p>
+     *
+     * @param idList 待校验的枚举类型编号集合
+     * @return 编号到不可删除原因的映射，仅包含不可删除的枚举；未命中的编号代可删除
+     */
+    Map<Long, String> checkDeletable(Collection<Long> idList);
+
+    /**
      * 获得枚举类型详情
      *
      * @param id 枚举类型编号

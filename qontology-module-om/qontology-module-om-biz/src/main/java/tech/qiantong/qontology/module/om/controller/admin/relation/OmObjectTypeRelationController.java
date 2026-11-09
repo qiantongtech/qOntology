@@ -24,6 +24,7 @@ import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -223,5 +224,18 @@ public class OmObjectTypeRelationController extends BaseController {
     @DeleteMapping("/{ids}")
     public CommonResult<Integer> remove(@PathVariable Long[] ids) {
         return CommonResult.toAjax(relationService.removeOmObjectTypeRelation(Arrays.asList(ids), getWorkSpaceId()));
+    }
+
+    /**
+     * 批量校验对象类型关系是否可删除，返回编号到不可删除原因的映射（仅包含不可删除项）。
+     *
+     * @param ids 待校验的关系编号集合
+     * @return 编号到不可删除原因的映射
+     */
+    @Operation(summary = "校验对象类型关系是否可删除")
+    @PreAuthorize("@ss.hasPermi('om:object:relation:remove')")
+    @PostMapping("/checkDeletable")
+    public CommonResult<Map<Long, String>> checkDeletable(@RequestBody List<Long> ids) {
+        return CommonResult.success(relationService.checkDeletable(ids, getWorkSpaceId()));
     }
 }

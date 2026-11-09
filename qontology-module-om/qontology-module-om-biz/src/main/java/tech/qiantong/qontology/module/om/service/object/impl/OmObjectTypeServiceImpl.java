@@ -24,6 +24,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -151,14 +154,51 @@ public class OmObjectTypeServiceImpl
 
     @Override
     public int removeOmObjectType(Long id) {
-        if (omObjectTypeMapper.selectById(id) == null) {
-            throw new ServiceException("对象类型不存在", 601);
+        // 删除前先计算不可删除原因（下级、属性、关系引用、公理/规则），命中则拦截。
+        String reason = objectTypeDeleteBlockReason(id);
+        if (reason != null) {
+            throw new ServiceException(reason, 601);
+        }
+        objectTypeTargetService.removeByObjectType(id);
+        return omObjectTypeMapper.deleteById(id);
+    }
+
+    @Override
+    public Map<Long, String> checkDeletable(Collection<Long> idList) {
+        Map<Long, String> blocked = new LinkedHashMap<>();
+        if (idList == null || idList.isEmpty()) {
+            return blocked;
+        }
+        for (Long id : idList) {
+            if (id == null) {
+                continue;
+            }
+            String reason = objectTypeDeleteBlockReason(id);
+            if (reason != null) {
+                blocked.put(id, reason);
+            }
+        }
+        return blocked;
+    }
+
+    /**
+     * 计算对象类型不可删除的原因，可删除时返回 null。
+     *
+     * <p>依次校验：对象类型是否存在、是否有下级对象类型、是否存有对象类型属性、是否被关系引用、是否被公理/规则引用。</p>
+     *
+     * @param id 对象类型编号
+     * @return 不可删除原因；可删除时为 null
+     */
+    private String objectTypeDeleteBlockReason(Long id) {
+        OmObjectTypeDO record = omObjectTypeMapper.selectById(id);
+        if (record == null) {
+            return "对象类型不存在";
         }
         if (omObjectTypeMapper.selectCount(new QueryWrapper<OmObjectTypeDO>().eq("parent_id", id)) > 0) {
-            throw new ServiceException("存在下级对象类型，请先删除下级", 601);
+            return "对象类型“" + record.getName() + "”存在下级对象类型，请先删除下级";
         }
         if (attributeMapper.selectCount(new QueryWrapper<OmObjectTypeAttributeDO>().eq("object_type_id", id)) > 0) {
-            throw new ServiceException("存在对象类型属性，请先删除属性", 601);
+            return "对象类型“" + record.getName() + "”存在对象类型属性，请先删除属性";
         }
         if (
             relationMapper.selectCount(
@@ -168,11 +208,14 @@ public class OmObjectTypeServiceImpl
             ) >
             0
         ) {
-            throw new ServiceException("对象类型已被关系引用，请先删除相关关系", 601);
+            return "对象类型“" + record.getName() + "”已被关系引用，请先删除相关关系";
         }
-        constraintReferenceGuard.checkObjectTypes(java.util.Collections.singleton(id));
-        objectTypeTargetService.removeByObjectType(id);
-        return omObjectTypeMapper.deleteById(id);
+        try {
+            constraintReferenceGuard.checkObjectTypes(Collections.singleton(id));
+        } catch (ServiceException ex) {
+            return ex.getMessage();
+        }
+        return null;
     }
 
     /**

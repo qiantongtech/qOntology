@@ -150,6 +150,11 @@ export function deleteCandidate(type, id) {
   return request({ url: `/om/${getCandidatePath(type)}/${id}`, method: 'delete' })
 }
 
+/** 删除前校验候选数据是否可删除，返回逐条不可删原因（键为候选编号、值为原因）。 */
+export function checkCandidateDeletable(type, ids) {
+  return request({ url: `/om/${getCandidatePath(type)}/checkDeletable`, method: 'post', data: ids })
+}
+
 /** 查询候选数据的来源证据和文件位置。 */
 export function getCandidateEvidence(type, id) {
   return request({ url: `/om/${getCandidatePath(type)}/${id}/evidence`, method: 'get' })

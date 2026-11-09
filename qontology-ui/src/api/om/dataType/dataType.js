@@ -63,6 +63,16 @@ export function delDataType(id, versionId) {
     });
 }
 
+// 批量校验业务数据类型是否可删除，返回编号到不可删除原因的映射
+export function checkDataTypeDeletable(ids, versionId) {
+    return request({
+        url: '/om/dataType/checkDeletable',
+        method: 'post',
+        params: { versionId },
+        data: ids
+    });
+}
+
 export function getEnumTypeDict(versionId, enumSource) {
     return request({ url: '/om/dataType/enumOptions', method: 'get', params: { versionId, enumSource } });
 }

@@ -19,6 +19,7 @@
 package tech.qiantong.qontology.module.om.service.object;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -65,6 +66,14 @@ public interface IOmObjectTypeService extends IService<OmObjectTypeDO> {
      * @return 实际受影响的记录数
      */
     int removeOmObjectType(Long id);
+
+    /**
+     * 批量校验对象类型是否可删除，返回编号到不可删除原因的映射（仅包含不可删除项）。
+     *
+     * @param idList 待校验的对象类型编号集合
+     * @return 编号到不可删除原因的映射
+     */
+    Map<Long, String> checkDeletable(Collection<Long> idList);
 
     /**
      * 获得对象类型详情

@@ -1,6 +1,7 @@
 package tech.qiantong.qontology.module.om.service.ai.aiDataRule.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import jakarta.annotation.Resource;
 import java.util.Collection;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,12 +14,16 @@ import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiDataRule.OmAiDataRu
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiDataRule.OmAiDataRuleMapper;
 import tech.qiantong.qontology.module.om.enums.ai.OmAiAdoptStatusEnum;
 import tech.qiantong.qontology.module.om.service.ai.aiDataRule.IOmAiDataRuleService;
+import tech.qiantong.qontology.module.om.service.ai.OmAiCandidateDeleteGuard;
 
 /** AI候选数据规则服务实现。 */
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class OmAiDataRuleServiceImpl extends ServiceImpl<OmAiDataRuleMapper, OmAiDataRuleDO>
         implements IOmAiDataRuleService {
+
+    @Resource
+    private OmAiCandidateDeleteGuard deleteGuard;
 
     @Override
     public PageResult<OmAiDataRuleDO> getPage(OmAiDataRulePageReqVO req) {
@@ -49,12 +54,7 @@ public class OmAiDataRuleServiceImpl extends ServiceImpl<OmAiDataRuleMapper, OmA
 
     @Override
     public int remove(Collection<Long> ids) {
-        for (Long id : ids) {
-            if (OmAiAdoptStatusEnum.ADOPTED.getCode().equals(get(id).getAdoptStatus())) {
-                throw new ServiceException("已采纳数据不可删除");
-            }
-        }
-        return baseMapper.deleteBatchIds(ids);
+        return deleteGuard.deleteCandidates("data_rule", ids);
     }
 
     @Override

@@ -1,0 +1,8 @@
+<!-- 文档采纳：确认文档内容并纳入模型，颜色继承按钮状态。 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="13,3 5,3 5,21 19,21 19,10" />
+    <polyline points="9,10 12,13 21,4" />
+    <polyline points="9,17 15,17" />
+  </g>
+</svg>

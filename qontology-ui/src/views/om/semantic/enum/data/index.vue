@@ -119,6 +119,7 @@
             link
             type="primary"
             icon="Edit"
+            :disabled="String(row.status) === '0'"
             @click="handleUpdate(row)"
             >修改</el-button>
           <el-button
@@ -126,7 +127,7 @@
             link
             type="danger"
             icon="Delete"
-            :disabled="deleting"
+            :disabled="deleting || String(row.status) === '0'"
             @click="handleDelete(row)"
             >删除</el-button>
         </template>
@@ -363,6 +364,7 @@ const saving = ref(false);
 const deleting = ref(false);
 const statusSaving = reactive({});
 const ids = ref([]);
+const selectedRows = ref([]);
 const multiple = ref(true);
 const title = ref("");
 const detail = ref({});
@@ -585,6 +587,7 @@ function cancel() {
 /** 同步当前选中的枚举数据编码，并控制批量删除按钮状态。 */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.enumCode);
+  selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
@@ -712,18 +715,39 @@ async function submitForm() {
   }
 }
 
-/** 确认并删除选中数据，仅在枚举上下文未改变时刷新列表和父级计数。 */
+/** 枚举数据是否可删除：启用中（status=0）不允许删除，需先停用（与行内删除按钮禁用规则一致）。 */
+function canDeleteData(row) {
+  return !!row && String(row.status) !== "0";
+}
+
+/** 确认并删除选中数据；批量删除时启用中的计入不可删除，统一弹“可删除X/不可删除Y”确认框，只删停用可删部分。 */
 async function handleDelete(row) {
   const context = contextRequest;
-  const recordIds = row ? [row.enumCode] : [...ids.value];
-  if (!recordIds.length || deleting.value) return;
+  if (deleting.value) return;
+  const selected = row ? [row] : [...selectedRows.value];
+  if (!selected.length) return;
+  let recordIds;
+  let confirmText;
+  if (row) {
+    // 单条删除：启用中的行删除按钮已禁用，直接弹编号确认框。
+    recordIds = [row.enumCode];
+    confirmText = `是否确认删除编号为${row.enumCode} 的数据项？`;
+  } else {
+    // 批量删除：仅删除停用（可删）部分，启用中的计入不可删除；即使可删数为 0 也统一弹“可删除X/不可删除Y”确认框。
+    const canDeleteRows = selected.filter(canDeleteData);
+    const cannotDeleteCount = selected.length - canDeleteRows.length;
+    recordIds = canDeleteRows.map((item) => item.enumCode);
+    confirmText = cannotDeleteCount
+      ? `可删除${canDeleteRows.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
+      : `是否确认删除选中的${canDeleteRows.length}个枚举数据？`;
+  }
   try {
-    await proxy.$modal.confirm(
-      '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
-    );
+    await proxy.$modal.confirm(confirmText);
   } catch {
     return;
   }
+  // 确认后可删部分为空（如全部启用）时不再发起删除请求。
+  if (!recordIds.length) return;
   if (deleting.value || context !== contextRequest) return;
   deleting.value = true;
   try {

@@ -69,6 +69,15 @@ export function delType(id) {
     });
 }
 
+// 批量校验对象类型是否可删除，返回编号到不可删除原因的映射
+export function checkTypeDeletable(ids) {
+    return request({
+        url: '/om/objectType/checkDeletable',
+        method: 'post',
+        data: ids
+    });
+}
+
 // 查询可供关联的有效建模目标
 export function listTypeTargetOptions(query) {
     return request({

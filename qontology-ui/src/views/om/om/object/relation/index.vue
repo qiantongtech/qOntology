@@ -50,6 +50,8 @@
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+        <!-- 反向名称为空时展示占位横线。 -->
+        <template #reverseName="{ row }">{{ row.reverseName || '-' }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
@@ -247,7 +249,7 @@
     import { computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
     import { useRouter } from 'vue-router';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
-    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { ElMessage } from 'element-plus';
     import {
         listRelations,
         getRelation,
@@ -255,6 +257,7 @@
         addRelation,
         updateRelation,
         delRelation,
+        checkRelationDeletable,
         listRelationTargets,
         listRelationTargetOptions
     } from '@/api/om/object/relation';
@@ -318,9 +321,9 @@
             { label: '起点类型', prop: 'startTypeName', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '关系名称', prop: 'name', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '终点类型', prop: 'endTypeName', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '反向名称', prop: 'reverseName', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '描述', prop: 'description', slot: 'text', minWidth: 256, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 10, showOverflowTooltip: { effect: 'light' },},
+            { label: '反向名称', prop: 'reverseName', slot: 'reverseName', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: { effect: 'light' },},
             { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true, showOverflowTooltip: { effect: 'light' },},
             { label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right', showOverflowTooltip: { effect: 'light' },}
@@ -521,29 +524,67 @@
     }
 
     /**
-     * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
-     * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+     * 删除按钮操作：行内删除取当前行编号，顶部批量删除取多选编号。
+     * 单条删除先弹编号确认框、点击确定后再校验；批量删除先校验再弹“可删除X/不可删除Y”确认，确认后只删未被公理/规则引用的可删部分。
+     * @param {Object} [row] 当前行数据，顶部批量按钮点击时为空
      */
     async function handleDelete(row) {
         if (deleting.value) return;
         const ids = row ? [row.id] : [...selectedIds.value];
         if (!ids.length) return;
         const context = contextRequest;
-        try {
-            await ElMessageBox.confirm(
-                row ? `是否删除关系“${row.name}”？` : `是否删除选中的 ${ids.length} 条关系？`,
-                '删除确认',
-                { type: 'warning' }
-            );
-        } catch {
-            return;
+        let deletableIds = [];
+        if (row) {
+            // 单条删除：先弹“是否确认删除编号为X 的数据项？”，点击确定后再调校验接口取回不可删原因。
+            try {
+                await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
+            } catch {
+                return;
+            }
+            let blockedMap = {};
+            try {
+                const response = await checkRelationDeletable(ids);
+                if (context !== contextRequest) return;
+                blockedMap = response.data || {};
+            } catch {
+                return;
+            }
+            // 确认后才校验：被模型公理 / 数据规则引用时提示原因并终止。
+            const reason = blockedMap[String(row.id)];
+            if (reason) {
+                proxy.$modal.msgWarning(reason);
+                return;
+            }
+            deletableIds = ids;
+        } else {
+            // 批量删除：先校验再弹“可删除X/不可删除Y”确认，确认后只删可删部分。
+            let blockedMap = {};
+            try {
+                const response = await checkRelationDeletable(ids);
+                if (context !== contextRequest) return;
+                blockedMap = response.data || {};
+            } catch {
+                return;
+            }
+            const reasonOf = (id) => blockedMap[String(id)];
+            deletableIds = ids.filter((id) => !reasonOf(id));
+            const cannotDeleteCount = ids.length - deletableIds.length;
+            try {
+                await proxy.$modal.confirm(
+                    `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`
+                );
+            } catch {
+                return;
+            }
         }
+        if (!deletableIds.length) return;
         if (context !== contextRequest || deleting.value) return;
         deleting.value = true;
         try {
-            await delRelation(ids);
+            await delRelation(deletableIds);
             if (context !== contextRequest) return;
             ElMessage.success('删除成功');
+            selectedIds.value = [];
             refreshList();
         } finally {
             deleting.value = false;

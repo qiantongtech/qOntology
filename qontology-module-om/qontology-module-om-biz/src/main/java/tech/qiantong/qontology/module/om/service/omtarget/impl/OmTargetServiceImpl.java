@@ -130,13 +130,44 @@ public class OmTargetServiceImpl extends ServiceImpl<OmTargetMapper, OmTargetDO>
     /**
      * 删除建模目标
      *
+     * <p>已被对象类型或对象类型关系绑定（valid_flag=true）的建模目标不允许删除，
+     * 这里只删除未被绑定的部分，作为前端“删除可删部分”交互的服务端兜底。
+     *
      * @param idList 编号集合
      * @return 影响行数
      */
     @Override
     public int removeOmTarget(Collection<Long> idList) {
+        if (idList == null || idList.isEmpty()) {
+            return 0;
+        }
+        Set<Long> boundIds = getBoundTargetIds(idList);
+        List<Long> deletableIds = idList.stream()
+                .filter(id -> !boundIds.contains(id))
+                .collect(Collectors.toList());
+        if (deletableIds.isEmpty()) {
+            return 0;
+        }
         // 批量删除建模目标
-        return baseMapper.deleteByIds(idList);
+        return baseMapper.deleteByIds(deletableIds);
+    }
+
+    /**
+     * 查询给定目标中被对象类型或对象类型关系有效绑定的目标编号。
+     *
+     * @param idList 待删除的目标编号集合
+     * @return 存在绑定的目标编号集合
+     */
+    private Set<Long> getBoundTargetIds(Collection<Long> idList) {
+        Set<Long> boundIds = new HashSet<>();
+        objectTypeTargetMapper.selectList(new QueryWrapper<OmObjectTypeTargetDO>()
+                        .select("DISTINCT target_id").in("target_id", idList).eq("valid_flag", true))
+                .forEach(record -> boundIds.add(record.getTargetId()));
+        relationTargetMapper.selectList(new QueryWrapper<OmRelationTargetDO>()
+                        .select("DISTINCT target_id").in("target_id", idList)
+                        .eq("valid_flag", true).isNotNull("relation_id"))
+                .forEach(record -> boundIds.add(record.getTargetId()));
+        return boundIds;
     }
 
     /**

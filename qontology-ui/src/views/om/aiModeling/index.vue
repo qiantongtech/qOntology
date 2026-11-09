@@ -47,7 +47,7 @@
           @click="removeTasks()"
           @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
@@ -510,11 +510,12 @@ async function removeTasks(row) {
   if (deleting.value) return;
   const deleteIds = row ? [row.id] : [...selectedIds.value];
   if (!deleteIds.length) return;
-  const target = row
-    ? `任务“${row.taskName}”`
-    : `选中的 ${deleteIds.length} 条任务`;
+  // 单条删除统一为“是否确认删除编号为X 的数据项？”（与批量删除同为系统提示风格）。
+  const confirmText = row
+    ? `是否确认删除编号为${row.id} 的数据项？`
+    : `确认删除选中的 ${deleteIds.length} 条任务？`;
   try {
-    await proxy.$modal.confirm(`确认删除${target}？`);
+    await proxy.$modal.confirm(confirmText);
   } catch {
     return;
   }

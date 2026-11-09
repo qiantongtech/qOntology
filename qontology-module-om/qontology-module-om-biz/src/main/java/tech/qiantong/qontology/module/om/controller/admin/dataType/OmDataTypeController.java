@@ -24,6 +24,7 @@ import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -157,5 +158,19 @@ public class OmDataTypeController extends BaseController {
     @DeleteMapping("/{ids}")
     public CommonResult<Integer> remove(@PathVariable("ids") Long[] ids, @RequestParam("versionId") Long versionId) {
         return CommonResult.toAjax(omDataTypeService.removeOmDataType(Arrays.asList(ids), versionId));
+    }
+
+    /**
+     * 批量校验业务数据类型是否可删除，返回编号到不可删除原因的映射（仅包含不可删除项）。
+     *
+     * @param ids 待校验的业务数据类型编号集合
+     * @param versionId 项目版本 ID
+     * @return 编号到不可删除原因的映射
+     */
+    @Operation(summary = "校验业务数据类型是否可删除")
+    @PreAuthorize("@ss.hasPermi('om:dataType:datatype:remove')")
+    @PostMapping("/checkDeletable")
+    public CommonResult<Map<Long, String>> checkDeletable(@RequestBody List<Long> ids, @RequestParam("versionId") Long versionId) {
+        return CommonResult.success(omDataTypeService.checkDeletable(ids, versionId));
     }
 }

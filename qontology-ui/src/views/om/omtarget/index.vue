@@ -275,6 +275,7 @@ const searchStore = reactive({
 const open = ref(false);
 const openDetail = ref(false);
 const ids = ref([]);
+const selectedRows = ref([]);
 const multiple = ref(true);
 const title = ref("");
 
@@ -297,6 +298,7 @@ watch(
     versionId.value = route.params.versionId || null;
     tableStore.params.versionId = versionId.value;
     ids.value = [];
+    selectedRows.value = [];
     multiple.value = true;
     tableRef.value?.resetQuery();
   },
@@ -350,6 +352,7 @@ function reset() {
 
 // 多选框选中数据
 function handleSelectionChange(selection) {
+  selectedRows.value = selection;
   ids.value = selection.map((item) => item.id);
   multiple.value = !selection.length;
 }
@@ -395,16 +398,42 @@ function submitForm() {
   });
 }
 
-/** 删除按钮操作 */
+/** 建模目标是否可删除：未被对象类型或对象类型关系绑定（关联元素数为 0）才能删。 */
+function canDeleteTarget(row) {
+  return !row || Number(row.relatedElementCount || 0) === 0;
+}
+
+/** 删除按钮操作：单条删除弹“是否确认删除编号为X 的数据项？”，批量删除弹“可删除X/不可删除Y”确认后只删未被关联绑定的可删部分。 */
 function handleDelete(row) {
-  const _ids = row?.id || ids.value;
-  proxy.$modal.confirm('是否确认删除建模目标编号为"' + _ids + '"的数据项？').then(function () {
-    return delTarget(_ids);
-  }).then(() => {
-    getList();
-    proxy.$modal.msgSuccess("删除成功");
-  }).catch(() => {
-  });
+  const records = row ? [row] : selectedRows.value;
+  if (!records.length) return;
+  // 已被对象类型或对象类型关系绑定（关联元素数 > 0）的建模目标不可删除。
+  const canDeleteRows = records.filter(canDeleteTarget);
+  const canDeleteIds = canDeleteRows.map((item) => item.id);
+  const canDeleteCount = canDeleteRows.length;
+  const cannotDeleteCount = records.length - canDeleteCount;
+  // 单条删除统一先弹“是否确认删除编号为X 的数据项？”（与批量删除同为系统提示风格）；点击确定后再判断可删性。
+  const confirmText = row
+    ? `是否确认删除编号为${row.id} 的数据项？`
+    : `可删除${canDeleteCount}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`;
+
+  proxy.$modal
+    .confirm(confirmText)
+    .then(function () {
+      // 确认后才校验：单条已被对象类型或关系绑定时提示原因并终止，不发起删除。
+      if (row && !canDeleteCount) {
+        proxy.$modal.msgWarning("该建模目标已被对象类型或关系引用，无法删除");
+        return;
+      }
+      if (!canDeleteCount) return;
+      return delTarget(canDeleteIds.join(","));
+    })
+    .then(() => {
+      if (!canDeleteCount) return;
+      getList();
+      proxy.$modal.msgSuccess("删除成功");
+    })
+    .catch(() => {});
 }
 
 function routeTo(link, row) {

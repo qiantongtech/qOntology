@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -150,10 +151,56 @@ public class OmObjectTypeRelationServiceImpl
             throw new ServiceException("部分关系已不存在，请刷新后重试", 601);
         }
         constraintReferenceGuard.checkRelations(ids);
+        // 关系定义本身就要求关联建模目标，删除时级联清理其与建模目标的绑定，
+        // 不再把“存在绑定”当作拦截条件（否则任何关系都无法删除）；真正的拦截依据是上方被公理/数据规则引用校验。
         relationTargetService.removeByRelations(ids, workspaceId);
         return omObjectTypeRelationMapper.delete(
             new QueryWrapper<OmObjectTypeRelationDO>().eq("workspace_id", workspaceId).in("id", ids)
         );
+    }
+
+    @Override
+    public Map<Long, String> checkDeletable(Collection<Long> idList, Long workspaceId) {
+        Map<Long, String> blocked = new LinkedHashMap<>();
+        if (idList == null || idList.isEmpty()) {
+            return blocked;
+        }
+        requireWorkspace(workspaceId);
+        for (Long id : idList) {
+            if (id == null || id <= 0) {
+                continue;
+            }
+            String reason = relationDeleteBlockReason(id, workspaceId);
+            if (reason != null) {
+                blocked.put(id, reason);
+            }
+        }
+        return blocked;
+    }
+
+    /**
+     * 计算对象类型关系不可删除的原因，可删除时返回 null。
+     *
+     * <p>与 {@link #removeOmObjectTypeRelation} 保持一致的拦截口径：仅当关系不存在或不属于当前工作区、
+     * 或被模型公理 / 数据规则引用时不可删；“存在建模目标绑定”不作为拦截条件。</p>
+     *
+     * @param id 关系编号
+     * @param workspaceId 工作区编号
+     * @return 不可删除原因；可删除时为 null
+     */
+    private String relationDeleteBlockReason(Long id, Long workspaceId) {
+        Long count = omObjectTypeRelationMapper.selectCount(
+            new QueryWrapper<OmObjectTypeRelationDO>().eq("workspace_id", workspaceId).eq("id", id)
+        );
+        if (count == null || count == 0) {
+            return "关系不存在或不属于当前工作区";
+        }
+        try {
+            constraintReferenceGuard.checkRelations(Collections.singleton(id));
+        } catch (ServiceException ex) {
+            return ex.getMessage();
+        }
+        return null;
     }
 
     @Override

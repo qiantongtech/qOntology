@@ -1444,3 +1444,12 @@ input:-internal-autofill-selected {
     margin-bottom: 0 !important;
   }
 }
+
+// 警告确认弹窗统一图标尺寸，适用于挂载到 body 的公共 MessageBox。
+.el-message-box {
+  --qt-messagebox-warning-icon-size: 24px;
+}
+
+.el-message-box .el-message-box__status.el-message-box-icon--warning {
+  font-size: var(--qt-messagebox-warning-icon-size);
+}

@@ -536,34 +536,30 @@ function getProject() {
 function projectIdChange() {
   return getProjectVersionDict(projectId.value)
     .then((res) => {
-      const list = res?.data;
-      if (!Array.isArray(list) || list.length === 0) {
-        return;
-      }
+      if (!Array.isArray(res?.data)) return;
+      const list = res.data.filter(item => item.status == null || Number(item.status) === 1);
       projectVersionOptions.value = list;
-      projectVersionId.value = list[0].dictValue;
+      projectVersionId.value = list[0]?.dictValue || '';
     })
     .catch((err) => {
       console.error('获取项目版本字典失败:', err);
     });
 }
 
-// 版本管理页新增/修改版本后，重新拉取项目版本字典，保持下拉选项数据同步
+// 版本新增、修改、删除或启停后，刷新顶部可用版本；其他字典调用方仍可使用完整列表。
 function refreshProjectVersionOptions() {
   if (!projectId.value) {
     return;
   }
   return getProjectVersionDict(projectId.value)
     .then((res) => {
-      const list = res?.data;
-      if (!Array.isArray(list) || list.length === 0) {
-        return;
-      }
+      if (!Array.isArray(res?.data)) return;
+      const list = res.data.filter(item => item.status == null || Number(item.status) === 1);
       projectVersionOptions.value = list;
-      // 保留当前选中版本；若已不在最新列表中（如被删除），回退到第一项
+      // 保留可用的选中版本；被禁用或删除时回退，无可用版本时清空。
       const current = String(projectVersionId.value || '');
       if (!current || !list.some(item => String(item.dictValue) === current)) {
-        projectVersionId.value = list[0].dictValue;
+        projectVersionId.value = list[0]?.dictValue || '';
       }
     })
     .catch((err) => {

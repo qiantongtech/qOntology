@@ -1,4 +1,4 @@
-import { adoptCandidate, deleteCandidate, getCandidateEvidence, listCandidates } from '@/api/om/aiModeling'
+import { adoptCandidate, checkCandidateDeletable, deleteCandidate, getCandidateEvidence, listCandidates } from '@/api/om/aiModeling'
 
 /** AI 候选页签通用分页、选择、批量采纳和批量删除逻辑。 */
 export function useCandidateTab(type, taskId, validateAdopt = () => [], options = {}) {
@@ -6,6 +6,9 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
   const rows = ref([])
   const total = ref(0)
   const loading = ref(false)
+  const deleting = ref(false)
+  const deleteLoading = ref({})
+  const batchDeleteLoading = ref(false)
   const selectedIds = ref([])
   const selectedRows = ref([])
   const pageSize = options.pageSize ?? 10
@@ -95,13 +98,62 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     await refresh()
   }
 
+  /**
+   * 删除当前行或所选候选；先弹删除确认框，点击确定后再调后端校验拿逐条“不可删原因”：
+   * 单条不可删时提示原因并终止，可删时直接删除；批量存在不可删项时再弹“可删除X/不可删除Y”二次确认，确认后只删可删部分。
+   */
   async function remove(row) {
-    const ids = row ? [row.id] : selectedRows.value.filter(item => item.adoptStatus !== 1).map(item => item.id)
+    if (deleting.value) return
+    const isSingle = row?.id != null
+    const records = isSingle ? [row] : [...selectedRows.value]
+    const ids = records.map(item => item?.id).filter(id => id != null)
     if (!ids.length) return
-    await proxy.$modal.confirm(`是否确认删除选中的 ${ids.length} 条候选数据？`)
-    await deleteCandidate(type, ids.join(','))
-    proxy.$modal.msgSuccess('删除成功')
-    await refresh()
+    // 先弹删除确认框（与批量删除同为系统提示风格），点击确定后再进行后端校验。
+    const confirmText = isSingle
+      ? `是否确认删除编号为${row.id} 的数据项？`
+      : `是否确认删除选中的 ${ids.length} 条候选数据？`
+    try {
+      await proxy.$modal.confirm(confirmText)
+    } catch {
+      return
+    }
+    // 确认后再校验：后端按跨候选引用与采纳状态返回不可删原因，仅包含不可删项。
+    let blockedMap = {}
+    try {
+      const response = await checkCandidateDeletable(type, ids)
+      blockedMap = response.data || {}
+    } catch {
+      return
+    }
+    // blockedMap 键为字符串化的候选编号，命中即为不可删。
+    const deletableIds = ids.filter(id => !blockedMap[String(id)])
+    const cannotDeleteCount = ids.length - deletableIds.length
+    if (isSingle) {
+      // 单条：不可删时提示原因并终止。
+      const reason = blockedMap[String(row.id)]
+      if (reason) { proxy.$modal.msgWarning(reason); return }
+    } else if (cannotDeleteCount) {
+      // 批量：存在不可删项时二次确认，确认后只删可删部分。
+      try {
+        await proxy.$modal.confirm(`可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`)
+      } catch {
+        return
+      }
+    }
+    // 确认后只删可删部分；无可删部分时不发起删除请求。
+    if (!deletableIds.length) return
+    deleting.value = true
+    if (isSingle) deleteLoading.value[row.id] = true
+    else batchDeleteLoading.value = true
+    try {
+      await deleteCandidate(type, deletableIds.join(','))
+      proxy.$modal.msgSuccess('删除成功')
+      await refresh()
+    } finally {
+      deleting.value = false
+      if (isSingle) deleteLoading.value[row.id] = false
+      else batchDeleteLoading.value = false
+    }
   }
 
   async function showEvidence(row) {
@@ -110,5 +162,5 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     evidenceVisible.value = true
   }
 
-  return { rows, total, loading, selectedIds, selectedRows, query, evidenceVisible, evidences, tableRef, pageSize, fetchRows, refresh, load, select, handleSortChange, adoptOne, adoptBatch, remove, showEvidence }
+  return { rows, total, loading, deleting, deleteLoading, batchDeleteLoading, selectedIds, selectedRows, query, evidenceVisible, evidences, tableRef, pageSize, fetchRows, refresh, load, select, handleSortChange, adoptOne, adoptBatch, remove, showEvidence }
 }

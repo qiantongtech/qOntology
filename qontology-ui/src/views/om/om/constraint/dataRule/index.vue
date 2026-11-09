@@ -32,10 +32,11 @@
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
         <el-button v-hasPermi="['om:constraint:datarule:remove']" type="danger" plain
-                   :disabled="!selectedIds.length || deleting" @click="handleDelete()"
+                   :loading="batchDeleteLoading"
+                :disabled="!selectedIds.length || deleting" @click="handleDelete()"
                    @mousedown="(e) => e.preventDefault()"
         >
-          <i class="iconfont-mini icon-shanchu-huise mr5"></i>删除
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
       </template>
 
@@ -60,7 +61,8 @@
           >修改
           </el-button>
           <el-button v-if="auth.hasPermi('om:constraint:datarule:remove')" link type="danger" icon="Delete"
-                     :disabled="deleting" @click="handleDelete(row)"
+                     :loading="deleteLoading[row.id]"
+                    :disabled="deleting" @click="handleDelete(row)"
           >删除
           </el-button>
         </template>
@@ -192,8 +194,50 @@
           <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
         </el-form-item>
         <div class="h2-title">执行条件</div>
-        <el-form-item v-for="field in conditionDetailFields" :key="field.label" :label="field.label">
-          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+        <el-form-item label="条件关系">
+          <div class="form-readonly">{{ conditionRelationLabel(detail.conditionRelation) || '-' }}</div>
+        </el-form-item>
+        <el-form-item label="失败条件">
+          <!-- 失败条件直接照搬修改弹窗的条件行布局，仅将各控件置为只读（disabled），去掉增删按钮。 -->
+          <div class="conditions">
+            <div v-for="(condition, index) in detail.conditions" :key="condition.key || index" class="condition-row">
+              <div class="condition-label">条件 {{ index + 1 }}：</div>
+              <div class="condition-fields condition-fields-detail">
+                <el-tree-select
+                  :model-value="condition.objectTypeId"
+                  :data="objectTypeTree"
+                  :props="objectTypeTreeProps"
+                  value-key="id"
+                  check-strictly
+                  disabled
+                  placeholder="请选择对象类型"
+                  class="condition-object"
+                />
+                <el-select
+                  :model-value="condition.attributeId"
+                  disabled
+                  class="condition-attribute"
+                  placeholder="请选择属性"
+                >
+                  <el-option v-for="item in getConditionAttributes(condition, detail.type)" :key="item.id" :label="item.name" :value="item.id"/>
+                </el-select>
+                <span v-if="detail.type === 'REQUIRED'" class="condition-operator">为空</span>
+                <template v-else>
+                  <el-select v-if="detail.type === 'RANGE'" :model-value="condition.operator" class="condition-comparison" disabled>
+                    <el-option v-for="item in om_rule_operator" :key="item.value" :label="item.label" :value="item.value"/>
+                  </el-select>
+                  <span v-else class="condition-operator">{{ detailConditionOperatorLabel }}</span>
+                  <el-select v-if="detail.type === 'FORMAT'" :model-value="condition.value" placeholder="请选择日期格式" class="condition-value" disabled>
+                    <el-option v-for="format in dateFormatOptions" :key="format" :label="format" :value="format"/>
+                  </el-select>
+                  <el-input v-else :model-value="condition.value" class="condition-value" disabled/>
+                </template>
+              </div>
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item label="失败提示">
+          <div class="form-readonly">{{ detail.failureMessage || '-' }}</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -208,7 +252,7 @@
 <script setup>
 import { createRowKey } from "@/utils/rowKey";
 import {computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
-import {ElMessage, ElMessageBox} from 'element-plus';
+import {ElMessage} from 'element-plus';
 import {useOntologyVersion} from '@/views/om/useOntologyVersion';
 import { listDataRule, getDataRule, addDataRule, updateDataRule, delDataRule } from '@/api/om/constraint/dataRule';
 import {listRelationTypes} from '@/api/om/object/relation';
@@ -229,6 +273,9 @@ const ruleRef = ref();
 const selectedIds = ref([]);
 const saving = ref(false);
 const deleting = ref(false);
+const deleteConfirming = ref(false);
+const deleteLoading = ref({});
+const batchDeleteLoading = ref(false);
 const open = ref(false);
 const detailOpen = ref(false);
 const dialogTitle = ref('新增数据规则');
@@ -332,6 +379,7 @@ const attributePlaceholder = computed(() => {
   return form.value.type === 'FORMAT' ? '请选择日期属性' : '请选择属性';
 });
 const conditionOperatorLabel = computed(() => form.value.type === 'ENUM' ? '不属于' : '不匹配');
+const detailConditionOperatorLabel = computed(() => detail.value.type === 'ENUM' ? '不属于' : '不匹配');
 const dateFormatOptions = [
   'yyyy',
   'yyyy-MM',
@@ -610,28 +658,37 @@ async function submitForm() {
 
 /**
  * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
- * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
+ * @param {Object} [row] 当前行数据，顶部删除按钮点击时不传参
  */
 async function handleDelete(row) {
-  if (!requireVersion() || deleting.value) return;
-  const ids = row ? [row.id] : [...selectedIds.value];
+  if (!requireVersion() || deleting.value || deleteConfirming.value) return;
+  const isSingle = row?.id != null;
+  const ids = isSingle ? [row.id] : [...selectedIds.value];
   if (!ids.length) return;
   const context = contextRequest;
+  const message = isSingle
+    ? `是否确认删除编号为${row.id} 的数据项？`
+    : `可删除${ids.length}个，不可删除0个，是否删除可删部分`;
+  deleteConfirming.value = true;
   try {
-    const message = row ? '是否删除数据规则“' + row.name + '”？' : '是否删除选中的 ' + ids.length + ' 条数据规则？';
-    await ElMessageBox.confirm(message, '删除确认', {type: 'warning'});
-  } catch {
-    return;
-  }
-  if (context !== contextRequest || deleting.value) return;
-  deleting.value = true;
-  try {
+    try {
+      await proxy.$modal.confirm(message);
+    } catch {
+      return;
+    }
+    if (context !== contextRequest) return;
+    deleting.value = true;
+    if (isSingle) deleteLoading.value[row.id] = true;
+    else batchDeleteLoading.value = true;
     await delDataRule(ids);
     if (context !== contextRequest) return;
-    ElMessage.success('删除成功');
+    proxy.$modal.msgSuccess('删除成功');
     refreshList();
   } finally {
+    deleteConfirming.value = false;
     deleting.value = false;
+    if (isSingle) deleteLoading.value[row.id] = false;
+    else batchDeleteLoading.value = false;
   }
 }
 
@@ -757,57 +814,12 @@ function validateExpression() {
   return validateConditions(form.value, attributeOptions, businessTypeOptions);
 }
 
-/**
- * 按规则类型返回条件比较符文案。
- * @param {string} type 规则类型
- * @param {string} operator 比较符字典值
- * @returns {string} 比较符展示文案
- */
-function conditionOperator(type, operator) {
-  if (type === 'REQUIRED') return '为空';
-  if (type === 'ENUM') return '不属于';
-  if (type === 'FORMAT') return '不匹配';
-  return proxy.selectDictLabel(om_rule_operator.value, operator);
-}
-
 /** 将条件关系字典值转为展示文案。 */
 function conditionRelationLabel(value) {
   return {OR: '任一满足（OR）', AND: '全部满足（AND）'}[value] || '';
 }
 
-/**
- * 将对象类型编号转为名称，选项未加载时回显编号。
- * @param {string} id 对象类型编号
- * @returns {string} 对象类型名称
- */
-function objectTypeLabel(id) {
-  return objectTypeOptions.value.find(item => String(item.id) === String(id))?.name || id || '';
-}
-
-/**
- * 将条件行的属性编号转为名称。
- * @param {Object} condition 条件对象
- * @returns {string} 属性名称
- */
-function conditionAttributeLabel(condition) {
-  const attributes = attributeOptions[condition.objectTypeId] || [];
-  return attributes.find(item => String(item.id) === String(condition.attributeId))?.name || condition.attributeId || '';
-}
-
-/**
- * 将失败条件拼为“条件N：操作 值”的多行文本。
- * @param {Object} record 详情记录
- * @returns {string} 条件展示文本
- */
-function detailConditions(record) {
-  return (record.conditions || []).map((condition, index) => {
-    const operator = conditionOperator(record.type, condition.operator);
-    const value = record.type === 'REQUIRED' || !condition.value ? '' : ` ${condition.value}`;
-    return `${value}`;
-  }).join('\n');
-}
-
-// 详情弹窗展示字段，分组与新增弹窗的“基本信息/执行条件”保持一致。
+// 详情“基本信息”分组展示字段，与新增弹窗字段顺序保持一致。
 const basicDetailFields = computed(() => [
   {label: '规则名称', value: detail.value.name},
   {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, detail.value.type)},
@@ -816,11 +828,6 @@ const basicDetailFields = computed(() => [
   {label: '创建人', value: detail.value.createBy || '-'},
   {label: '联系方式', value: creatorPhones.value[detail.value.creatorId] || '-'},
   {label: '创建时间', value: proxy.parseTime(detail.value.createTime, '{y}-{m}-{d} {h}:{i}')}
-]);
-const conditionDetailFields = computed(() => [
-  {label: '条件关系', value: conditionRelationLabel(detail.value.conditionRelation)},
-  {label: '失败条件', value: detailConditions(detail.value), multiline: true},
-  {label: '失败提示', value: detail.value.failureMessage}
 ]);
 
 // 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
@@ -967,6 +974,11 @@ onBeforeUnmount(() => {
 .condition-fields > .condition-value {
   flex: 1 1 180px;
   min-width: 0;
+}
+
+/* 详情无增删按钮列，单独让条件值换行展示，与修改弹窗的换行效果保持一致。 */
+.condition-fields-detail > .condition-value {
+  flex: 1 1 100%;
 }
 
 .condition-actions {

@@ -340,7 +340,7 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
     import { onBeforeUnmount, computed, getCurrentInstance, nextTick, reactive, ref, watch, onMounted } from 'vue';
     import { useRouter } from 'vue-router';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
-    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { ElMessage } from 'element-plus';
     import {
         listType,
         listTypeExcludeChild,
@@ -348,6 +348,7 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
         addType,
         updateType,
         delType,
+        checkTypeDeletable,
         listTypeTargets
     } from '@/api/om/object/type';
     import { listTerm } from '@/api/om/term/term';
@@ -641,19 +642,35 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
         if (!saving.value) done();
     }
 
+    /** 单条删除：先弹“是否确认删除编号为X 的数据项？”，点击确定后再调校验接口取回不可删原因。 */
     async function handleDelete(row) {
         const context = contextRequest;
         const deletingVersion = versionId.value;
         if (deleting.value || row?.id == null) return;
+        const recordIds = [row.id];
         try {
-            await ElMessageBox.confirm(`是否删除对象类型“${row.name}”？`, '删除确认', { type: 'warning' });
+            await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`);
         } catch {
+            return;
+        }
+        // 确认后才校验：取回不可删除原因（下级/属性/关系/公理规则），被引用时提示原因并终止。
+        let blockedMap = {};
+        try {
+            const response = await checkTypeDeletable(recordIds);
+            if (context !== contextRequest || deletingVersion !== versionId.value) return;
+            blockedMap = response.data || {};
+        } catch {
+            return;
+        }
+        const reason = blockedMap[String(row.id)];
+        if (reason) {
+            proxy.$modal.msgWarning(reason);
             return;
         }
         if (deleting.value || context !== contextRequest || deletingVersion !== versionId.value) return;
         deleting.value = true;
         try {
-            await delType(row.id);
+            await delType(recordIds.join(','));
             if (context !== contextRequest || deletingVersion !== versionId.value) return;
             ElMessage.success('删除成功');
             await getList();
