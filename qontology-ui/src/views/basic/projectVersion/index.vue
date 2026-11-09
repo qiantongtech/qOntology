@@ -144,6 +144,7 @@
               link
               type="primary"
               icon="Edit"
+              :disabled="row.status === 1"
               @click="handleUpdate(row)"
               >修改</el-button
             >
@@ -152,6 +153,7 @@
               link
               type="danger"
               icon="Delete"
+              :disabled="row.status === 1"
               @click="handleDelete(row)"
               >删除</el-button
             >
@@ -424,6 +426,7 @@ const openDetail = ref(false);
 const saving = ref(false);
 const ids = ref([]);
 const multiple = ref(true);
+const selectedRows = ref([]);
 const title = ref("");
 
 const versionId = ref(route.params.versionId || null);
@@ -525,6 +528,7 @@ function reset() {
  */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.id);
+  selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
@@ -620,11 +624,39 @@ async function submitForm() {
  * @param {Object} [row] 当前行数据，顶部批量按钮点击时为 MouseEvent
  */
 function handleDelete(row) {
-  const deleteIds = row?.id ?? ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.id 区分）
+  if (row?.id != null) {
+    const deleteIds = row.id;
+    proxy.$modal
+      .confirm('是否确认删除项目版本编号为"' + deleteIds + '"的数据项？')
+      .then(function () {
+        return delProjectVersion(deleteIds);
+      })
+      .then(() => {
+        tableRef.value?.getList();
+        notifyProjectVersionChanged();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（1=启用不可删除，0=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === 0);
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.id);
   proxy.$modal
-    .confirm('是否确认删除项目版本编号为"' + deleteIds + '"的数据项？')
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delProjectVersion(deleteIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delProjectVersion(deletableIds);
     })
     .then(() => {
       tableRef.value?.getList();

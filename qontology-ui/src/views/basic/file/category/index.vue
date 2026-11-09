@@ -66,6 +66,7 @@
         <template #handle="{row}">
           <el-button link type="primary" icon="View" @click="handleDetail(row)">详情</el-button>
           <el-button v-hasPermi="['basic:file:category:edit']" link type="primary" icon="Edit"
+                     :disabled="row.status === 0"
                      @click="handleUpdate(row)"
           >修改
           </el-button>

@@ -130,6 +130,7 @@
             link
             type="primary"
             icon="Edit"
+            :disabled="row.status === '0'"
             @click="handleUpdate(row)"
             >修改
           </el-button>
@@ -138,7 +139,7 @@
             link
             type="danger"
             icon="Delete"
-            :disabled="deleting"
+            :disabled="deleting || row.status === '0'"
             @click="handleDelete(row)"
             >删除
           </el-button>
@@ -261,6 +262,7 @@ const saving = ref(false);
 const deleting = ref(false);
 const ids = ref([]);
 const multiple = ref(true);
+const selectedRows = ref([]);
 const title = ref("");
 const defaultSort = { prop: "createTime", order: "descending" };
 // 搜索表单保存待提交输入，实际请求始终使用已提交条件，避免分页或刷新意外应用草稿。
@@ -483,6 +485,7 @@ function handleStatusChange(row, status) {
 /** 同步当前勾选的枚举编号，并控制批量删除按钮是否可用。 */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.enumId);
+  selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
@@ -551,16 +554,48 @@ async function submitForm() {
 /** 删除单行或勾选记录；成功后回到第一页，避免删除末页全部记录后出现空页。 */
 async function handleDelete(row) {
   const context = contextRequest;
-  const recordIds = row ? [row.enumId] : [...ids.value];
-  if (!recordIds.length || deleting.value) return;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.enumId 区分）
+  if (row?.enumId != null) {
+    const recordIds = [row.enumId];
+    if (!recordIds.length || deleting.value) return;
+    try {
+      await proxy.$modal.confirm(
+        '是否确认删除枚举编号为"' + recordIds.join(",") + '"的数据项？'
+      );
+    } catch {
+      return;
+    }
+    if (deleting.value || context !== contextRequest) return;
+    deleting.value = true;
+    try {
+      await delType(recordIds.join(","));
+      if (context !== contextRequest) return;
+      tableRef.value?.resetQuery();
+      proxy.$modal.msgSuccess("删除成功");
+    } finally {
+      deleting.value = false;
+    }
+    return;
+  }
+
+  // 批量删除：根据状态（'0'=正常/启用不可删除，'1'=停用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length || deleting.value) return;
+  const deletableRows = rows.filter((item) => item.status === "1");
+  const undeletableCount = rows.length - deletableRows.length;
+  const recordIds = deletableRows.map((item) => item.enumId);
   try {
     await proxy.$modal.confirm(
-      '是否确认删除枚举编号为"' + recordIds.join(",") + '"的数据项？'
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
     );
   } catch {
     return;
   }
   if (deleting.value || context !== contextRequest) return;
+  if (!recordIds.length) {
+    proxy.$modal.msgWarning("无可删除的数据");
+    return;
+  }
   deleting.value = true;
   try {
     await delType(recordIds.join(","));

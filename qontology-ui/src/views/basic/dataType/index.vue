@@ -119,6 +119,7 @@
             link
             type="primary"
             icon="Edit"
+            :disabled="row.status === 1"
             @click="handleUpdate(row)"
           >修改
           </el-button>
@@ -127,6 +128,7 @@
             link
             type="danger"
             icon="Delete"
+            :disabled="row.status === 1"
             @click="handleDelete(row)"
           >删除
           </el-button>
@@ -380,6 +382,7 @@ const saving = ref(false);
 const openDetail = ref(false);
 const ids = ref([]);
 const multiple = ref(true);
+const selectedRows = ref([]);
 const title = ref("");
 const defaultSort = { prop: "createTime", order: "descending" };
 const enumTypeDict = ref([]);
@@ -734,6 +737,7 @@ function reset() {
 // 多选框选中数据
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.id);
+  selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
@@ -816,16 +820,41 @@ async function submitForm(draft) {
 function handleDelete(row) {
   // 只读模式即使通过脚本调用方法，也不允许执行写操作。
   if (props.readOnly) return;
-  const _ids = row?.id || [...ids.value];
-  // 批量删除仅提交确认前已选中的编号，未选中记录时不发起删除请求。
-  if (Array.isArray(_ids) && !_ids.length) return;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.id 区分）
+  if (row?.id != null) {
+    const _ids = row.id;
+    proxy.$modal
+      .confirm('是否确认删除数据类型编号为"' + _ids + '"的数据项？')
+      .then(function () {
+        return delDataType(_ids);
+      })
+      .then(() => {
+        // 删除后回到第一页，避免移除末页全部关联记录后停留在空页。
+        tableRef.value?.resetQuery();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（1=启用不可删除，0=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === 0);
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.id);
   proxy.$modal
-    .confirm('是否确认删除数据类型编号为"' + _ids + '"的数据项？')
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delDataType(_ids);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delDataType(deletableIds);
     })
     .then(() => {
-      // 删除后回到第一页，避免移除末页全部关联记录后停留在空页。
       tableRef.value?.resetQuery();
       proxy.$modal.msgSuccess("删除成功");
     })

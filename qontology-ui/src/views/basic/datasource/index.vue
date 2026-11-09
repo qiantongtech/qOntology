@@ -123,6 +123,7 @@
                 link
                 type="primary"
                 icon="Edit"
+                :disabled="row.status === 0"
                 @click="handleUpdate(row)"
                 >修改</el-button
               >
@@ -131,6 +132,7 @@
                 link
                 type="danger"
                 icon="Delete"
+                :disabled="row.status === 0"
                 @click="handleDelete(row)"
                 >删除</el-button
               >
@@ -603,6 +605,7 @@ const testResult = ref(null);
 let testRequest = 0;
 const ids = ref([]);
 const multiple = ref(true);
+const selectedRows = ref([]);
 const title = ref("");
 
 const data = reactive({
@@ -710,6 +713,7 @@ function reset() {
 // 多选框选中数据
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.id);
+  selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
@@ -903,11 +907,38 @@ async function handleStatusChange(row, value) {
 }
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _ids = row.id || ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.id 区分）
+  if (row?.id != null) {
+    const _ids = row.id;
+    proxy.$modal
+      .confirm('是否确认删除数据连接编号为"' + _ids + '"的数据项？')
+      .then(function () {
+        return delDaDatasource(_ids);
+      })
+      .then(() => {
+        tableRef.value?.getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（0=正常/启用不可删除，1=停用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === 1);
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.id);
   proxy.$modal
-    .confirm('是否确认删除数据连接编号为"' + _ids + '"的数据项？')
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delDaDatasource(_ids);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delDaDatasource(deletableIds);
     })
     .then(() => {
       tableRef.value?.getList();
