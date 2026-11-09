@@ -469,9 +469,9 @@ const tableStore = reactive({
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
-    { label: "起点类型", prop: "startTypeName", slot: "startTypeName", minWidth: 140, align: "left" },
+    { label: "起点类型", slot: "startTypeName", minWidth: 140, align: "left" },
     { label: "关系名称", prop: "name", slot: "text", minWidth: 160, align: "left" },
-    { label: "终点类型", prop: "endTypeName", slot: "endTypeName", minWidth: 140, align: "left" },
+    { label: "终点类型", slot: "endTypeName", minWidth: 140, align: "left" },
     { label: "反向名称", prop: "reverseName", slot: "text", minWidth: 150, align: "left" },
     { label: "描述", prop: "description", slot: "text", minWidth: 200, align: "left", showOverflowTooltip: { effect: "light" } },
     {
