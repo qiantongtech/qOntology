@@ -203,16 +203,30 @@ qOntology 采用前后端分离架构，后端基于 JDK 17 与 Spring Boot 3.5.
 </table>
 
 ## 🚀 快速开始
+第一次接触 qOntology，推荐按下面的顺序体验：
 
-👉 点击下方按钮，查看完整的安装与部署指南：
+1. **在线体验**：登录演示环境，无需安装即可了解主要功能。
+2. **本地部署**：通过 Docker Compose 在本机启动完整环境。
+3. **源码启动**：需要二次开发时，再从源码启动前后端服务。
 
-[🧭 查看快速开始文档](QUICKSTART.md)
+### 1. 在线体验
+
+- 登录[社区开源版演示环境](#-平台简介)，无需安装即可了解主要功能。
+
+### 2. 选择部署方式
+
+- [本地部署](https://docs.qontology.cn/docs/deploy/docker-compose-deployment.html) ：通过 Docker Compose 在本机启动完整环境。
+- [源码启动](https://docs.qontology.cn/docs/deploy/build-from-source.html) ：需要二次开发时，再从源码启动前后端服务。
+- [自主部署](https://docs.qontology.cn/docs/deploy/manual-deployment/) ：手工安装、配置并管理各项服务，适合生产环境、大规模部署和个性化配置。
+
+> 👉 完整指南：https://docs.qontology.cn/docs/deploy/deploy-open-source.html
+
 
 ## 🚨 商用授权
 
 qOntology 规划 **开源版** 与 **专业版**。开源版聚焦领域建模、基础质量验证、轻量数据映射、样例预览和标准格式导出；专业版扩展可视化建模、运行时对象、动作、函数及本体驱动的业务能力。
 
-👉 如需 **品牌定制授权** 或 **咨询专业版**，请点击按钮查看详情：[💼 了解授权详情](https://docs.qontology.cn/docs/overview/introduction.html#%F0%9F%9A%A8-%E5%95%86%E7%94%A8%E6%8E%88%E6%9D%83)
+> 👉 如需 **品牌定制授权** 或 **咨询专业版**，请点击按钮查看详情：[💼 了解授权详情](https://docs.qontology.cn/docs/overview/introduction.html#%F0%9F%9A%A8-%E5%95%86%E7%94%A8%E6%8E%88%E6%9D%83)
 
 ## 👥 QQ交流群
 欢迎加入 qOntology 官方 QQ 交流群，获取最新动态、技术支持与使用交流。
