@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
 
   This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
@@ -18,7 +18,7 @@
         />
       </template>
 
-      <template #actions-data>
+      <!-- <template #actions-data>
         <el-button
           type="danger"
           plain
@@ -28,7 +28,7 @@
         >
           <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
-      </template>
+      </template> -->
 
       <qt-table v-bind="tableStore" ref="tableRef">
         <template #taskType="{ row }">
@@ -106,7 +106,7 @@ const tableStore = reactive({
     },
   },
   columns: [
-    { type: "selection", width: 55, minWidth: 55 },
+    // { type: "selection", width: 55, minWidth: 55 },
     {
       label: "编号",
       prop: "id",
@@ -228,8 +228,12 @@ function showDetail(row) {
 }
 
 function handleDelete() {
+  if (!ids.value.length) {
+    proxy.$modal.msgWarning("请选择要删除的日志");
+    return;
+  }
   proxy.$modal
-    .confirm(`是否确认删除抽取日志编号为“${ids.value.join(",")}”的数据项？`)
+    .confirm(`是否确认删除选中的 ${ids.value.length} 条抽取日志？`)
     .then(() => delTaskLog(ids.value.join(",")))
     .then(() => {
       proxy.$modal.msgSuccess("删除成功");

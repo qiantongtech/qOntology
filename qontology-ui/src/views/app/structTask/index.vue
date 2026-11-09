@@ -266,7 +266,6 @@ const tableStore = reactive({
       type: "selection",
       width: 55,
       minWidth: 55,
-      selectable: (row) => Number(row.publishStatus) !== 1,
     },
     {
       label: "编号",
@@ -497,12 +496,16 @@ function handleDetail(row) {
 
 /** 删除按钮操作 */
 function canDeleteTask(row) {
-  return !isRunning(row);
+  return Number(row.publishStatus) !== 1 && !isRunning(row);
 }
 
 function handleDelete(row) {
   if (row) {
-    if (!canDeleteTask(row)) {
+    if (Number(row.publishStatus) === 1) {
+      proxy.$modal.msgWarning("已发布的任务不可删除");
+      return;
+    }
+    if (isRunning(row)) {
       proxy.$modal.msgWarning(
         row.status == 4 ? "任务已在队列中" : "任务执行中"
       );
@@ -510,7 +513,7 @@ function handleDelete(row) {
     }
 
     proxy.$modal
-      .confirm('是否确认删除任务名称为"' + row.name + '"的数据项？')
+      .confirm(`是否确认删除任务编号为“${row.id}”的数据项？`)
       .then(function () {
         return delExtStruct(row.id);
       })
@@ -528,7 +531,7 @@ function handleDelete(row) {
   const cannotDeleteCount = selectedRows.value.length - canDeleteCount;
 
   if (!canDeleteCount) {
-    proxy.$modal.msgWarning("选中的任务为进行中或队列中，无法删除");
+    proxy.$modal.msgWarning("已发布或执行中的任务不可删除");
     return;
   }
 

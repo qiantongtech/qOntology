@@ -386,7 +386,6 @@ const tableStore = reactive({
       type: "selection",
       width: 55,
       minWidth: 55,
-      selectable: (row) => Number(row.publishStatus) !== 1,
     },
     {
       label: "编号",
@@ -816,6 +815,10 @@ function handleResult(row) {
 /** 删除任务。 */
 function handleDelete(row) {
   if (row) {
+    if (Number(row.publishStatus) === 1) {
+      proxy.$modal.msgWarning("已发布的任务不可删除");
+      return;
+    }
     if (isRunning(row)) {
       proxy.$modal.msgWarning(
         Number(row.status) === 4 ? "任务已在队列中" : "任务执行中"
@@ -823,7 +826,7 @@ function handleDelete(row) {
       return;
     }
     proxy.$modal
-      .confirm(`是否确认删除任务“${row.name}”？`)
+      .confirm(`是否确认删除任务编号为“${row.id}”的数据项？`)
       .then(() => delUnstructTask(String(row.id)))
       .then(() => {
         proxy.$modal.msgSuccess("删除成功");
@@ -832,21 +835,22 @@ function handleDelete(row) {
       .catch(() => {});
     return;
   }
-  const targetIds = selectedRows.value.map((item) => item.id);
-  const runningRows = selectedRows.value.filter(isRunning);
-  const deletableIds = targetIds.filter(
-    (id) => !runningRows.some((item) => item.id === id)
+  const canDeleteRows = selectedRows.value.filter(
+    (item) => Number(item.publishStatus) !== 1 && !isRunning(item)
   );
-  if (!deletableIds.length) {
-    proxy.$modal.msgWarning("选中的任务为进行中或队列中，无法删除");
+  const canDeleteIds = canDeleteRows.map((item) => item.id);
+  const canDeleteCount = canDeleteRows.length;
+  const cannotDeleteCount = selectedRows.value.length - canDeleteCount;
+  if (!canDeleteCount) {
+    proxy.$modal.msgWarning("已发布或执行中的任务不可删除");
     return;
   }
-  const confirmText = runningRows.length
-    ? `可删除${deletableIds.length}个，不可删除${runningRows.length}个，是否删除可删部分？`
-    : `是否确认删除选中的 ${deletableIds.length} 个任务？`;
+  const confirmText = cannotDeleteCount
+    ? `可删除${canDeleteCount}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`
+    : `是否确认删除选中的 ${canDeleteCount} 个任务？`;
   proxy.$modal
     .confirm(confirmText)
-    .then(() => delUnstructTask(deletableIds.join(",")))
+    .then(() => delUnstructTask(canDeleteIds.join(",")))
     .then(() => {
       proxy.$modal.msgSuccess("删除成功");
       tableRef.value.getList();
