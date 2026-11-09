@@ -79,6 +79,15 @@ public interface IOmObjectTypeRelationService extends IService<OmObjectTypeRelat
     int removeOmObjectTypeRelation(Collection<Long> idList, Long workspaceId);
 
     /**
+     * 批量校验对象类型关系是否可删除，返回编号到不可删除原因的映射（仅包含不可删除项）。
+     *
+     * @param idList 待校验的关系编号集合
+     * @param workspaceId 工作区编号
+     * @return 编号到不可删除原因的映射
+     */
+    Map<Long, String> checkDeletable(Collection<Long> idList, Long workspaceId);
+
+    /**
      * 获得关系起点、终点的对象类型候选列表
      *
      * @param workspaceId 工作区编号

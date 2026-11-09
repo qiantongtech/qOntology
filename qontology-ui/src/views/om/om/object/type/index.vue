@@ -348,6 +348,7 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
         addType,
         updateType,
         delType,
+        checkTypeDeletable,
         listTypeTargets
     } from '@/api/om/object/type';
     import { listTerm } from '@/api/om/term/term';
@@ -645,15 +646,33 @@ import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
         const context = contextRequest;
         const deletingVersion = versionId.value;
         if (deleting.value || row?.id == null) return;
+        const recordIds = [row.id];
+        // 删除前先调用校验接口，取回不可删除原因（下级/属性/关系/公理规则），再弹“可删除X/不可删除Y”确认。
+        let blockedMap = {};
         try {
-            await ElMessageBox.confirm(`是否删除对象类型“${row.name}”？`, '删除确认', { type: 'warning' });
+            const response = await checkTypeDeletable(recordIds);
+            if (context !== contextRequest || deletingVersion !== versionId.value) return;
+            blockedMap = response.data || {};
         } catch {
             return;
         }
+        const reasonOf = (id) => blockedMap[String(id)];
+        const deletableIds = recordIds.filter((id) => !reasonOf(id));
+        const cannotDeleteCount = recordIds.length - deletableIds.length;
+        try {
+            await ElMessageBox.confirm(
+                `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`,
+                '删除确认',
+                { type: 'warning' }
+            );
+        } catch {
+            return;
+        }
+        if (!deletableIds.length) return;
         if (deleting.value || context !== contextRequest || deletingVersion !== versionId.value) return;
         deleting.value = true;
         try {
-            await delType(row.id);
+            await delType(deletableIds.join(','));
             if (context !== contextRequest || deletingVersion !== versionId.value) return;
             ElMessage.success('删除成功');
             await getList();

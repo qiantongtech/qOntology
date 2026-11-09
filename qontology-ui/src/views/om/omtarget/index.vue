@@ -403,46 +403,24 @@ function canDeleteTarget(row) {
   return !row || Number(row.relatedElementCount || 0) === 0;
 }
 
-/** 删除按钮操作（单条与批量共用） */
+/** 删除按钮操作（单条与批量共用）：统一先弹“可删除X/不可删除Y”确认框，确认后只删除未被关联绑定的可删部分。 */
 function handleDelete(row) {
-  if (row) {
-    if (!canDeleteTarget(row)) {
-      proxy.$modal.msgWarning("该建模目标已被对象类型或对象类型关系关联，无法删除");
-      return;
-    }
-    proxy.$modal
-      .confirm('是否确认删除建模目标编号为"' + row.id + '"的数据项？')
-      .then(function () {
-        return delTarget(row.id);
-      })
-      .then(() => {
-        getList();
-        proxy.$modal.msgSuccess("删除成功");
-      })
-      .catch(() => {});
-    return;
-  }
-
-  const canDeleteRows = selectedRows.value.filter(canDeleteTarget);
+  const records = row ? [row] : selectedRows.value;
+  if (!records.length) return;
+  // 已被对象类型或对象类型关系绑定（关联元素数 > 0）的建模目标不可删除。
+  const canDeleteRows = records.filter(canDeleteTarget);
   const canDeleteIds = canDeleteRows.map((item) => item.id);
   const canDeleteCount = canDeleteRows.length;
-  const cannotDeleteCount = selectedRows.value.length - canDeleteCount;
-
-  if (!canDeleteCount) {
-    proxy.$modal.msgWarning("选中的建模目标均已被关联，无法删除");
-    return;
-  }
-
-  const confirmText = cannotDeleteCount
-    ? `可删除${canDeleteCount}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`
-    : `是否确认删除选中的${canDeleteCount}个建模目标？`;
+  const cannotDeleteCount = records.length - canDeleteCount;
 
   proxy.$modal
-    .confirm(confirmText)
+    .confirm(`可删除${canDeleteCount}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`)
     .then(function () {
-      return delTarget(canDeleteIds);
+      if (!canDeleteCount) return;
+      return delTarget(canDeleteIds.join(","));
     })
     .then(() => {
+      if (!canDeleteCount) return;
       getList();
       proxy.$modal.msgSuccess("删除成功");
     })

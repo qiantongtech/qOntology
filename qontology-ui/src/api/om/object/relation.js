@@ -71,6 +71,15 @@ export function delRelation(ids) {
     });
 }
 
+// 批量校验对象关系是否可删除，返回编号到不可删除原因的映射
+export function checkRelationDeletable(ids) {
+    return request({
+        url: '/om/objectTypeRelation/checkDeletable',
+        method: 'post',
+        data: ids
+    });
+}
+
 // 查询可供关联的有效建模目标
 export function listRelationTargetOptions(query) {
     return request({

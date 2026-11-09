@@ -257,6 +257,7 @@
         addRelation,
         updateRelation,
         delRelation,
+        checkRelationDeletable,
         listRelationTargets,
         listRelationTargetOptions
     } from '@/api/om/object/relation';
@@ -524,6 +525,7 @@
 
     /**
      * 删除按钮操作：行内删除取当前行编号，顶部批量删除取多选编号。
+     * 删除前先调校验接口，统一弹“可删除X/不可删除Y”确认框，确认后只删除未被公理/规则引用的可删部分。
      * @param {Object} [row] 当前行数据，顶部批量按钮点击时为空
      */
     async function handleDelete(row) {
@@ -531,19 +533,32 @@
         const ids = row ? [row.id] : [...selectedIds.value];
         if (!ids.length) return;
         const context = contextRequest;
+        // 关系仅在被模型公理 / 数据规则引用时不可删，删除前先取回不可删原因。
+        let blockedMap = {};
+        try {
+            const response = await checkRelationDeletable(ids);
+            if (context !== contextRequest) return;
+            blockedMap = response.data || {};
+        } catch {
+            return;
+        }
+        const reasonOf = (id) => blockedMap[String(id)];
+        const deletableIds = ids.filter((id) => !reasonOf(id));
+        const cannotDeleteCount = ids.length - deletableIds.length;
         try {
             await ElMessageBox.confirm(
-                row ? `是否删除关系“${row.name}”？` : `是否删除选中的 ${ids.length} 条关系？`,
+                `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`,
                 '删除确认',
                 { type: 'warning' }
             );
         } catch {
             return;
         }
+        if (!deletableIds.length) return;
         if (context !== contextRequest || deleting.value) return;
         deleting.value = true;
         try {
-            await delRelation(ids);
+            await delRelation(deletableIds);
             if (context !== contextRequest) return;
             ElMessage.success('删除成功');
             selectedIds.value = [];

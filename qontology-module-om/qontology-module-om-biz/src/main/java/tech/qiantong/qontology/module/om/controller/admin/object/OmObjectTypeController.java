@@ -284,4 +284,17 @@ public class OmObjectTypeController extends BaseController {
     public CommonResult<Integer> remove(@PathVariable Long id) {
         return CommonResult.toAjax(omObjectTypeService.removeOmObjectType(id));
     }
+
+    /**
+     * 批量校验对象类型是否可删除，返回编号到不可删除原因的映射（仅包含不可删除项）。
+     *
+     * @param ids 待校验的对象类型编号集合
+     * @return 编号到不可删除原因的映射
+     */
+    @Operation(summary = "校验对象类型是否可删除")
+    @PreAuthorize("@ss.hasPermi('om:object:type:remove')")
+    @PostMapping("/checkDeletable")
+    public CommonResult<Map<Long, String>> checkDeletable(@RequestBody List<Long> ids) {
+        return CommonResult.success(omObjectTypeService.checkDeletable(ids));
+    }
 }
