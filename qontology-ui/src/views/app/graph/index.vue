@@ -16,38 +16,10 @@
  See the LICENSE file in the project root for full license information.
 -->
 
-<!--<template>-->
-<!--    <div class="app-container">-->
-<!--        <div class="pagecont-one">-->
-<!--            <Graph />-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</template>-->
-<!--<script setup name="ExploreIndex">-->
-<!--    import Graph from './graph/index.vue';-->
-<!--</script>-->
-<!--<style lang="scss" scoped>-->
-<!--    .app-container {-->
-<!--        display: flex;-->
-<!--        flex-direction: column;-->
-<!--        .pagecont-one {-->
-<!--            flex: 1;-->
-<!--            min-height: 0;-->
-<!--            display: flex;-->
-<!--            flex-direction: column;-->
-<!--            border-radius: 2px;-->
-<!--            :deep(.graphView) {-->
-<!--                flex: 1;-->
-<!--                min-height: 0;-->
-<!--            }-->
-<!--        }-->
-<!--    }-->
-<!--</style>-->
-
 <template>
   <div class="app-container">
     <guide-tip tip-id="kg/graphExploration" />
-    <div class="pagecont-one">
+    <div class="graph-exploration__content">
       <div class="page-tabs">
         <el-tabs v-model="pageAct" @tab-click="tabsClick">
           <el-tab-pane label="常规视图" name="General"> </el-tab-pane>
@@ -80,7 +52,6 @@ const tabsClick = (tab) => {
 watch(
     () => route.name,
     (val) => {
-      console.log(val);
       pageAct.value = val;
     },
     {
@@ -92,7 +63,7 @@ watch(
 .app-container {
   display: flex;
   flex-direction: column;
-  .pagecont-one {
+  .graph-exploration__content {
     flex: 1;
     border-radius: 2px;
     :deep(.page-tabs) {

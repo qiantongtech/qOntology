@@ -67,11 +67,23 @@ const tableStore = reactive({
     },
   },
   columns: [
-    { label: "主体", prop: "startName", minWidth: 150 },
-    { label: "主体概念", prop: "startSchemaName", minWidth: 150 },
-    { label: "谓词/关系", prop: "relationType", minWidth: 150 },
-    { label: "客体", prop: "endName", minWidth: 150 },
-    { label: "客体概念", prop: "endSchemaName", minWidth: 150 },
+    {
+      label: "编号",
+      prop: "id",
+      width: 60,
+      sortable: "custom",
+      sortableKey: "id",
+    },
+    { label: "主体", prop: "startName", align: "left", minWidth: 200 },
+    {
+      label: "主体概念",
+      prop: "startSchemaName",
+      align: "left",
+      minWidth: 150,
+    },
+    { label: "谓词/关系", prop: "relationType", align: "left", minWidth: 150 },
+    { label: "客体", prop: "endName", align: "left", minWidth: 200 },
+    { label: "客体概念", prop: "endSchemaName", align: "left", minWidth: 150 },
     {
       label: "创建时间",
       prop: "createTime",

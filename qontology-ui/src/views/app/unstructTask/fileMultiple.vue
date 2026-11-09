@@ -25,116 +25,24 @@
     destroy-on-close
     @close="cancel"
   >
-    <el-form
-      ref="queryRef"
-      class="btn-style"
-      :inline="true"
-      :model="queryParams"
-      label-width="68px"
-      @submit.prevent
-    >
-      <el-form-item label="文件名称" prop="fileName">
-        <el-input
-          v-model="queryParams.fileName"
-          clearable
-          placeholder="请输入文件名称"
-          @keyup.enter="handleQuery"
-          class="file-multiple__search-input"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button
-          plain
-          type="primary"
-          @click="handleQuery"
-          @mousedown="(event) => event.preventDefault()"
-        >
-          <i class="iconfont-mini icon-a-zu22377 mr5" />查询
-        </el-button>
-        <el-button
-          @click="resetQuery"
-          @mousedown="(event) => event.preventDefault()"
-        >
-          <i class="iconfont-mini icon-a-zu22378 mr5" />重置
-        </el-button>
-      </el-form-item>
-    </el-form>
-
-    <el-table
-      ref="multipleTableRef"
-      v-loading="loading"
-      :data="dataList"
-      height="420px"
-      reserve-selection
-      row-key="id"
-      stripe
-      @selection-change="handleSelectionChange"
-      @row-click="handleRowClick"
-    >
-      <el-table-column align="center" type="selection" width="55" />
-      <el-table-column align="center" label="编号" prop="id" width="80" />
-      <el-table-column
-        align="left"
-        label="知识分类名称"
-        prop="categoryName"
-        width="150"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="scope">{{
-          scope.row.categoryName || "-"
-        }}</template></el-table-column>
-      <el-table-column
-        align="left"
-        label="文件名称"
-        prop="fileName"
-        min-width="220"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="scope">{{
-          scope.row.fileName || "-"
-        }}</template></el-table-column>
-      <el-table-column
-        align="left"
-        header-align="left"
-        label="文件描述"
-        prop="description"
-        min-width="220"
-        :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="scope">{{
-          scope.row.description || "-"
-        }}</template></el-table-column>
-      <el-table-column align="center" label="文件大小" prop="fileSize" width="110">
-        <template #default="scope">{{ formatSize(scope.row.fileSize) }}</template>
-      </el-table-column>
-      <el-table-column align="center" label="创建人" prop="createBy"><template #default="scope">{{
-          scope.row.createBy || "-"
-        }}</template></el-table-column>
-      <el-table-column
-        align="center"
-        label="创建时间"
-        prop="createTime"
-        width="150"
-        ><template #default="scope">{{
-          parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}")
-        }}</template></el-table-column>
-      <!-- <el-table-column align="center" label="备注" prop="remark"
-        ><template #default="scope">{{
-          scope.row.remark || "-"
-        }}</template></el-table-column
-      > -->
-      <template #empty><div class="emptyBg">
-          <img src="@/assets/system/images/no_data/noData.png" alt="" />
-          <p>暂无记录</p>
-        </div></template>
-    </el-table>
-    <pagination
-      v-show="total > 0"
-      v-model:limit="queryParams.pageSize"
-      v-model:page="queryParams.pageNum"
-      :total="total"
-      @pagination="getList"
+    <qt-search-bar
+      :items="searchItems"
+      :params="queryParams"
+      :table-ref="multipleTableRef"
     />
-    <template #footer><div class="dialog-footer">
-        <el-button size="mini" @click="cancel">取 消</el-button><el-button type="primary" size="mini" @click="confirm">确 定</el-button>
-      </div></template>
+
+    <qt-table v-bind="tableStore" ref="multipleTableRef">
+      <template #fileSize="{ row }">{{ formatSize(row.fileSize) }}</template>
+      <template #createTime="{ row }">{{
+        parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+      }}</template>
+    </qt-table>
+    <template #footer
+      ><div class="dialog-footer">
+        <el-button @click="cancel">取 消</el-button
+        ><el-button type="primary" @click="confirm">确 定</el-button>
+      </div></template
+    >
   </el-dialog>
 </template>
 
@@ -151,41 +59,97 @@ defineProps({
 });
 const emit = defineEmits(["confirm", "cancel"]);
 const visible = ref(false);
-const loading = ref(false);
-const total = ref(0);
 const dataList = ref([]);
 const selectedRows = ref([]);
 const automaticSelection = ref(false);
 const multipleTableRef = ref();
 const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
   fileName: undefined,
   status: 1,
   orderByColumn: "createTime",
   isAsc: "descending",
 });
-
-/** 查询文件列表。 */
-function getList() {
-  loading.value = true;
-  listModelDataFile(queryParams)
-    .then(({ data }) => {
-      dataList.value = data.rows;
-      total.value = data.total;
+const searchItems = [
+  { label: "文件名称", prop: "fileName", component: { is: "input" } },
+];
+const tableStore = reactive({
+  config: {
+    initResquest: false,
+    table: {
+      height: 420,
+      stripe: true,
+      rowKey: "id",
+      onSelectionChange: handleSelectionChange,
+      onRowClick: handleRowClick,
+    },
+    pagination: { notAutoScroll: true },
+  },
+  columns: [
+    { type: "selection", width: 55, minWidth: 55 },
+    { label: "编号", prop: "id", width: 60, minWidth: 60 },
+    {
+      label: "知识分类名称",
+      prop: "categoryName",
+      width: 150,
+      minWidth: 150,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "文件名称",
+      prop: "fileName",
+      minWidth: 220,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "文件描述",
+      prop: "description",
+      minWidth: 220,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "文件大小",
+      prop: "fileSize",
+      slot: "fileSize",
+      width: 110,
+      minWidth: 110,
+    },
+    { label: "创建人", prop: "createBy", minWidth: 100 },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      slot: "createTime",
+      width: 150,
+      minWidth: 150,
+    },
+  ],
+  func: listModelDataFile,
+  params: queryParams,
+  events: {
+    formatData: (rows) => {
       automaticSelection.value = true;
-      nextTick(() => {
-        selectedRows.value.forEach((row) => {
-          const currentRow = dataList.value.find((item) => item.id === row.id);
-          if (currentRow)
-            multipleTableRef.value?.toggleRowSelection(currentRow, true);
-        });
-        automaticSelection.value = false;
-      });
-    })
-    .finally(() => {
-      loading.value = false;
+      return rows;
+    },
+    onDataLoaded: restoreSelection,
+  },
+});
+
+/** 分页刷新后回显跨页勾选。 */
+function restoreSelection(rows) {
+  dataList.value = rows;
+  nextTick(() => {
+    selectedRows.value.forEach((row) => {
+      const currentRow = rows.find((item) => item.id === row.id);
+      if (currentRow)
+        multipleTableRef.value?.elTableRef?.toggleRowSelection(
+          currentRow,
+          true
+        );
     });
+    automaticSelection.value = false;
+  });
 }
 
 /** 记录跨页选择结果。 */
@@ -204,38 +168,25 @@ function handleSelectionChange(selection) {
 
 /** 点击行时切换选中状态。 */
 function handleRowClick(row) {
-  multipleTableRef.value?.toggleRowSelection(row);
-}
-
-/** 执行文件查询。 */
-function handleQuery() {
-  queryParams.pageNum = 1;
-  getList();
-}
-
-/** 重置文件查询条件。 */
-function resetQuery() {
-  proxy.resetForm("queryRef");
-  handleQuery();
+  multipleTableRef.value?.elTableRef?.toggleRowSelection(row);
 }
 
 /** 重置查询条件与选中状态。 */
 function rest() {
   selectedRows.value = [];
-  queryParams.pageNum = 1;
-  proxy.resetForm("queryRef");
+  queryParams.fileName = undefined;
 }
 
 /** 打开文件选择弹框并回显已选文件。 */
 function open(rows = []) {
   selectedRows.value = Array.isArray(rows) ? [...rows] : [];
   visible.value = true;
-  getList();
+  nextTick(() => multipleTableRef.value?.resetQuery());
 }
 
 /** 关闭文件选择弹框。 */
 function cancel() {
-  multipleTableRef.value?.clearSelection();
+  multipleTableRef.value?.elTableRef?.clearSelection();
   rest();
   visible.value = false;
   emit("cancel");
@@ -254,9 +205,3 @@ function confirm() {
 
 defineExpose({ open });
 </script>
-
-<style scoped lang="scss">
-.file-multiple__search-input {
-  width: 240px;
-}
-</style>

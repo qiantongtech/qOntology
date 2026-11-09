@@ -17,7 +17,7 @@
 -->
 
 <template>
-  <div class="app-container" ref="app-container">
+  <div class="app-container" ref="appContainer">
     <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
       <template #search>
         <qt-search-bar
@@ -68,21 +68,30 @@
         <template #eventType="{ row }">
           <dict-tag :options="app_event_type" :value="row.type" />
         </template>
-        <!-- 参与实体沿用标签换行展示的样式 -->
+        <!-- 参与实体：超出两行省略时，悬浮用浅色气泡展示全部实体 -->
         <template #entityList="{ row }">
-          <div class="entity-list multiline-ellipsis">
-            <span v-if="!row.entityNameList || !row.entityNameList.length"
-              >-</span
+          <el-tooltip
+            v-if="row.entityNameList && row.entityNameList.length"
+            :disabled="!overflowRows[row.id]"
+            effect="light"
+            placement="top"
+            popper-class="entity-list-tooltip"
+            :content="row.entityNameList.map((tag) => tag.name).join('、')"
+          >
+            <div
+              :ref="(el) => setEntityEl(row.id, el)"
+              class="entity-list multiline-ellipsis"
             >
-            <el-tag
-              v-else
-              v-for="tag in row.entityNameList"
-              :key="tag.id"
-              class="card-tag"
-            >
-              {{ tag.name }}
-            </el-tag>
-          </div>
+              <el-tag
+                v-for="tag in row.entityNameList"
+                :key="tag.id"
+                class="card-tag"
+              >
+                {{ tag.name }}
+              </el-tag>
+            </div>
+          </el-tooltip>
+          <span v-else>-</span>
         </template>
         <!-- 创建人双行展示：姓名上方，联系电话复用公共用户关联逻辑。 -->
         <template #creator="{ row }">
@@ -134,7 +143,7 @@
       :entity-options="app_enetity_type"
       :graph-id="route.params.kgId"
       :saving="eventSaving"
-      :append-to="$refs['app-container']"
+      :append-to="appContainer"
       @cancel="cancel"
       @submit="submitForm"
     />
@@ -144,7 +153,7 @@
       :title="title"
       v-model="openDetail"
       width="800px"
-      :append-to="$refs['app-container']"
+      :append-to="appContainer"
       draggable
     >
       <template #header>
@@ -204,7 +213,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">关 闭</el-button>
+          <el-button @click="cancel">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -231,6 +240,7 @@ const { app_event_type, app_enetity_type } = proxy.useDict(
 const { creatorPhones } = useCreatorPhones();
 
 const tableRef = ref();
+const appContainer = ref();
 
 const open = ref(false);
 const openDetail = ref(false);
@@ -253,6 +263,28 @@ function formatData(rows) {
   }));
 }
 
+// 参与实体单元格：记录各行 DOM，列表渲染后测量是否被两行省略，只对省略的行开启悬浮提示
+const entityEls = new Map();
+const overflowRows = reactive({});
+
+function setEntityEl(id, el) {
+  if (el) {
+    entityEls.set(id, el);
+  } else {
+    entityEls.delete(id);
+  }
+}
+
+function measureEntityOverflow() {
+  nextTick(() => {
+    entityEls.forEach((el, id) => {
+      overflowRows[id] =
+        el.scrollHeight > el.clientHeight + 1 ||
+        el.scrollWidth > el.clientWidth + 1;
+    });
+  });
+}
+
 // 表格配置
 const tableStore = reactive({
   config: {
@@ -269,7 +301,7 @@ const tableStore = reactive({
     {
       label: "编号",
       prop: "id",
-      width: 80,
+      width: 60,
       sortable: "custom",
       sortableKey: "id",
     },
@@ -293,7 +325,7 @@ const tableStore = reactive({
       label: "发生时间",
       prop: "occurTime",
       date: true,
-      width: 160,
+      width: 150,
       sortable: "custom",
       sortableKey: "occurTime",
     },
@@ -308,7 +340,7 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 100,
+      width: 120,
       align: "left",
       headerAlign: "left",
       showOverflowTooltip: { effect: "light" },
@@ -317,7 +349,7 @@ const tableStore = reactive({
       label: "创建时间",
       prop: "createTime",
       date: true,
-      width: 160,
+      width: 150,
       align: "left",
       sortable: "custom",
       sortableKey: "createTime",
@@ -335,6 +367,8 @@ const tableStore = reactive({
   },
   events: {
     formatData,
+    // 列表渲染完成后测量参与实体是否超出两行
+    onDataLoaded: measureEntityOverflow,
   },
 });
 
@@ -528,5 +562,21 @@ function handleDelete(row) {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+</style>
+<style lang="scss">
+/* 参与实体悬浮提示：与系统浅色 tooltip 样式保持一致 */
+.el-popper.is-light.entity-list-tooltip {
+  max-width: 426px;
+  padding: 10px 16px;
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 4px;
+  background: var(--qt-surface-background);
+  box-shadow: 0 2px 12px 0 var(--qt-overlay-border);
+  color: var(--el-text-color-primary);
+  font-size: var(--qt-font-size-base);
+  line-height: 22px;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 </style>

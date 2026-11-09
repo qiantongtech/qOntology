@@ -201,17 +201,17 @@
             overflow: hidden;
             font-family: var(--qt-font-family);
             .el-tag.el-tag--default .el-tag__content {
-                font-size: 12px !important;
+                font-size: var(--qt-font-size-small) !important;
             }
             .line-title {
                 display: flex;
                 align-items: center;
-                font-size: 14px;
+                font-size: var(--qt-font-size-base);
                 position: relative;
                 .title-text {
                     cursor: pointer;
                     font-weight: 600;
-                    font-size: 14px;
+                    font-size: var(--qt-font-size-base);
                     color: var(--qt-text-primary);
                     max-width: 100px;
                     overflow: hidden;
@@ -232,13 +232,13 @@
                     }
                     .toggle-text {
                         display: inline-block;
-                        font-size: 12px !important;
+                        font-size: var(--qt-font-size-small) !important;
                         line-height: 1;
                         margin-right: 3px;
                     }
                     .el-icon {
                         font-weight: bold;
-                        font-size: 10px;
+                        font-size: var(--qt-font-size-small);
                         transition: transform 0.3s ease-in-out;
                     }
                     .toggle {

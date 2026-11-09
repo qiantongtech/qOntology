@@ -23,43 +23,11 @@
     v-model="visible"
     width="1000px"
     top="5vh"
-    :append-to="$refs['app-container']"
     draggable
     destroy-on-close
     @close="handleClose"
   >
-    <el-form
-      ref="queryRef"
-      :model="queryParams"
-      :inline="true"
-      class="btn-style"
-    >
-      <el-form-item label="表名称" prop="tableName">
-        <el-input
-          v-model="queryParams.tableName"
-          placeholder="请输入表名称"
-          clearable
-          class="el-form-input-width"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button
-          plain
-          type="primary"
-          @click="handleQuery"
-          @mousedown="(event) => event.preventDefault()"
-        >
-          <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-        </el-button>
-        <el-button
-          @click="resetQuery"
-          @mousedown="(event) => event.preventDefault()"
-        >
-          <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
-        </el-button>
-      </el-form-item>
-    </el-form>
+    <qt-search-bar :items="searchItems" :params="queryParams" :table-ref="tableRef" />
     <qt-table v-bind="tableStore" ref="tableRef" />
     <template #footer>
       <div class="dialog-footer">
@@ -79,8 +47,8 @@ const tableRef = ref();
 
 const queryParams = reactive({
   tableName: undefined,
-  tableComment: undefined,
 });
+const searchItems = [{ label: "表名称", prop: "tableName", component: { is: "input" } }];
 
 const tableStore = reactive({
   config: {
@@ -96,7 +64,7 @@ const tableStore = reactive({
     pagination: { notAutoScroll: true },
   },
   columns: [
-    { type: "selection", width: 55 },
+    { type: "selection", width: 55, minWidth: 55 },
     {
       label: "表名称",
       prop: "tableName",
@@ -147,18 +115,6 @@ async function loadTableData(params) {
     tableName: params.tableName,
   });
   return { data: res.data || [] };
-}
-
-/** 搜索按钮操作 */
-function handleQuery() {
-  tableRef.value?.resetQuery();
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  proxy.resetForm("queryRef");
-  queryParams.tableName = undefined;
-  tableRef.value?.resetQuery();
 }
 
 /** 导入按钮操作 */

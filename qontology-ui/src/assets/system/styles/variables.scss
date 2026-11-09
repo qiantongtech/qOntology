@@ -26,9 +26,6 @@
   /* 所有主题和业务模块共用的基础变量。 */
   --qt-font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
   --qt-font-size-base: 14px;
-  --qt-font-size-small: 12px;
-  --qt-font-size-medium: 16px;
-  --qt-font-size-large: 18px;
   --qt-font-weight-regular: 400;
   --qt-font-weight-medium: 500;
   --qt-font-weight-bold: 600;
@@ -64,9 +61,6 @@
   /* 深色或主色导航表面上的文字颜色。 */
   --qt-text-inverse: #FFFFFF;
   --qt-text-inverse-muted: rgba(255, 255, 255, 0.72);
-  --qt-text-emphasis: rgba(0, 0, 0, 0.85);
-  --qt-overlay-border: rgba(0, 0, 0, 0.1);
-  --qt-overlay-shadow: rgba(0, 0, 0, 0.4);
 
   /*
    * 固定的 Element Plus 契约。
@@ -115,12 +109,31 @@
   --qt-radius-medium: 4px;
   --qt-motion-duration: 180ms;
 
+
+  /*
+   * 知识图谱
+   *
+   */
+  /* 字体大小。 */
+  --qt-font-size-small: 12px;
+  --qt-font-size-medium: 16px;
+  --qt-font-size-large: 18px;
+
+  /* 字体颜色。 */
+  --qt-text-emphasis: rgba(0, 0, 0, 0.85);
+  --qt-overlay-border: rgba(0, 0, 0, 0.1);
+  --qt-overlay-shadow: rgba(0, 0, 0, 0.4);
+
   /* 知识图谱深色画布及工具面板共用变量。 */
   --qt-graph-panel-background: #1C376A;
   --qt-graph-panel-border: #448FFF;
   --qt-graph-panel-text: #D7E3FA;
   --qt-graph-node-default: #89B8FF;
   --qt-graph-node-default-border: rgba(137, 184, 255, 0.3);
+  --qt-graph-node-highlight: #0006FF;
+  --qt-graph-node-highlight-border: rgba(0, 6, 255, 0.3);
   --qt-graph-tool-background: #F3F7FF;
   --qt-graph-divider: #E8E8E8;
+  --qt-graph-overlay-highlight: rgba(255, 255, 255, 0.2);
+  --qt-graph-panel-gradient-edge: rgba(0, 15, 39, 0.27);
 }

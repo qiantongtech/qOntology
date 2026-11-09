@@ -66,58 +66,10 @@
           抽取步骤
         </span>
       </template>
-      <el-table
-        v-loading="detailLoading"
-        :data="details"
-        :default-sort="{ prop: 'createTime', order: 'descending' }"
-        stripe
-        @sort-change="handleDetailSortChange"
-        class="detail-table"
-      >
-        <el-table-column
-          label="编号"
-          prop="id"
-          width="100"
-          align="center"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-        />
-        <el-table-column
-          label="执行步骤"
-          prop="step"
-          min-width="330"
-          align="left"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        >
-          <template #default="scope">{{ scope.row.step || "-" }}</template>
-        </el-table-column>
-        <el-table-column
-          label="执行时间"
-          prop="createTime"
-          width="190"
-          align="center"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-        >
-          <template #default="scope">
-            {{
-              proxy.parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}") ||
-              "-"
-            }}
-          </template>
-        </el-table-column>
-      </el-table>
-      <pagination
-        v-show="detailTotal > 0"
-        v-model:limit="detailParams.pageSize"
-        v-model:page="detailParams.pageNum"
-        :total="detailTotal"
-        @pagination="getDetails"
-        class="no-top-padding"
-      />
+      <qt-table v-bind="detailTableStore" ref="detailTableRef" />
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="detailOpen = false">关 闭</el-button>
+          <el-button @click="detailOpen = false">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -137,12 +89,10 @@ const { creatorPhones } = useCreatorPhones();
 
 const appContainer = ref();
 const tableRef = ref();
-const detailLoading = ref(false);
 const detailOpen = ref(false);
-const details = ref([]);
+const detailTableRef = ref();
 const ids = ref([]);
 const multiple = ref(true);
-const detailTotal = ref(0);
 const currentLogId = ref();
 
 const tableStore = reactive({
@@ -160,14 +110,14 @@ const tableStore = reactive({
     {
       label: "编号",
       prop: "id",
-      width: 100,
-      minWidth: 100,
+      width: 60,
+      minWidth: 60,
       sortable: "custom",
     },
     {
       label: "任务名称",
       prop: "taskName",
-      minWidth: 260,
+      minWidth: 300,
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
@@ -191,7 +141,7 @@ const tableStore = reactive({
       label: "创建人",
       prop: "createBy",
       slot: "creator",
-      width: 140,
+      width: 120,
       align: "left",
       headerAlign: "left",
     },
@@ -234,12 +184,35 @@ const searchStore = reactive({
   ],
 });
 
-const detailParams = reactive({
-  pageNum: 1,
-  pageSize: 10,
-  logId: undefined,
-  orderByColumn: "createTime",
-  isAsc: "descending",
+const detailTableStore = reactive({
+  config: {
+    initResquest: false,
+    sort: true,
+    table: {
+      stripe: true,
+      defaultSort: { prop: "createTime", order: "descending" },
+    },
+    pagination: { notAutoScroll: true },
+  },
+  columns: [
+    { label: "编号", prop: "id", width: 60, sortable: "custom" },
+    {
+      label: "执行步骤",
+      prop: "step",
+      minWidth: 330,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "执行时间",
+      prop: "createTime",
+      width: 190,
+      sortable: "custom",
+      date: "{y}-{m}-{d} {h}:{i}",
+    },
+  ],
+  func: getDetailPage,
+  params: { logId: undefined },
 });
 
 function handleSelectionChange(selection) {
@@ -247,29 +220,11 @@ function handleSelectionChange(selection) {
   multiple.value = !selection.length;
 }
 
-async function getDetails() {
-  detailLoading.value = true;
-  detailParams.logId = currentLogId.value;
-  try {
-    const { data } = await getDetailPage(detailParams);
-    details.value = data.rows || [];
-    detailTotal.value = data.total || 0;
-    detailOpen.value = true;
-  } finally {
-    detailLoading.value = false;
-  }
-}
-
 function showDetail(row) {
   currentLogId.value = row.id;
-  detailParams.pageNum = 1;
-  getDetails();
-}
-
-function handleDetailSortChange({ prop, order }) {
-  detailParams.orderByColumn = order ? prop : "createTime";
-  detailParams.isAsc = order || "descending";
-  getDetails();
+  detailTableStore.params.logId = currentLogId.value;
+  detailOpen.value = true;
+  nextTick(() => detailTableRef.value?.resetQuery());
 }
 
 function handleDelete() {
@@ -283,13 +238,3 @@ function handleDelete() {
     .catch(() => {});
 }
 </script>
-
-<style scoped>
-.detail-table {
-  margin-bottom: 0;
-}
-.detail-table + :deep(.pagination-container),
-.no-top-padding :deep(.pagination-container) {
-  padding-top: 0;
-}
-</style>

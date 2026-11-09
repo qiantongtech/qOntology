@@ -22,7 +22,7 @@
     v-loading="appLoading"
   >
     <el-container class="wrap-container">
-      <div :class="['gragh-wrap', { isfull: isfull }]">
+      <div :class="['graph-wrap', { isfull: isfull }]">
         <div class="control-tree">
           <el-tree
             node-key="id"
@@ -108,7 +108,7 @@
         <!-- 视图容器 -->
         <div
           :class="['graph-container', { 'is-detail-visible': detailShow }]"
-          id="gragh-container"
+          id="graph-container"
         ></div>
         <transition name="el-zoom-in-right">
           <div class="details-dialog" v-if="detailShow">
@@ -124,7 +124,8 @@
                   v-if="!isEditName"
                   >{{
                     currentNodeData.name + "&nbsp;(" + currentNodeData.id + ")"
-                  }}</span>
+                  }}</span
+                >
                 <el-input
                   v-model="currentNodeData.name"
                   autofocus="true"
@@ -137,7 +138,6 @@
               <div class="title-slot">
                 <el-button
                   :disabled="releaseStatus"
-                  size="small"
                   type="danger"
                   icon="Delete"
                   @click="handleDel"
@@ -152,68 +152,39 @@
                     <div class="collapse-title">属性信息</div>
                   </template>
                   <div class="collapse-con">
-                    <el-table
-                      stripe
-                      height="150px"
+                    <qt-table
+                      v-bind="attrTableStore"
+                      ref="attrTableRef"
                       v-loading="attrLoading"
-                      :data="attrData"
                     >
-                      <el-table-column
-                        label="属性名称"
-                        align="center"
-                        prop="name"
-                        :show-overflow-tooltip="{ effect: 'light' }"
-                      />
-                      <el-table-column
-                        label="数据类型"
-                        prop="dataType"
-                        align="center"
-                        :show-overflow-tooltip="{ effect: 'light' }"
-                      >
-                        <template #default="scope">
-                          <dict-tag
-                            :options="ext_data_type"
-                            :value="scope.row.dataType"
-                          />
-                        </template>
-                      </el-table-column>
-                      <el-table-column
-                        label="属性值"
-                        prop="dataValue"
-                        align="center"
-                        :show-overflow-tooltip="{ effect: 'light' }"
-                      >
-                        <template #default="scope">
-                          {{ scope.row.dataValue ? scope.row.dataValue : "-" }}
-                        </template>
-                      </el-table-column>
-                      <el-table-column
-                        label="操作"
-                        class-name="small-padding fixed-width"
-                        fixed="right"
-                        align="center"
-                        width="120"
-                      >
-                        <template #default="scope">
-                          <el-button
-                            :disabled="releaseStatus"
-                            link
-                            type="primary"
-                            icon="Edit"
-                            @click="attrUpdate(scope.row)"
-                            >修改
-                          </el-button>
-                          <el-button
-                            :disabled="releaseStatus"
-                            link
-                            type="danger"
-                            icon="Delete"
-                            @click="attrDelete(scope.row)"
-                            >删除
-                          </el-button>
-                        </template>
-                      </el-table-column>
-                    </el-table>
+                      <template #dataType="{ row }">
+                        <dict-tag
+                          :options="ext_data_type"
+                          :value="row.dataType"
+                        />
+                      </template>
+                      <template #dataValue="{ row }">{{
+                        row.dataValue || "-"
+                      }}</template>
+                      <template #actions="{ row }">
+                        <el-button
+                          :disabled="releaseStatus"
+                          link
+                          type="primary"
+                          icon="Edit"
+                          @click="attrUpdate(row)"
+                          >修改
+                        </el-button>
+                        <el-button
+                          :disabled="releaseStatus"
+                          link
+                          type="danger"
+                          icon="Delete"
+                          @click="attrDelete(row)"
+                          >删除
+                        </el-button>
+                      </template>
+                    </qt-table>
                   </div>
                 </el-collapse-item>
                 <el-collapse-item title="关联三元组" name="2">
@@ -221,65 +192,40 @@
                     <div class="collapse-title">关联三元组</div>
                   </template>
                   <div class="collapse-con">
-                    <el-table
-                      stripe
-                      height="200px"
+                    <qt-table
+                      v-bind="tripletTableStore"
+                      ref="tripletTableRef"
                       v-loading="tripletLoading"
-                      :data="tripletData"
                     >
-                      <el-table-column
-                        label="起点"
-                        key="startName"
-                        prop="startName"
-                        :show-overflow-tooltip="{ effect: 'light' }"
-                      />
-                      <el-table-column
-                        label="关系"
-                        key="name"
-                        prop="name"
-                        :show-overflow-tooltip="{ effect: 'light' }"
-                      >
-                        <template #default="scope">
-                          <span
-                            v-if="isRelationshipEdit !== scope.$index"
-                            @dblclick="
-                              !releaseStatus &&
-                                (isRelationshipEdit = scope.$index)
-                            "
-                            >{{ scope.row.name }}</span>
-                          <el-input
-                            v-model="scope.row.name"
-                            autofocus="true"
-                            placeholder="请输入关系名称"
-                            clearable
-                            v-else
-                            @blur="updateRelationship"
-                          />
-                        </template>
-                      </el-table-column>
-                      <el-table-column
-                        label="终点"
-                        key="endName"
-                        prop="endName"
-                        :show-overflow-tooltip="{ effect: 'light' }"
-                      />
-                      <el-table-column
-                        label="操作"
-                        class-name="small-padding fixed-width"
-                        fixed="right"
-                      >
-                        <template #default="scope">
-                          <el-button
-                            :disabled="releaseStatus"
-                            link
-                            type="danger"
-                            icon="Delete"
-                            @click="tripletDelete(scope.row)"
-                            >删除
-                          </el-button>
-                        </template>
-                      </el-table-column>
-                    </el-table>
+                      <template #name="scope">
+                        <span
+                          v-if="isRelationshipEdit !== scope.$index"
+                          @dblclick="
+                            !releaseStatus &&
+                              (isRelationshipEdit = scope.$index)
+                          "
+                          >{{ scope.row.name }}</span
+                        >
+                        <el-input
+                          v-model="scope.row.name"
+                          autofocus="true"
+                          placeholder="请输入关系名称"
+                          clearable
+                          v-else
+                          @blur="updateRelationship"
+                        />
+                      </template>
+                      <template #actions="{ row }">
+                        <el-button
+                          :disabled="releaseStatus"
+                          link
+                          type="danger"
+                          icon="Delete"
+                          @click="tripletDelete(row)"
+                          >删除
+                        </el-button>
+                      </template>
+                    </qt-table>
                   </div>
                 </el-collapse-item>
 
@@ -298,11 +244,7 @@
                     <!--                                        >-->
                     <!--                                            {{ tag.name }}-->
                     <!--                                        </el-tag>-->
-                    <el-button
-                      size="small"
-                      @click="openTagMultiple"
-                      class="mt5"
-                    >
+                    <el-button @click="openTagMultiple" class="mt5">
                       + 绑定标签
                     </el-button>
                   </div>
@@ -331,27 +273,11 @@
                           表名称: {{ dataSource.database.tableName }}
                         </div>
                       </div>
-                      <el-table
-                        height="200px"
+                      <qt-table
+                        v-bind="dataSourceTableStore"
+                        ref="dataSourceTableRef"
                         v-loading="dataSourceLoading"
-                        :data="dataSource.tableData"
-                      >
-                        <el-table-column
-                          label="表字段"
-                          align="center"
-                          prop="field"
-                          :show-overflow-tooltip="{ effect: 'light' }"
-                        />
-                        <el-table-column
-                          label="数据"
-                          align="center"
-                          prop="value"
-                        >
-                          <template #default="scope">
-                            {{ scope.row.value ? scope.row.value : "-" }}
-                          </template>
-                        </el-table-column>
-                      </el-table>
+                      />
                     </div>
                   </el-collapse-item>
                 </template>
@@ -369,7 +295,8 @@
                               .split(',')
                               .includes(item.id.toString())
                           "
-                          >{{ item.text }}</span>
+                          >{{ item.text }}</span
+                        >
                         <!--                        <span v-if="currentNodeData.paragraphIndex && currentNodeData.paragraphIndex === item.paragraphIndex">{{ item.text }}</span>-->
                       </div>
                     </div>
@@ -414,7 +341,6 @@
           title="属性信息"
           v-model="attrVisible"
           width="500px"
-          :append-to="$refs['app-container']"
           draggable
           destroy-on-close
         >
@@ -456,7 +382,8 @@
           <template #footer>
             <div class="dialog-footer">
               <el-button @click="attrFormCancel">取 消</el-button>
-              <el-button type="primary" @click="attrFormSubmit">确 定
+              <el-button type="primary" @click="attrFormSubmit"
+                >确 定
               </el-button>
             </div>
           </template>
@@ -487,7 +414,7 @@
   </div>
 </template>
 
-<script setup name="KEresult">
+<script setup name="GraphView">
 import {
   ref,
   watch,
@@ -846,14 +773,14 @@ function renderGraphData(sourceData) {
   }
   //设置画布
   // setGraph(graphData.value);
-  initG6Gragh(graphData.value);
+  initG6Graph(graphData.value);
   if (nodes.value.length !== 0) {
     // 初始化树结构
     initTree();
   }
 }
 
-function initG6Gragh(option) {
+function initG6Graph(option) {
   let data = {
     nodes: option.nodes.map((item) => {
       return {
@@ -887,14 +814,20 @@ function initG6Gragh(option) {
         offset: offset,
         // ========== 曲线配置写在style里，封装类可识别 ==========
         style: {
-          stroke: "#40a9ff", // [表情]必加！没有就看不见线
+          stroke: getComputedStyle(document.documentElement)
+            .getPropertyValue("--qt-graph-panel-border")
+            .trim(),
           lineWidth: 2,
           type: "arc", // 曲线类型
           radius: 25, // 曲线弧度
           labelCfg: {
             autoRotate: true,
             refY: 8,
-            style: { fill: "#333" },
+            style: {
+              fill: getComputedStyle(document.documentElement)
+                .getPropertyValue("--qt-text-primary")
+                .trim(),
+            },
           },
         },
       };
@@ -953,7 +886,7 @@ function initG6Gragh(option) {
     ],
   };
 
-  relationGraph = new G6Network("gragh-container", data, options);
+  relationGraph = new G6Network("graph-container", data, options);
   relationGraph.triggerNodeClick = function (nodeId) {
     handleNodeClickId(nodeId);
   };
@@ -1643,6 +1576,28 @@ const collapseChange = () => {};
 // };
 const attrLoading = ref(false);
 const attrData = ref([]);
+const attrTableRef = ref();
+const attrTableStore = reactive({
+  config: { notPagination: true, table: { stripe: true, height: 150 } },
+  columns: [
+    {
+      label: "属性名称",
+      prop: "name",
+      showOverflowTooltip: { effect: "light" },
+    },
+    { label: "数据类型", slot: "dataType" },
+    { label: "属性值", slot: "dataValue" },
+    {
+      label: "操作",
+      slot: "actions",
+      fixed: "right",
+      width: 120,
+      minWidth: 120,
+    },
+  ],
+  func: () => Promise.resolve({ data: attrData.value }),
+});
+watch(attrData, () => attrTableRef.value?.getList());
 const attrVisible = ref(false);
 const attrForm = ref({});
 const attrUpdate = (row) => {
@@ -1708,6 +1663,26 @@ const getTripletData = (id) => {
 };
 const tripletLoading = ref(false);
 const tripletData = ref([]);
+const tripletTableRef = ref();
+const tripletTableStore = reactive({
+  config: { notPagination: true, table: { stripe: true, height: 200 } },
+  columns: [
+    {
+      label: "起点",
+      prop: "startName",
+      showOverflowTooltip: { effect: "light" },
+    },
+    { label: "关系", slot: "name" },
+    {
+      label: "终点",
+      prop: "endName",
+      showOverflowTooltip: { effect: "light" },
+    },
+    { label: "操作", slot: "actions", fixed: "right" },
+  ],
+  func: () => Promise.resolve({ data: tripletData.value }),
+});
+watch(tripletData, () => tripletTableRef.value?.getList());
 const tripletDelete = (row) => {
   const id = row.id.replace(/edge/g, "");
   proxy.$modal
@@ -1736,6 +1711,20 @@ const dataSource = ref({
   dataTable: [],
 });
 const dataSourceLoading = ref(false);
+const dataSourceTableRef = ref();
+const dataSourceTableStore = reactive({
+  config: { notPagination: true, table: { stripe: true, height: 200 } },
+  columns: [
+    {
+      label: "表字段",
+      prop: "field",
+      showOverflowTooltip: { effect: "light" },
+    },
+    { label: "数据", prop: "value", showOverflowTooltip: { effect: "light" } },
+  ],
+  func: () => Promise.resolve({ data: dataSource.value.tableData || [] }),
+});
+watch(dataSource, () => dataSourceTableRef.value?.getList());
 // const getDataSorceData = (val) => {
 //     dataSourceLoading.value = true;
 //     dataSource.value = {
@@ -1879,16 +1868,6 @@ function openTagMultiple() {
 // };
 </script>
 
-<style lang="scss">
-.fileDialog {
-  height: 90%;
-  width: 85%;
-
-  .el-dialog__body {
-    height: calc(100% - 42px) !important;
-  }
-}
-</style>
 <style scoped lang="scss">
 .graph-view {
   // 与关系视图、时序视图保持同一尺寸区间，切换页签时不再出现高度跳动和滚动条
@@ -1946,7 +1925,7 @@ function openTagMultiple() {
       &::before {
         content: "";
         display: inline-block;
-        background-color: var(--qt-primary, #2666fb);
+        background-color: var(--qt-title-marker-color);
         width: var(--qt-title-marker-width);
         height: var(--qt-title-marker-height);
         margin-right: var(--qt-title-marker-gap);
@@ -1967,7 +1946,7 @@ function openTagMultiple() {
     min-height: 0;
   }
 
-  .gragh-wrap {
+  .graph-wrap {
     position: relative;
     width: 100%;
     height: 100%;
@@ -1990,8 +1969,8 @@ function openTagMultiple() {
       height: calc(100% - 20px);
       background: radial-gradient(
         100% 0% at 50% 50%,
-        #1c3668 0%,
-        rgba(0, 15, 39, 0.27) 100%
+        var(--qt-graph-panel-background) 0%,
+        var(--qt-graph-panel-gradient-edge) 100%
       );
       border: 1px solid var(--el-color-primary);
       border-radius: 4px;
@@ -2004,7 +1983,7 @@ function openTagMultiple() {
       }
 
       :deep(.el-tree) {
-        --el-tree-text-color: #fff;
+        --el-tree-text-color: var(--qt-text-inverse);
         background: transparent;
 
         .el-tree-node__content:hover {
@@ -2105,7 +2084,7 @@ function openTagMultiple() {
         margin-right: 5px;
 
         &:hover {
-          background-color: rgba(255, 255, 255, 0.2);
+          background-color: var(--qt-graph-overlay-highlight);
         }
 
         img {
@@ -2168,8 +2147,8 @@ function openTagMultiple() {
           .mask-label {
             max-width: 100px;
             line-height: 1;
-            font-family: PingFangSCs;
-            font-size: 13px;
+            font-family: var(--qt-font-family);
+            font-size: var(--qt-font-size-small);
             color: var(--qt-graph-panel-text);
           }
         }
@@ -2179,7 +2158,8 @@ function openTagMultiple() {
     .graph-container {
       width: 100%;
       height: 100%;
-      background: var(--qt-surface-background) url("@/assets/ke/images/bg1.png") no-repeat;
+      background: var(--qt-surface-background) url("@/assets/ke/images/bg1.png")
+        no-repeat;
       background-size: 100% 100%;
       transition: width 0.3s;
 
@@ -2189,10 +2169,10 @@ function openTagMultiple() {
 
       :deep(.g6-toolbar) {
         .g6-toolbar-item {
-          fill: #7dbffa;
+          fill: var(--qt-graph-node-default);
 
           &:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: var(--qt-graph-overlay-highlight);
           }
         }
       }
@@ -2237,7 +2217,7 @@ function openTagMultiple() {
         height: calc(100% - 42px);
         overflow: hidden auto;
         padding: 10px 10px;
-        --el-border-color-lighter: #ddd;
+        --el-border-color-lighter: var(--qt-border-color);
 
         &::-webkit-scrollbar {
           width: 2px;
@@ -2265,7 +2245,7 @@ function openTagMultiple() {
         }
 
         .collapse-title {
-          font-size: 16px;
+          font-size: var(--qt-font-size-medium);
           color: var(--qt-text-primary);
           display: flex;
           align-items: center;
