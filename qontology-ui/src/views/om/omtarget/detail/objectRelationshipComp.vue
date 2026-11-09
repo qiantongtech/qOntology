@@ -273,10 +273,12 @@ const columns = reactive([
 const tableConfig = { notPagination: true, sort: true, table: { rowKey: 'id', stripe: true, defaultSort: { prop: 'createTime', order: 'descending' }, onSelectionChange: handleSelectionChange } };
 const tableEvents = { onSortChange: ({ orderByColumn, isAsc }) => handleSortChange({ prop: orderByColumn, order: isAsc }) };
 const listActions = { getList };
-const searchItems = [
+// searchItems 必须用 reactive 包裹：否则内层的 reversibleOptions 计算属性不会被自动解包，
+// QtSearchBar 遍历 options 时会拿到 Ref 本身而下拉渲染异常（与主菜单 relation/index.vue 保持一致）。
+const searchItems = reactive([
   { label: '对象类型关系名称', prop: 'name', component: { is: 'input' } },
   { label: '是否可逆', prop: 'reversibleFlag', component: { is: 'select', options: reversibleOptions } },
-];
+]);
 function readRows() {
   return Promise.resolve({ data: rows.value.map(row => {
     const record = { ...row };

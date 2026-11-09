@@ -99,8 +99,9 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
   }
 
   /**
-   * 删除当前行或所选候选；先弹删除确认框，点击确定后再调后端校验拿逐条“不可删原因”：
-   * 单条不可删时提示原因并终止，可删时直接删除；批量存在不可删项时再弹“可删除X/不可删除Y”二次确认，确认后只删可删部分。
+   * 删除当前行或所选候选：
+   * 单条先弹“是否确认删除编号为X 的数据项？”，点击确定后再调后端校验，不可删时提示原因并终止；
+   * 批量先调后端校验算出可删/不可删数量，统一弹“可删除X个，不可删除Y个，是否删除可删除部分？”（即使可删数为 0 也弹框），确认后只删可删部分。
    */
   async function remove(row) {
     if (deleting.value) return
@@ -108,34 +109,38 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     const records = isSingle ? [row] : [...selectedRows.value]
     const ids = records.map(item => item?.id).filter(id => id != null)
     if (!ids.length) return
-    // 先弹删除确认框（与批量删除同为系统提示风格），点击确定后再进行后端校验。
-    const confirmText = isSingle
-      ? `是否确认删除编号为${row.id} 的数据项？`
-      : `是否确认删除选中的 ${ids.length} 条候选数据？`
-    try {
-      await proxy.$modal.confirm(confirmText)
-    } catch {
-      return
-    }
-    // 确认后再校验：后端按跨候选引用与采纳状态返回不可删原因，仅包含不可删项。
-    let blockedMap = {}
-    try {
-      const response = await checkCandidateDeletable(type, ids)
-      blockedMap = response.data || {}
-    } catch {
-      return
-    }
     // blockedMap 键为字符串化的候选编号，命中即为不可删。
-    const deletableIds = ids.filter(id => !blockedMap[String(id)])
-    const cannotDeleteCount = ids.length - deletableIds.length
+    let deletableIds = []
     if (isSingle) {
-      // 单条：不可删时提示原因并终止。
+      // 单条：先弹编号确认框，点击确定后再调后端校验取回不可删原因。
+      try {
+        await proxy.$modal.confirm(`是否确认删除编号为${row.id} 的数据项？`)
+      } catch {
+        return
+      }
+      let blockedMap = {}
+      try {
+        const response = await checkCandidateDeletable(type, ids)
+        blockedMap = response.data || {}
+      } catch {
+        return
+      }
       const reason = blockedMap[String(row.id)]
       if (reason) { proxy.$modal.msgWarning(reason); return }
-    } else if (cannotDeleteCount) {
-      // 批量：存在不可删项时二次确认，确认后只删可删部分。
+      deletableIds = ids
+    } else {
+      // 批量：先调后端校验算出可删/不可删数量，再统一弹“可删除X/不可删除Y”确认，确认后只删可删部分。
+      let blockedMap = {}
       try {
-        await proxy.$modal.confirm(`可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`)
+        const response = await checkCandidateDeletable(type, ids)
+        blockedMap = response.data || {}
+      } catch {
+        return
+      }
+      deletableIds = ids.filter(id => !blockedMap[String(id)])
+      const cannotDeleteCount = ids.length - deletableIds.length
+      try {
+        await proxy.$modal.confirm(`可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`)
       } catch {
         return
       }
