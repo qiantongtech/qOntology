@@ -93,6 +93,12 @@
           placeholder="请输入文件名称"
         />
       </qt-form-item>
+      <!-- 详情态补充文件大小字段，展示格式与列表的文件大小列一致。 -->
+      <el-form-item v-if="readonly" class="row-full" label="文件大小">
+        <div class="form-readonly">
+          {{ form.fileSize ? formatSize(form.fileSize) : "—" }}
+        </div>
+      </el-form-item>
       <qt-form-item class="row-full" label="描述" prop="description">
         <div v-if="readonly" class="form-readonly textarea">
           {{ form.description || "—" }}
@@ -149,6 +155,7 @@ import {
 } from "@/api/basic/file/basicFile.js";
 import FileUpload2 from "@/components/FileUpload2";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
+import { formatSize } from "@/utils/index";
 
 const props = defineProps({
   categoryOptions: { type: Array, default: () => [] },
@@ -172,7 +179,7 @@ const rules = {
     { required: true, message: "文件名称不能为空", trigger: "change" },
   ],
   filePath: [
-    { required: true, message: "文件路径不能为空", trigger: "change" },
+    { required: true, message: "上传文件不能为空", trigger: "change" },
   ],
 };
 

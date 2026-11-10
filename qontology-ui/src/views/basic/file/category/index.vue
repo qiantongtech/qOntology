@@ -312,7 +312,7 @@ async function handleStatusChange(row, value) {
     status: value
   }
   proxy.$modal
-      .confirm(`确认要${value === 0 ? "启用" : "禁用"}文件分类“${row.name}”吗？`)
+      .confirm(`确认要${value === 0 ? "启用" : "停用"}文件分类“${row.name}”吗？`)
       .then(function () {
         return updateModelDataCategory(data);
       })

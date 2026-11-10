@@ -119,7 +119,6 @@
               <el-table-column align="center" width="110px" label="操作">
                 <template #default="scope">
                   <el-button
-                    size="mini"
                     type="danger"
                     @click="deleteItem(scope.$index, scope.row)"
                     plain
@@ -133,8 +132,8 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" size="mini" @click="submitForm">提交</el-button>
-          <el-button size="mini" @click="handleClose">取 消</el-button>
+          <el-button type="primary" @click="submitForm">提交</el-button>
+          <el-button @click="handleClose">取 消</el-button>
         </div>
       </template>
     </el-dialog>

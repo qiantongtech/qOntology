@@ -180,14 +180,14 @@
         </el-form-item>
         <el-row :gutter="20">
           <el-col :span="24">
-            <el-form-item label="名称" prop="name">
+            <el-form-item label="业务数据名称" prop="name">
               <div class="form-readonly">
                 {{ form.name }}
               </div>
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="数据类型" prop="dataType">
+            <el-form-item label="业务数据类型" prop="dataType">
               <dict-tag
                 :options="basic_data_type"
                 :value="form.dataType"
@@ -327,7 +327,7 @@
           <el-col :span="24">
             <el-form-item label="创建时间" prop="createTime">
               <div class="form-readonly">
-                {{ form.createTime }}
+                {{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") }}
               </div>
             </el-form-item>
           </el-col>
@@ -611,7 +611,7 @@ async function handleStatusChange(row, value) {
   if (statusSaving[row.id]) return;
   statusSaving[row.id] = true;
   try {
-    await proxy.$modal.confirm(`确认要${value === 1 ? "启用" : "禁用"}业务数据类型“${row.name}”吗？`);
+    await proxy.$modal.confirm(`确认要${value === 1 ? "启用" : "停用"}业务数据类型“${row.name}”吗？`);
     await updateDataTypeStatus(row.id, value);
     row.status = value;
     tableRef.value?.getList();
@@ -648,15 +648,15 @@ const data = reactive({
   form: {},
   rules: {
     name: [
-      { required: true, message: "名称不能为空", trigger: "blur" },
-      { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
+      { required: true, message: "业务数据名称不能为空", trigger: "blur" },
+      { max: 128, message: "业务数据名称不能超过128个字符", trigger: "blur" },
     ],
     description: [
       { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
     ],
     // 下拉框选择时触发 change，及时重新校验并清除先前的必填提示。
     dataType: [
-      { required: true, message: "数据类型不能为空", trigger: "change" },
+      { required: true, message: "业务数据类型不能为空", trigger: "change" },
     ],
     format: [{ required: true, message: "格式不能为空", trigger: "blur" }],
     enumType: [

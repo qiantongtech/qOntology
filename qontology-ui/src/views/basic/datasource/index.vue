@@ -329,15 +329,13 @@
         <div class="dialog-footer">
           <el-button
             type="primary"
-            size="mini"
             :loading="testLoading"
             @click="handleTestFormConnection"
             >测试连接</el-button
           >
-          <el-button size="mini" @click="cancel">取 消</el-button>
+          <el-button @click="cancel">取 消</el-button>
           <el-button
             type="primary"
-            size="mini"
             :disabled="testLoading"
             @click="submitForm"
             >确 定</el-button
@@ -467,7 +465,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" @click="cancel">关 闭</el-button>
+          <el-button @click="cancel">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -894,7 +892,7 @@ async function handleStatusChange(row, value) {
     status: value
   }
   proxy.$modal
-      .confirm(`确认要${value === 0 ? "启用" : "禁用"}数据源“${row.datasourceName}”吗？`)
+      .confirm(`确认要${value === 0 ? "启用" : "停用"}数据源“${row.datasourceName}”吗？`)
       .then(function () {
         return updateDaDatasource(data);
       })

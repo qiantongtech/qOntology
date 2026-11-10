@@ -599,7 +599,7 @@ function handleSelectionChange(selection) {
 
 /** 启用禁用开关 */
 function handleStatusChange(id, row, e) {
-  const text = e === 1 ? "启用" : "禁用";
+  const text = e === 1 ? "启用" : "停用";
   proxy.$modal
     .confirm('确认要"' + text + '","' + row.name + '"项目吗？')
     .then(function () {
