@@ -1,6 +1,7 @@
 package tech.qiantong.qontology.module.app.dal.mapper.appUnstructTask;
 
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.Param;
 import tech.qiantong.qontology.core.page.PageResult;
 import tech.qiantong.qontology.module.app.controller.admin.appUnstructTask.vo.AppUnstructTaskPageReqVO;
 import tech.qiantong.qontology.module.app.dal.dataobject.appUnstructTask.AppUnstructTaskDO;
@@ -10,6 +11,10 @@ import java.util.*;
 
 /** 非结构化抽取任务 Mapper 接口。 */
 public interface AppUnstructTaskMapper extends BaseMapperX<AppUnstructTaskDO> {
+    /** 清空取消发布后的发布审计信息。 */
+    @Update("UPDATE app_unstruct_task SET publish_time = NULL, publisher_id = NULL, publish_by = NULL WHERE id = #{id}")
+    int clearPublishInfo(@Param("id") Long id);
+
     /** 查询非结构化抽取任务分页列表。 */
     default PageResult<AppUnstructTaskDO> selectPage(AppUnstructTaskPageReqVO reqVO) {
         Set<String> allowedColumns = new HashSet<>(Arrays.asList("id", "publish_time", "create_time", "update_time"));

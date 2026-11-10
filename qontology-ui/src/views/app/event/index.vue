@@ -169,7 +169,9 @@
           <dict-tag :options="app_event_type" :value="form.type" />
         </el-form-item>
         <el-form-item label="发生时间" prop="occurTime" class="row-full">
-          <div class="form-readonly">{{ form.occurTime || "-" }}</div>
+          <div class="form-readonly">
+            {{ proxy.parseTime(form.occurTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
         </el-form-item>
 
         <el-form-item label="发生地点" prop="occurPlace" class="row-full">

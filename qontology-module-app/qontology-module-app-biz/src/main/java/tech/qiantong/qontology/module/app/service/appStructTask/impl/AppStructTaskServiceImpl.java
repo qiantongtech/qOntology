@@ -939,6 +939,7 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
     @Override
     public AjaxResult cancelReleaseByTaskId(AppStructTaskDO structTaskDO) {
         appStructTaskMapper.updateById(structTaskDO);
+        appStructTaskMapper.clearPublishInfo(structTaskDO.getId());
         appNeo4jService.cancelReleaseStructExtraction(structTaskDO.getId());
         return AjaxResult.success("取消发布成功");
     }

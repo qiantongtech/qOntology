@@ -226,6 +226,7 @@ public class AppUnstructTaskServiceImpl extends ServiceImpl<AppUnstructTaskMappe
         appNeo4jService.cancelReleaseUnstructExtraction(taskDO.getId());
         taskDO.setPublishStatus(AppReleaseStatus.UNPUBLISHED.getStatus());
         appUnstructTaskMapper.updateById(taskDO);
+        appUnstructTaskMapper.clearPublishInfo(taskDO.getId());
         return AjaxResult.success();
     }
 
