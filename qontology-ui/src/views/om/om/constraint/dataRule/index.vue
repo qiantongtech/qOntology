@@ -191,7 +191,8 @@
       <el-form label-width="120px" class="rule-form">
         <div class="h2-title">基本信息</div>
         <el-form-item v-for="field in basicDetailFields" :key="field.label" :label="field.label">
-          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+          <dict-tag v-if="field.dictOptions" :options="field.dictOptions" :value="field.dictValue" />
+          <div v-else class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
         </el-form-item>
         <div class="h2-title">执行条件</div>
         <el-form-item label="条件关系">
@@ -822,8 +823,8 @@ function conditionRelationLabel(value) {
 // 详情“基本信息”分组展示字段，与新增弹窗字段顺序保持一致。
 const basicDetailFields = computed(() => [
   {label: '规则名称', value: detail.value.name},
-  {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, detail.value.type)},
-  {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, detail.value.level)},
+  {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, detail.value.type), dictOptions: om_data_rule_type.value, dictValue: detail.value.type},
+  {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, detail.value.level), dictOptions: om_rule_level.value, dictValue: detail.value.level},
   {label: '描述', value: detail.value.description, multiline: true},
   {label: '创建人', value: detail.value.createBy || '-'},
   {label: '联系方式', value: creatorPhones.value[detail.value.creatorId] || '-'},

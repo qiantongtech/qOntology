@@ -157,7 +157,8 @@
       <el-form v-if="readonly" label-width="120px" class="rule-form">
         <div class="h2-title">基本信息</div>
         <el-form-item v-for="field in basicDetailFields" :key="field.label" :label="field.label">
-          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+          <dict-tag v-if="field.dictOptions" :options="field.dictOptions" :value="field.dictValue" />
+          <div v-else class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
         </el-form-item>
         <div class="h2-title">执行条件</div>
         <el-form-item v-for="field in conditionDetailFields" :key="field.label" :label="field.label">
@@ -567,8 +568,8 @@ function detailConditions(record) {
 // 详情弹窗展示字段
 const basicDetailFields = computed(() => [
   {label: '规则名称', value: form.value.name},
-  {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, form.value.type)},
-  {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, form.value.level)},
+  {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, form.value.type), dictOptions: om_data_rule_type.value, dictValue: form.value.type},
+  {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, form.value.level), dictOptions: om_rule_level.value, dictValue: form.value.level},
   {label: '描述', value: form.value.description, multiline: true},
   {label: '创建人', value: form.value.createBy || '-'},
   {label: '联系方式', value: creatorPhones.value[form.value.creatorId] || '-'},

@@ -347,9 +347,9 @@
 
         <div class="h2-title">数据定义</div>
 
-        <el-form-item label="数据类型"><div class="form-readonly">
-            {{ dataTypeLabel(attributeDetail.typeCategory) }}
-          </div></el-form-item>
+        <el-form-item label="数据类型">
+          <dict-tag :options="om_attribute_data_type" :value="attributeDetail.typeCategory" />
+        </el-form-item>
 
         <el-form-item v-if="attributeDetail.typeCategory === 2" label="业务类型来源">
           <div class="form-readonly">{{ attributeDetail.businessTypeSource === "PROJECT" ? "当前项目" : "全局" }}</div>
@@ -361,9 +361,10 @@
             {{ findBusinessType(attributeDetail)?.name || selectedTypeLabel(attributeDetail) }}
           </div></el-form-item>
 
-        <el-form-item label="基础数据类型"><div class="form-readonly">
-            {{ basicTypeLabel(detailConfig.basicTypeCode) }}
-          </div></el-form-item>
+        <el-form-item label="基础数据类型">
+          <dict-tag v-if="detailConfig.basicTypeCode != null" :options="basic_data_type" :value="detailConfig.basicTypeCode" />
+          <div v-else class="form-readonly">未设置</div>
+        </el-form-item>
 
         <AttributeTypeConfig
           :model="detailConfig"

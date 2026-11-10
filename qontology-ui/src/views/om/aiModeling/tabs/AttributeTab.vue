@@ -337,9 +337,7 @@
         </el-form-item>
         <div class="h2-title">数据定义</div>
         <el-form-item label="数据类型">
-          <div class="form-readonly">
-            {{ dataTypeLabel(detail.typeCategory) }}
-          </div>
+          <dict-tag :options="om_attribute_data_type" :value="detail.typeCategory" />
         </el-form-item>
         <el-form-item label="类型配置">
           <div class="form-readonly">

@@ -34,7 +34,7 @@
                         >{{ detail.description || '-' }}</span>
                 </template>
             </detail-info>
-            
+
             <div class="pagecont-bottom">
                 <el-tabs v-model="activeTab" class="demo-tabs">
                     <el-tab-pane label="建模目标" name="goals">
@@ -60,8 +60,6 @@
     const { proxy } = getCurrentInstance();
     const { sys_yes_no } = proxy.useDict('sys_yes_no');
     const { creatorPhones } = useCreatorPhones();
-    const reversibleLabel = (value) =>
-        sys_yes_no.value.find((dict) => dict.value === (value === 1 ? 'Y' : value === 0 ? 'N' : ''))?.label || '-';
     const detail = ref({});
     const loading = ref(false);
     const loadFailed = ref(false);
@@ -69,11 +67,11 @@
     const descriptionOverflow = ref(false);
     const returnPath = computed(() => `/om/${route.params.versionId}/ontology/objectRelation`);
     let requestId = 0;
-    
+
     const detailItems = computed(() => [
         { label: '起点类型', key: 'startTypeName', className: 'mb2'},
         { label: '终点类型', key: 'endTypeName' },
-        { label: '是否可逆', key: 'reversibleFlag', formatter: (val) => reversibleLabel(val) },
+        { label: '是否可逆', value: detail.value.reversibleFlag === 1 ? 'Y' : 'N', dictOptions: sys_yes_no.value },
         { label: '描述', key: 'description', span: 24, className: 'mb2', slot: 'description' },
         { label: '反向名称', key: 'reverseName' },
         { label: '创建人', key: 'createBy', formatter: (name, record) => {

@@ -313,9 +313,7 @@
           </div>
         </el-form-item>
         <el-form-item label="是否可逆">
-          <div class="form-readonly">
-            {{ reversibleLabel(detail.reversibleFlag) }}
-          </div>
+          <dict-tag :options="sys_yes_no" :value="detail.reversibleFlag === 1 ? 'Y' : 'N'" />
         </el-form-item>
         <el-form-item v-if="detail.reversibleFlag === 1" label="反向名称">
           <div class="form-readonly">
@@ -572,16 +570,6 @@ const rules = {
  */
 const objectName = (id) =>
   objects.value.find((item) => item.id === id)?.name || "-";
-
-/**
- * 将是否可逆的数字标记转成字典文案。
- * @param {number|string} value 可逆标记
- * @returns {string} 字典标签
- */
-const reversibleLabel = (value) =>
-  sys_yes_no.value.find(
-    (item) => item.value === (Number(value) === 1 ? "Y" : "N")
-  )?.label || "-";
 
 /** 加载对象类型候选，供起止类型名称回显和下拉选择使用。 */
 async function loadObjects() {

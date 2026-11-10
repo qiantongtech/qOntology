@@ -310,7 +310,8 @@
                     :label="field.label"
                     :class="{ 'row-full': field.multiline }"
                 >
-                    <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+                    <dict-tag v-if="field.dictOptions" :options="field.dictOptions" :value="field.dictValue" />
+                    <div v-else class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
                 </el-form-item>
                 <AttributeTypeConfig
                     v-if="detail.type === 'PROPERTY_RANGE'"
@@ -562,8 +563,8 @@
 
     const detailFields = computed(() => [
         { label: '公理名称', value: detail.value.name },
-        { label: '类型', value: typeLabel(detail.value.type) },
-        { label: '级别', value: levelLabel(detail.value.level) },
+        { label: '类型', value: typeLabel(detail.value.type), dictOptions: om_axiom_type.value, dictValue: detail.value.type },
+        { label: '级别', value: levelLabel(detail.value.level), dictOptions: om_rule_level.value, dictValue: detail.value.level },
         ...getDetailFields(detail.value),
         { label: '描述', value: detail.value.description, multiline: true },
         { label: '创建人', value: detail.value.createBy || '-' },
