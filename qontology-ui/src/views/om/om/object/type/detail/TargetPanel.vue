@@ -17,11 +17,17 @@
 -->
 <template>
   <div v-loading="loading">
-    <qt-wrap :columns="columns" :table-ref="listActions" :config="{ fullContent: false, actions: { table: { search: false } } }">
+    <qt-wrap
+      :columns="columns"
+      :table-ref="listActions"
+      :config="{ fullContent: false, actions: { table: { search: false } } }"
+    >
       <template #actions-data>
         <guide-tip-panel type="plain" class="target-note">
           <template #title-append>
-            <span>展示当前对象类型关联的建模目标，便于核对该类型的设计是否符合目标要求。</span>
+            <span
+              >展示当前对象类型关联的建模目标，便于核对该类型的设计是否符合目标要求。</span
+            >
           </template>
         </guide-tip-panel>
       </template>
@@ -33,10 +39,18 @@
         :func="readTableRows"
       >
         <template #relatedElementCount="{ row }">
-          <qt-tag-group :items="row.relatedElementTags || []" type="none" :max-count="2" />
+          <qt-tag-group
+            :items="row.relatedElementTags || []"
+            type="none"
+            :max-count="2"
+          />
         </template>
-        <template #priority="{ row }"><dict-tag :options="om_target_priority" :value="row.priority" /></template>
-        <template #acceptStatus="{ row }"><dict-tag :options="om_accept_status" :value="row.acceptStatus" /></template>
+        <template #priority="{ row }"
+          ><dict-tag :options="om_target_priority" :value="row.priority"
+        /></template>
+        <template #acceptStatus="{ row }"
+          ><dict-tag :options="om_accept_status" :value="row.acceptStatus"
+        /></template>
       </qt-table>
       <pagination
         v-show="total > 0"
@@ -56,27 +70,71 @@ import { pageTypeTargets } from "@/api/om/object/type";
 import { withTargetRelatedElements } from "@/utils/targetRelatedElements";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 
-const props = defineProps({ objectTypeId: { type: [String, Number], required: true } });
+const props = defineProps({
+  objectTypeId: { type: [String, Number], required: true },
+});
 const { proxy } = getCurrentInstance();
-const { om_target_priority, om_accept_status } = proxy.useDict("om_target_priority", "om_accept_status");
+const { om_target_priority, om_accept_status } = proxy.useDict(
+  "om_target_priority",
+  "om_accept_status"
+);
 const { versionId } = useOntologyVersion();
 const targets = ref([]);
 const tableRef = ref();
 const loading = ref(false);
 const total = ref(0);
 const columns = reactive([
-  { label: "编号", prop: "id", width: 80, sortable: "custom" },
-  { label: "目标问题", prop: "question", minWidth: 300, align: "left", showOverflowTooltip: { effect: "light" } },
-  { label: "问题来源", prop: "questionSource", width: 250, align: "left", showOverflowTooltip: { effect: "light" } },
-  { label: "业务场景", prop: "businessScenarios", width: 250, align: "left", showOverflowTooltip: { effect: "light" } },
-  { label: "关联元素", slot: "relatedElementCount", minWidth: 240, align: "left" },
+  { label: "编号", prop: "id", width: 60, sortable: "custom" },
+  {
+    label: "目标问题",
+    prop: "question",
+    minWidth: 300,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    label: "问题来源",
+    prop: "questionSource",
+    width: 250,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    label: "业务场景",
+    prop: "businessScenarios",
+    width: 250,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    label: "关联元素",
+    slot: "relatedElementCount",
+    minWidth: 240,
+    align: "left",
+  },
   { label: "优先级", prop: "priority", slot: "priority", width: 100 },
   { label: "验证状态", prop: "acceptStatus", slot: "acceptStatus", width: 100 },
 ]);
-const query = reactive({ pageNum: 1, pageSize: 10, orderByColumn: "id", isAsc: "descending" });
+const query = reactive({
+  pageNum: 1,
+  pageSize: 10,
+  orderByColumn: "id",
+  isAsc: "descending",
+});
 const listActions = { getList };
-const tableConfig = { notPagination: true, sort: true, table: { stripe: true, rowKey: "id", defaultSort: { prop: "id", order: "descending" } } };
-const tableEvents = { onSortChange: ({ orderByColumn, isAsc }) => handleSortChange({ prop: orderByColumn, order: isAsc }) };
+const tableConfig = {
+  notPagination: true,
+  sort: true,
+  table: {
+    stripe: true,
+    rowKey: "id",
+    defaultSort: { prop: "id", order: "descending" },
+  },
+};
+const tableEvents = {
+  onSortChange: ({ orderByColumn, isAsc }) =>
+    handleSortChange({ prop: orderByColumn, order: isAsc }),
+};
 function readTableRows() {
   return Promise.resolve({ data: targets.value });
 }
@@ -94,7 +152,10 @@ async function getList() {
       query.pageNum = maxPage;
       return await getList();
     }
-    const rows = await withTargetRelatedElements(response.data.rows || [], versionId.value);
+    const rows = await withTargetRelatedElements(
+      response.data.rows || [],
+      versionId.value
+    );
     if (request !== requestId) return;
     total.value = count;
     targets.value = rows;
@@ -113,19 +174,25 @@ function handleSortChange({ prop, order }) {
   query.pageNum = 1;
   getList();
 }
-watch(() => props.objectTypeId, () => {
-  query.pageNum = 1;
-  targets.value = [];
-  total.value = 0;
-  getList();
-}, { immediate: true });
-onBeforeUnmount(() => { ++requestId; });
+watch(
+  () => props.objectTypeId,
+  () => {
+    query.pageNum = 1;
+    targets.value = [];
+    total.value = 0;
+    getList();
+  },
+  { immediate: true }
+);
+onBeforeUnmount(() => {
+  ++requestId;
+});
 </script>
 
 <style scoped lang="scss">
 .target-note.guide-tip.plain :deep(.tip-header .tip-title) {
-        gap: 6px;
-    }
+  gap: 6px;
+}
 .target-note-icon {
   flex-shrink: 0;
   font-size: 14px;

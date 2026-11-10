@@ -46,21 +46,25 @@
           plain
           :disabled="!defaultEnumType || !contextReady"
           @click="handleAdd"
-          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button>
+          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button
+        >
         <el-button
           v-hasPermi="['om:enumeration:data:remove']"
           type="danger"
           plain
           :disabled="multiple || deleting"
           @click="handleDelete()"
-          ><i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除</el-button>
+          ><i class="iconfont-mini icon-shanchu-huise mr5"></i
+          >批量删除</el-button
+        >
         <el-button
           v-if="!embedded && route.params.enumId"
           type="warning"
           plain
           icon="Close"
           @click="handleClose"
-          >关闭</el-button>
+          >关闭</el-button
+        >
       </template>
       <!-- 路由入口先解析枚举编码，再挂载表格；切换上下文时重建实例，隔离旧列表响应。 -->
       <qt-table
@@ -110,23 +114,26 @@
             type="primary"
             icon="View"
             @click="handleDetail(row)"
-            >详情</el-button>
-            <el-button
-              v-if="auth.hasPermi('om:enumeration:data:edit')"
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.status === '0'"
-              @click="handleUpdate(row)"
-              >修改</el-button>
-            <el-button
-              v-if="auth.hasPermi('om:enumeration:data:remove')"
-              link
-              type="danger"
-              icon="Delete"
-              :disabled="deleting || row.status === '0'"
-              @click="handleDelete(row)"
-              >删除</el-button>
+            >详情</el-button
+          >
+          <el-button
+            v-if="auth.hasPermi('om:enumeration:data:edit')"
+            link
+            type="primary"
+            icon="Edit"
+            :disabled="row.status === '0'"
+            @click="handleUpdate(row)"
+            >修改</el-button
+          >
+          <el-button
+            v-if="auth.hasPermi('om:enumeration:data:remove')"
+            link
+            type="danger"
+            icon="Delete"
+            :disabled="deleting || row.status === '0'"
+            @click="handleDelete(row)"
+            >删除</el-button
+          >
         </template>
       </qt-table>
     </qt-wrap>
@@ -155,24 +162,24 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <qt-form-item class="row-full" label="枚举类型" >
+        <qt-form-item class="row-full" label="枚举类型">
           <el-input v-model="form.enumType" disabled />
         </qt-form-item>
-        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel" >
+        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel">
           <el-input
             v-model="form.enumLabel"
             placeholder="请输入枚举标签"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="枚举键值" prop="enumValue" >
+        <qt-form-item class="row-full" label="枚举键值" prop="enumValue">
           <el-input
             v-model="form.enumValue"
             placeholder="请输入枚举键值"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="排序" prop="enumSort" >
+        <qt-form-item class="row-full" label="排序" prop="enumSort">
           <el-input-number
             v-model="form.enumSort"
             :min="0"
@@ -194,7 +201,6 @@
         <qt-form-item class="row-full" label="描述" prop="description">
           <el-input
             v-model="form.description"
-
             type="textarea"
             :rows="3"
             maxlength="256个字符"
@@ -254,7 +260,9 @@
         </el-form-item>
         <!-- 与列表一致：创建人姓名后拼接联系电话，未维护电话时只显示姓名。 -->
         <el-form-item class="row-full" label="描述">
-          <div class="form-readonly textarea">{{ detail.description || "-" }}</div>
+          <div class="form-readonly textarea">
+            {{ detail.description || "-" }}
+          </div>
         </el-form-item>
         <el-form-item class="row-full" label="备注">
           <div class="form-readonly textarea">{{ detail.remark || "-" }}</div>
@@ -267,7 +275,9 @@
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
-            {{ parseTime(detail.createTime) || "-" }}
+            {{
+              proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+            }}
           </div>
         </el-form-item>
       </el-form>
@@ -310,7 +320,7 @@ const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
-const { creatorPhones ,getPhoneNum} = useCreatorPhones();
+const { creatorPhones, getPhoneNum } = useCreatorPhones();
 const route = useRoute();
 const pageRef = ref();
 const tableRef = ref();
@@ -450,7 +460,9 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
-    description: [{ max: 256, message: "描述不能超过256个字符", trigger: "blur" }],
+    description: [
+      { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
+    ],
     remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });

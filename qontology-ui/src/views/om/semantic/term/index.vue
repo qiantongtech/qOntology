@@ -150,12 +150,7 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <qt-form-item
-          class="row-full"
-
-          label="术语名称"
-          prop="stdName"
-        >
+        <qt-form-item class="row-full" label="术语名称" prop="stdName">
           <el-input
             v-model="form.stdName"
             placeholder="请输入术语名称"
@@ -163,11 +158,7 @@
           />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          label="英文名称"
-          prop="enName"
-        >
+        <qt-form-item class="row-full" label="英文名称" prop="enName">
           <el-input
             v-model="form.enName"
             :formatter="formatEnglishName"
@@ -176,33 +167,18 @@
           />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          label="术语别名"
-          prop="alias"
-        >
+        <qt-form-item class="row-full" label="术语别名" prop="alias">
           <el-input
             v-model="form.alias"
             placeholder="请输入术语别名，多个别名用逗号（，）分隔"
           />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          label="业务缩写"
-          prop="abbr"
-        >
-          <el-input
-            v-model="form.abbr"
-            placeholder="请输入业务缩写"
-          />
+        <qt-form-item class="row-full" label="业务缩写" prop="abbr">
+          <el-input v-model="form.abbr" placeholder="请输入业务缩写" />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          label="状态"
-          prop="status"
-        >
+        <qt-form-item class="row-full" label="状态" prop="status">
           <el-radio-group v-model="form.status" :disabled="saving">
             <el-radio
               v-for="dict in project_status"
@@ -214,11 +190,7 @@
           </el-radio-group>
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          label="来源"
-          prop="source"
-        >
+        <qt-form-item class="row-full" label="来源" prop="source">
           <el-input
             v-model="form.source"
             class="term-character-count"
@@ -230,11 +202,7 @@
           />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          label="描述"
-          prop="description"
-        >
+        <qt-form-item class="row-full" label="描述" prop="description">
           <el-input
             v-model="form.description"
             class="term-character-count"
@@ -465,7 +433,7 @@ const tableColumns = reactive([
   {
     label: "编号",
     prop: "id",
-    width: 80,
+    width: 60,
     align: "center",
     sortable: true,
   },
@@ -575,11 +543,9 @@ function parseAliases(value) {
 }
 
 function confirmAlias() {
-  const values = (form.value.alias || "").split(/[,，]/).map((value) => value.trim());
-  if (!values.length || values.some((value) => !value)) {
-    ElMessage.warning("术语别名每一项都不能为空，请完善后提交");
-    return false;
-  }
+  const values = (form.value.alias || "")
+    .split(/[,，]/)
+    .map((value) => value.trim());
   if (new Set(values).size !== values.length) {
     ElMessage.warning("术语别名不能重复，请检查后提交");
     return false;
@@ -691,7 +657,11 @@ async function loadTerm(row, isDetail) {
     detail.value = response.data;
     detailOpen.value = true;
   } else {
-    form.value = { ...emptyForm(), ...response.data, alias: parseAliases(response.data.alias).join("，") };
+    form.value = {
+      ...emptyForm(),
+      ...response.data,
+      alias: parseAliases(response.data.alias).join("，"),
+    };
     dialogTitle.value = "修改术语";
     open.value = true;
     await nextTick();

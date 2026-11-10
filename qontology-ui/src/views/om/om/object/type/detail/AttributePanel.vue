@@ -19,18 +19,17 @@
 <template>
   <div ref="panelRef">
     <qt-search-bar
-        :items="searchItems"
-        :params="query"
-        :table-ref="tableRef"
-        @query="handleQuery"
-        @reset="handleQuery"
+      :items="searchItems"
+      :params="query"
+      :table-ref="tableRef"
+      @query="handleQuery"
+      @reset="handleQuery"
     />
     <qt-wrap
       :columns="columns"
       :table-ref="listActions"
       :config="{ fullContent: false }"
     >
-
       <template #actions-data>
         <el-button
           v-hasPermi="['om:object:type:edit']"
@@ -60,15 +59,27 @@
           :events="tableEvents"
           :func="readTableRows"
         >
-          <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
-          <template #description="{ row }">{{ row.description?.trim() }}</template>
+          <template #text="{ row, column_data }">{{
+            row[column_data.prop]
+          }}</template>
+          <template #description="{ row }">{{
+            row.description?.trim()
+          }}</template>
           <template #typeCategory="{ row }">
-            <dict-tag :options="om_attribute_data_type" :value="row.typeCategory" />
+            <dict-tag
+              :options="om_attribute_data_type" :value="row.typeCategory" />
           </template>
           <template #createBy="{ row }">
             <div class="flex-column overflow-hidden">
-              <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
-              <span v-if="creatorPhones[row.creatorId]" class="desc-text text-ellipsis" :title="creatorPhones[row.creatorId]">{{ creatorPhones[row.creatorId] }}</span>
+              <span class="text-ellipsis" :title="row.createBy || ''">{{
+                row.createBy || "-"
+              }}</span>
+              <span
+                v-if="creatorPhones[row.creatorId]"
+                class="desc-text text-ellipsis"
+                :title="creatorPhones[row.creatorId]"
+                >{{ creatorPhones[row.creatorId] }}</span
+              >
             </div>
           </template>
           <template #createTime="{ row }">{{
@@ -81,7 +92,8 @@
               type="primary"
               icon="View"
               @click="handleDetail(row)"
-              >详情</el-button>
+              >详情</el-button
+            >
             <el-button
               v-hasPermi="['om:object:type:edit']"
               link
@@ -89,7 +101,8 @@
               icon="Edit"
               :disabled="saving"
               @click="handleUpdate(row)"
-              >修改</el-button>
+              >修改</el-button
+            >
             <el-button
               v-hasPermi="['om:object:type:edit']"
               link
@@ -97,11 +110,15 @@
               icon="Delete"
               :disabled="deleting"
               @click="handleDelete(row)"
-              >删除</el-button>
+              >删除</el-button
+            >
           </template>
           <template #empty>
             <div class="emptyBg">
-              <img src="@/assets/system/images/no_data/noData.png" alt="暂无属性" />
+              <img
+                src="@/assets/system/images/no_data/noData.png"
+                alt="暂无属性"
+              />
               <p>暂无属性</p>
             </div>
           </template>
@@ -145,27 +162,23 @@
       >
         <div class="h2-title row-full">基础信息</div>
 
-        <qt-form-item
-          class="row-full"
-          label="属性名称"
-          prop="name"
-        >
-          <el-input v-model="form.name" placeholder="请输入属性名称" maxlength="128" />
+        <qt-form-item class="row-full" label="属性名称" prop="name">
+          <el-input
+            v-model="form.name"
+            placeholder="请输入属性名称"
+            maxlength="128"
+          />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          label="属性代码"
-          prop="code"
-        >
-          <el-input v-model="form.code" placeholder="请输入属性代码，例如 purchase_amount" maxlength="128" />
+        <qt-form-item class="row-full" label="属性代码" prop="code">
+          <el-input
+            v-model="form.code"
+            placeholder="请输入属性代码，例如 purchase_amount"
+            maxlength="128"
+          />
         </qt-form-item>
 
-        <qt-form-item
-          class="row-full"
-          label="描述"
-          prop="description"
-        >
+        <qt-form-item class="row-full" label="描述" prop="description">
           <el-input
             v-model="form.description"
             class="character-count"
@@ -179,17 +192,17 @@
 
         <div class="h2-title row-full">数据定义</div>
 
-        <qt-form-item
-          class="row-full"
-          label="数据类型"
-          prop="typeCategory"
-        >
-          <el-radio-group v-model="form.typeCategory" @change="handleDataTypeChange">
+        <qt-form-item class="row-full" label="数据类型" prop="typeCategory">
+          <el-radio-group
+            v-model="form.typeCategory"
+            @change="handleDataTypeChange"
+          >
             <el-radio
               v-for="option in dataTypeOptions"
               :key="option.value"
               :label="option.value"
-              >{{ option.label }}</el-radio>
+              >{{ option.label }}</el-radio
+            >
           </el-radio-group>
         </qt-form-item>
 
@@ -223,7 +236,10 @@
             prop="businessTypeSource"
             required
           >
-            <el-radio-group v-model="form.businessTypeSource" @change="handleBusinessSourceChange">
+            <el-radio-group
+              v-model="form.businessTypeSource"
+              @change="handleBusinessSourceChange"
+            >
               <el-radio value="PROJECT">当前项目</el-radio>
               <el-radio value="GLOBAL">全局</el-radio>
             </el-radio-group>
@@ -261,10 +277,15 @@
           tip="由所选业务数据类型自动带出，不可修改。"
           label="基础数据类型"
         >
-          <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
+          <div class="form-readonly">
+            {{ basicTypeLabel(effectiveConfig.basicTypeCode) }}
+          </div>
         </qt-form-item>
 
-        <div v-if="form.typeCategory === 1 || form.businessTypeId" class="row-full attribute-type-config">
+        <div
+          v-if="form.typeCategory === 1 || form.businessTypeId"
+          class="row-full attribute-type-config"
+        >
           <AttributeTypeConfig
             :model="effectiveConfig"
             :readonly="form.typeCategory === 2"
@@ -280,7 +301,9 @@
           tip="所选业务数据类型的说明，用于核对是否符合当前属性的业务语义。"
           label="类型描述"
         >
-          <div class="form-readonly textarea">{{ selectedBusinessType.description }}</div>
+          <div class="form-readonly textarea">
+            {{ selectedBusinessType.description }}
+          </div>
         </qt-form-item>
       </el-form>
 
@@ -288,12 +311,9 @@
         <div class="dialog-footer">
           <el-button :disabled="saving" @click="open = false">取 消</el-button>
 
-          <el-button
-            type="primary"
-
-            :loading="saving"
-            @click="submitForm"
-            >确 定</el-button>
+          <el-button type="primary" :loading="saving" @click="submitForm"
+            >确 定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -309,58 +329,90 @@
         <div class="h2-title">基础信息</div>
 
         <el-row :gutter="20">
-          <el-col :span="24"><el-form-item label="属性名称"><div class="form-readonly">
+          <el-col :span="24"
+            ><el-form-item label="属性名称"
+              ><div class="form-readonly">
                 {{ attributeDetail.name }}
-              </div></el-form-item></el-col>
+              </div></el-form-item
+            ></el-col
+          >
 
-          <el-col :span="24"><el-form-item label="属性代码"><div class="form-readonly">
+          <el-col :span="24"
+            ><el-form-item label="属性代码"
+              ><div class="form-readonly">
                 {{ attributeDetail.code }}
-              </div></el-form-item></el-col>
+              </div></el-form-item
+            ></el-col
+          >
         </el-row>
 
-        <el-form-item label="描述"><div class="form-readonly textarea">
+        <el-form-item label="描述"
+          ><div class="form-readonly textarea">
             {{ attributeDetail.description || "-" }}
-          </div></el-form-item>
+          </div></el-form-item
+        >
 
         <el-form-item label="创建人">
           <div class="form-readonly">
-            {{ attributeDetail.createBy || '-' }}
+            {{ attributeDetail.createBy || "-" }}
           </div>
         </el-form-item>
 
         <el-form-item label="联系方式">
           <div class="form-readonly">
-            {{ creatorPhones[attributeDetail.creatorId] || '-' }}
+            {{ creatorPhones[attributeDetail.creatorId] || "-" }}
           </div>
         </el-form-item>
 
-        <el-form-item label="创建时间"><div class="form-readonly">
+        <el-form-item label="创建时间"
+          ><div class="form-readonly">
             {{
               proxy.parseTime(
                 attributeDetail.createTime,
                 "{y}-{m}-{d} {h}:{i}"
               ) || "-"
             }}
-          </div></el-form-item>
+          </div></el-form-item
+        >
 
         <div class="h2-title">数据定义</div>
 
         <el-form-item label="数据类型">
-          <dict-tag :options="om_attribute_data_type" :value="attributeDetail.typeCategory" />
+          <dict-tag
+            :options="om_attribute_data_type"
+            :value="attributeDetail.typeCategory"
+          />
         </el-form-item>
 
-        <el-form-item v-if="attributeDetail.typeCategory === 2" label="业务类型来源">
-          <div class="form-readonly">{{ attributeDetail.businessTypeSource === "PROJECT" ? "当前项目" : "全局" }}</div>
+        <el-form-item
+          v-if="attributeDetail.typeCategory === 2"
+          label="业务类型来源"
+        >
+          <div class="form-readonly">
+            {{
+              attributeDetail.businessTypeSource === "PROJECT"
+                ? "当前项目"
+                : "全局"
+            }}
+          </div>
         </el-form-item>
         <el-form-item
           v-if="attributeDetail.typeCategory === 2"
           label="业务数据类型"
           ><div class="form-readonly">
-            {{ findBusinessType(attributeDetail)?.name || selectedTypeLabel(attributeDetail) }}
-          </div></el-form-item>
+            {{
+              findBusinessType(attributeDetail)?.name ||
+              selectedTypeLabel(attributeDetail)
+            }}
+          </div></el-form-item
+        >
 
         <el-form-item label="基础数据类型">
-          <dict-tag v-if="detailConfig.basicTypeCode != null" :options="basic_data_type" :value="detailConfig.basicTypeCode" />
+          <dict-tag
+            v-if="detailConfig.basicTypeCode != null"
+            :options="basic_data_type"
+            :value="detailConfig.basicTypeCode"
+          />
           <div v-else class="form-readonly">未设置</div>
         </el-form-item>
 
@@ -371,9 +423,11 @@
         />
       </el-form>
 
-      <template #footer><div class="dialog-footer">
+      <template #footer
+        ><div class="dialog-footer">
           <el-button @click="detailOpen = false">关 闭</el-button>
-        </div></template>
+        </div></template
+      >
     </el-dialog>
   </div>
 </template>
@@ -476,8 +530,8 @@ const columns = reactive([
     label: "编号",
     prop: "id",
     slot: "text",
-    width: 80,
-    minWidth: 80,
+    width: 60,
+    minWidth: 60,
     align: "center",
     fixed: "left",
     sortable: "custom",
@@ -615,9 +669,10 @@ const attributeDetail = ref({});
 const selectedBusinessType = computed(() => findBusinessType(form.value));
 
 const filteredBusinessTypes = computed(() =>
-  businessDataTypes.value.filter((item) =>
-    item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL"),
-  ),
+  businessDataTypes.value.filter(
+    (item) =>
+      item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL")
+  )
 );
 
 function handleBusinessSourceChange() {
@@ -1265,7 +1320,9 @@ onBeforeUnmount(() => {
   margin-bottom: 20px !important;
 }
 
-.attribute-dialog-form.column-form .attribute-type-config :deep(.el-form-item:last-child) {
+.attribute-dialog-form.column-form
+  .attribute-type-config
+  :deep(.el-form-item:last-child) {
   margin-bottom: 0 !important;
 }
 

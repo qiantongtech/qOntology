@@ -66,31 +66,41 @@
           />
         </template>
         <template #creator="{ row }">
-          <div class="flex-column overflow-hidden"><span class="text-ellipsis">{{ row.createBy || '-' }}</span><span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span></div>
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis">{{ row.createBy || "-" }}</span
+            ><span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
         </template>
-        <template #createTime="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
+        <template #createTime="{ row }">{{
+          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+        }}</template>
         <template #action="{ row }">
           <el-button
             link
             type="primary"
             icon="View"
-            @click="routeTo('/om/'+versionId+'/target/detail', row)"
+            @click="routeTo('/om/' + versionId + '/target/detail', row)"
             v-hasPermi="['om:target:target:query']"
-          >详情</el-button>
+            >详情</el-button
+          >
           <el-button
             link
             type="primary"
             icon="Edit"
             @click="handleUpdate(row)"
             v-hasPermi="['om:target:target:edit']"
-          >修改</el-button>
+            >修改</el-button
+          >
           <el-button
             link
             type="danger"
             icon="Delete"
             @click="handleDelete(row)"
             v-hasPermi="['om:target:target:remove']"
-          >删除</el-button>
+            >删除</el-button
+          >
         </template>
       </qt-table>
     </qt-wrap>
@@ -127,21 +137,28 @@
           class="row-full"
           tip="填写本次建模需要回答的具体业务问题，建议使用清晰、可验证的问句。"
         >
-          <el-input v-model="form.question" placeholder="请输入目标问题，例如：哪些采购订单尚未完成入库？" :maxlength="256" />
+          <el-input
+            v-model="form.question"
+            placeholder="请输入目标问题，例如：哪些采购订单尚未完成入库？"
+            :maxlength="256"
+          />
         </qt-form-item>
-        <qt-form-item
-          label="问题来源"
-          prop="questionSource"
-          class="row-full"
-        >
-          <el-input v-model="form.questionSource" placeholder="请输入问题来源，例如：采购管理部门提出" :maxlength="256" />
+        <qt-form-item label="问题来源" prop="questionSource" class="row-full">
+          <el-input
+            v-model="form.questionSource"
+            placeholder="请输入问题来源，例如：采购管理部门提出"
+            :maxlength="256"
+          />
         </qt-form-item>
-        <qt-form-item
-          label="优先级"
-          prop="priority"
-          class="row-full"
-        >
-          <el-radio-group v-model="form.priority"><el-radio v-for="dict in om_target_priority" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio></el-radio-group>
+        <qt-form-item label="优先级" prop="priority" class="row-full">
+          <el-radio-group v-model="form.priority"
+            ><el-radio
+              v-for="dict in om_target_priority"
+              :key="dict.value"
+              :value="dict.value"
+              >{{ dict.label }}</el-radio
+            ></el-radio-group
+          >
         </qt-form-item>
         <qt-form-item
           label="业务场景"
@@ -158,11 +175,7 @@
             show-word-limit
           />
         </qt-form-item>
-        <qt-form-item
-          label="验收标准"
-          prop="acceptCriterion"
-          class="row-full"
-        >
+        <qt-form-item label="验收标准" prop="acceptCriterion" class="row-full">
           <el-input
             v-model="form.acceptCriterion"
             class="target-textarea"
@@ -199,7 +212,7 @@ import { withTargetRelatedElements } from "@/utils/targetRelatedElements";
 const { proxy } = getCurrentInstance();
 const { om_accept_status, om_target_priority } = proxy.useDict(
   "om_accept_status",
-  "om_target_priority",
+  "om_target_priority"
 );
 const route = useRoute();
 const router = useRouter();
@@ -219,7 +232,7 @@ const tableStore = reactive({
   },
   columns: [
     { type: "selection", width: 55 },
-    { label: "编号", prop: "id", width: 80, sortable: true },
+    { label: "编号", prop: "id", width: 60, sortable: true },
     {
       label: "目标问题",
       prop: "question",
@@ -241,11 +254,34 @@ const tableStore = reactive({
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
-    { label: "关联元素", slot: "relatedElementCount", minWidth: 240, align: "left" },
+    {
+      label: "关联元素",
+      slot: "relatedElementCount",
+      minWidth: 240,
+      align: "left",
+    },
     { label: "优先级", prop: "priority", slot: "priority", width: 100 },
-    { label: "验证状态", prop: "acceptStatus", slot: "acceptStatus", width: 100 },
-    { label: "创建人", prop: "createBy", slot: "creator", width: 130, align: "left", headerAlign: "left" },
-    { label: "创建时间", prop: "createTime", slot: "createTime", width: 160, sortable: "custom" },
+    {
+      label: "验证状态",
+      prop: "acceptStatus",
+      slot: "acceptStatus",
+      width: 100,
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 130,
+      align: "left",
+      headerAlign: "left",
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      slot: "createTime",
+      width: 160,
+      sortable: "custom",
+    },
     { label: "操作", slot: "action", fixed: "right", width: 240 },
   ],
   func: loadTargets,
@@ -282,10 +318,42 @@ const title = ref("");
 const data = reactive({
   form: {},
   rules: {
-    question: [{ required: true, whitespace: true, message: "目标问题不能为空", trigger: "blur" }, { max: 256, message: "目标问题不能超过256个字符", trigger: "blur" }],
-    questionSource: [{ required: true, whitespace: true, message: "问题来源不能为空", trigger: "blur" }, { max: 256, message: "问题来源不能超过256个字符", trigger: "blur" }],
-    businessScenarios: [{ required: true, whitespace: true, message: "业务场景不能为空", trigger: "blur" }, { max: 256, message: "业务场景不能超过256个字符", trigger: "blur" }],
-    acceptCriterion: [{ required: true, whitespace: true, message: "验收标准不能为空", trigger: "blur" }, { max: 256, message: "验收标准不能超过256个字符", trigger: "blur" }],
+    question: [
+      {
+        required: true,
+        whitespace: true,
+        message: "目标问题不能为空",
+        trigger: "blur",
+      },
+      { max: 256, message: "目标问题不能超过256个字符", trigger: "blur" },
+    ],
+    questionSource: [
+      {
+        required: true,
+        whitespace: true,
+        message: "问题来源不能为空",
+        trigger: "blur",
+      },
+      { max: 256, message: "问题来源不能超过256个字符", trigger: "blur" },
+    ],
+    businessScenarios: [
+      {
+        required: true,
+        whitespace: true,
+        message: "业务场景不能为空",
+        trigger: "blur",
+      },
+      { max: 256, message: "业务场景不能超过256个字符", trigger: "blur" },
+    ],
+    acceptCriterion: [
+      {
+        required: true,
+        whitespace: true,
+        message: "验收标准不能为空",
+        trigger: "blur",
+      },
+      { max: 256, message: "验收标准不能超过256个字符", trigger: "blur" },
+    ],
     priority: [{ required: true, message: "优先级不能为空", trigger: "blur" }],
   },
 });
@@ -301,13 +369,16 @@ watch(
     selectedRows.value = [];
     multiple.value = true;
     tableRef.value?.resetQuery();
-  },
+  }
 );
 
 // 复用详情页的关联查询口径；每类仅查询一条，通过 total 取得数量。
 async function loadTargets(params) {
   const response = await listTarget(params);
-  response.data.rows = await withTargetRelatedElements(response.data.rows || [], params.versionId);
+  response.data.rows = await withTargetRelatedElements(
+    response.data.rows || [],
+    params.versionId
+  );
   return response;
 }
 
@@ -380,19 +451,21 @@ function submitForm() {
   proxy.$refs["targetRef"].validate((valid) => {
     if (valid) {
       if (form.value.id != null) {
-        updateTarget(form.value).then(() => {
-          proxy.$modal.msgSuccess("修改成功");
-          open.value = false;
-          getList();
-        }).catch(() => {
-        });
+        updateTarget(form.value)
+          .then(() => {
+            proxy.$modal.msgSuccess("修改成功");
+            open.value = false;
+            getList();
+          })
+          .catch(() => {});
       } else {
-        addTarget(form.value).then(() => {
-          proxy.$modal.msgSuccess("新增成功");
-          open.value = false;
-          getList();
-        }).catch(() => {
-        });
+        addTarget(form.value)
+          .then(() => {
+            proxy.$modal.msgSuccess("新增成功");
+            open.value = false;
+            getList();
+          })
+          .catch(() => {});
       }
     }
   });

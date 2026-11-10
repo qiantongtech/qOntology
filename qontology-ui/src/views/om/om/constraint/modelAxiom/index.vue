@@ -17,247 +17,307 @@
 -->
 
 <template>
-    <div class="app-container model-axiom-page" ref="app-container">
-        <GuideTip tip-id="om/constraint/model.list" />
+  <div class="app-container model-axiom-page" ref="app-container">
+    <GuideTip tip-id="om/constraint/model.list" />
 
-        <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
-            <template #search>
-                <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef" />
-            </template>
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+        />
+      </template>
 
-            <template #actions-data>
-                <el-button
-                    v-hasPermi="['om:constraint:modelaxi:add']"
-                    type="primary"
-                    plain
-                    :disabled="saving"
-                    @click="handleAdd"
-                    @mousedown="(e) => e.preventDefault()"
-                >
-                    <i class="iconfont-mini icon-xinzeng mr5"></i>新增
-                </el-button>
-                <el-button
-                    v-hasPermi="['om:constraint:modelaxi:remove']"
-                    type="danger"
-                    plain
-                    :loading="batchDeleteLoading"
-                    :disabled="!selectedIds.length || deleting"
-                    @click="handleDelete()"
-                    @mousedown="(e) => e.preventDefault()"
-                >
-                    <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
-                </el-button>
-            </template>
-
-            <qt-table v-bind="tableStore" ref="tableRef">
-                <!-- 纯文本列沿用统一 text 插槽渲染。 -->
-                <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
-                <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
-                <template #creator="{ row }">
-                    <div class="flex-column overflow-hidden">
-                        <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
-                        <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
-                    </div>
-                </template>
-                <template #handle="{ row }">
-                    <el-button
-                        v-hasPermi="['om:constraint:modelaxi:query']"
-                        link
-                        type="primary"
-                        icon="View"
-                        @click="handleDetail(row)"
-                        >详情</el-button
-                    >
-                    <!-- 操作区仅三个按钮，直展不折叠到“更多”。 -->
-                    <el-button
-                        v-if="auth.hasPermi('om:constraint:modelaxi:edit')"
-                        link
-                        type="primary"
-                        icon="Edit"
-                        :disabled="saving"
-                        @click="handleUpdate(row)"
-                        >修改</el-button
-                    >
-                    <el-button
-                        v-if="auth.hasPermi('om:constraint:modelaxi:remove')"
-                        link
-                        type="danger"
-                        icon="Delete"
-                        :loading="deleteLoading[row.id]"
-                        :disabled="deleting"
-                        @click="handleDelete(row)"
-                        >删除</el-button
-                    >
-                </template>
-            </qt-table>
-        </qt-wrap>
-        <el-dialog
-            v-model="open"
-            :title="dialogTitle"
-            width="860px"
-            :append-to="$refs['app-container']"
-            :close-on-press-escape="!saving"
-            :before-close="beforeClose"
-            draggable
-            destroy-on-close
-            @closed="handleDialogClosed"
+      <template #actions-data>
+        <el-button
+          v-hasPermi="['om:constraint:modelaxi:add']"
+          type="primary"
+          plain
+          :disabled="saving"
+          @click="handleAdd"
+          @mousedown="(e) => e.preventDefault()"
         >
-            <guide-tip-panel
-                type="hint"
-                class="mb15"
-                allow-wrap
-                title="为对象类型及其属性、关系设定逻辑约束，选择公理类型并配置适用范围与约束强度，保证模型的一致性与可校验性。"
-            />
-            <el-form
-                ref="ruleRef"
-                :model="form"
-                :rules="rules"
-                label-width="120px"
-                class="rule-form"
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button
+          v-hasPermi="['om:constraint:modelaxi:remove']"
+          type="danger"
+          plain
+          :loading="batchDeleteLoading"
+          :disabled="!selectedIds.length || deleting"
+          @click="handleDelete()"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
+        </el-button>
+      </template>
 
-                @submit.prevent="submitForm"
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop]
+        }}</template>
+        <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
+        <template #creator="{ row }">
+          <div class="flex-column overflow-hidden">
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
+          </div>
+        </template>
+        <template #handle="{ row }">
+          <el-button
+            v-hasPermi="['om:constraint:modelaxi:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情</el-button
+          >
+          <!-- 操作区仅三个按钮，直展不折叠到“更多”。 -->
+          <el-button
+            v-if="auth.hasPermi('om:constraint:modelaxi:edit')"
+            link
+            type="primary"
+            icon="Edit"
+            :disabled="saving"
+            @click="handleUpdate(row)"
+            >修改</el-button
+          >
+          <el-button
+            v-if="auth.hasPermi('om:constraint:modelaxi:remove')"
+            link
+            type="danger"
+            icon="Delete"
+            :loading="deleteLoading[row.id]"
+            :disabled="deleting"
+            @click="handleDelete(row)"
+            >删除</el-button
+          >
+        </template>
+      </qt-table>
+    </qt-wrap>
+    <el-dialog
+      v-model="open"
+      :title="dialogTitle"
+      width="860px"
+      :append-to="$refs['app-container']"
+      :close-on-press-escape="!saving"
+      :before-close="beforeClose"
+      draggable
+      destroy-on-close
+      @closed="handleDialogClosed"
+    >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="为对象类型及其属性、关系设定逻辑约束，选择公理类型并配置适用范围与约束强度，保证模型的一致性与可校验性。"
+      />
+      <el-form
+        ref="ruleRef"
+        :model="form"
+        :rules="rules"
+        label-width="120px"
+        class="rule-form"
+        @submit.prevent="submitForm"
+      >
+        <div class="h2-title">基本信息</div>
+        <qt-form-item label="公理名称" prop="name">
+          <el-input
+            v-model="form.name"
+            placeholder="请输入公理名称"
+            maxlength="128"
+          />
+        </qt-form-item>
+        <qt-form-item label="类型" prop="type">
+          <el-select
+            v-model="form.type"
+            placeholder="请选择类型"
+            @change="handleTypeChange"
+          >
+            <el-option
+              v-for="item in om_axiom_type"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </qt-form-item>
+        <qt-form-item label="级别" prop="level">
+          <el-radio-group v-model="form.level">
+            <el-radio
+              v-for="item in om_rule_level"
+              :key="item.value"
+              :value="item.value"
+              >{{ item.label }}</el-radio
             >
-                <div class="h2-title">基本信息</div>
-                <qt-form-item label="公理名称" prop="name" >
-                    <el-input v-model="form.name" placeholder="请输入公理名称" maxlength="128" />
-                </qt-form-item>
-                <qt-form-item label="类型" prop="type" >
-                    <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
-                        <el-option
-                            v-for="item in om_axiom_type"
-                            :key="item.value"
-                            :label="item.label"
-                            :value="item.value"
-                        />
-                    </el-select>
-                </qt-form-item>
-                <qt-form-item label="级别" prop="level">
-                    <el-radio-group v-model="form.level">
-                        <el-radio v-for="item in om_rule_level" :key="item.value" :value="item.value">{{
-                            item.label
-                        }}</el-radio>
-                    </el-radio-group>
-                </qt-form-item>
-                <qt-form-item label="描述" prop="description">
-                    <el-input
-                        v-model="form.description"
-                        class="character-count"
-                        type="textarea"
-                        :rows="4"
-                        placeholder="请输入描述"
-                        :maxlength="256"
-                        show-word-limit
-                    />
-                </qt-form-item>
-                <div class="h2-title">公理表达</div>
-                <template v-if="form.type === 'DOMAIN_RANGE'">
-                    <qt-form-item label="关系" prop="relationName" tip="填写该约束作用的关系名称。">
-                        <el-input v-model="form.relationName" placeholder="请输入关系名称" maxlength="128" clearable />
-                    </qt-form-item>
-                    <qt-form-item label="Domain" prop="domainId" tip="选择关系起点（定义域）对应的对象类型。">
-                        <el-tree-select
-                            v-model="form.domainId"
-                            :data="objectTypeTree"
-                            :props="objectTypeTreeProps"
-                            value-key="id"
-                            :loading="optionsLoading"
-                            check-strictly
-                            filterable
-                            clearable
-                            placeholder="请选择对象类型"
-                            @change="handleDomainChange"
-                        />
-                    </qt-form-item>
-                    <qt-form-item label="Range" prop="rangeId" tip="选择关系终点（值域）对应的对象类型。">
-                        <el-tree-select
-                            v-model="form.rangeId"
-                            :data="rangeObjectTypeTree"
-                            :props="objectTypeTreeProps"
-                            value-key="id"
-                            :loading="optionsLoading"
-                            check-strictly
-                            filterable
-                            clearable
-                            placeholder="请选择对象类型"
-                        />
-                    </qt-form-item>
-                </template>
-                <template v-else>
-                    <qt-form-item :label="firstTypeLabel" prop="objectTypeId" tip="选择该公理作用的主体对象类型。">
-                        <el-tree-select
-                            v-model="form.objectTypeId"
-                            :data="objectTypeTree"
-                            :props="objectTypeTreeProps"
-                            value-key="id"
-                            :loading="optionsLoading"
-                            check-strictly
-                            filterable
-                            clearable
-                            placeholder="请选择对象类型"
-                            @change="handleObjectTypeChange"
-                        />
-                    </qt-form-item>
-                    <template v-if="form.type === 'PROPERTY_RANGE'">
-                        <qt-form-item label="对象类型属性" prop="attributeId" tip="选择当前对象类型下需要约束的属性。">
-                            <el-select
-                                v-model="form.attributeId"
-                                :loading="optionsLoading || attributeLoadingCount > 0"
-                                filterable
-                                :disabled="!form.objectTypeId"
-                                placeholder="请选择当前对象类型的属性"
-                            >
-                                <el-option
-                                    v-for="item in currentAttributes"
-                                    :key="item.id"
-                                    :label="item.name"
-                                    :value="item.id"
-                                />
-                            </el-select>
-                        </qt-form-item>
-                        <qt-form-item label="数据类型" prop="typeCategory" tip="选择属性取值的基础数据类型或业务数据类型。">
-                            <el-radio-group v-model="form.typeCategory" @change="handleValueTypeChange">
-                                <el-radio
-                                    v-for="item in om_attribute_data_type"
-                                    :key="item.value"
-                                    :value="Number(item.value)"
-                                >
-                                    {{ item.label }}
-                                </el-radio>
-                            </el-radio-group>
-                        </qt-form-item>
-                        <qt-form-item v-if="form.typeCategory === 1" label="基础数据类型" prop="basicTypeCode" tip="选择属性对应的基础数据类型。">
-                            <el-select
-                                v-model="form.basicTypeCode"
-                                placeholder="请选择基础数据类型"
-                                clearable
-                                @change="handleBasicTypeChange"
-                            >
-                                <el-option
-                                    v-for="item in basic_data_type"
-                                    :key="item.value"
-                                    :label="item.label"
-                                    :value="Number(item.value)"
-                                />
-                            </el-select>
-                        </qt-form-item>
-                        <template v-else>
-                            <qt-form-item label="数据范围" prop="businessTypeSource" required tip="选择业务数据类型来自当前项目还是全局，下方业务数据类型会按该范围过滤。">
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item label="描述" prop="description">
+          <el-input
+            v-model="form.description"
+            class="character-count"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入描述"
+            :maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
+        <div class="h2-title">公理表达</div>
+        <template v-if="form.type === 'DOMAIN_RANGE'">
+          <qt-form-item
+            label="关系"
+            prop="relationName"
+            tip="填写该约束作用的关系名称。"
+          >
+            <el-input
+              v-model="form.relationName"
+              placeholder="请输入关系名称"
+              maxlength="128"
+              clearable
+            />
+          </qt-form-item>
+          <qt-form-item
+            label="Domain"
+            prop="domainId"
+            tip="选择关系起点（定义域）对应的对象类型。"
+          >
+            <el-tree-select
+              v-model="form.domainId"
+              :data="objectTypeTree"
+              :props="objectTypeTreeProps"
+              value-key="id"
+              :loading="optionsLoading"
+              check-strictly
+              filterable
+              clearable
+              placeholder="请选择对象类型"
+              @change="handleDomainChange"
+            />
+          </qt-form-item>
+          <qt-form-item
+            label="Range"
+            prop="rangeId"
+            tip="选择关系终点（值域）对应的对象类型。"
+          >
+            <el-tree-select
+              v-model="form.rangeId"
+              :data="rangeObjectTypeTree"
+              :props="objectTypeTreeProps"
+              value-key="id"
+              :loading="optionsLoading"
+              check-strictly
+              filterable
+              clearable
+              placeholder="请选择对象类型"
+            />
+          </qt-form-item>
+        </template>
+        <template v-else>
+          <qt-form-item
+            :label="firstTypeLabel"
+            prop="objectTypeId"
+            tip="选择该公理作用的主体对象类型。"
+          >
+            <el-tree-select
+              v-model="form.objectTypeId"
+              :data="objectTypeTree"
+              :props="objectTypeTreeProps"
+              value-key="id"
+              :loading="optionsLoading"
+              check-strictly
+              filterable
+              clearable
+              placeholder="请选择对象类型"
+              @change="handleObjectTypeChange"
+            />
+          </qt-form-item>
+          <template v-if="form.type === 'PROPERTY_RANGE'">
+            <qt-form-item
+              label="对象类型属性"
+              prop="attributeId"
+              tip="选择当前对象类型下需要约束的属性。"
+            >
+              <el-select
+                v-model="form.attributeId"
+                :loading="optionsLoading || attributeLoadingCount > 0"
+                filterable
+                :disabled="!form.objectTypeId"
+                placeholder="请选择当前对象类型的属性"
+              >
+                <el-option
+                  v-for="item in currentAttributes"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </qt-form-item>
+            <qt-form-item
+              label="数据类型"
+              prop="typeCategory"
+              tip="选择属性取值的基础数据类型或业务数据类型。"
+            >
+              <el-radio-group
+                v-model="form.typeCategory"
+                @change="handleValueTypeChange"
+              >
+                <el-radio
+                  v-for="item in om_attribute_data_type"
+                  :key="item.value"
+                  :value="Number(item.value)"
+                >
+                  {{ item.label }}
+                </el-radio>
+              </el-radio-group>
+            </qt-form-item>
+            <qt-form-item
+              v-if="form.typeCategory === 1"
+              label="基础数据类型"
+              prop="basicTypeCode"
+              tip="选择属性对应的基础数据类型。"
+            >
+              <el-select
+                v-model="form.basicTypeCode"
+                placeholder="请选择基础数据类型"
+                clearable
+                @change="handleBasicTypeChange"
+              >
+                <el-option
+                  v-for="item in basic_data_type"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="Number(item.value)"
+                />
+              </el-select>
+            </qt-form-item>
+            <template v-else>
+                            <qt-form-item
+
+              label="数据范围" prop="businessTypeSource" required tip="选择业务数据类型来自当前项目还是全局，下方业务数据类型会按该范围过滤。">
                                 <el-radio-group v-model="form.businessTypeSource" @change="handleBusinessSourceChange">
                                     <el-radio value="PROJECT">当前项目</el-radio>
                                     <el-radio value="GLOBAL">全局</el-radio>
                                 </el-radio-group>
                             </qt-form-item>
-                            <qt-form-item label="业务数据类型" prop="businessTypeKey" tip="按所选数据范围，选择属性关联的业务数据类型。">
-                                <el-select
-                                    v-model="form.businessTypeKey"
-                                    placeholder="请选择业务数据类型"
-                                    style="width: 100%"
+                            <qt-form-item label="业务数据类型" prop="businessTypeKey" tip="按所选数据范围，选择属性关联的业务数据类型。"
+            >
+              <el-select
+                v-model="form.businessTypeKey"
+
+                placeholder="请选择业务数据类型"
+                style="width: 100%"
                                     :loading="optionsLoading"
                                     filterable
-                                    clearable
-                                    @change="handleBusinessTypeChange"
-                                >
-                                    <el-option
+                                    clearable@change="handleBusinessTypeChange"
+              >
+            <el-option
                                         v-for="item in filteredBusinessTypes"
                                         :key="item.key"
                                         :label="item.name"
@@ -266,157 +326,268 @@
                                 </el-select>
                             </qt-form-item>
                         </template>
-                        <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
-                            <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
-                        </el-form-item>
-                        <AttributeTypeConfig
-                            v-if="form.typeCategory === 1 || selectedBusinessType"
-                            :model="effectiveConfig"
-                            :readonly="form.typeCategory === 2"
-                            :enum-options="enumOptions"
-                            :enum-loading="enumsLoading"
-                            @enum-open="loadEnums()"
-                        />
-                        <el-form-item
-                            v-if="form.typeCategory === 2 && selectedBusinessType?.description"
-                            label="类型描述"
-                        >
-                            <div class="form-readonly textarea">{{ selectedBusinessType.description }}</div>
-                        </el-form-item>
-                    </template>
-                    <qt-form-item v-else :label="secondTypeLabel" prop="otherTypeId" tip="选择参与公理表达的另一对象类型。">
-                        <el-tree-select
-                            v-model="form.otherTypeId"
-                            :data="otherObjectTypeTree"
-                            :props="objectTypeTreeProps"
-                            value-key="id"
-                            :loading="optionsLoading"
-                            check-strictly
-                            filterable
-                            clearable
-                            placeholder="请选择对象类型"
-                        />
-                    </qt-form-item>
-                </template>
-            </el-form>
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button :disabled="saving" @click="cancel">取 消</el-button>
-                    <el-button type="primary" :loading="saving" :disabled="saveDisabled" @click="submitForm">确 定</el-button>
-                </div>
-            </template>
-        </el-dialog>
-        <el-dialog
-            v-model="detailOpen"
-            title="模型公理详情"
-            width="860px"
-            :append-to="$refs['app-container']"
-            draggable
-            destroy-on-close
+            <el-form-item
+              v-if="form.typeCategory === 2 && selectedBusinessType"
+              label="基础数据类型"
+            >
+              <div class="form-readonly">
+                {{ basicTypeLabel(effectiveConfig.basicTypeCode) }}
+              </div>
+            </el-form-item>
+            <AttributeTypeConfig
+              v-if="form.typeCategory === 1 || selectedBusinessType"
+              :model="effectiveConfig"
+              :readonly="form.typeCategory === 2"
+              :enum-options="enumOptions"
+              :enum-loading="enumsLoading"
+              @enum-open="loadEnums()"
+            />
+            <el-form-item
+              v-if="
+                form.typeCategory === 2 && selectedBusinessType?.description
+              "
+              label="类型描述"
+            >
+              <div class="form-readonly textarea">
+                {{ selectedBusinessType.description }}
+              </div>
+            </el-form-item>
+          </template>
+          <qt-form-item
+            v-else
+            :label="secondTypeLabel"
+            prop="otherTypeId"
+            tip="选择参与公理表达的另一对象类型。"
+          >
+            <el-tree-select
+              v-model="form.otherTypeId"
+              :data="otherObjectTypeTree"
+              :props="objectTypeTreeProps"
+              value-key="id"
+              :loading="optionsLoading"
+              check-strictly
+              filterable
+              clearable
+              placeholder="请选择对象类型"
+            />
+          </qt-form-item>
+        </template>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button :disabled="saving" @click="cancel">取 消</el-button>
+          <el-button
+            type="primary"
+            :loading="saving"
+            :disabled="saveDisabled"
+            @click="submitForm"
+            >确 定</el-button
+          >
+        </div>
+      </template>
+    </el-dialog>
+    <el-dialog
+      v-model="detailOpen"
+      title="模型公理详情"
+      width="860px"
+      :append-to="$refs['app-container']"
+      draggable
+      destroy-on-close
+    >
+      <el-form label-width="120px" class="column-form">
+        <el-form-item
+          v-for="field in detailFields"
+          :key="field.label"
+          :label="field.label"
+          :class="{ 'row-full': field.multiline }"
         >
-            <el-form label-width="120px" class="column-form">
-                <el-form-item
-                    v-for="field in detailFields"
-                    :key="field.label"
-                    :label="field.label"
-                    :class="{ 'row-full': field.multiline }"
-                >
-                    <dict-tag v-if="field.dictOptions" :options="field.dictOptions" :value="field.dictValue" />
-                    <div v-else class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
-                </el-form-item>
-                <AttributeTypeConfig
-                    v-if="detail.type === 'PROPERTY_RANGE'"
-                    :model="detailConfig"
-                    readonly
-                    :enum-options="enumOptions"
-                />
-            </el-form>
+          <dict-tag
+            v-if="field.dictOptions"
+            :options="field.dictOptions"
+            :value="field.dictValue"
+          />
+          <div
+            v-else
+            class="form-readonly"
+            :class="{ textarea: field.multiline }"
+          >
+            {{ field.value || "-" }}
+          </div>
+        </el-form-item>
+        <AttributeTypeConfig
+          v-if="detail.type === 'PROPERTY_RANGE'"
+          :model="detailConfig"
+          readonly
+          :enum-options="enumOptions"
+        />
+      </el-form>
 
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button @click="detailOpen = false">关 闭</el-button>
-                </div>
-            </template>
-        </el-dialog>
-    </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="detailOpen = false">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup>
-    import { computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
-    import { ElMessage } from 'element-plus';
-    import { useOntologyVersion } from '@/views/om/useOntologyVersion';
-    import { listModelAxiom, getModelAxiom, addModelAxiom, updateModelAxiom, delModelAxiom } from '@/api/om/constraint/modelAxiom';
-    import { listRelationTypes } from '@/api/om/object/relation';
-    import { listAttributes, listAttributeBusinessDataTypes, listAttributeEnums } from '@/api/om/object/attribute';
-    import AttributeTypeConfig from '../../object/type/detail/AttributeTypeConfig.vue';
-    import auth from '@/plugins/auth';
-    import { useCreatorPhones } from '@/utils/useCreatorPhones';
+import {
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  reactive,
+  ref,
+  watch,
+} from "vue";
+import { ElMessage } from "element-plus";
+import { useOntologyVersion } from "@/views/om/useOntologyVersion";
+import {
+  listModelAxiom,
+  getModelAxiom,
+  addModelAxiom,
+  updateModelAxiom,
+  delModelAxiom,
+} from "@/api/om/constraint/modelAxiom";
+import { listRelationTypes } from "@/api/om/object/relation";
+import {
+  listAttributes,
+  listAttributeBusinessDataTypes,
+  listAttributeEnums,
+} from "@/api/om/object/attribute";
+import AttributeTypeConfig from "../../object/type/detail/AttributeTypeConfig.vue";
+import auth from "@/plugins/auth";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
-    defineOptions({ name: 'OmModelAxiom' });
-    const props = defineProps({ versionId: { type: [String, Number], default: undefined } });
-    const { versionId, requireVersion } = useOntologyVersion(() => props.versionId);
-    const { proxy } = getCurrentInstance();
-    const { basic_data_type, om_axiom_type, om_rule_level, om_attribute_data_type } = proxy.useDict(
-        'basic_data_type',
-        'om_axiom_type',
-        'om_rule_level',
-        'om_attribute_data_type'
-    );
-    const tableRef = ref();
-    const ruleRef = ref();
-    const selectedIds = ref([]);
-    const saving = ref(false);
-    const deleting = ref(false);
-    const deleteConfirming = ref(false);
-    const deleteLoading = ref({});
-    const batchDeleteLoading = ref(false);
-    const open = ref(false);
-    const detailOpen = ref(false);
-    const dialogTitle = ref('新增模型公理');
-    const detail = ref({});
-    const { creatorPhones, formatCreator } = useCreatorPhones();
+defineOptions({ name: "OmModelAxiom" });
+const props = defineProps({
+  versionId: { type: [String, Number], default: undefined },
+});
+const { versionId, requireVersion } = useOntologyVersion(() => props.versionId);
+const { proxy } = getCurrentInstance();
+const {
+  basic_data_type,
+  om_axiom_type,
+  om_rule_level,
+  om_attribute_data_type,
+} = proxy.useDict(
+  "basic_data_type",
+  "om_axiom_type",
+  "om_rule_level",
+  "om_attribute_data_type"
+);
+const tableRef = ref();
+const ruleRef = ref();
+const selectedIds = ref([]);
+const saving = ref(false);
+const deleting = ref(false);
+const deleteConfirming = ref(false);
+const deleteLoading = ref({});
+const batchDeleteLoading = ref(false);
+const open = ref(false);
+const detailOpen = ref(false);
+const dialogTitle = ref("新增模型公理");
+const detail = ref({});
+const { creatorPhones, formatCreator } = useCreatorPhones();
 
-    /**
-     * 分页查询模型公理列表；版本号缺失时返回空列表，避免无版本上下文发起无效查询。
-     * @param {Object} params QtTable 传入的查询参数
-     * @returns {Promise<Object>} 列表接口返回体
-     */
-    function fetchModelAxioms(params) {
-        if (!versionId.value) {
-            return Promise.resolve({ data: { rows: [], total: 0 } });
-        }
-        return listModelAxiom({ ...params, versionId: versionId.value });
-    }
+/**
+ * 分页查询模型公理列表；版本号缺失时返回空列表，避免无版本上下文发起无效查询。
+ * @param {Object} params QtTable 传入的查询参数
+ * @returns {Promise<Object>} 列表接口返回体
+ */
+function fetchModelAxioms(params) {
+  if (!versionId.value) {
+    return Promise.resolve({ data: { rows: [], total: 0 } });
+  }
+  return listModelAxiom({ ...params, versionId: versionId.value });
+}
 
-    // 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
-    const tableStore = reactive({
-        config: {
-            sort: true,
-            table: {
-                stripe: true,
-                rowKey: 'id',
-                defaultSort: { prop: 'createTime', order: 'descending' },
-                onSelectionChange: handleSelectionChange
-            }
-        },
-        columns: [
-            { type: 'selection', width: 55, minWidth: 55 },
-            { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true },
-            { label: '公理名称', prop: 'name', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '描述', prop: 'description', slot: 'text', minWidth: 240, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '公理类型', prop: 'type', dict: 'om_axiom_type', width: 150, minWidth: 150 },
-            { label: '级别', prop: 'level', dict: 'om_rule_level', width: 90, minWidth: 90 },
-            { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left' },
-            { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true },
-            { label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right' }
-        ],
-        func: fetchModelAxioms,
-        params: {
-            name: null,
-            type: null,
-            level: null
-        }
-    });
+// 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
+const tableStore = reactive({
+  config: {
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
+  },
+  columns: [
+    { type: "selection", width: 55, minWidth: 55 },
+    {
+      label: "编号",
+      prop: "id",
+      slot: "text",
+      width: 60,
+      minWidth: 60,
+      align: "center",
+      sortable: true,
+    },
+    {
+      label: "公理名称",
+      prop: "name",
+      slot: "text",
+      minWidth: 200,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 240,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "公理类型",
+      prop: "type",
+      dict: "om_axiom_type",
+      width: 150,
+      minWidth: 150,
+    },
+    {
+      label: "级别",
+      prop: "level",
+      dict: "om_rule_level",
+      width: 90,
+      minWidth: 90,
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 130,
+      minWidth: 130,
+      align: "left",
+      headerAlign: "left",
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 160,
+      minWidth: 160,
+      align: "left",
+      sortable: true,
+    },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 250,
+      minWidth: 250,
+      fixed: "right",
+    },
+  ],
+  func: fetchModelAxioms,
+  params: {
+    name: null,
+    type: null,
+    level: null,
+  },
+});
 
     // 搜索项配置
     const searchStore = reactive({
@@ -558,442 +729,509 @@
         )
     );
 
-    const detailFields = computed(() => [
-        { label: '公理名称', value: detail.value.name },
-        { label: '类型', value: typeLabel(detail.value.type), dictOptions: om_axiom_type.value, dictValue: detail.value.type },
-        { label: '级别', value: levelLabel(detail.value.level), dictOptions: om_rule_level.value, dictValue: detail.value.level },
-        ...getDetailFields(detail.value),
-        { label: '描述', value: detail.value.description, multiline: true },
-        { label: '创建人', value: detail.value.createBy || '-' },
-        { label: '联系方式', value: creatorPhones.value[detail.value.creatorId] || '-' },
-        { label: '创建时间', value: proxy.parseTime(detail.value.createTime, '{y}-{m}-{d} {h}:{i}') }
-    ]);
+const detailFields = computed(() => [
+  { label: "公理名称", value: detail.value.name },
+  {
+    label: "类型",
+    value: typeLabel(detail.value.type),
+    dictOptions: om_axiom_type.value,
+    dictValue: detail.value.type,
+  },
+  {
+    label: "级别",
+    value: levelLabel(detail.value.level),
+    dictOptions: om_rule_level.value,
+    dictValue: detail.value.level,
+  },
+  ...getDetailFields(detail.value),
+  { label: "描述", value: detail.value.description, multiline: true },
+  { label: "创建人", value: detail.value.createBy || "-" },
+  {
+    label: "联系方式",
+    value: creatorPhones.value[detail.value.creatorId] || "-",
+  },
+  {
+    label: "创建时间",
+    value: proxy.parseTime(detail.value.createTime, "{y}-{m}-{d} {h}:{i}"),
+  },
+]);
 
-    /**
-     * 逐页读取下拉选项，避免只显示第一页属性或关系。
-     * @param {Function} loadPage 按页号拉取单页数据的回调
-     * @returns {Promise<Array>} 合并后的全量行数据
-     */
-    async function loadAllPages(loadPage) {
-        const rows = [];
-        let pageNum = 1;
-        let total = 0;
-        do {
-            const response = await loadPage(pageNum++);
-            const page = response.data || {};
-            const batch = page.rows || [];
-            rows.push(...batch);
-            total = Number(page.total || 0);
-            if (!batch.length) break;
-        } while (rows.length < total);
-        return rows;
-    }
+/**
+ * 逐页读取下拉选项，避免只显示第一页属性或关系。
+ * @param {Function} loadPage 按页号拉取单页数据的回调
+ * @returns {Promise<Array>} 合并后的全量行数据
+ */
+async function loadAllPages(loadPage) {
+  const rows = [];
+  let pageNum = 1;
+  let total = 0;
+  do {
+    const response = await loadPage(pageNum++);
+    const page = response.data || {};
+    const batch = page.rows || [];
+    rows.push(...batch);
+    total = Number(page.total || 0);
+    if (!batch.length) break;
+  } while (rows.length < total);
+  return rows;
+}
 
-    /**
-     * 拉取指定版本的对象类型选项。
-     * @param {string|number} versionId 项目版本编号
-     * @returns {Promise<Array>} 对象类型列表
-     */
-    async function listObjectTypeOptions(versionId) {
-        const response = await listRelationTypes(versionId);
-        return (response.data || []).map((item) => ({
-            ...item,
-            id: String(item.id),
-            parentId: item.parentId == null ? null : String(item.parentId)
-        }));
-    }
+/**
+ * 拉取指定版本的对象类型选项。
+ * @param {string|number} versionId 项目版本编号
+ * @returns {Promise<Array>} 对象类型列表
+ */
+async function listObjectTypeOptions(versionId) {
+  const response = await listRelationTypes(versionId);
+  return (response.data || []).map((item) => ({
+    ...item,
+    id: String(item.id),
+    parentId: item.parentId == null ? null : String(item.parentId),
+  }));
+}
 
-    /**
-     * 拉取指定对象类型的全量属性选项。
-     * @param {string} objectTypeId 对象类型编号
-     * @param {string|number} versionId 项目版本编号
-     * @returns {Promise<Array>} 属性列表
-     */
-    async function listObjectAttributeOptions(objectTypeId, versionId) {
-        const rows = await loadAllPages((pageNum) => listAttributes({ objectTypeId, versionId, pageNum, pageSize: 100 }));
-        return rows.map((item) => ({ ...item, id: String(item.id) }));
-    }
+/**
+ * 拉取指定对象类型的全量属性选项。
+ * @param {string} objectTypeId 对象类型编号
+ * @param {string|number} versionId 项目版本编号
+ * @returns {Promise<Array>} 属性列表
+ */
+async function listObjectAttributeOptions(objectTypeId, versionId) {
+  const rows = await loadAllPages((pageNum) =>
+    listAttributes({ objectTypeId, versionId, pageNum, pageSize: 100 })
+  );
+  return rows.map((item) => ({ ...item, id: String(item.id) }));
+}
 
-    /**
-     * 拉取业务数据类型选项，按项目版本和全局范围加载，不依赖具体对象类型。
-     * @param {string|number} versionId 项目版本编号
-     * @returns {Promise<Array>} 带来源标识的业务数据类型列表
-     */
-    async function listBusinessTypeOptions(versionId) {
-        const results = await Promise.allSettled([
-            listAttributeBusinessDataTypes(undefined, 'PROJECT', versionId),
-            listAttributeBusinessDataTypes(undefined, 'GLOBAL', versionId)
-        ]);
-        const failed = results.find((result) => result.status === 'rejected');
-        if (failed) throw failed.reason;
-        return [
-            ...(results[0].value.data || []).map((item) => ({ ...item, businessTypeSource: 'PROJECT' })),
-            ...(results[1].value.data || []).map((item) => ({ ...item, businessTypeSource: 'GLOBAL' }))
+/**
+ * 拉取业务数据类型选项，按项目版本和全局范围加载，不依赖具体对象类型。
+ * @param {string|number} versionId 项目版本编号
+ * @returns {Promise<Array>} 带来源标识的业务数据类型列表
+ */
+async function listBusinessTypeOptions(versionId) {
+  const results = await Promise.allSettled([
+    listAttributeBusinessDataTypes(undefined, "PROJECT", versionId),
+    listAttributeBusinessDataTypes(undefined, "GLOBAL", versionId),
+  ]);
+  const failed = results.find((result) => result.status === "rejected");
+  if (failed) throw failed.reason;
+  return [
+    ...(results[0].value.data || []).map((item) => ({
+      ...item,
+      businessTypeSource: "PROJECT",
+    })),
+    ...(results[1].value.data || []).map((item) => ({
+      ...item,
+      businessTypeSource: "GLOBAL",
+    })),
+  ];
+}
+
+/** 刷新当前模型公理列表。 */
+function refreshList() {
+  tableRef.value?.getList();
+}
+
+/**
+ * 多选框选中数据，供顶部批量删除使用。
+ * @param {Array} selection 当前选中的行数据
+ */
+function handleSelectionChange(selection) {
+  selectedIds.value = selection.map((row) => row.id);
+}
+
+/**
+ * 拉取并缓存指定对象类型的属性选项。
+ * @param {string} objectTypeId 对象类型编号
+ */
+async function loadObjectOptions(objectTypeId) {
+  if (!objectTypeId) return;
+  const request = dialogRequest;
+  attributeLoadingCount.value++;
+  try {
+    const response = await listObjectAttributeOptions(
+      objectTypeId,
+      versionId.value
+    );
+    if (request !== dialogRequest) return;
+    attributeOptions[objectTypeId] = response;
+  } catch {
+    if (request === dialogRequest) optionsLoadFailed.value = true;
+  } finally {
+    if (request === dialogRequest) attributeLoadingCount.value--;
+  }
+}
+
+/**
+ * 拉取指定对象类型的枚举选项（项目与全局）。
+ * @param {string} [objectTypeId] 对象类型编号，缺省取当前表单选中值
+ */
+async function loadEnums(objectTypeId = form.value.objectTypeId) {
+  if (!objectTypeId) return;
+  const request = ++enumRequest;
+  const dialog = dialogRequest;
+  enumsLoading.value = true;
+  try {
+    await Promise.allSettled(
+      ["PROJECT", "GLOBAL"].map(async (source) => {
+        const response = await listAttributeEnums(objectTypeId, source);
+        if (request !== enumRequest || dialog !== dialogRequest) return;
+        if (!Array.isArray(response.data)) throw new Error("枚举返回格式无效");
+        enumOptions.value = [
+          ...enumOptions.value.filter((item) => item.enumSource !== source),
+          ...response.data.map((item) => ({ ...item, enumSource: source })),
         ];
-    }
+      })
+    );
+  } finally {
+    if (request === enumRequest && dialog === dialogRequest)
+      enumsLoading.value = false;
+  }
+}
 
-    /** 刷新当前模型公理列表。 */
-    function refreshList() {
-        tableRef.value?.getList();
-    }
+/**
+ * 按业务数据类型唯一键查找选项。
+ * @param {Object} record 含 businessTypeKey 的记录
+ * @returns {Object|undefined} 匹配的业务数据类型
+ */
+function findBusinessType(record) {
+  return businessTypeOptions.value.find(
+    (item) => item.businessTypeSource + ":" + item.id === record.businessTypeKey
+  );
+}
 
-    /**
-     * 多选框选中数据，供顶部批量删除使用。
-     * @param {Array} selection 当前选中的行数据
-     */
-    function handleSelectionChange(selection) {
-        selectedIds.value = selection.map((row) => row.id);
-    }
+/**
+ * 将业务数据类型的基础类型信息合并回记录，供只读展示与提交使用。
+ * @param {Object} record 当前表单或详情记录
+ * @returns {Object} 解析后的配置对象
+ */
+function resolvedConfig(record) {
+  const selected =
+    record.typeCategory === 2 ? findBusinessType(record) : undefined;
+  return selected
+    ? { ...selected, basicTypeCode: Number(selected.dataType) }
+    : record;
+}
 
-    /**
-     * 拉取并缓存指定对象类型的属性选项。
-     * @param {string} objectTypeId 对象类型编号
-     */
-    async function loadObjectOptions(objectTypeId) {
-        if (!objectTypeId) return;
-        const request = dialogRequest;
-        attributeLoadingCount.value++;
-        try {
-            const response = await listObjectAttributeOptions(objectTypeId, versionId.value);
-            if (request !== dialogRequest) return;
-            attributeOptions[objectTypeId] = response;
-        } catch {
-            if (request === dialogRequest) optionsLoadFailed.value = true;
-        } finally {
-            if (request === dialogRequest) attributeLoadingCount.value--;
-        }
-    }
+/** 加载弹窗所需的对象类型、业务数据类型与属性选项。 */
+async function loadOptions() {
+  const request = dialogRequest;
+  optionsLoading.value = true;
+  optionsLoadFailed.value = false;
+  try {
+    const results = await Promise.allSettled([
+      listObjectTypeOptions(versionId.value),
+      listBusinessTypeOptions(versionId.value),
+    ]);
+    const failed = results.find((result) => result.status === "rejected");
+    if (failed) throw failed.reason;
+    if (request !== dialogRequest) return;
+    objectTypeOptions.value = results[0].value;
+    businessTypeOptions.value = results[1].value;
+    const record = detailOpen.value ? detail.value : form.value;
+    const objectIds = getRecordObjectIds(record);
+    await Promise.allSettled(objectIds.map(loadObjectOptions));
+    if (request === dialogRequest && record.type === "PROPERTY_RANGE")
+      await loadEnums(record.objectTypeId);
+  } catch {
+    if (request === dialogRequest) optionsLoadFailed.value = true;
+  } finally {
+    if (request === dialogRequest) optionsLoading.value = false;
+  }
+}
 
-    /**
-     * 拉取指定对象类型的枚举选项（项目与全局）。
-     * @param {string} [objectTypeId] 对象类型编号，缺省取当前表单选中值
-     */
-    async function loadEnums(objectTypeId = form.value.objectTypeId) {
-        if (!objectTypeId) return;
-        const request = ++enumRequest;
-        const dialog = dialogRequest;
-        enumsLoading.value = true;
-        try {
-            await Promise.allSettled(
-                ['PROJECT', 'GLOBAL'].map(async (source) => {
-                    const response = await listAttributeEnums(objectTypeId, source);
-                    if (request !== enumRequest || dialog !== dialogRequest) return;
-                    if (!Array.isArray(response.data)) throw new Error('枚举返回格式无效');
-                    enumOptions.value = [
-                        ...enumOptions.value.filter((item) => item.enumSource !== source),
-                        ...response.data.map((item) => ({ ...item, enumSource: source }))
-                    ];
-                })
-            );
-        } finally {
-            if (request === enumRequest && dialog === dialogRequest) enumsLoading.value = false;
-        }
-    }
+/** 新增按钮操作。 */
+function handleAdd() {
+  if (!requireVersion()) return;
+  ++dialogRequest;
+  attributeLoadingCount.value = 0;
+  resetEnums();
+  form.value = emptyForm();
+  detailOpen.value = false;
+  dialogTitle.value = "新增模型公理";
+  open.value = true;
+  nextTick(() => ruleRef.value?.clearValidate());
+  loadOptions();
+}
 
-    /**
-     * 按业务数据类型唯一键查找选项。
-     * @param {Object} record 含 businessTypeKey 的记录
-     * @returns {Object|undefined} 匹配的业务数据类型
-     */
-    function findBusinessType(record) {
-        return businessTypeOptions.value.find(
-            (item) => item.businessTypeSource + ':' + item.id === record.businessTypeKey
-        );
-    }
-
-    /**
-     * 将业务数据类型的基础类型信息合并回记录，供只读展示与提交使用。
-     * @param {Object} record 当前表单或详情记录
-     * @returns {Object} 解析后的配置对象
-     */
-    function resolvedConfig(record) {
-        const selected = record.typeCategory === 2 ? findBusinessType(record) : undefined;
-        return selected ? { ...selected, basicTypeCode: Number(selected.dataType) } : record;
-    }
-
-    /** 加载弹窗所需的对象类型、业务数据类型与属性选项。 */
-    async function loadOptions() {
-        const request = dialogRequest;
-        optionsLoading.value = true;
-        optionsLoadFailed.value = false;
-        try {
-            const results = await Promise.allSettled([
-                listObjectTypeOptions(versionId.value),
-                listBusinessTypeOptions(versionId.value)
-            ]);
-            const failed = results.find((result) => result.status === 'rejected');
-            if (failed) throw failed.reason;
-            if (request !== dialogRequest) return;
-            objectTypeOptions.value = results[0].value;
-            businessTypeOptions.value = results[1].value;
-            const record = detailOpen.value ? detail.value : form.value;
-            const objectIds = getRecordObjectIds(record);
-            await Promise.allSettled(objectIds.map(loadObjectOptions));
-            if (request === dialogRequest && record.type === 'PROPERTY_RANGE') await loadEnums(record.objectTypeId);
-        } catch {
-            if (request === dialogRequest) optionsLoadFailed.value = true;
-        } finally {
-            if (request === dialogRequest) optionsLoading.value = false;
-        }
-    }
-
-    /** 新增按钮操作。 */
-    function handleAdd() {
-        if (!requireVersion()) return;
-        ++dialogRequest;
-        attributeLoadingCount.value = 0;
-        resetEnums();
-        form.value = emptyForm();
-        detailOpen.value = false;
-        dialogTitle.value = '新增模型公理';
-        open.value = true;
-        nextTick(() => ruleRef.value?.clearValidate());
-        loadOptions();
-    }
-
-    /**
-     * 修改按钮操作。
-     * @param {Object} row 当前行数据
-     */
-    async function handleUpdate(row) {
-        if (!requireVersion()) return;
-        const request = ++dialogRequest;
-        const response = await getModelAxiom(row.id);
-        if (request !== dialogRequest) return;
-        attributeLoadingCount.value = 0;
-        resetEnums();
-        form.value = {
+/**
+ * 修改按钮操作。
+ * @param {Object} row 当前行数据
+ */
+async function handleUpdate(row) {
+  if (!requireVersion()) return;
+  const request = ++dialogRequest;
+  const response = await getModelAxiom(row.id);
+  if (request !== dialogRequest) return;
+  attributeLoadingCount.value = 0;
+  resetEnums();
+  form.value = {
             ...emptyForm(),
             ...response.data,
             businessTypeSource: String(response.data.businessTypeKey || '').split(':')[0] || 'PROJECT'
         };
-        detailOpen.value = false;
-        dialogTitle.value = '修改模型公理';
-        open.value = true;
-        nextTick(() => ruleRef.value?.clearValidate());
-        loadOptions();
-    }
+  detailOpen.value = false;
+  dialogTitle.value = "修改模型公理";
+  open.value = true;
+  nextTick(() => ruleRef.value?.clearValidate());
+  loadOptions();
+}
 
-    /**
-     * 详情按钮操作。
-     * @param {Object} row 当前行数据
-     */
-    async function handleDetail(row) {
-        if (!requireVersion()) return;
-        const request = ++dialogRequest;
-        const response = await getModelAxiom(row.id);
-        if (request !== dialogRequest) return;
-        attributeLoadingCount.value = 0;
-        resetEnums();
-        detail.value = response.data;
-        await loadDetailOptions();
-        if (request === dialogRequest) detailOpen.value = true;
-    }
+/**
+ * 详情按钮操作。
+ * @param {Object} row 当前行数据
+ */
+async function handleDetail(row) {
+  if (!requireVersion()) return;
+  const request = ++dialogRequest;
+  const response = await getModelAxiom(row.id);
+  if (request !== dialogRequest) return;
+  attributeLoadingCount.value = 0;
+  resetEnums();
+  detail.value = response.data;
+  await loadDetailOptions();
+  if (request === dialogRequest) detailOpen.value = true;
+}
 
-    /** 详情弹窗打开前加载展示所需的选项数据。 */
-    async function loadDetailOptions() {
-        const request = dialogRequest;
-        optionsLoadFailed.value = false;
-        try {
-            const options = await listObjectTypeOptions(versionId.value);
-            if (request !== dialogRequest) return;
-            objectTypeOptions.value = options;
-            const businessTypes = await listBusinessTypeOptions(versionId.value);
-            if (request !== dialogRequest) return;
-            businessTypeOptions.value = businessTypes;
-            await Promise.allSettled(getRecordObjectIds(detail.value).map(loadObjectOptions));
-            if (request === dialogRequest && detail.value.type === 'PROPERTY_RANGE')
-                await loadEnums(detail.value.objectTypeId);
-        } catch {
-            // 接口异常由统一请求拦截器提示
-        }
-    }
+/** 详情弹窗打开前加载展示所需的选项数据。 */
+async function loadDetailOptions() {
+  const request = dialogRequest;
+  optionsLoadFailed.value = false;
+  try {
+    const options = await listObjectTypeOptions(versionId.value);
+    if (request !== dialogRequest) return;
+    objectTypeOptions.value = options;
+    const businessTypes = await listBusinessTypeOptions(versionId.value);
+    if (request !== dialogRequest) return;
+    businessTypeOptions.value = businessTypes;
+    await Promise.allSettled(
+      getRecordObjectIds(detail.value).map(loadObjectOptions)
+    );
+    if (request === dialogRequest && detail.value.type === "PROPERTY_RANGE")
+      await loadEnums(detail.value.objectTypeId);
+  } catch {
+    // 接口异常由统一请求拦截器提示
+  }
+}
 
-    /** 提交新增/修改表单，提交期间锁定确定按钮避免重复入库。 */
-    async function submitForm() {
-        if (!requireVersion() || saving.value || saveDisabled.value) return;
-        const request = dialogRequest;
-        const context = contextRequest;
-        if (!(await ruleRef.value.validate().catch(() => false))) return;
-        if (request !== dialogRequest || !open.value || saving.value || saveDisabled.value) return;
-        const error = validateExpression();
-        if (error) {
-            ElMessage.warning(error);
-            return;
-        }
-        const data = {
-            ...JSON.parse(JSON.stringify(form.value)),
-            versionId: versionId.value,
-            name: form.value.name.trim(),
-            description: form.value.description.trim()
-        };
-        saving.value = true;
-        try {
-            await (data.id ? updateModelAxiom(data) : addModelAxiom(data));
-            if (context !== contextRequest) return;
-            ElMessage.success(data.id ? '修改成功' : '新增成功');
-            open.value = false;
-            refreshList();
-        } finally {
-            saving.value = false;
-        }
-    }
+/** 提交新增/修改表单，提交期间锁定确定按钮避免重复入库。 */
+async function submitForm() {
+  if (!requireVersion() || saving.value || saveDisabled.value) return;
+  const request = dialogRequest;
+  const context = contextRequest;
+  if (!(await ruleRef.value.validate().catch(() => false))) return;
+  if (
+    request !== dialogRequest ||
+    !open.value ||
+    saving.value ||
+    saveDisabled.value
+  )
+    return;
+  const error = validateExpression();
+  if (error) {
+    ElMessage.warning(error);
+    return;
+  }
+  const data = {
+    ...JSON.parse(JSON.stringify(form.value)),
+    versionId: versionId.value,
+    name: form.value.name.trim(),
+    description: form.value.description.trim(),
+  };
+  saving.value = true;
+  try {
+    await (data.id ? updateModelAxiom(data) : addModelAxiom(data));
+    if (context !== contextRequest) return;
+    ElMessage.success(data.id ? "修改成功" : "新增成功");
+    open.value = false;
+    refreshList();
+  } finally {
+    saving.value = false;
+  }
+}
 
-    /**
-     * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
-     * @param {Object} [row] 当前行数据，顶部删除按钮点击时不传参
-     */
-    async function handleDelete(row) {
-      if (!requireVersion() || deleting.value || deleteConfirming.value) return;
-      const isSingle = row?.id != null;
-      const ids = isSingle ? [row.id] : [...selectedIds.value];
-      if (!ids.length) return;
-      const context = contextRequest;
-      const message = isSingle
-        ? `是否确认删除编号为${row.id} 的数据项？`
-        : `可删除${ids.length}个，不可删除0个，是否删除可删部分`;
-      deleteConfirming.value = true;
-      try {
-        try {
-          await proxy.$modal.confirm(message);
-        } catch {
-          return;
-        }
-        if (context !== contextRequest) return;
-        deleting.value = true;
-        if (isSingle) deleteLoading.value[row.id] = true;
-        else batchDeleteLoading.value = true;
-        await delModelAxiom(ids);
-        if (context !== contextRequest) return;
-        proxy.$modal.msgSuccess('删除成功');
-        refreshList();
-      } finally {
-        deleteConfirming.value = false;
-        deleting.value = false;
-        if (isSingle) deleteLoading.value[row.id] = false;
-        else batchDeleteLoading.value = false;
-      }
+/**
+ * 删除按钮操作：行内删除取当前行编号，顶部按钮删除取多选编号。
+ * @param {Object} [row] 当前行数据，顶部删除按钮点击时不传参
+ */
+async function handleDelete(row) {
+  if (!requireVersion() || deleting.value || deleteConfirming.value) return;
+  const isSingle = row?.id != null;
+  const ids = isSingle ? [row.id] : [...selectedIds.value];
+  if (!ids.length) return;
+  const context = contextRequest;
+  const message = isSingle
+    ? `是否确认删除编号为${row.id} 的数据项？`
+    : `可删除${ids.length}个，不可删除0个，是否删除可删部分`;
+  deleteConfirming.value = true;
+  try {
+    try {
+      await proxy.$modal.confirm(message);
+    } catch {
+      return;
     }
+    if (context !== contextRequest) return;
+    deleting.value = true;
+    if (isSingle) deleteLoading.value[row.id] = true;
+    else batchDeleteLoading.value = true;
+    await delModelAxiom(ids);
+    if (context !== contextRequest) return;
+    proxy.$modal.msgSuccess("删除成功");
+    refreshList();
+  } finally {
+    deleteConfirming.value = false;
+    deleting.value = false;
+    if (isSingle) deleteLoading.value[row.id] = false;
+    else batchDeleteLoading.value = false;
+  }
+}
 
-    /** 关闭新增/修改弹窗；保存中禁止关闭。 */
-    function cancel() {
-        if (saving.value) return;
-        open.value = false;
-    }
+/** 关闭新增/修改弹窗；保存中禁止关闭。 */
+function cancel() {
+  if (saving.value) return;
+  open.value = false;
+}
 
-    /**
-     * 保存期间拦截弹窗关闭回调。
-     * @param {Function} done el-dialog 的 before-close 完成回调
-     */
-    function beforeClose(done) {
-        if (!saving.value) done();
-    }
+/**
+ * 保存期间拦截弹窗关闭回调。
+ * @param {Function} done el-dialog 的 before-close 完成回调
+ */
+function beforeClose(done) {
+  if (!saving.value) done();
+}
 
-    /** 弹窗关闭后清除表单校验提示。 */
-    function handleDialogClosed() {
-        ruleRef.value?.clearValidate();
-    }
+/** 弹窗关闭后清除表单校验提示。 */
+function handleDialogClosed() {
+  ruleRef.value?.clearValidate();
+}
 
-    /**
-     * 将对象类型编号转为名称，未加载时回显编号。
-     * @param {string} id 对象类型编号
-     * @returns {string} 对象类型名称
-     */
-    function objectTypeLabel(id) {
-        return objectTypeOptions.value.find((item) => item.id === id)?.name || id || '-';
-    }
+/**
+ * 将对象类型编号转为名称，未加载时回显编号。
+ * @param {string} id 对象类型编号
+ * @returns {string} 对象类型名称
+ */
+function objectTypeLabel(id) {
+  return (
+    objectTypeOptions.value.find((item) => item.id === id)?.name || id || "-"
+  );
+}
 
-    /**
-     * 将属性编号转为名称。
-     * @param {string} objectTypeId 对象类型编号
-     * @param {string} attributeId 属性编号
-     * @returns {string} 属性名称
-     */
-    function attributeLabel(objectTypeId, attributeId) {
-        return (
-            (attributeOptions[objectTypeId] || []).find((item) => item.id === attributeId)?.name || attributeId || '-'
-        );
-    }
+/**
+ * 将属性编号转为名称。
+ * @param {string} objectTypeId 对象类型编号
+ * @param {string} attributeId 属性编号
+ * @returns {string} 属性名称
+ */
+function attributeLabel(objectTypeId, attributeId) {
+  return (
+    (attributeOptions[objectTypeId] || []).find(
+      (item) => item.id === attributeId
+    )?.name ||
+    attributeId ||
+    "-"
+  );
+}
 
-    /**
-     * 取出记录需要加载属性选项的对象类型编号。
-     * @param {Object} record 当前表单或详情记录
-     * @returns {Array<string>} 对象类型编号列表
-     */
-    function getRecordObjectIds(record) {
-        return record.type === 'PROPERTY_RANGE' && record.objectTypeId ? [record.objectTypeId] : [];
-    }
+/**
+ * 取出记录需要加载属性选项的对象类型编号。
+ * @param {Object} record 当前表单或详情记录
+ * @returns {Array<string>} 对象类型编号列表
+ */
+function getRecordObjectIds(record) {
+  return record.type === "PROPERTY_RANGE" && record.objectTypeId
+    ? [record.objectTypeId]
+    : [];
+}
 
-    /** 切换公理类型时重置除基本信息外的字段。 */
-    function handleTypeChange() {
-        const { id, name, description, level, type, createBy, createTime } = form.value;
-        // 通过表单重置表达字段，避免清空选值触发异步必填校验
-        ruleRef.value?.resetFields([
-            'objectTypeId',
-            'otherTypeId',
-            'relationName',
-            'domainId',
-            'rangeId',
-            'attributeId',
-            'typeCategory',
-            'basicTypeCode',
-            'businessTypeKey',
-            'unit',
-            'decimalPlaces',
-            'format',
-            'enumType'
-        ]);
-        form.value = { ...emptyForm(), id, name, description, level, type, createBy, createTime };
-        resetEnums();
-        nextTick(() => ruleRef.value?.clearValidate());
-    }
+/** 切换公理类型时重置除基本信息外的字段。 */
+function handleTypeChange() {
+  const { id, name, description, level, type, createBy, createTime } =
+    form.value;
+  // 通过表单重置表达字段，避免清空选值触发异步必填校验
+  ruleRef.value?.resetFields([
+    "objectTypeId",
+    "otherTypeId",
+    "relationName",
+    "domainId",
+    "rangeId",
+    "attributeId",
+    "typeCategory",
+    "basicTypeCode",
+    "businessTypeKey",
+    "unit",
+    "decimalPlaces",
+    "format",
+    "enumType",
+  ]);
+  form.value = {
+    ...emptyForm(),
+    id,
+    name,
+    description,
+    level,
+    type,
+    createBy,
+    createTime,
+  };
+  resetEnums();
+  nextTick(() => ruleRef.value?.clearValidate());
+}
 
-    /** Domain 与 Range 重复时清空 Range。 */
-    function handleDomainChange() {
-        if (form.value.domainId && form.value.domainId === form.value.rangeId) form.value.rangeId = '';
-    }
+/** Domain 与 Range 重复时清空 Range。 */
+function handleDomainChange() {
+  if (form.value.domainId && form.value.domainId === form.value.rangeId)
+    form.value.rangeId = "";
+}
 
-    /** 切换对象类型时清空属性、值类型配置与枚举选项。 */
-    function handleObjectTypeChange() {
-        form.value.attributeId = '';
-        clearTypeConfig();
-        resetEnums();
-        if (form.value.type === 'PROPERTY_RANGE') {
-            loadObjectOptions(form.value.objectTypeId);
-            loadEnums();
-        }
-    }
+/** 切换对象类型时清空属性、值类型配置与枚举选项。 */
+function handleObjectTypeChange() {
+  form.value.attributeId = "";
+  clearTypeConfig();
+  resetEnums();
+  if (form.value.type === "PROPERTY_RANGE") {
+    loadObjectOptions(form.value.objectTypeId);
+    loadEnums();
+  }
+}
 
-    /** 切换基础/业务数据类型时清空已选类型与值配置。 */
-    function handleValueTypeChange() {
-        form.value.basicTypeCode = undefined;
-        form.value.businessTypeKey = '';
-        form.value.businessTypeSource = 'PROJECT';
-        clearTypeConfig();
-        nextTick(() => ruleRef.value?.clearValidate(['basicTypeCode', 'businessTypeKey']));
-    }
+/** 切换基础/业务数据类型时清空已选类型与值配置。 */
+function handleValueTypeChange() {
+  form.value.basicTypeCode = undefined;
+  form.value.businessTypeKey = "";
+  form.value.businessTypeSource = 'PROJECT';clearTypeConfig();
+  nextTick(() =>
+    ruleRef.value?.clearValidate(["basicTypeCode", "businessTypeKey"])
+  );
+}
 
-    /** 清空单位、小数位、格式与枚举等值配置。 */
-    function clearTypeConfig() {
-        Object.assign(form.value, {
-            unit: '',
-            decimalPlaces: 2,
-            format: '',
-            enumType: undefined,
-            enumSource: 'PROJECT'
-        });
-        nextTick(() => ruleRef.value?.clearValidate(['unit', 'decimalPlaces', 'format', 'enumType']));
-    }
+/** 清空单位、小数位、格式与枚举等值配置。 */
+function clearTypeConfig() {
+  Object.assign(form.value, {
+    unit: "",
+    decimalPlaces: 2,
+    format: "",
+    enumType: undefined,
+    enumSource: "PROJECT",
+  });
+  nextTick(() =>
+    ruleRef.value?.clearValidate([
+      "unit",
+      "decimalPlaces",
+      "format",
+      "enumType",
+    ])
+  );
+}
 
-    /** 切换基础数据类型时重置值配置。 */
-    function handleBasicTypeChange() {
-        clearTypeConfig();
-    }
+/** 切换基础数据类型时重置值配置。 */
+function handleBasicTypeChange() {
+  clearTypeConfig();
+}
 
-    /** 切换业务数据类型时重置值配置。 */
-    function handleBusinessTypeChange() {
-        clearTypeConfig();
-    }
+/** 切换业务数据类型时重置值配置。 */
+function handleBusinessTypeChange() {
+  clearTypeConfig();
+}
 
     /** 切换数据范围时清空已选业务数据类型并重置值配置。 */
     function handleBusinessSourceChange() {
@@ -1002,178 +1240,206 @@
         nextTick(() => ruleRef.value?.clearValidate(['businessTypeKey']));
     }
 
-    /** 清空枚举选项并释放加载中状态。 */
-    function resetEnums() {
-        ++enumRequest;
-        enumOptions.value = [];
-        enumsLoading.value = false;
+/** 清空枚举选项并释放加载中状态。 */
+function resetEnums() {
+  ++enumRequest;
+  enumOptions.value = [];
+  enumsLoading.value = false;
+}
+
+/**
+ * 校验公理表达的业务约束（表单规则无法覆盖的部分）。
+ * @returns {string} 错误提示文案，校验通过时为空字符串
+ */
+function validateExpression() {
+  const record = form.value;
+  const typeExists = (id) =>
+    objectTypeOptions.value.some((item) => item.id === id);
+  if (record.type === "DOMAIN_RANGE") {
+    if (record.domainId && record.domainId === record.rangeId)
+      return "Domain 和 Range 不能选择相同的对象类型";
+    if (!record.relationName?.trim()) return "请输入关系名称";
+    if (!typeExists(record.domainId) || !typeExists(record.rangeId)) {
+      return "请选择有效的Domain和Range";
     }
-
-    /**
-     * 校验公理表达的业务约束（表单规则无法覆盖的部分）。
-     * @returns {string} 错误提示文案，校验通过时为空字符串
-     */
-    function validateExpression() {
-        const record = form.value;
-        const typeExists = (id) => objectTypeOptions.value.some((item) => item.id === id);
-        if (record.type === 'DOMAIN_RANGE') {
-            if (record.domainId && record.domainId === record.rangeId) return 'Domain 和 Range 不能选择相同的对象类型';
-            if (!record.relationName?.trim()) return '请输入关系名称';
-            if (!typeExists(record.domainId) || !typeExists(record.rangeId)) {
-                return '请选择有效的Domain和Range';
-            }
-            return '';
-        }
-        if (!typeExists(record.objectTypeId)) return '请选择有效的对象类型';
-        if (record.type !== 'PROPERTY_RANGE') {
-            if (!typeExists(record.otherTypeId) || record.objectTypeId === record.otherTypeId) {
-                return '请选择两个不同的对象类型';
-            }
-            return '';
-        }
-        if (!currentAttributes.value.some((item) => item.id === record.attributeId)) {
-            return '请选择当前对象类型的有效属性';
-        }
-        if (
-            record.typeCategory === 1 &&
-            !basic_data_type.value.some((item) => Number(item.value) === record.basicTypeCode)
-        ) {
-            return '请选择有效的基础数据类型';
-        }
-        if (
-            record.typeCategory === 2 &&
-            !currentBusinessTypes.value.some((item) => item.key === record.businessTypeKey)
-        ) {
-            return '请选择有效的业务数据类型';
-        }
-        return '';
+    return "";
+  }
+  if (!typeExists(record.objectTypeId)) return "请选择有效的对象类型";
+  if (record.type !== "PROPERTY_RANGE") {
+    if (
+      !typeExists(record.otherTypeId) ||
+      record.objectTypeId === record.otherTypeId
+    ) {
+      return "请选择两个不同的对象类型";
     }
+    return "";
+  }
+  if (!currentAttributes.value.some((item) => item.id === record.attributeId)) {
+    return "请选择当前对象类型的有效属性";
+  }
+  if (
+    record.typeCategory === 1 &&
+    !basic_data_type.value.some(
+      (item) => Number(item.value) === record.basicTypeCode
+    )
+  ) {
+    return "请选择有效的基础数据类型";
+  }
+  if (
+    record.typeCategory === 2 &&
+    !currentBusinessTypes.value.some(
+      (item) => item.key === record.businessTypeKey
+    )
+  ) {
+    return "请选择有效的业务数据类型";
+  }
+  return "";
+}
 
-    /**
-     * 按公理类型组装详情弹窗的展示字段。
-     * @param {Object} record 详情记录
-     * @returns {Array<Object>} 展示字段列表
-     */
-    function getDetailFields(record) {
-        if (record.type === 'DOMAIN_RANGE') {
-            return [
-                {
-                    label: '关系',
-                    value: record.relationName
-                },
-                { label: 'Domain', value: objectTypeLabel(record.domainId) },
-                { label: 'Range', value: objectTypeLabel(record.rangeId) }
-            ];
-        }
-        if (record.type === 'PROPERTY_RANGE') {
-            const businessType = findBusinessType(record);
-            const fields = [
-                { label: '对象类型', value: objectTypeLabel(record.objectTypeId) },
-                { label: '对象类型属性', value: attributeLabel(record.objectTypeId, record.attributeId) },
-                { label: '数据类型', value: record.typeCategory === 1 ? '基础数据类型' : '业务数据类型' },
-                {
-                    label: '数据类型',
-                    value:
-                        record.typeCategory === 1
-                            ? proxy.selectDictLabel(basic_data_type.value, record.basicTypeCode)
-                            : businessType?.name || record.businessTypeKey
-                }
-            ];
-            if (record.typeCategory === 2) {
-                fields.push({ label: '基础数据类型', value: basicTypeLabel(resolvedConfig(record).basicTypeCode) });
-                if (businessType?.description)
-                    fields.push({ label: '类型描述', value: businessType.description, multiline: true });
-            }
-            return fields;
-        }
-        return [
-            { label: record.type === 'SUBCLASS' ? '子类型' : '对象类型A', value: objectTypeLabel(record.objectTypeId) },
-            { label: record.type === 'SUBCLASS' ? '父类型' : '对象类型B', value: objectTypeLabel(record.otherTypeId) }
-        ];
+/**
+ * 按公理类型组装详情弹窗的展示字段。
+ * @param {Object} record 详情记录
+ * @returns {Array<Object>} 展示字段列表
+ */
+function getDetailFields(record) {
+  if (record.type === "DOMAIN_RANGE") {
+    return [
+      {
+        label: "关系",
+        value: record.relationName,
+      },
+      { label: "Domain", value: objectTypeLabel(record.domainId) },
+      { label: "Range", value: objectTypeLabel(record.rangeId) },
+    ];
+  }
+  if (record.type === "PROPERTY_RANGE") {
+    const businessType = findBusinessType(record);
+    const fields = [
+      { label: "对象类型", value: objectTypeLabel(record.objectTypeId) },
+      {
+        label: "对象类型属性",
+        value: attributeLabel(record.objectTypeId, record.attributeId),
+      },
+      {
+        label: "数据类型",
+        value: record.typeCategory === 1 ? "基础数据类型" : "业务数据类型",
+      },
+      {
+        label: "数据类型",
+        value:
+          record.typeCategory === 1
+            ? proxy.selectDictLabel(basic_data_type.value, record.basicTypeCode)
+            : businessType?.name || record.businessTypeKey,
+      },
+    ];
+    if (record.typeCategory === 2) {
+      fields.push({
+        label: "基础数据类型",
+        value: basicTypeLabel(resolvedConfig(record).basicTypeCode),
+      });
+      if (businessType?.description)
+        fields.push({
+          label: "类型描述",
+          value: businessType.description,
+          multiline: true,
+        });
     }
+    return fields;
+  }
+  return [
+    {
+      label: record.type === "SUBCLASS" ? "子类型" : "对象类型A",
+      value: objectTypeLabel(record.objectTypeId),
+    },
+    {
+      label: record.type === "SUBCLASS" ? "父类型" : "对象类型B",
+      value: objectTypeLabel(record.otherTypeId),
+    },
+  ];
+}
 
-    // 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
-    watch(versionId, async () => {
-        ++contextRequest;
-        ++dialogRequest;
-        open.value = false;
-        detailOpen.value = false;
-        optionsLoading.value = false;
-        attributeLoadingCount.value = 0;
-        optionsLoadFailed.value = false;
-        resetEnums();
-        objectTypeOptions.value = [];
-        Object.keys(attributeOptions).forEach((key) => delete attributeOptions[key]);
-        businessTypeOptions.value = [];
-        tableStore.params.name = null;
-        tableStore.params.type = null;
-        tableStore.params.level = null;
-        await nextTick();
-        tableRef.value?.resetQuery();
-    });
+// 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
+watch(versionId, async () => {
+  ++contextRequest;
+  ++dialogRequest;
+  open.value = false;
+  detailOpen.value = false;
+  optionsLoading.value = false;
+  attributeLoadingCount.value = 0;
+  optionsLoadFailed.value = false;
+  resetEnums();
+  objectTypeOptions.value = [];
+  Object.keys(attributeOptions).forEach((key) => delete attributeOptions[key]);
+  businessTypeOptions.value = [];
+  tableStore.params.name = null;
+  tableStore.params.type = null;
+  tableStore.params.level = null;
+  await nextTick();
+  tableRef.value?.resetQuery();
+});
 
-    watch(open, (value) => {
-        if (value) return;
-        ++dialogRequest;
-        attributeLoadingCount.value = 0;
-        optionsLoading.value = false;
-        ++enumRequest;
-        enumsLoading.value = false;
-    });
+watch(open, (value) => {
+  if (value) return;
+  ++dialogRequest;
+  attributeLoadingCount.value = 0;
+  optionsLoading.value = false;
+  ++enumRequest;
+  enumsLoading.value = false;
+});
 
-    onBeforeUnmount(() => {
-        ++contextRequest;
-        ++dialogRequest;
-        ++enumRequest;
-    });
+onBeforeUnmount(() => {
+  ++contextRequest;
+  ++dialogRequest;
+  ++enumRequest;
+});
 </script>
 
 <style scoped lang="scss">
-    .model-axiom-page :deep(.el-dialog) {
-        max-width: calc(100vw - 32px);
-    }
+.model-axiom-page :deep(.el-dialog) {
+  max-width: calc(100vw - 32px);
+}
 
-    .rule-form {
-        min-height: 390px;
-    }
+.rule-form {
+  min-height: 390px;
+}
 
-    .rule-form .el-select {
-        width: 100%;
-    }
+.rule-form .el-select {
+  width: 100%;
+}
 
-    /* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
-    .rule-form :deep(.el-form-item.has-tip) {
-        margin-bottom: 25px;
-    }
+/* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
+.rule-form :deep(.el-form-item.has-tip) {
+  margin-bottom: 25px;
+}
 
-    .h2-title {
-        font-size: 16px;
-        color: rgba(0, 0, 0, 0.85);
-        display: flex;
-        align-items: center;
-        font-family: PingFang SC;
-        font-weight: 500;
-        margin: 8px 0;
-    }
-    .h2-title::before {
-        display: inline-block;
-        content: '';
-        width: 6px;
-        height: 16px;
-        border-radius: 3px;
-        background: var(--el-color-primary);
-        margin-right: 8px;
-    }
+.h2-title {
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  font-family: PingFang SC;
+  font-weight: 500;
+  margin: 8px 0;
+}
+.h2-title::before {
+  display: inline-block;
+  content: "";
+  width: 6px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--el-color-primary);
+  margin-right: 8px;
+}
 
-    .character-count :deep(.el-input__count) {
-        background: transparent;
-    }
+.character-count :deep(.el-input__count) {
+  background: transparent;
+}
 
-    .character-count :deep(.el-input__count)::after {
-        content: '个字符';
-    }
+.character-count :deep(.el-input__count)::after {
+  content: "个字符";
+}
 
-    .character-count :deep(.el-textarea__inner) {
-        padding-bottom: 24px;
-    }
+.character-count :deep(.el-textarea__inner) {
+  padding-bottom: 24px;
+}
 </style>

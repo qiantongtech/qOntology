@@ -26,7 +26,12 @@
             </guide-tip-panel>
             <right-toolbar :search="false" :columns="columns" @queryTable="getList" />
         </div>
-        <TargetTable :targets="targets" :columns="columns" @sort-change="handleSortChange" />
+        <TargetTable
+            :targets="targets"
+            :columns="columns"
+            :version-id="versionId"
+            @sort-change="handleSortChange"
+        />
         <pagination
             v-show="total > 0"
             :total="total"
@@ -41,8 +46,11 @@
     import { onBeforeUnmount, reactive, ref, watch } from 'vue';
     import { InfoFilled } from '@element-plus/icons-vue';
     import { pageRelationTargets } from '@/api/om/object/relation';
+    import { useOntologyVersion } from '@/views/om/useOntologyVersion';
     import TargetTable from '../../type/TargetTable.vue';
     const props = defineProps({ relationId: { type: [String, Number], required: true } });
+    // 关联元素需要按当前版本补充对象类型/关系标签，与建设目标列表页保持一致。
+    const { versionId } = useOntologyVersion();
     const targets = ref([]);
     const loading = ref(false);
     const total = ref(0);

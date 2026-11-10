@@ -18,12 +18,17 @@
 
 <template>
   <div ref="pageRef" class="target-relations">
-    <qt-wrap :columns="columns" :table-ref="listActions" :config="{ fullContent: false, searchShadow: false }">
-      <template #search><qt-search-bar
-        :items="searchItems"
-        :params="query"
-        @query="search"
-        @reset="search"
+    <qt-wrap
+      :columns="columns"
+      :table-ref="listActions"
+      :config="{ fullContent: false, searchShadow: false }"
+    >
+      <template #search
+        ><qt-search-bar
+          :items="searchItems"
+          :params="query"
+          @query="search"
+          @reset="search"
       /></template>
       <template #actions-data>
         <el-button
@@ -32,14 +37,17 @@
           plain
           :disabled="saving"
           @click="handleAdd"
-        ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button>
+          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button
+        >
         <el-button
           v-hasPermi="['om:object:relation:remove']"
           type="danger"
           plain
           :disabled="!selectedIds.length || deleting || loading"
           @click="handleDelete()"
-        ><i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除</el-button>
+          ><i class="iconfont-mini icon-shanchu-huise mr5"></i
+          >批量删除</el-button
+        >
       </template>
       <div v-loading="loading">
         <qt-table
@@ -49,13 +57,29 @@
           :events="tableEvents"
           :func="readRows"
         >
-          <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+          <template #text="{ row, column_data }">{{
+            row[column_data.prop]
+          }}</template>
           <!-- 是否可逆接口用 1/0 存储，这里映射为 sys_yes_no 字典值渲染。 -->
           <template #reversible="{ row }">
-            <dict-tag :options="sys_yes_no" :value="reversibleDictValue(row.reversibleFlag)" />
+            <dict-tag
+              :options="sys_yes_no"
+              :value="reversibleDictValue(row.reversibleFlag)"
+            />
           </template>
-          <template #creator="{ row }"><div class="flex-column overflow-hidden"><span class="text-ellipsis" :title="row.createBy">{{ row.createBy }}</span><span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span></div></template>
-          <template #createTime="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
+          <template #creator="{ row }"
+            ><div class="flex-column overflow-hidden">
+              <span class="text-ellipsis" :title="row.createBy">{{
+                row.createBy
+              }}</span
+              ><span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+                creatorPhones[row.creatorId]
+              }}</span>
+            </div></template
+          >
+          <template #createTime="{ row }">{{
+            proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+          }}</template>
           <template #operation="{ row }">
             <el-button
               v-hasPermi="['om:object:relation:query']"
@@ -63,7 +87,8 @@
               type="primary"
               icon="View"
               @click="handleDetail(row)"
-            >详情</el-button>
+              >详情</el-button
+            >
             <el-button
               v-hasPermi="['om:object:relation:edit']"
               link
@@ -71,7 +96,8 @@
               icon="Edit"
               :disabled="saving"
               @click="handleUpdate(row)"
-            >修改</el-button>
+              >修改</el-button
+            >
             <el-button
               v-hasPermi="['om:object:relation:remove']"
               link
@@ -79,7 +105,8 @@
               icon="Delete"
               :disabled="deleting"
               @click="handleDelete(row)"
-            >删除</el-button>
+              >删除</el-button
+            >
           </template>
         </qt-table>
       </div>
@@ -119,12 +146,7 @@
       class="column-form"
       @submit.prevent="submitForm"
     >
-      <div class="h2-titles row-full">基础信息</div>
-      <qt-form-item
-        label="起点类型"
-        prop="startTypeId"
-        class="row-full"
-      >
+      <qt-form-item label="起点类型" prop="startTypeId" class="row-full">
         <el-tree-select
           v-model="form.startTypeId"
           :data="typeOptions"
@@ -135,18 +157,14 @@
           clearable
         />
       </qt-form-item>
-      <qt-form-item
-        label="对象类型关系名称"
-        prop="name"
-        class="row-full"
-      >
-        <el-input v-model="form.name" placeholder="请输入对象类型关系名称，例如：提供、采购物料" :maxlength="128" />
+      <qt-form-item label="对象类型关系名称" prop="name" class="row-full">
+        <el-input
+          v-model="form.name"
+          placeholder="请输入对象类型关系名称，例如：提供、采购物料"
+          :maxlength="128"
+        />
       </qt-form-item>
-      <qt-form-item
-        label="终点类型"
-        prop="endTypeId"
-        class="row-full"
-      >
+      <qt-form-item label="终点类型" prop="endTypeId" class="row-full">
         <el-tree-select
           v-model="form.endTypeId"
           :data="typeOptions"
@@ -157,17 +175,14 @@
           clearable
         />
       </qt-form-item>
-      <qt-form-item
-        label="是否可逆"
-        prop="reversibleFlag"
-        class="row-full"
-      >
+      <qt-form-item label="是否可逆" prop="reversibleFlag" class="row-full">
         <el-radio-group v-model="form.reversibleFlag">
           <el-radio
             v-for="dict in sys_yes_no"
             :key="dict.value"
             :value="dict.value === 'Y' ? 1 : 0"
-          >{{ dict.label }}</el-radio>
+            >{{ dict.label }}</el-radio
+          >
         </el-radio-group>
       </qt-form-item>
       <qt-form-item
@@ -176,13 +191,13 @@
         prop="reverseName"
         class="row-full"
       >
-        <el-input v-model="form.reverseName" placeholder="请输入反向名称，例如：由供应商提供" :maxlength="128" />
+        <el-input
+          v-model="form.reverseName"
+          placeholder="请输入反向名称，例如：由供应商提供"
+          :maxlength="128"
+        />
       </qt-form-item>
-      <qt-form-item
-        label="描述"
-        prop="description"
-        class="row-full"
-      >
+      <qt-form-item label="描述" prop="description" class="row-full">
         <el-input
           v-model="form.description"
           class="character-count"
@@ -197,23 +212,28 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button :disabled="saving" @click="open = false">取 消</el-button>
-        <el-button
-          type="primary"
-
-          :loading="saving"
-          @click="submitForm"
-        >确 定</el-button>
+        <el-button type="primary" :loading="saving" @click="submitForm"
+          >确 定</el-button
+        >
       </div>
     </template>
   </el-dialog>
 </template>
 
 <script setup>
-import { useCreatorPhones } from '@/utils/useCreatorPhones';
-import {computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
-import {useRouter} from 'vue-router';
-import {useOntologyVersion} from '@/views/om/useOntologyVersion';
-import {ElMessage} from 'element-plus';
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
+import {
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  reactive,
+  ref,
+  watch,
+} from "vue";
+import { useRouter } from "vue-router";
+import { useOntologyVersion } from "@/views/om/useOntologyVersion";
+import { ElMessage } from "element-plus";
 import {
   listRelations,
   getRelation,
@@ -222,23 +242,26 @@ import {
   updateRelation,
   delRelation,
   checkRelationDeletable,
-  listRelationTargets
-} from '@/api/om/object/relation';
+  listRelationTargets,
+} from "@/api/om/object/relation";
 
-defineOptions({name: 'OmObjectTypeRelation'});
+defineOptions({ name: "OmObjectTypeRelation" });
 const props = defineProps({
-  versionId: {type: [String, Number], default: undefined},
-  targetDetail: {type: Object, default: () => {}}
+  versionId: { type: [String, Number], default: undefined },
+  targetDetail: { type: Object, default: () => {} },
 });
 const router = useRouter();
-const {versionId, requireVersion} = useOntologyVersion(() => props.versionId);
+const { versionId, requireVersion } = useOntologyVersion(() => props.versionId);
 const { proxy } = getCurrentInstance();
-const { sys_yes_no } = proxy.useDict('sys_yes_no');
+const { sys_yes_no } = proxy.useDict("sys_yes_no");
 /** 将 1/0 可逆标识转换为 sys_yes_no 字典值。 */
-const reversibleDictValue = (value) => (Number(value) === 1 ? 'Y' : 'N');
+const reversibleDictValue = (value) => (Number(value) === 1 ? "Y" : "N");
 // 搜索下拉复用 sys_yes_no 字典，接口用 1/0 标识可逆。
 const reversibleOptions = computed(() =>
-    sys_yes_no.value.map((dict) => ({ label: dict.label, value: dict.value === 'Y' ? 1 : 0 }))
+  sys_yes_no.value.map((dict) => ({
+    label: dict.label,
+    value: dict.value === "Y" ? 1 : 0,
+  }))
 );
 const pageRef = ref();
 const tableRef = ref();
@@ -254,76 +277,180 @@ const appliedReversible = ref();
 const open = ref(false);
 const existingTargetIds = ref([]);
 const typeOptions = ref([]);
-const dialogTitle = ref('新增对象类型关系');
+const dialogTitle = ref("新增对象类型关系");
 
-const appliedName = ref('');
+const appliedName = ref("");
 const columns = reactive([
-  { type: 'selection', width: 55 },
-  { prop: 'id', label: '编号', width: 80, sortable: 'custom' },
-  { prop: 'startTypeName', label: '起点类型', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
-  { prop: 'name', label: '关系名称', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
-  { prop: 'endTypeName', label: '终点类型', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
-  { prop: 'description', label: '描述', slot: 'text', minWidth: 240, align: 'left' },
-  { prop: 'reversibleFlag', label: '是否可逆', slot: 'reversible', width: 100 },
-  { prop: 'reverseName', label: '反向名称', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
-  { prop: 'createBy', label: '创建人', slot: 'creator', width: 130, align: 'left', headerAlign: 'left' },
-  { prop: 'createTime', label: '创建时间', slot: 'createTime', width: 160, sortable: 'custom' },
-  { label: '操作', slot: 'operation', width: 220, minWidth: 220, fixed: 'right' },
+  { type: "selection", width: 55 },
+  { prop: "id", label: "编号", width: 60, sortable: "custom" },
+  {
+    prop: "startTypeName",
+    label: "起点类型",
+    slot: "text",
+    minWidth: 140,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    prop: "name",
+    label: "关系名称",
+    slot: "text",
+    minWidth: 160,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    prop: "endTypeName",
+    label: "终点类型",
+    slot: "text",
+    minWidth: 140,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    prop: "description",
+    label: "描述",
+    slot: "text",
+    minWidth: 240,
+    align: "left",
+  },
+  { prop: "reversibleFlag", label: "是否可逆", slot: "reversible", width: 100 },
+  {
+    prop: "reverseName",
+    label: "反向名称",
+    slot: "text",
+    minWidth: 150,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    prop: "createBy",
+    label: "创建人",
+    slot: "creator",
+    width: 130,
+    align: "left",
+    headerAlign: "left",
+  },
+  {
+    prop: "createTime",
+    label: "创建时间",
+    slot: "createTime",
+    width: 160,
+    sortable: "custom",
+  },
+  {
+    label: "操作",
+    slot: "operation",
+    width: 220,
+    minWidth: 220,
+    fixed: "right",
+  },
 ]);
-const tableConfig = { notPagination: true, sort: true, table: { rowKey: 'id', stripe: true, defaultSort: { prop: 'createTime', order: 'descending' }, onSelectionChange: handleSelectionChange } };
-const tableEvents = { onSortChange: ({ orderByColumn, isAsc }) => handleSortChange({ prop: orderByColumn, order: isAsc }) };
+const tableConfig = {
+  notPagination: true,
+  sort: true,
+  table: {
+    rowKey: "id",
+    stripe: true,
+    defaultSort: { prop: "createTime", order: "descending" },
+    onSelectionChange: handleSelectionChange,
+  },
+};
+const tableEvents = {
+  onSortChange: ({ orderByColumn, isAsc }) =>
+    handleSortChange({ prop: orderByColumn, order: isAsc }),
+};
 const listActions = { getList };
 // searchItems 必须用 reactive 包裹：否则内层的 reversibleOptions 计算属性不会被自动解包，
 // QtSearchBar 遍历 options 时会拿到 Ref 本身而下拉渲染异常（与主菜单 relation/index.vue 保持一致）。
 const searchItems = reactive([
-  { label: '对象类型关系名称', prop: 'name', component: { is: 'input' } },
-  { label: '是否可逆', prop: 'reversibleFlag', component: { is: 'select', options: reversibleOptions } },
+  { label: "对象类型关系名称", prop: "name", component: { is: "input" } },
+  {
+    label: "是否可逆",
+    prop: "reversibleFlag",
+    component: { is: "select", options: reversibleOptions },
+  },
 ]);
 function readRows() {
-  return Promise.resolve({ data: rows.value.map(row => {
-    const record = { ...row };
-    ['name', 'startTypeName', 'endTypeName', 'description', 'reverseName', 'createBy', 'createTime'].forEach(key => { if (record[key] == null || record[key] === '') record[key] = '-'; });
-    return record;
-  }) });
+  return Promise.resolve({
+    data: rows.value.map((row) => {
+      const record = { ...row };
+      [
+        "name",
+        "startTypeName",
+        "endTypeName",
+        "description",
+        "reverseName",
+        "createBy",
+        "createTime",
+      ].forEach((key) => {
+        if (record[key] == null || record[key] === "") record[key] = "-";
+      });
+      return record;
+    }),
+  });
 }
 watch(rows, () => tableRef.value?.getList());
-const treeProps = {label: 'name', value: 'id', children: 'children'};
+const treeProps = { label: "name", value: "id", children: "children" };
 const emptyForm = () => ({
   id: undefined,
   versionId: versionId.value,
-  name: '',
-  description: '',
+  name: "",
+  description: "",
   startTypeId: null,
   endTypeId: null,
   reversibleFlag: 0,
-  reverseName: ''
+  reverseName: "",
 });
 
-const defaultSort = ref({prop: "createTime", order: "descending"});
-const query = reactive({name: '', reversibleFlag: undefined, pageNum: 1, pageSize: 10,
+const defaultSort = ref({ prop: "createTime", order: "descending" });
+const query = reactive({
+  name: "",
+  reversibleFlag: undefined,
+  pageNum: 1,
+  pageSize: 10,
   orderByColumn: defaultSort.value.prop,
-  isAsc: defaultSort.value.order});
+  isAsc: defaultSort.value.order,
+});
 
 const form = ref(emptyForm());
 const rules = {
-  name: [{required: true, whitespace: true, message: '关系名称不能为空', trigger: 'blur'}, {
-    max: 128,
-    message: '关系名称不能超过128个字符',
-    trigger: 'blur'
-  }],
-  startTypeId: [{required: true, message: '请选择起点类型', trigger: 'change'}],
-  endTypeId: [{required: true, message: '请选择终点类型', trigger: 'change'}],
-  reversibleFlag: [{required: true, message: '请选择是否可逆', trigger: 'change'}],
-  reverseName: [{
-    validator: (_rule, value, callback) => {
-      if (form.value.reversibleFlag === 1 && !value?.trim()) {
-        callback(new Error('可逆关系的反向名称不能为空'));
-      } else {
-        callback();
-      }
-    }, trigger: 'blur'
-  }, {max: 128, message: '反向名称不能超过128个字符', trigger: 'blur'}],
-  description: [{max: 256, message: '关系描述不能超过256个字符', trigger: 'blur'}]
+  name: [
+    {
+      required: true,
+      whitespace: true,
+      message: "关系名称不能为空",
+      trigger: "blur",
+    },
+    {
+      max: 128,
+      message: "关系名称不能超过128个字符",
+      trigger: "blur",
+    },
+  ],
+  startTypeId: [
+    { required: true, message: "请选择起点类型", trigger: "change" },
+  ],
+  endTypeId: [{ required: true, message: "请选择终点类型", trigger: "change" }],
+  reversibleFlag: [
+    { required: true, message: "请选择是否可逆", trigger: "change" },
+  ],
+  reverseName: [
+    {
+      validator: (_rule, value, callback) => {
+        if (form.value.reversibleFlag === 1 && !value?.trim()) {
+          callback(new Error("可逆关系的反向名称不能为空"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur",
+    },
+    { max: 128, message: "反向名称不能超过128个字符", trigger: "blur" },
+  ],
+  description: [
+    { max: 256, message: "关系描述不能超过256个字符", trigger: "blur" },
+  ],
 };
 let listRequest = 0;
 let dialogRequest = 0;
@@ -331,7 +458,12 @@ let contextRequest = 0;
 
 async function getList() {
   const request = ++listRequest;
-  if (!versionId.value || !props.targetDetail?.id) { rows.value = []; total.value = 0; loading.value = false; return; }
+  if (!versionId.value || !props.targetDetail?.id) {
+    rows.value = [];
+    total.value = 0;
+    loading.value = false;
+    return;
+  }
   loading.value = true;
   try {
     query.versionId = versionId.value;
@@ -362,7 +494,7 @@ function search() {
 }
 
 function handleSelectionChange(selection) {
-  selectedIds.value = selection.map(row => row.id);
+  selectedIds.value = selection.map((row) => row.id);
 }
 
 async function handleAdd() {
@@ -370,10 +502,10 @@ async function handleAdd() {
   const request = ++dialogRequest;
   const response = await listRelationTypes(versionId.value);
   if (request !== dialogRequest) return;
-  typeOptions.value = proxy.handleTree(response.data || [], 'id', 'parentId');
+  typeOptions.value = proxy.handleTree(response.data || [], "id", "parentId");
   form.value = emptyForm();
   existingTargetIds.value = [];
-  dialogTitle.value = '新增对象类型关系';
+  dialogTitle.value = "新增对象类型关系";
   open.value = true;
   nextTick(() => relationRef.value?.clearValidate());
 }
@@ -381,21 +513,29 @@ async function handleAdd() {
 async function handleUpdate(row) {
   const request = ++dialogRequest;
   const [response, options, targetsResponse] = await Promise.all([
-    getRelation(row.id), listRelationTypes(versionId.value), listRelationTargets(row.id)
+    getRelation(row.id),
+    listRelationTypes(versionId.value),
+    listRelationTargets(row.id),
   ]);
   if (request !== dialogRequest) return;
-  typeOptions.value = proxy.handleTree(options.data || [], 'id', 'parentId');
-  form.value = {...emptyForm(), ...response.data, reversibleFlag: Number(response.data.reversibleFlag)};
-  existingTargetIds.value = (targetsResponse.data || []).map(target => String(target.id));
-  dialogTitle.value = '修改对象类型关系';
+  typeOptions.value = proxy.handleTree(options.data || [], "id", "parentId");
+  form.value = {
+    ...emptyForm(),
+    ...response.data,
+    reversibleFlag: Number(response.data.reversibleFlag),
+  };
+  existingTargetIds.value = (targetsResponse.data || []).map((target) =>
+    String(target.id)
+  );
+  dialogTitle.value = "修改对象类型关系";
   open.value = true;
   nextTick(() => relationRef.value?.clearValidate());
 }
 
 function handleDetail(row) {
   return router.push({
-    name: 'OmObjectTypeRelationDetail',
-    params: {id: String(row.id), versionId: versionId.value}
+    name: "OmObjectTypeRelationDetail",
+    params: { id: String(row.id), versionId: versionId.value },
   });
 }
 
@@ -405,26 +545,36 @@ async function submitForm() {
   const submittingVersion = versionId.value;
   const request = dialogRequest;
   const valid = await relationRef.value.validate().catch(() => false);
-  if (!valid || saving.value || !open.value || request !== dialogRequest
-      || submittingVersion !== versionId.value || targetId !== props.targetDetail?.id) return;
+  if (
+    !valid ||
+    saving.value ||
+    !open.value ||
+    request !== dialogRequest ||
+    submittingVersion !== versionId.value ||
+    targetId !== props.targetDetail?.id
+  )
+    return;
   const context = contextRequest;
   ++dialogRequest;
   const data = {
     id: form.value.id,
     versionId: submittingVersion,
     name: form.value.name.trim(),
-    description: (form.value.description || '').trim(),
+    description: (form.value.description || "").trim(),
     startTypeId: form.value.startTypeId,
     endTypeId: form.value.endTypeId,
     reversibleFlag: form.value.reversibleFlag,
-    reverseName: form.value.reversibleFlag === 1 ? (form.value.reverseName || '').trim() : '',
-    targetIds: [...new Set([String(targetId), ...existingTargetIds.value])]
+    reverseName:
+      form.value.reversibleFlag === 1
+        ? (form.value.reverseName || "").trim()
+        : "",
+    targetIds: [...new Set([String(targetId), ...existingTargetIds.value])],
   };
   saving.value = true;
   try {
     await (data.id ? updateRelation(data) : addRelation(data));
     if (context !== contextRequest) return;
-    ElMessage.success(data.id ? '修改成功' : '新增成功');
+    ElMessage.success(data.id ? "修改成功" : "新增成功");
     open.value = false;
     await getList();
   } finally {
@@ -487,7 +637,8 @@ async function handleDelete(row) {
     const cannotDeleteCount = ids.length - deletableIds.length;
     try {
       await proxy.$modal.confirm(
-        `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`);
+        `可删除${deletableIds.length}个，不可删除${cannotDeleteCount}个，是否删除可删部分？`
+      );
     } catch {
       return;
     }
@@ -498,28 +649,32 @@ async function handleDelete(row) {
   try {
     await delRelation(deletableIds);
     if (context !== contextRequest) return;
-    ElMessage.success('删除成功');
+    ElMessage.success("删除成功");
     await getList();
   } finally {
     deleting.value = false;
   }
 }
 
-watch(() => [versionId.value, props.targetDetail?.id], () => {
-  ++contextRequest;
-  ++dialogRequest;
-  open.value = false;
-  existingTargetIds.value = [];
-  query.name = '';
-  appliedName.value = '';
-  query.reversibleFlag = undefined;
-  appliedReversible.value = undefined;
-  query.pageNum = 1;
-  rows.value = [];
-  selectedIds.value = [];
-  total.value = 0;
-  getList();
-}, {immediate: true});
+watch(
+  () => [versionId.value, props.targetDetail?.id],
+  () => {
+    ++contextRequest;
+    ++dialogRequest;
+    open.value = false;
+    existingTargetIds.value = [];
+    query.name = "";
+    appliedName.value = "";
+    query.reversibleFlag = undefined;
+    appliedReversible.value = undefined;
+    query.pageNum = 1;
+    rows.value = [];
+    selectedIds.value = [];
+    total.value = 0;
+    getList();
+  },
+  { immediate: true }
+);
 onBeforeUnmount(() => {
   ++contextRequest;
   ++dialogRequest;
@@ -528,14 +683,21 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
-.target-relations :deep(.qt-wrap--search) { padding: 0; }
-.relation-actions .el-button + .el-button { margin-left: 0; }
-.target-table { margin: 0 0 10px 120px; }
-.object-type-relation-page :deep(.el-dialog) { max-width: calc(100vw - 32px); }
+.target-relations :deep(.qt-wrap--search) {
+  padding: 0;
+}
+.relation-actions .el-button + .el-button {
+  margin-left: 0;
+}
+.target-table {
+  margin: 0 0 10px 120px;
+}
+.object-type-relation-page :deep(.el-dialog) {
+  max-width: calc(100vw - 32px);
+}
 @media (max-width: 600px) {
 }
 .character-count :deep(.el-input__count) {
   background: transparent;
 }
-
 </style>

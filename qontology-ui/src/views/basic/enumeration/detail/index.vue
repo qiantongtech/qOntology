@@ -42,8 +42,7 @@
     <div
       v-if="
         detail.enumId != null &&
-          (auth.hasPermi(permissions.data) ||
-            auth.hasPermi(permissions.dataType))
+        (auth.hasPermi(permissions.data) || auth.hasPermi(permissions.dataType))
       "
       class="pagecont-bottom"
     >
@@ -79,7 +78,14 @@
 
 <script setup name="BasicEnumDetail">
 import { toEnumStatusOptions } from "@/utils/enumStatus";
-import { computed, defineAsyncComponent, getCurrentInstance, onBeforeUnmount, ref, watch } from "vue";
+import {
+  computed,
+  defineAsyncComponent,
+  getCurrentInstance,
+  onBeforeUnmount,
+  ref,
+  watch,
+} from "vue";
 import { useRoute } from "vue-router";
 import { getType as getGlobalType } from "@/api/basic/enumeration/type";
 import { listData as listGlobalData } from "@/api/basic/enumeration/data";
@@ -98,10 +104,18 @@ const props = defineProps({
 });
 const isProject = computed(() => props.scope === "project");
 const { versionId } = useOntologyVersion();
-const ProjectEnumData = defineAsyncComponent(() => import("@/views/om/semantic/enum/data/index.vue"));
-const ProjectBusinessDataTypes = defineAsyncComponent(() => import("@/views/om/semantic/dataType/index.vue"));
-const EnumData = computed(() => isProject.value ? ProjectEnumData : GlobalEnumData);
-const BusinessDataTypes = computed(() => isProject.value ? ProjectBusinessDataTypes : GlobalBusinessDataTypes);
+const ProjectEnumData = defineAsyncComponent(() =>
+  import("@/views/om/semantic/enum/data/index.vue")
+);
+const ProjectBusinessDataTypes = defineAsyncComponent(() =>
+  import("@/views/om/semantic/dataType/index.vue")
+);
+const EnumData = computed(() =>
+  isProject.value ? ProjectEnumData : GlobalEnumData
+);
+const BusinessDataTypes = computed(() =>
+  isProject.value ? ProjectBusinessDataTypes : GlobalBusinessDataTypes
+);
 const permissions = computed(() => ({
   data: `${isProject.value ? "om" : "basic"}:enumeration:data:list`,
   dataType: `${isProject.value ? "om" : "basic"}:dataType:datatype:list`,
@@ -110,12 +124,16 @@ function getType(enumId) {
   return isProject.value ? getProjectType(enumId) : getGlobalType(enumId);
 }
 function listData(params) {
-  return isProject.value ? listProjectData({ ...params, versionId: versionId.value }) : listGlobalData(params);
+  return isProject.value
+    ? listProjectData({ ...params, versionId: versionId.value })
+    : listGlobalData(params);
 }
 
 const { proxy } = getCurrentInstance();
 const { project_status } = proxy.useDict("project_status");
-const enumStatusOptions = computed(() => toEnumStatusOptions(project_status.value));
+const enumStatusOptions = computed(() =>
+  toEnumStatusOptions(project_status.value)
+);
 const route = useRoute();
 const { creatorPhones } = useCreatorPhones();
 const detail = ref({});
@@ -127,10 +145,26 @@ const detailItems = computed(() => [
   { label: "枚举名称", key: "enumName" },
   { label: "枚举类型", key: "enumType" },
   { label: "枚举数据数", key: "enumDataCount" },
-  { label: "描述", key: "description", span: 24, className: "mt2 mb2", formatter: (value) => value?.trim() || "-" },
+  {
+    label: "描述",
+    key: "description",
+    span: 24,
+    className: "mt2 mb2",
+    formatter: (value) => value?.trim() || "-",
+  },
   { label: "创建人", key: "createBy", formatter: formatCreator },
-  { label: "创建时间", key: "createTime", type: "time" },
-  { label: "更新时间", key: "updateTime", type: "time" },
+  {
+    label: "创建时间",
+    key: "createTime",
+    type: "time",
+    formatter: (d) => proxy.parseTime(d.createTime, "{y}-{m}-{d} {h}:{i}"),
+  },
+  {
+    label: "更新时间",
+    key: "updateTime",
+    type: "time",
+    formatter: (d) => proxy.parseTime(d.updateTime, "{y}-{m}-{d} {h}:{i}"),
+  },
 ]);
 /** 复用用户电话关联结果，创建人与联系电话用斜杠分隔，未维护电话时仅显示姓名。 */
 function formatCreator(name, record) {
@@ -159,7 +193,11 @@ watch(
       const response = await getType(enumId);
       // 仅采纳当前枚举的最新详情响应，忽略切换前仍未完成的请求。
       if (request !== requestVersion) return;
-      if (isProject.value && response.data && String(response.data.versionId) !== String(versionId.value)) {
+      if (
+        isProject.value &&
+        response.data &&
+        String(response.data.versionId) !== String(versionId.value)
+      ) {
         emptyMessage.value = "枚举不属于当前项目版本";
         return;
       }
@@ -190,8 +228,7 @@ async function loadDataCount() {
   const request = ++countRequest;
   const version = requestVersion;
   // 缺少关联键或列表权限时不请求数据接口，避免无效查询及权限错误。
-  if (!detail.value.enumType || !auth.hasPermi(permissions.value.data))
-    return;
+  if (!detail.value.enumType || !auth.hasPermi(permissions.value.data)) return;
   try {
     // 单独查询未筛选的总数，避免标签或状态筛选影响详情概要。
     const response = await listData({
@@ -218,7 +255,9 @@ onBeforeUnmount(() => {
 /** 关闭当前详情页签，并返回固定的枚举列表入口。 */
 function handleReturn() {
   proxy.$tab.closeOpenPage({
-    path: isProject.value ? `/om/${versionId.value}/semantic/omEnum` : "/basic/basicEnum",
+    path: isProject.value
+      ? `/om/${versionId.value}/semantic/omEnum`
+      : "/basic/basicEnum",
   });
 }
 </script>
