@@ -175,9 +175,7 @@
         </span>
       </template>
       <el-form ref="dataTypeRef" :model="form" label-width="100px">
-        <el-form-item label="状态" prop="status">
-          <dict-tag :options="project_status" :value="form.status" />
-        </el-form-item>
+
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="业务数据名称" prop="name">
@@ -186,6 +184,12 @@
               </div>
             </el-form-item>
           </el-col>
+          <el-col :span="24">
+            <el-form-item label="状态" prop="status">
+              <dict-tag :options="project_status" :value="form.status" />
+            </el-form-item>
+          </el-col>
+
           <el-col :span="24">
             <el-form-item label="业务数据类型" prop="dataType">
               <dict-tag
@@ -477,6 +481,7 @@ const tableStore = reactive({
       label: "创建时间",
       prop: "createTime",
       slot: "createTime",
+      align: "center",
       width: 160,
       sortable: true,
     },

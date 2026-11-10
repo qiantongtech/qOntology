@@ -18,204 +18,198 @@
 
 <template>
   <div
-    ref="pageRef"
-    v-loading="!contextReady"
-    class="enum-page"
-    :class="embedded ? 'enum-data-embedded' : 'app-container'"
+      ref="pageRef"
+      v-loading="!contextReady"
+      class="enum-page"
+      :class="embedded ? 'enum-data-embedded' : 'app-container'"
   >
     <!-- 两种入口共用标准列表组件，详情内嵌时不重复显示整页卡片和搜索阴影。 -->
     <qt-wrap
-      :columns="tableStore.columns"
-      :table-ref="tableRef"
-      :config="{ fullContent: !embedded, searchShadow: !embedded }"
+        :columns="tableStore.columns"
+        :table-ref="tableRef"
+        :config="{ fullContent: !embedded, searchShadow: !embedded }"
     >
       <template #search>
         <qt-search-bar
-          :items="searchStore.items"
-          :params="tableStore.params"
-          :table-ref="tableRef"
-          :config="{ collapsedCount: 4 }"
-          @query="applyFilters"
-          @reset="applyFilters"
+            :items="searchStore.items"
+            :params="tableStore.params"
+            :table-ref="tableRef"
+            :config="{ collapsedCount: 4 }"
+            @query="applyFilters"
+            @reset="applyFilters"
         />
       </template>
       <template #actions-data>
         <el-button
-          v-hasPermi="['om:enumeration:data:add']"
-          type="primary"
-          plain
-          :disabled="!defaultEnumType || !contextReady"
-          @click="handleAdd"
-          ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button
-        >
+            v-hasPermi="['om:enumeration:data:add']"
+            type="primary"
+            plain
+            :disabled="!defaultEnumType || !contextReady"
+            @click="handleAdd"
+        ><i class="iconfont-mini icon-xinzeng mr5"></i>新增</el-button>
         <el-button
-          v-hasPermi="['om:enumeration:data:remove']"
-          type="danger"
-          plain
-          :disabled="multiple || deleting"
-          @click="handleDelete()"
-          ><i class="iconfont-mini icon-shanchu-huise mr5"></i
-          >批量删除</el-button
-        >
+            v-hasPermi="['om:enumeration:data:remove']"
+            type="danger"
+            plain
+            :disabled="multiple || deleting"
+            @click="handleDelete()"
+        ><i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除</el-button>
         <el-button
-          v-if="!embedded && route.params.enumId"
-          type="warning"
-          plain
-          icon="Close"
-          @click="handleClose"
-          >关闭</el-button
-        >
+            v-if="!embedded && route.params.enumId"
+            type="warning"
+            plain
+            icon="Close"
+            @click="handleClose"
+        >关闭</el-button>
       </template>
       <!-- 路由入口先解析枚举编码，再挂载表格；切换上下文时重建实例，隔离旧列表响应。 -->
       <qt-table
-        v-if="contextReady"
-        :key="defaultEnumType"
-        v-bind="tableStore"
-        ref="tableRef"
+          v-if="contextReady"
+          :key="defaultEnumType"
+          v-bind="tableStore"
+          ref="tableRef"
       >
         <template #text="{ row, column_data }">{{
-          row[column_data.prop] || "-"
-        }}</template>
+            row[column_data.prop] || "-"
+          }}</template>
         <!-- 与枚举类型列表一致：创建人下方展示联系电话，未维护电话时只显示姓名。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
             <span class="text-ellipsis" :title="row.createBy || ''">{{
-              row.createBy || "—"
-            }}</span>
+                row.createBy || "—"
+              }}</span>
             <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
-              creatorPhones[row.creatorId]
-            }}</span>
+                creatorPhones[row.creatorId]
+              }}</span>
           </div>
         </template>
         <!-- 与枚举类型列表一致：正常/停用用开关表示，未取得的空状态仍显示占位符。 -->
         <template #status="{ row }">
           <el-switch
-            v-if="row.status === '0' || row.status === '1'"
-            v-model="row.status"
-            active-color="#13ce66"
-            inactive-color="#ff4949"
-            active-value="0"
-            inactive-value="1"
-            @change="(e) => handleStatusChange(row, e)"
+              v-if="row.status === '0' || row.status === '1'"
+              v-model="row.status"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+              active-value="0"
+              inactive-value="1"
+              @change="(e) => handleStatusChange(row, e)"
           />
           <span v-else>—</span>
         </template>
         <template #createTime="{ row }">
           {{
             row.createTime === "-"
-              ? "-"
-              : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+                ? "-"
+                : parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
           }}
         </template>
         <template #handle="{ row }">
           <el-button
-            v-hasPermi="['om:enumeration:data:query']"
-            link
-            type="primary"
-            icon="View"
-            @click="handleDetail(row)"
-            >详情</el-button
-          >
+              v-hasPermi="['om:enumeration:data:query']"
+              link
+              type="primary"
+              icon="View"
+              @click="handleDetail(row)"
+          >详情</el-button>
           <el-button
-            v-if="auth.hasPermi('om:enumeration:data:edit')"
-            link
-            type="primary"
-            icon="Edit"
-            :disabled="row.status === '0'"
-            @click="handleUpdate(row)"
-            >修改</el-button
-          >
+              v-if="auth.hasPermi('om:enumeration:data:edit')"
+              link
+              type="primary"
+              icon="Edit"
+              :disabled="row.status === '0'"
+              @click="handleUpdate(row)"
+          >修改</el-button>
           <el-button
-            v-if="auth.hasPermi('om:enumeration:data:remove')"
-            link
-            type="danger"
-            icon="Delete"
-            :disabled="deleting || row.status === '0'"
-            @click="handleDelete(row)"
-            >删除</el-button
-          >
+              v-if="auth.hasPermi('om:enumeration:data:remove')"
+              link
+              type="danger"
+              icon="Delete"
+              :disabled="deleting || row.status === '0'"
+              @click="handleDelete(row)"
+          >删除</el-button>
         </template>
       </qt-table>
     </qt-wrap>
     <el-dialog
-      v-model="open"
-      :title="title"
-      width="800px"
-      :append-to="pageRef"
-      :close-on-click-modal="!saving"
-      :close-on-press-escape="!saving"
-      :before-close="handleBeforeClose"
-      draggable
-      @closed="clearValidation"
+        v-model="open"
+        :title="title"
+        width="800px"
+        :append-to="pageRef"
+        :close-on-click-modal="!saving"
+        :close-on-press-escape="!saving"
+        :before-close="handleBeforeClose"
+        draggable
+        @closed="clearValidation"
     >
       <guide-tip-panel
-        type="hint"
-        class="mb15"
-        allow-wrap
-        title="维护当前枚举类型下的候选项，定义展示标签与存储键值，为业务数据类型和属性提供可选取值。"
+          type="hint"
+          class="mb15"
+          allow-wrap
+          title="维护当前枚举类型下的候选项，定义展示标签与存储键值，为业务数据类型和属性提供可选取值。"
       />
       <el-form
-        ref="dataRef"
-        :model="form"
-        :rules="rules"
-        label-width="90px"
-        class="column-form"
-        @submit.prevent="submitForm"
+          ref="dataRef"
+          :model="form"
+          :rules="rules"
+          label-width="90px"
+          class="column-form"
+          @submit.prevent="submitForm"
       >
-        <qt-form-item class="row-full" label="枚举类型">
+        <qt-form-item class="row-full" label="枚举类型" >
           <el-input v-model="form.enumType" disabled />
         </qt-form-item>
-        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel">
+        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel" >
           <el-input
-            v-model="form.enumLabel"
-            placeholder="请输入枚举标签"
-            :maxlength="128"
+              v-model="form.enumLabel"
+              placeholder="请输入枚举标签"
+              :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="枚举键值" prop="enumValue">
+        <qt-form-item class="row-full" label="枚举键值" prop="enumValue" >
           <el-input
-            v-model="form.enumValue"
-            placeholder="请输入枚举键值"
-            :maxlength="128"
+              v-model="form.enumValue"
+              placeholder="请输入枚举键值"
+              :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="排序" prop="enumSort">
+        <qt-form-item class="row-full" label="排序" prop="enumSort" >
           <el-input-number
-            v-model="form.enumSort"
-            :min="0"
-            :max="2147483647"
-            :precision="0"
-            controls-position="right"
+              v-model="form.enumSort"
+              :min="0"
+              :max="2147483647"
+              :precision="0"
+              controls-position="right"
           />
         </qt-form-item>
         <qt-form-item class="row-full" label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio
-              v-for="dict in sys_normal_disable"
-              :key="dict.value"
-              :label="dict.value"
-              >{{ dict.label }}
+                v-for="dict in sys_normal_disable"
+                :key="dict.value"
+                :label="dict.value"
+            >{{ dict.label }}
             </el-radio>
           </el-radio-group>
         </qt-form-item>
         <qt-form-item class="row-full" label="描述" prop="description">
           <el-input
-            v-model="form.description"
-            type="textarea"
-            :rows="3"
-            maxlength="256个字符"
-            show-word-limit
-            placeholder="请输入描述"
+              v-model="form.description"
+
+              type="textarea"
+              :rows="3"
+              maxlength="256个字符"
+              show-word-limit
+              placeholder="请输入描述"
           />
         </qt-form-item>
         <qt-form-item class="row-full" label="备注" prop="remark">
           <el-input
-            v-model="form.remark"
-            type="textarea"
-            :rows="3"
-            maxlength="256个字符"
-            show-word-limit
-            placeholder="请输入备注"
+              v-model="form.remark"
+              type="textarea"
+              :rows="3"
+              maxlength="256个字符"
+              show-word-limit
+              placeholder="请输入备注"
           />
         </qt-form-item>
       </el-form>
@@ -227,22 +221,19 @@
       </template>
     </el-dialog>
     <el-dialog
-      v-model="openDetail"
-      class="enum-detail-dialog"
-      title="枚举数据详情"
-      width="800px"
-      :append-to="pageRef"
-      draggable
+        v-model="openDetail"
+        class="enum-detail-dialog"
+        title="枚举数据详情"
+        width="800px"
+        :append-to="pageRef"
+        draggable
     >
       <el-form
-        :model="detail"
-        label-width="90px"
-        label-position="right"
-        class="enum-detail-form column-form"
+          :model="detail"
+          label-width="90px"
+          label-position="right"
+          class="enum-detail-form column-form"
       >
-        <el-form-item class="row-full" label="编号">
-          <div class="form-readonly">{{ detail.enumCode }}</div>
-        </el-form-item>
         <el-form-item class="row-full" label="枚举类型">
           <div class="form-readonly">{{ detail.enumType }}</div>
         </el-form-item>
@@ -260,9 +251,7 @@
         </el-form-item>
         <!-- 与列表一致：创建人姓名后拼接联系电话，未维护电话时只显示姓名。 -->
         <el-form-item class="row-full" label="描述">
-          <div class="form-readonly textarea">
-            {{ detail.description || "-" }}
-          </div>
+          <div class="form-readonly textarea">{{ detail.description || "-" }}</div>
         </el-form-item>
         <el-form-item class="row-full" label="备注">
           <div class="form-readonly textarea">{{ detail.remark || "-" }}</div>
@@ -275,9 +264,7 @@
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
-            {{
-              proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-            }}
+            {{parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
           </div>
         </el-form-item>
       </el-form>
@@ -310,6 +297,7 @@ import {
 import { getType } from "@/api/basic/enumeration/type";
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
+import {parseTime} from "@/utils/anivia";
 
 // 传入 enumType 时作为详情页内嵌列表使用；未传入时沿用独立页面的路由加载逻辑。
 const props = defineProps({
@@ -320,7 +308,7 @@ const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
-const { creatorPhones, getPhoneNum } = useCreatorPhones();
+const { creatorPhones ,getPhoneNum} = useCreatorPhones();
 const route = useRoute();
 const pageRef = ref();
 const tableRef = ref();
@@ -460,9 +448,7 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
-    description: [
-      { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
-    ],
+    description: [{ max: 256, message: "描述不能超过256个字符", trigger: "blur" }],
     remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });
@@ -497,8 +483,8 @@ function loadEnumData(params) {
 /** 统一公共表格和插槽的空值占位符，保留枚举键值与排序值中的数值零。 */
 function formatListData(rows) {
   const fields = tableStore.columns
-    .map((column) => column.prop)
-    .filter(Boolean);
+      .map((column) => column.prop)
+      .filter(Boolean);
   return rows.map((row) => {
     const record = { ...row };
     fields.forEach((field) => {
@@ -556,29 +542,29 @@ function handleStatusChange(row, status) {
   const text = status === "0" ? "启用" : "停用";
   const previous = status === "0" ? "1" : "0";
   proxy.$modal
-    .confirm('确认要"' + text + '","' + row.enumLabel + '"枚举数据吗？')
-    .then(() => getData(row.enumCode))
-    .then(function (response) {
-      if (!response.data) throw new Error("记录已不存在，请刷新");
-      // 修改接口要求标签、键值、排序、类型及状态必填，故基于最新记录仅替换状态；
-      // 排序为空时回退为默认值 0，避免历史空值让开关无法切换。
-      return updateData({
-        enumCode: response.data.enumCode,
-        enumLabel: response.data.enumLabel,
-        enumValue: response.data.enumValue,
-        enumSort: response.data.enumSort ?? 0,
-        enumType: defaultEnumType.value || response.data.enumType,
-        status: status,
-        description: response.data.description || "",
-        remark: response.data.remark || "",
+      .confirm('确认要"' + text + '","' + row.enumLabel + '"枚举数据吗？')
+      .then(() => getData(row.enumCode))
+      .then(function (response) {
+        if (!response.data) throw new Error("记录已不存在，请刷新");
+        // 修改接口要求标签、键值、排序、类型及状态必填，故基于最新记录仅替换状态；
+        // 排序为空时回退为默认值 0，避免历史空值让开关无法切换。
+        return updateData({
+          enumCode: response.data.enumCode,
+          enumLabel: response.data.enumLabel,
+          enumValue: response.data.enumValue,
+          enumSort: response.data.enumSort ?? 0,
+          enumType: defaultEnumType.value || response.data.enumType,
+          status: status,
+          description: response.data.description || "",
+          remark: response.data.remark || "",
+        });
+      })
+      .then(() => {
+        proxy.$modal.msgSuccess("操作成功");
+      })
+      .catch(function () {
+        row.status = previous;
       });
-    })
-    .then(() => {
-      proxy.$modal.msgSuccess("操作成功");
-    })
-    .catch(function () {
-      row.status = previous;
-    });
 }
 
 /** 同步当前选中的枚举数据编码，并控制批量删除按钮状态。 */
@@ -653,7 +639,7 @@ async function submitForm() {
     }
     emit("dataChange");
     proxy.$modal.msgSuccess(
-      form.value.enumCode != null ? "修改成功" : "新增成功"
+        form.value.enumCode != null ? "修改成功" : "新增成功"
     );
     open.value = false;
     getList();
@@ -671,7 +657,7 @@ async function handleDelete(row) {
     if (!recordIds.length || deleting.value) return;
     try {
       await proxy.$modal.confirm(
-        '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
+          '是否确认删除枚举编码为"' + recordIds.join(",") + '"的数据项？'
       );
     } catch {
       return;
@@ -699,7 +685,7 @@ async function handleDelete(row) {
   const recordIds = deletableRows.map((item) => item.enumCode);
   try {
     await proxy.$modal.confirm(
-      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+        `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
     );
   } catch {
     return;
@@ -729,43 +715,43 @@ function handleClose() {
 let typeRequest = 0;
 /** 解析内嵌参数或独立页面路由的枚举编码，切换时重置列表、筛选和弹窗上下文。 */
 watch(
-  () => [props.enumType, embedded.value ? undefined : route.params.enumId],
-  async ([enumType, enumId]) => {
-    ++contextRequest;
-    const request = ++typeRequest;
-    ++detailRequest;
-    contextReady.value = false;
-    defaultEnumType.value = "";
-    open.value = false;
-    openDetail.value = false;
-    handleSelectionChange([]);
-    tableStore.params.enumLabel = "";
-    tableStore.params.status = "";
-    appliedFilters.enumLabel = "";
-    appliedFilters.status = "";
-    // 等待旧表格卸载，即使新旧入口解析出相同编码，也重新建立分页和请求上下文。
-    await nextTick();
-    if (request !== typeRequest) return;
-    try {
-      if (enumType !== undefined) {
-        // 详情页已取得枚举编码，直接复用，避免重复加载类型详情及全量选项。
-        defaultEnumType.value = enumType;
-      } else if (enumId) {
-        const response = await getType(enumId);
-        if (request !== typeRequest) return;
-        if (!response.data) {
-          proxy.$modal.msgWarning("枚举类型已不存在");
-          return;
+    () => [props.enumType, embedded.value ? undefined : route.params.enumId],
+    async ([enumType, enumId]) => {
+      ++contextRequest;
+      const request = ++typeRequest;
+      ++detailRequest;
+      contextReady.value = false;
+      defaultEnumType.value = "";
+      open.value = false;
+      openDetail.value = false;
+      handleSelectionChange([]);
+      tableStore.params.enumLabel = "";
+      tableStore.params.status = "";
+      appliedFilters.enumLabel = "";
+      appliedFilters.status = "";
+      // 等待旧表格卸载，即使新旧入口解析出相同编码，也重新建立分页和请求上下文。
+      await nextTick();
+      if (request !== typeRequest) return;
+      try {
+        if (enumType !== undefined) {
+          // 详情页已取得枚举编码，直接复用，避免重复加载类型详情及全量选项。
+          defaultEnumType.value = enumType;
+        } else if (enumId) {
+          const response = await getType(enumId);
+          if (request !== typeRequest) return;
+          if (!response.data) {
+            proxy.$modal.msgWarning("枚举类型已不存在");
+            return;
+          }
+          defaultEnumType.value = response.data.enumType;
         }
-        defaultEnumType.value = response.data.enumType;
+      } catch {
+        // 错误由全局请求层提示；保持空编码，避免失败后继续展示上一个枚举的数据。
+      } finally {
+        if (request === typeRequest) contextReady.value = true;
       }
-    } catch {
-      // 错误由全局请求层提示；保持空编码，避免失败后继续展示上一个枚举的数据。
-    } finally {
-      if (request === typeRequest) contextReady.value = true;
-    }
-  },
-  { immediate: true }
+    },
+    { immediate: true }
 );
 
 // 页面离开后使类型加载、删除确认及弹窗详情请求失效。
@@ -825,13 +811,6 @@ onBeforeUnmount(() => {
   border-top: 1px solid #f1f1f1;
 }
 
-.enum-page :deep(.enum-detail-dialog .el-dialog__footer .el-button) {
-  min-width: 56px;
-  height: 32px;
-  padding: 8px 12px;
-  font-size: 12px;
-}
-
 @media (max-width: 768px) {
   .enum-page :deep(.enum-detail-dialog .el-dialog__body) {
     padding: 20px 16px !important;
@@ -840,12 +819,6 @@ onBeforeUnmount(() => {
 
 .enum-page :deep(.el-dialog) {
   max-width: calc(100vw - 32px);
-}
-
-.enum-page :deep(.el-dialog__footer .el-button) {
-  min-width: 56px;
-  height: 32px;
-  padding: 8px 12px;
 }
 
 .character-count :deep(.el-input__count)::after {

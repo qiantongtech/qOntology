@@ -82,7 +82,6 @@
         <!-- 状态列：独立页用开关交互，嵌入详情页时只读展示。 -->
         <template #status="{ row }">
           <el-switch
-            v-if="!props.embedded"
             v-model="row.status"
             :active-value="1"
             :inactive-value="0"
@@ -94,7 +93,6 @@
             :aria-label="`${row.version}状态`"
             @change="(value) => handleStatusChange(row, value)"
           />
-          <dict-tag v-else :options="project_status" :value="row.status" />
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -278,7 +276,7 @@
         </el-form-item>
         <el-form-item label="创建时间" prop="createTime">
           <div class="form-readonly">
-            {{ form.createTime }}
+            {{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
           </div>
         </el-form-item>
       </el-form>
@@ -312,7 +310,7 @@ const props = defineProps({
 });
 
 const { proxy } = getCurrentInstance();
-const { creatorPhones, formatCreator } = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const { project_status } = proxy.useDict("project_status");
 const route = useRoute();
 const router = useRouter();
@@ -524,7 +522,7 @@ function handleSelectionChange(selection) {
  */
 async function handleStatusChange(row, value) {
   const previous = value === 1 ? 0 : 1;
-  const text = value === 1 ? "启用" : "禁用";
+  const text = value === 1 ? "启用" : "停用";
   statusSaving[row.id] = true;
   try {
     await proxy.$modal.confirm(`确认要${text}项目版本“${row.version}”吗？`);
@@ -634,7 +632,7 @@ function handleDelete(row) {
  */
 function handleDiff(row) {
   let versionId = props.embedded ? row.id : route.params.versionId;
-  let projectId = props.embedded ? props.projectId : routeVersion.value.projectId;
+  let projectId = props.embedded ? props.projectId : row.projectId;
   let compareVersion = row.id;
   if(route.path === '/basic/project/detail'){
     router.push({

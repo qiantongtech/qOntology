@@ -69,19 +69,19 @@ const route = useRoute();
 // 详情概要字段：布局与枚举详情页一致，描述独占一行
 // 字典 ref 在 script 中需 .value 解包后再传入子组件
 const detailItems = computed(() => [
-  { label: "模型名称", key: "name" },
-  { label: "支持语言", value: "中/英文" },
   { label: "模型提供方", key: "platform", dictOptions: ai_model_platform.value },
+  { label: "支持语言", value: "中/英文" },
+  { label: "创建人", key: "createBy" },
+  { label: "创建时间", className: "mt2", key: "createTime", type: "time" },
+  { label: "更新人", className: "mt2", key: "updateBy" },
+  { label: "更新时间", className: "mt2", key: "updateTime", type: "time" },
   {
     label: "描述",
     key: "description",
     span: 24,
-    className: "mt2 mb2",
+    className: "mt2",
     formatter: (value) => value?.trim() || "-",
   },
-  { label: "创建人", key: "createBy" },
-  { label: "创建时间", key: "createTime", type: "time" },
-  { label: "更新时间", key: "updateTime", type: "time" },
 ]);
 // 监听 id 变化
 watch(

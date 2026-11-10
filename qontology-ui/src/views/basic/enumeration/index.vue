@@ -328,6 +328,7 @@ const tableStore = reactive({
       label: "创建时间",
       prop: "createTime",
       slot: "createTime",
+      align: "center",
       width: 160,
       sortable: true,
     },

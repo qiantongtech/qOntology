@@ -468,7 +468,7 @@ const tableStore = reactive({
       prop: "createTime",
       date: true,
       width: 160,
-      align: "left",
+      align: "center",
       sortable: true,
     },
     {

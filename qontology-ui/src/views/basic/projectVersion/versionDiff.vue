@@ -19,25 +19,25 @@
 <template>
   <div class="app-container" v-loading="loading">
     <!--  顶部操作条：与详情页一致，右侧提供返回入口  -->
-    <div class="pagecont-top diff-header">
-      <div class="infotop">
-        <div class="infotop-title">
-          <span class="h2-titles">版本对比</span>
-          <div class="btn-style">
-            <el-button
-                type="primary"
-                plain
-                class="fh_btn"
-                @mousedown="(e) => e.preventDefault()"
-                @click="handleBack"
-            >
-              <svg-icon icon-class="fhs" />
-              返回
-            </el-button>
-          </div>
-        </div>
-      </div>
-    </div>
+<!--    <div class="pagecont-top diff-header">-->
+<!--      <div class="infotop">-->
+<!--        <div class="infotop-title">-->
+<!--          <span class="h2-titles">版本对比</span>-->
+<!--          <div class="btn-style">-->
+<!--            <el-button-->
+<!--                type="primary"-->
+<!--                plain-->
+<!--                class="fh_btn"-->
+<!--                @mousedown="(e) => e.preventDefault()"-->
+<!--                @click="handleBack"-->
+<!--            >-->
+<!--              <svg-icon icon-class="fhs" />-->
+<!--              返回-->
+<!--            </el-button>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
     <!--  版本信息  -->
     <div class="version-info">
       <!--   基准版本（左侧）   -->
@@ -59,8 +59,8 @@
           </el-select>
         </div>
         <div class="border-item-body">
-          <div class="infotop">
-            <el-row :gutter="2" style="margin-bottom: 5px">
+          <div class="infotop" style="height: 100px;">
+            <el-row :gutter="2" style="margin-bottom: 2px">
               <el-col :span="12">
                 <div class="infotop-row border-top">
                   <div class="infotop-row-lable">创建人</div>
@@ -79,7 +79,7 @@
                 </div>
               </el-col>
             </el-row>
-            <el-row :gutter="16">
+            <el-row :gutter="2">
               <el-col :span="24">
                 <div class="infotop-row border-top">
                   <div class="infotop-row-lable">版本描述</div>
@@ -90,7 +90,7 @@
                         effect="light"
                         :disabled="!currentVersionDiffStats.projectVersion?.description"
                     >
-                      <span>{{ currentVersionDiffStats.projectVersion?.description || "-" }}</span>
+                      <span class="text-ellipsis">{{ currentVersionDiffStats.projectVersion?.description || "-" }}</span>
                     </el-tooltip>
                   </div>
                 </div>
@@ -118,8 +118,8 @@
           </el-select>
         </div>
         <div class="border-item-body">
-          <div class="infotop">
-            <el-row :gutter="2" style="margin-bottom: 5px">
+          <div class="infotop" style="height: 100px;">
+            <el-row :gutter="2" style="margin-bottom: 2px">
               <el-col :span="12">
                 <div class="infotop-row border-top">
                   <div class="infotop-row-lable">创建人</div>
@@ -148,7 +148,7 @@
                         effect="light"
                         :disabled="!compareVersionDiffStats.projectVersion?.description"
                     >
-                      <span>{{ compareVersionDiffStats.projectVersion?.description || "-" }}</span>
+                      <span class="text-ellipsis">{{ compareVersionDiffStats.projectVersion?.description || "-" }}</span>
                     </el-tooltip>
                   </div>
                 </div>
@@ -379,7 +379,7 @@ onMounted(() => {
 // 顶部操作条沿用详情样式，但间距对齐本页卡片节奏（叠加全局类提高优先级）
 .diff-header.pagecont-top {
   padding: 15px;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
 
   // 返回按钮图标对齐文字，与通用详情头部保持一致
   .fh_btn .svg-icon {
@@ -398,8 +398,8 @@ onMounted(() => {
   width: 100%;
   background: #fff;
   border-radius: 2px;
-  padding: 0 16px 12px;
-  margin-bottom: 8px;
+  padding: 0 16px 0;
+  margin-bottom: 0;
 
   .border-item-head {
     height: 50px;
@@ -430,8 +430,8 @@ onMounted(() => {
 .version-info {
   width: 100%;
   display: flex;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 15px;
+  margin-bottom: 15px;
   flex-wrap: wrap;
   flex-shrink: 0;
   overflow: auto;
@@ -441,14 +441,21 @@ onMounted(() => {
     min-width: 480px;
 
     &:first-child {
-      padding-right: 12px;
+      padding-right: 15px;
     }
 
     &:last-child {
-      padding-left: 12px;
+      padding-left: 15px;
     }
   }
 }
+
+// 版本描述单行省略：切断 nowrap 文本 min-content 向上传播，否则长描述会把卡片撑出屏幕
+.infotop-row-value {
+  min-width: 0;
+  overflow: hidden;
+}
+
 
 // 版本差异明细：纵向撑满剩余视口
 .diff-section {
