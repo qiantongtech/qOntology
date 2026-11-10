@@ -19,7 +19,14 @@
   <div class="app-container ai-modeling-page">
     <detail-info
       :data="task"
-      :header="{ className: 'clearfixs', idKey: 'id', nameKey: 'taskName', statusKey: 'status', statusOptions: om_ai_task_status, routerBack: false }"
+      :header="{
+        className: 'clearfixs',
+        idKey: 'id',
+        nameKey: 'taskName',
+        statusKey: 'status',
+        statusOptions: om_ai_task_status,
+        routerBack: false,
+      }"
       :items="detailItems"
       mode="free"
       @back="goBack"
@@ -45,7 +52,9 @@
             :key="file.id || file.fileName"
             class="document-name"
             :title="file.fileName"
-          >{{ file.fileName || "-" }}</div>
+          >
+            {{ file.fileName || "-" }}
+          </div>
         </div>
         <span v-else>-</span>
       </template>
@@ -134,7 +143,11 @@ const detailItems = [
   { label: "任务描述", key: "description", span: 24, className: "mt2 mb2" },
   { label: "文档名称", slot: "documents", span: 16, className: "mb2" },
   { label: "更新人", key: "updateBy", className: "mb2" },
-  { label: "创建人", key: "createBy", formatter: (_name, record) => formatCreator(record) },
+  {
+    label: "创建人",
+    key: "createBy",
+    formatter: (_name, record) => formatCreator(record),
+  },
   { label: "创建时间", key: "createTime", type: "time" },
   { label: "更新时间", key: "updateTime", type: "time" },
 ];
@@ -194,17 +207,6 @@ onUnmounted(() => clearInterval(refreshTimer));
   overflow-wrap: anywhere;
   line-height: 22px;
 }
-
-/* 模块内 SVG 使用按钮图标的 1em 尺寸，避免通用 SvgIcon 的 1.2em 放大。
- * 图文间距由 Element Plus icon 插槽处理；同时统一旧返回图标的尺寸与垂直对齐。
- */
-.ai-modeling-page :deep(.el-button .svg-icon) {
-  width: 1em;
-  height: 1em;
-  margin-top: 0;
-  vertical-align: middle;
-}
-
 /* 顶部主操作与返回图标匹配视觉尺寸；列表操作继续沿用紧凑图标尺寸。
  * 仅调整图标容器，不改变共用 SVG 画布及按钮文字字号。
  */

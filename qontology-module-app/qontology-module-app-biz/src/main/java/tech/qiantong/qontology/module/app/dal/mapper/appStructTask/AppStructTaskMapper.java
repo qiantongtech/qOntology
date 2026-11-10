@@ -20,6 +20,7 @@ package tech.qiantong.qontology.module.app.dal.mapper.appStructTask;
 
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 import org.springframework.data.neo4j.repository.query.Query;
 import tech.qiantong.qontology.module.app.dal.dataobject.appStructTask.AppStructTaskDO;
 import java.util.Arrays;
@@ -40,6 +41,10 @@ import jakarta.websocket.server.PathParam;
  * @date 2025-02-25
  */
 public interface AppStructTaskMapper extends BaseMapperX<AppStructTaskDO> {
+
+    /** 清空取消发布后的发布审计信息。 */
+    @Update("UPDATE app_struct_task SET publish_time = NULL, publisher_id = NULL, publish_by = NULL WHERE id = #{id}")
+    int clearPublishInfo(@Param("id") Long id);
 
     /** 按查询条件分页获取映射或任务列表。 */
     default PageResult<AppStructTaskDO> selectPage(AppStructTaskPageReqVO reqVO) {

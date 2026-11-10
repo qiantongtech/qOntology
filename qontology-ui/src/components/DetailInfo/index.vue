@@ -67,7 +67,11 @@
   <div class="pagecont-top pb15 detail-info" v-show="show">
     <div class="infotop">
       <!-- 标题/头部区域 -->
-      <div class="infotop-title mb15" :class="headerClasses" v-if="header || title">
+      <div
+        class="infotop-title mb15"
+        :class="headerClasses"
+        v-if="header || title"
+      >
         <!-- 默认标题（未传 header 时展示） -->
         <template v-if="!header && title">
           {{ title || "-" }}
@@ -77,7 +81,8 @@
           <div class="task-item">
             <div v-if="props.header?.showId !== false" class="task-id">
               {{
-                stringify(getByPath(data, props.header?.idKey ?? "id")) || placeholder
+                stringify(getByPath(data, props.header?.idKey ?? "id")) ||
+                placeholder
               }}
             </div>
             <div class="task-name">
@@ -99,13 +104,18 @@
               @click="handleBack"
             >
               <svg-icon :iconClass="props.header?.backIcon ?? 'fhs'" />
-              {{ props.header?.backText ?? '返回' }}
+              {{ props.header?.backText ?? "返回" }}
             </el-button>
           </div>
           <slot name="header-right" />
         </template>
       </div>
-      <slot v-if="$slots.content" name="content" :data="data" :items="displayItems" />
+      <slot
+        v-if="$slots.content"
+        name="content"
+        :data="data"
+        :items="displayItems"
+      />
       <!-- 信息栅格：默认一行 3 个（span=8），可按项覆盖 -->
       <el-row v-else :gutter="merged.gutter">
         <el-col
@@ -256,7 +266,8 @@ const headerClasses = computed(() => {
   const cls = headerClass.value;
   const isLong =
     props.header?.showId !== false &&
-    typeof headerIdVal.value === "string" && headerIdVal.value.length > 12;
+    typeof headerIdVal.value === "string" &&
+    headerIdVal.value.length > 12;
   return isLong ? [cls, "no-square-id"] : cls;
 });
 
@@ -375,7 +386,7 @@ function handleBack() {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss" >
 /* 补齐来源项目的详情头部样式，并限制在组件内，避免影响现有页面。 */
 .detail-info.pagecont-top {
   padding-bottom: 15px;
@@ -428,7 +439,7 @@ function handleBack() {
   margin-bottom: 2px;
 }
 .fh_btn .svg-icon {
-  font-size: 12px;
+  font-size: 10px;
   margin-right: 5px;
   vertical-align: middle;
   margin-top: -3px;

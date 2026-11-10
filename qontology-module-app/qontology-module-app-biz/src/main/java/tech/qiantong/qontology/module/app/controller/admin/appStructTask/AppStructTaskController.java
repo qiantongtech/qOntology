@@ -110,6 +110,10 @@ public class AppStructTaskController extends BaseController {
             taskById.setPublishBy(getNickName());
             taskById.setPublisherId(getUserId());
             taskById.setPublishTime(new Date());
+        } else {
+            taskById.setPublishBy(null);
+            taskById.setPublisherId(null);
+            taskById.setPublishTime(null);
         }
         return AppReleaseStatus.PUBLISHED.getStatus().equals(appStructTask.getPublishStatus())
                 ? appStructTaskService.releaseByTaskId(taskById)
@@ -134,9 +138,15 @@ public class AppStructTaskController extends BaseController {
     private AppStructTaskDO preparePublishTask(Long taskId, Integer publishStatus) {
         AppStructTaskDO taskDO = appStructTaskService.getAppStructTaskById(taskId);
         taskDO.setPublishStatus(publishStatus);
-        taskDO.setPublishTime(new Date());
-        taskDO.setPublisherId(getUserId());
-        taskDO.setPublishBy(getNickName());
+        if (AppReleaseStatus.PUBLISHED.getStatus().equals(publishStatus)) {
+            taskDO.setPublishTime(new Date());
+            taskDO.setPublisherId(getUserId());
+            taskDO.setPublishBy(getNickName());
+        } else {
+            taskDO.setPublishTime(null);
+            taskDO.setPublisherId(null);
+            taskDO.setPublishBy(null);
+        }
         taskDO.setUpdateTime(new Date());
         taskDO.setUpdaterId(getUserId());
         taskDO.setUpdateBy(getNickName());
