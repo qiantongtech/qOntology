@@ -16,28 +16,13 @@
   See the LICENSE file in the project root for full license information.
 -->
 
+<!--
+  @file 项目版本对比页面
+  @description 选择基准版本与对比版本，展示两个版本的基础信息与建模数量指标差异。
+-->
+
 <template>
-  <div class="app-container" v-loading="loading">
-    <!--  顶部操作条：与详情页一致，右侧提供返回入口  -->
-<!--    <div class="pagecont-top diff-header">-->
-<!--      <div class="infotop">-->
-<!--        <div class="infotop-title">-->
-<!--          <span class="h2-titles">版本对比</span>-->
-<!--          <div class="btn-style">-->
-<!--            <el-button-->
-<!--                type="primary"-->
-<!--                plain-->
-<!--                class="fh_btn"-->
-<!--                @mousedown="(e) => e.preventDefault()"-->
-<!--                @click="handleBack"-->
-<!--            >-->
-<!--              <svg-icon icon-class="fhs" />-->
-<!--              返回-->
-<!--            </el-button>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
+  <div v-loading="loading" class="app-container">
     <!--  版本信息  -->
     <div class="version-info">
       <!--   基准版本（左侧）   -->
@@ -47,8 +32,8 @@
           <el-select
               v-model="currentVersion"
               placeholder="请选择版本"
-              class="version-select"
               @change="currentVersionChange"
+              class="version-select"
           >
             <el-option
                 v-for="version in projectVersionDict"
@@ -59,8 +44,8 @@
           </el-select>
         </div>
         <div class="border-item-body">
-          <div class="infotop" style="height: 100px;">
-            <el-row :gutter="2" style="margin-bottom: 2px">
+          <div class="infotop version-info-body">
+            <el-row :gutter="2" class="version-info-row">
               <el-col :span="12">
                 <div class="infotop-row border-top">
                   <div class="infotop-row-lable">创建人</div>
@@ -106,8 +91,8 @@
           <el-select
               v-model="compareVersion"
               placeholder="请选择版本"
-              class="version-select"
               @change="compareVersionChange"
+              class="version-select"
           >
             <el-option
                 v-for="version in projectVersionDict"
@@ -118,8 +103,8 @@
           </el-select>
         </div>
         <div class="border-item-body">
-          <div class="infotop" style="height: 100px;">
-            <el-row :gutter="2" style="margin-bottom: 2px">
+          <div class="infotop version-info-body">
+            <el-row :gutter="2" class="version-info-row">
               <el-col :span="12">
                 <div class="infotop-row border-top">
                   <div class="infotop-row-lable">创建人</div>
@@ -222,32 +207,35 @@
 </template>
 
 <script setup name="ModelVersionDiff">
-import {getCurrentInstance, onMounted, ref} from "vue";
-import {useRoute, useRouter} from "vue-router";
-import {parseTime} from "@/utils/anivia.js";
+/**
+ * @file 项目版本对比页面
+ * @description 选择基准版本与对比版本，展示两个版本的基础信息与建模数量指标差异。
+ */
+import {onMounted, ref} from "vue";
+import {useRoute} from "vue-router";
 
+import {parseTime} from "@/utils/anivia.js";
 import {getProjectVersionDict, getVersionDiffStats} from "@/api/basic/project/projectVersion";
 
-const { proxy } = getCurrentInstance();
 const route = useRoute();
-const router = useRouter();
 
-const loading = ref(true)
+const loading = ref(true);
 
-const projectId = route.query.projectId || "";// 项目ID
-const currentVersion = ref("");// 基准版本
-const compareVersion = ref("");// 对比版本
-const projectVersionDict = ref([]);// 项目版本字典
+const projectId = route.query.projectId || "";  // 项目ID
+const currentVersion = ref("");  // 基准版本
+const compareVersion = ref("");  // 对比版本
+const projectVersionDict = ref([]);  // 项目版本字典
 
-const currentVersionDiffStats = ref({projectVersion: {}});// 基准版本模型
-const compareVersionDiffStats = ref({projectVersion: {}});// 对比版本模型
+const currentVersionDiffStats = ref({projectVersion: {}});  // 基准版本模型
+const compareVersionDiffStats = ref({projectVersion: {}});  // 对比版本模型
 
 const diffResult = ref({
   current: [],
   compare: [],
 });
 
-const fieldConfigMap = {
+// 参与对比的建模数量指标：字段名 -> 展示名称
+const FIELD_CONFIG_MAP = {
   "omTargetCount": {"name": "建模目标"},
   "omTargetCoveredRate": {"name": "建模目标覆盖率"},
   "termCount": {"name": "术语"},
@@ -257,9 +245,13 @@ const fieldConfigMap = {
   "relationCount": {"name": "对象类型关系"},
   "modelAxiomCount": {"name": "模型公理"},
   "dataRuleCount": {"name": "数据规则"},
-}
+};
 
-// 基准版本改变
+/**
+ * 切换基准版本，拉取该版本统计并刷新差异计算。
+ * @param {string} val 选中的基准版本编码
+ * @returns {Promise<void>}
+ */
 async function currentVersionChange(val) {
   loading.value = true;
   currentVersion.value = val;
@@ -269,7 +261,11 @@ async function currentVersionChange(val) {
   loading.value = false;
 }
 
-// 对比版本改变
+/**
+ * 切换对比版本，拉取该版本统计并刷新差异计算。
+ * @param {string} val 选中的对比版本编码
+ * @returns {Promise<void>}
+ */
 async function compareVersionChange(val) {
   loading.value = true;
   compareVersion.value = val;
@@ -279,29 +275,32 @@ async function compareVersionChange(val) {
   loading.value = false;
 }
 
-// 初始化数据
+/**
+ * 初始化页面数据：读取路由参数中的版本、加载项目版本字典并拉取两个版本的统计。
+ * @returns {Promise<void>}
+ */
 async function initData() {
-  if(route.path === '/basic/project/detail/versionDiff'){
+  if (route.path === '/basic/project/detail/versionDiff') {
     currentVersion.value = route.query.currentVersion || "";
-  }else{
+  } else {
     currentVersion.value = route.params.versionId || "";
   }
 
   compareVersion.value = route.query.compareVersion || "";
   getProjectVersionDict(projectId).then((res) => {
     projectVersionDict.value = res.data;
-  })
+  });
 
   const tasks = [];
   if (currentVersion.value) {
     tasks.push(getVersionDiffStats(currentVersion.value).then((res) => {
       currentVersionDiffStats.value = res.data || {projectVersion: {}};
-    }))
+    }));
   }
   if (compareVersion.value) {
     tasks.push(getVersionDiffStats(compareVersion.value).then((res) => {
       compareVersionDiffStats.value = res.data || {projectVersion: {}};
-    }))
+    }));
   }
   await Promise.all(tasks);
 
@@ -310,32 +309,18 @@ async function initData() {
 }
 
 /**
- * 返回来源页面：项目详情页内嵌进入时回到项目详情，其余场景回到版本管理列表。
- * 走 closeOpenPage 关闭本页签，避免版本对比页签带着旧版本堆积；缺少上下文时才退回浏览器历史。
+ * 表格行样式：差异行返回 row-yellow 类以高亮标记。
+ * @param {{ row: Object }} data el-table row-class-name 回调参数
+ * @returns {string} 行类名，无差异时为空字符串
  */
-function handleBack() {
-  if(route.path === '/basic/project/detail/versionDiff'){
-  proxy.$tab.closeOpenPage({ path: `/basic/project/detail` ,
-  query: {
-      projectId: projectId
-    }});
-    return;
-  }
-
-  const backVersionId = route.params.versionId;
-  if (backVersionId) {
-    proxy.$tab.closeOpenPage({ path: `/om/${backVersionId}/projectVersion` });
-    return;
-  }
-  router.back();
+function tableRowClassName({ row }) {
+  return row.changeType;
 }
 
-// 表格行样式
-function tableRowClassName(row) {
-  return row.row.changeType;
-}
-
-// 对比数据
+/**
+ * 计算两个版本各数量指标的差异行数据（含差异标色与对比版本趋势）。
+ * @returns {void}
+ */
 function diffData() {
   const a = currentVersionDiffStats.value || {};
   const b = compareVersionDiffStats.value || {};
@@ -343,13 +328,13 @@ function diffData() {
   const current = [];
   const compare = [];
 
-  for (const [field, fieldConfig] of Object.entries(fieldConfigMap)) {
+  for (const [field, fieldConfig] of Object.entries(FIELD_CONFIG_MAP)) {
     const valA = a[field] ?? "";
     const valB = b[field] ?? "";
     // 两边都没值：按 0 展示，不标色
     if (!valA && !valB) {
-      current.push({field, fieldValue: 0, changeType: "", ...fieldConfig})
-      compare.push({field, fieldValue: 0, changeType: "", trend: "", ...fieldConfig})
+      current.push({field, fieldValue: 0, changeType: "", ...fieldConfig});
+      compare.push({field, fieldValue: 0, changeType: "", trend: "", ...fieldConfig});
       continue;
     }
     // 值不一致（含单边没值）标黄，一致则不标色
@@ -363,8 +348,8 @@ function diffData() {
     } else if (numB < numA) {
       trend = "down";
     }
-    current.push({field, fieldValue: valA, changeType, ...fieldConfig})
-    compare.push({field, fieldValue: valB, changeType, trend, ...fieldConfig})
+    current.push({field, fieldValue: valA, changeType, ...fieldConfig});
+    compare.push({field, fieldValue: valB, changeType, trend, ...fieldConfig});
   }
   diffResult.value = {current, compare};
 }
@@ -372,43 +357,24 @@ function diffData() {
 onMounted(() => {
   initData();
 });
-
 </script>
 
 <style lang="scss" scoped>
-// 顶部操作条沿用详情样式，但间距对齐本页卡片节奏（叠加全局类提高优先级）
-.diff-header.pagecont-top {
-  padding: 15px;
-  margin-bottom: 15px;
-
-  // 返回按钮图标对齐文字，与通用详情头部保持一致
-  .fh_btn .svg-icon {
-    font-size: 12px;
-    margin-right: 5px;
-    vertical-align: middle;
-    margin-top: -3px;
-  }
-
-  .fh_btn:hover .svg-icon {
-    filter: brightness(0) invert(1) !important;
-  }
-}
-
 .border-item {
   width: 100%;
-  background: #fff;
-  border-radius: 2px;
-  padding: 0 16px 0;
+  padding: 0 16px;
   margin-bottom: 0;
+  background: var(--qt-surface-background);
+  border-radius: var(--qt-radius-small);
 
   .border-item-head {
-    height: 50px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #dfe3e9;
+    justify-content: space-between;
+    height: 50px;
     margin: 0 -16px;
     padding: 0 16px;
+    border-bottom: 1px solid var(--qt-border-color);
 
     .head-left {
       display: flex;
@@ -419,7 +385,7 @@ onMounted(() => {
 
   .border-item-body {
     padding: 12px 0 0;
-    background-color: #fff;
+    background-color: var(--qt-surface-background);
   }
 }
 
@@ -428,13 +394,13 @@ onMounted(() => {
 }
 
 .version-info {
-  width: 100%;
   display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
   flex-wrap: wrap;
   flex-shrink: 0;
+  gap: 15px;
   overflow: auto;
+  width: 100%;
+  margin-bottom: 15px;
 
   .border-item {
     flex: 1;
@@ -450,12 +416,27 @@ onMounted(() => {
   }
 }
 
+// 版本信息卡片内容区：固定高度，避免切换版本时布局跳动
+.version-info-body {
+  height: 100px;
+}
+
+// 创建人/创建时间行与版本描述行之间留 2px 分隔
+.version-info-row {
+  margin-bottom: 2px;
+}
+
 // 版本描述单行省略：切断 nowrap 文本 min-content 向上传播，否则长描述会把卡片撑出屏幕
 .infotop-row-value {
   min-width: 0;
   overflow: hidden;
 }
 
+// 全局固定 40px 行高 + 上下 padding 共 20px，15px 字号的文字会被上下裁切，加高到 44px
+.infotop-row-lable,
+.infotop-row-value {
+  height: 44px;
+}
 
 // 版本差异明细：纵向撑满剩余视口
 .diff-section {
@@ -466,53 +447,50 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     min-height: 0;
-
-    .border-item-body {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-    }
   }
 
-  .version-compare {
+  .border-item-body {
+    display: flex;
     flex: 1;
     min-height: 0;
-
-    .table-wrap {
-      display: flex;
-      flex-direction: column;
-
-      :deep(.el-table) {
-        flex: 1;
-        height: 100%;
-        min-height: 0;
-
-        .el-scrollbar,
-        .el-scrollbar__wrap,
-        // 行数不足以撑满时，让行高均分撑满表格区域
-        .el-scrollbar__view,
-        .el-table__body {
-          height: 100%;
-        }
-      }
-    }
   }
 }
 
 .version-compare {
-  width: 100%;
   display: flex;
   overflow: hidden;
+  width: 100%;
 
   .table-wrap {
+    display: flex;
     flex: 1;
-    overflow: hidden;
+    flex-direction: column;
     min-width: 480px;
     padding: 0 16px;
+    overflow: hidden;
   }
 }
 
-// 对比版本数量趋势箭头（样式对齐 overview 枚举个数/术语个数卡片）
+// 表格撑满卡片剩余高度；行数不足时行高均分
+.diff-section :deep(.el-table) {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
+
+.diff-section :deep(.el-scrollbar),
+.diff-section :deep(.el-scrollbar__wrap),
+.diff-section :deep(.el-scrollbar__view),
+.diff-section :deep(.el-table__body) {
+  height: 100%;
+}
+
+// 差异行高亮（row-class-name 挂在 el-table 内部 tr 上，需 :deep 穿透）
+:deep(.el-table .row-yellow) {
+  --el-table-tr-bg-color: var(--el-color-warning-light-9);
+}
+
+// 对比版本数量趋势箭头（语义色对齐全局状态变量）
 .trend-arrow {
   margin-left: 4px;
   font-size: 12px;
@@ -521,16 +499,10 @@ onMounted(() => {
 }
 
 .trend-up {
-  color: #32b8bb;
+  color: var(--qt-status-success);
 }
 
 .trend-down {
-  color: #ef6b75;
-}
-</style>
-
-<style>
-.el-table .row-yellow {
-  --el-table-tr-bg-color: var(--el-color-warning-light-9);
+  color: var(--qt-status-danger);
 }
 </style>
