@@ -106,7 +106,8 @@
               <span
                 v-if="creatorPhones[scope.row.creatorId]"
                 class="desc-text"
-                >{{ creatorPhones[scope.row.creatorId] }}</span>
+                >{{ creatorPhones[scope.row.creatorId] }}</span
+              >
             </div>
           </template>
           <template #createTime="scope">
@@ -170,16 +171,15 @@
       @submit="submitForm"
     >
       <template #before-description="{ form: draft }">
-        <qt-form-item
-          label="状态"
-          prop="status"
-          class="row-full"
-        >
-          <el-radio-group v-model="draft.status"><el-radio
+        <qt-form-item label="状态" prop="status" class="row-full">
+          <el-radio-group v-model="draft.status"
+            ><el-radio
               v-for="item in project_status"
               :key="item.value"
               :value="Number(item.value)"
-              >{{ item.label }}</el-radio></el-radio-group>
+              >{{ item.label }}</el-radio
+            ></el-radio-group
+          >
         </qt-form-item>
       </template>
       <template #enum-source="{ form: draft }">
@@ -248,151 +248,170 @@
         </qt-form-item>
         <!-- 只读详情展示已保存的文本约束，与编辑组件使用相同的格式编码。 -->
         <template v-if="form.dataType === dataTypeConstant.TEXT">
-          <qt-form-item label="最小长度"><div class="form-readonly">
+          <qt-form-item label="最小长度"
+            ><div class="form-readonly">
               {{ form.minLength ?? "不限制" }}
-            </div></qt-form-item>
-          <qt-form-item label="最大长度"><div class="form-readonly">
+            </div></qt-form-item
+          >
+          <qt-form-item label="最大长度"
+            ><div class="form-readonly">
               {{ form.maxLength ?? "不限制" }}
-            </div></qt-form-item>
-          <qt-form-item label="格式校验" class="row-full"><div class="form-readonly">
+            </div></qt-form-item
+          >
+          <qt-form-item label="格式校验" class="row-full"
+            ><div class="form-readonly">
               {{ textValidationLabels[form.validationType || "NONE"] }}
-            </div></qt-form-item>
-        <template v-if="form.validationType === 'CUSTOM'">
-          <qt-form-item label="正则表达式"><div class="form-readonly">
-              {{ form.validationPattern }}
-            </div></qt-form-item>
+            </div></qt-form-item
+          >
+          <template v-if="form.validationType === 'CUSTOM'">
+            <qt-form-item label="正则表达式"
+              ><div class="form-readonly">
+                {{ form.validationPattern }}
+              </div></qt-form-item
+            >
+          </template>
+          <qt-form-item label="示例值"
+            ><div class="form-readonly">
+              {{ form.exampleValue || "-" }}
+            </div></qt-form-item
+          >
         </template>
-        <qt-form-item label="示例值"><div class="form-readonly">
-            {{ form.exampleValue || "-" }}
-          </div></qt-form-item>
-      </template>
 
-      <qt-form-item
-        v-if="
-          [dataTypeConstant.DECIMAL, dataTypeConstant.INTEGER].includes(
-            form.dataType
-          )
-        "
-        label="单位"
-        prop="unit"
-      >
-        <div class="form-readonly">
-          {{ form.unit }}
-        </div>
-      </qt-form-item>
+        <qt-form-item
+          v-if="
+            [dataTypeConstant.DECIMAL, dataTypeConstant.INTEGER].includes(
+              form.dataType
+            )
+          "
+          label="单位"
+          prop="unit"
+        >
+          <div class="form-readonly">
+            {{ form.unit }}
+          </div>
+        </qt-form-item>
 
-      <!-- 数值范围在整数和小数类型共用，布尔文案及日期范围仅在对应类型展示。 -->
-      <template
-        v-if="
-          [dataTypeConstant.DECIMAL, dataTypeConstant.INTEGER].includes(
-            form.dataType
-          )
-        "
-      >
-        <qt-form-item label="最小值"><div class="form-readonly">
-            {{ form.minValue ?? "不限制" }}
-          </div></qt-form-item>
-        <qt-form-item label="最大值"><div class="form-readonly">
-            {{ form.maxValue ?? "不限制" }}
-          </div></qt-form-item>
-      </template>
+        <!-- 数值范围在整数和小数类型共用，布尔文案及日期范围仅在对应类型展示。 -->
+        <template
+          v-if="
+            [dataTypeConstant.DECIMAL, dataTypeConstant.INTEGER].includes(
+              form.dataType
+            )
+          "
+        >
+          <qt-form-item label="最小值"
+            ><div class="form-readonly">
+              {{ form.minValue ?? "不限制" }}
+            </div></qt-form-item
+          >
+          <qt-form-item label="最大值"
+            ><div class="form-readonly">
+              {{ form.maxValue ?? "不限制" }}
+            </div></qt-form-item
+          >
+        </template>
 
-      <qt-form-item
-        v-if="form.dataType === dataTypeConstant.DECIMAL"
-        label="总位数"
-      >
-        <div class="form-readonly">
-          {{ form.allPlaces ?? "-" }}
-        </div>
-      </qt-form-item>
+        <qt-form-item
+          v-if="form.dataType === dataTypeConstant.DECIMAL"
+          label="总位数"
+        >
+          <div class="form-readonly">
+            {{ form.allPlaces ?? "-" }}
+          </div>
+        </qt-form-item>
 
-      <template v-if="form.dataType === dataTypeConstant.BOOLEAN">
-        <qt-form-item label="true 对应文案"><el-input
-            :model-value="form.trueValue ?? '是'"
-            disabled
-/></qt-form-item>
-        <qt-form-item label="false 对应文案"><el-input
-            :model-value="form.falseValue ?? '否'"
-            disabled
-/></qt-form-item>
-      </template>
+        <template v-if="form.dataType === dataTypeConstant.BOOLEAN">
+          <qt-form-item label="true 对应文案"
+            ><el-input :model-value="form.trueValue ?? '是'" disabled
+          /></qt-form-item>
+          <qt-form-item label="false 对应文案"
+            ><el-input :model-value="form.falseValue ?? '否'" disabled
+          /></qt-form-item>
+        </template>
 
-      <template v-if="form.dataType === dataTypeConstant.DATE">
-        <qt-form-item label="最早日期"><div class="form-readonly">
-            {{ form.earliestTime || "不限制" }}
-          </div></qt-form-item>
-        <qt-form-item label="最晚日期"><div class="form-readonly">
-            {{ form.latestTime || "不限制" }}
-          </div></qt-form-item>
-      </template>
+        <template v-if="form.dataType === dataTypeConstant.DATE">
+          <qt-form-item label="最早日期"
+            ><div class="form-readonly">
+              {{ form.earliestTime || "不限制" }}
+            </div></qt-form-item
+          >
+          <qt-form-item label="最晚日期"
+            ><div class="form-readonly">
+              {{ form.latestTime || "不限制" }}
+            </div></qt-form-item
+          >
+        </template>
 
-      <qt-form-item
-        v-if="[dataTypeConstant.DECIMAL].includes(form.dataType)"
-        label="小数位数"
-        prop="decimalPlaces"
-      >
-        <div class="form-readonly">
-          {{ form.decimalPlaces }}
-        </div>
-      </qt-form-item>
+        <qt-form-item
+          v-if="[dataTypeConstant.DECIMAL].includes(form.dataType)"
+          label="小数位数"
+          prop="decimalPlaces"
+        >
+          <div class="form-readonly">
+            {{ form.decimalPlaces }}
+          </div>
+        </qt-form-item>
 
-      <qt-form-item
-        v-if="[dataTypeConstant.DATE].includes(form.dataType)"
-        label="展示格式"
-        prop="format"
-      >
-        <div class="form-readonly">
-          {{ form.format }}
-        </div>
-      </qt-form-item>
+        <qt-form-item
+          v-if="[dataTypeConstant.DATE].includes(form.dataType)"
+          label="展示格式"
+          prop="format"
+        >
+          <div class="form-readonly">
+            {{ form.format }}
+          </div>
+        </qt-form-item>
 
-      <qt-form-item
-        v-if="[dataTypeConstant.ENUM].includes(form.dataType)"
-        label="枚举类型"
-        prop="enumType"
-      >
-        <div class="form-readonly">
-          <span v-if="form.enumType" class="enum-selected-label">
-            <span>{{ selectedEnumName }}</span>
-            <el-tag
-              class="enum-source-tag"
-              :type="form.enumSource === 'GLOBAL' ? 'info' : 'primary'"
-              size="small"
-              :disable-transitions="true"
-              >{{ selectedEnumSourceLabel }}</el-tag>
-          </span>
-          <span v-else>—</span>
-        </div>
-      </qt-form-item>
+        <qt-form-item
+          v-if="[dataTypeConstant.ENUM].includes(form.dataType)"
+          label="枚举类型"
+          prop="enumType"
+        >
+          <div class="form-readonly">
+            <span v-if="form.enumType" class="enum-selected-label">
+              <span>{{ selectedEnumName }}</span>
+              <el-tag
+                class="enum-source-tag"
+                :type="form.enumSource === 'GLOBAL' ? 'info' : 'primary'"
+                size="small"
+                :disable-transitions="true"
+                >{{ selectedEnumSourceLabel }}</el-tag
+              >
+            </span>
+            <span v-else>—</span>
+          </div>
+        </qt-form-item>
 
-      <qt-form-item label="状态" prop="status">
-        <dict-tag
-          :options="project_status"
-          :value="form.status"
-          class="con-value access-tag"
-        />
-      </qt-form-item>
+        <qt-form-item label="状态" prop="status">
+          <dict-tag
+            :options="project_status"
+            :value="form.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
 
-      <qt-form-item label="描述" prop="description" class="row-full">
-        <div class="form-readonly textarea">
-          {{ form.description || "-" }}
-        </div>
-      </qt-form-item>
+        <qt-form-item label="描述" prop="description" class="row-full">
+          <div class="form-readonly textarea">
+            {{ form.description || "-" }}
+          </div>
+        </qt-form-item>
 
-      <qt-form-item label="创建人" prop="createBy">
-        <div class="form-readonly">{{ form.createBy || "-" }}</div>
-      </qt-form-item>
+        <qt-form-item label="创建人" prop="createBy">
+          <div class="form-readonly">{{ form.createBy || "-" }}</div>
+        </qt-form-item>
 
-      <qt-form-item label="联系方式">
-        <div class="form-readonly">{{ creatorPhones[form.creatorId] || "-" }}</div>
-      </qt-form-item>
+        <qt-form-item label="联系方式">
+          <div class="form-readonly">
+            {{ creatorPhones[form.creatorId] || "-" }}
+          </div>
+        </qt-form-item>
 
-      <qt-form-item label="创建时间" prop="createTime">
-        <div class="form-readonly">
-          {{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
-        </div>
-      </qt-form-item>
-    </el-form>
+        <qt-form-item label="创建时间" prop="createTime">
+          <div class="form-readonly">
+            {{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
+        </qt-form-item>
+      </el-form>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="cancel">关 闭</el-button>
@@ -481,8 +500,8 @@ const data = reactive({
       },
     ],
     name: [
-      { required: true, message: "名称不能为空", trigger: "blur" },
-      { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
+      { required: true, message: "业务数据名称不能为空", trigger: "blur" },
+      { max: 128, message: "业务数据名称不能超过128个字符", trigger: "blur" },
     ],
     description: [
       { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
@@ -640,7 +659,7 @@ const tableColumns = reactive([
   {
     label: "编号",
     prop: "id",
-    width: 80,
+    width: 60,
     align: "center",
     sortable: true,
   },
@@ -1073,7 +1092,9 @@ async function handleDelete(row) {
   const cannotDeleteCount = recordIds.length - deletableIds.length;
   if (!deletableIds.length) {
     try {
-      await proxy.$modal.confirm(`可删除0个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`);
+      await proxy.$modal.confirm(
+        `可删除0个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
+      );
     } catch {}
     return;
   }

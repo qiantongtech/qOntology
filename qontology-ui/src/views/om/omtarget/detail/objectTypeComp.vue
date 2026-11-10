@@ -18,7 +18,11 @@
 
 <template>
   <div ref="pageRef" class="target-object-types">
-    <qt-wrap :columns="columns" :table-ref="listActions" :config="{ fullContent: false, searchShadow: false }">
+    <qt-wrap
+      :columns="columns"
+      :table-ref="listActions"
+      :config="{ fullContent: false, searchShadow: false }"
+    >
       <template #search>
         <qt-search-bar
           :items="searchItems"
@@ -43,7 +47,7 @@
           @click="toggleExpandAll"
         >
           <svg-icon :icon-class="isExpandAll ? 'toggle' : 'expand'" />
-          <span>{{ isExpandAll ? ' 折叠' : ' 展开' }}</span>
+          <span>{{ isExpandAll ? " 折叠" : " 展开" }}</span>
         </el-button>
       </template>
       <div v-loading="loading">
@@ -55,15 +59,25 @@
           :events="tableEvents"
           :func="readTree"
         >
-          <template #text="{ row, column_data }">{{ row[column_data.prop] ?? '-' }}</template>
-          <template #description="{ row }">{{ row.description?.trim() || '-' }}</template>
+          <template #text="{ row, column_data }">{{
+            row[column_data.prop] ?? "-"
+          }}</template>
+          <template #description="{ row }">{{
+            row.description?.trim() || "-"
+          }}</template>
           <template #creator="{ row }">
             <div class="flex-column overflow-hidden">
-              <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
-              <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+              <span class="text-ellipsis" :title="row.createBy || ''">{{
+                row.createBy || "-"
+              }}</span>
+              <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+                creatorPhones[row.creatorId]
+              }}</span>
             </div>
           </template>
-          <template #createTime="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
+          <template #createTime="{ row }">{{
+            proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+          }}</template>
           <template #operation="{ row }">
             <el-button
               v-hasPermi="['om:object:type:query']"
@@ -71,22 +85,30 @@
               type="primary"
               icon="View"
               @click="handleDetail(row)"
-            >详情</el-button>
+              >详情</el-button
+            >
             <el-button
               v-hasPermi="['om:object:type:edit']"
               link
               type="primary"
               icon="Edit"
               @click="handleUpdate(row)"
-            >修改</el-button>
+              >修改</el-button
+            >
             <el-popover
-              v-if="auth.hasPermiOr(['om:object:type:add', 'om:object:type:remove'])"
+              v-if="
+                auth.hasPermiOr(['om:object:type:add', 'om:object:type:remove'])
+              "
               placement="bottom"
               :width="110"
               trigger="click"
               popper-class="table-action-popover handle-popover"
             >
-              <template #reference><el-button link type="primary" icon="ArrowDown">更多</el-button></template>
+              <template #reference
+                ><el-button link type="primary" icon="ArrowDown"
+                  >更多</el-button
+                ></template
+              >
               <div class="object-type-actions">
                 <el-button
                   v-hasPermi="['om:object:type:add']"
@@ -94,7 +116,8 @@
                   type="primary"
                   icon="Plus"
                   @click="handleAdd(row)"
-                >新增子级</el-button>
+                  >新增子级</el-button
+                >
                 <el-button
                   v-hasPermi="['om:object:type:remove']"
                   link
@@ -102,12 +125,19 @@
                   icon="Delete"
                   :disabled="deleting"
                   @click="handleDelete(row)"
-                >删除</el-button>
+                  >删除</el-button
+                >
               </div>
             </el-popover>
           </template>
           <template #empty>
-            <div class="emptyBg"><img src="@/assets/system/images/no_data/noData.png" alt="暂无记录" /><p>暂无记录</p></div>
+            <div class="emptyBg">
+              <img
+                src="@/assets/system/images/no_data/noData.png"
+                alt="暂无记录"
+              />
+              <p>暂无记录</p>
+            </div>
           </template>
         </qt-table>
       </div>
@@ -139,8 +169,6 @@
       class="column-form"
       @submit.prevent="submitForm"
     >
-      <div class="h2-titles row-full">基础信息</div>
-
       <qt-form-item
         class="row-full"
         v-if="!editingRoot"
@@ -158,24 +186,24 @@
         />
       </qt-form-item>
 
-      <qt-form-item
-        class="row-full"
-        label="对象类型名称"
-        prop="name"
-      >
+      <qt-form-item class="row-full" label="对象类型名称" prop="name">
         <div class="name-input">
-          <el-input v-model="form.name" placeholder="请输入对象类型名称" maxlength="128"/>
-          <el-button v-hasPermi="['om:term:term:list']" type="primary" @click="openTermPicker">
+          <el-input
+            v-model="form.name"
+            placeholder="请输入对象类型名称"
+            maxlength="128"
+          />
+          <el-button
+            v-hasPermi="['om:term:term:list']"
+            type="primary"
+            @click="openTermPicker"
+          >
             从术语表中选择
           </el-button>
         </div>
       </qt-form-item>
 
-      <qt-form-item
-        class="row-full"
-        label="显示顺序"
-        prop="orderNum"
-      >
+      <qt-form-item class="row-full" label="显示顺序" prop="orderNum">
         <el-input-number
           v-model="form.orderNum"
           :min="0"
@@ -186,11 +214,7 @@
         />
       </qt-form-item>
 
-      <qt-form-item
-        class="row-full"
-        label="描述"
-        prop="description"
-      >
+      <qt-form-item class="row-full" label="描述" prop="description">
         <el-input
           v-model="form.description"
           class="character-count"
@@ -205,12 +229,9 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button :disabled="saving" @click="open = false">取 消</el-button>
-        <el-button
-          type="primary"
-
-          :loading="saving"
-          @click="submitForm"
-        >确 定</el-button>
+        <el-button type="primary" :loading="saving" @click="submitForm"
+          >确 定</el-button
+        >
       </div>
     </template>
   </el-dialog>
@@ -238,9 +259,12 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" plain @click="searchTerms"><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
+        <el-button type="primary" plain @click="searchTerms"
+          ><i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
         </el-button>
-        <el-button @click="resetTerms"><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button>
+        <el-button @click="resetTerms"
+          ><i class="iconfont-mini icon-a-zu22378 mr5"></i>重置</el-button
+        >
       </el-form-item>
     </el-form>
     <el-table
@@ -256,10 +280,12 @@
       <el-table-column
         prop="id"
         label="编号"
-        width="65"
+        width="60"
         align="center"
+        sortable
+        :sort-method="(a, b) => Number(a.id) - Number(b.id)"
       />
-      <el-table-column label="术语信息" min-width="235">
+      <el-table-column label="术语信息" min-width="320" align="left">
         <template #default="{ row }"><TermInfoCell :row="row" /></template>
       </el-table-column>
       <el-table-column
@@ -271,20 +297,17 @@
         align="left"
         :show-overflow-tooltip="{ effect: 'light' }"
       />
-      <el-table-column label="状态" width="70" align="center">
-        <template #default>启用</template>
-      </el-table-column>
-      <el-table-column label="创建人" min-width="80">
+      <!-- <el-table-column label="状态" width="90" align="center">
         <template #default="{ row }">
-          <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis">{{ row.createBy || "-" }}</span>
-            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
-          </div>
+          <el-switch
+            :model-value="Number(row.status)"
+            :active-value="1"
+            :inactive-value="0"
+            disabled
+            :aria-label="`${row.stdName}状态`"
+          />
         </template>
-      </el-table-column>
-      <el-table-column label="创建时间" width="145" align="center">
-        <template #default="{ row }">{{ proxy.parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}') || '-' }}</template>
-      </el-table-column>
+      </el-table-column> -->
     </el-table>
     <pagination
       v-show="termTotal > 0"
@@ -298,10 +321,9 @@
         <el-button @click="termOpen = false">取 消</el-button>
         <el-button
           type="primary"
-
           :disabled="Number(selectedTerm?.status) !== 1 || termLoading"
           @click="applyTerm"
-        >确 定
+          >确 定
         </el-button>
       </div>
     </template>
@@ -310,24 +332,40 @@
 
 <script setup >
 import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
-import {computed, getCurrentInstance, nextTick, reactive, ref, watch, onMounted} from 'vue';
-import {useRouter} from 'vue-router';
-import {useOntologyVersion} from '@/views/om/useOntologyVersion';
-import {ElMessage} from 'element-plus';
-import {listType, listTypeExcludeChild, getType, addType, updateType, delType, listTypeTargets} from '@/api/om/object/type';
-import {listTerm} from '@/api/om/term/term';
-import auth from '@/plugins/auth';
-import { useCreatorPhones } from '@/utils/useCreatorPhones';
+import {
+  computed,
+  getCurrentInstance,
+  nextTick,
+  reactive,
+  ref,
+  watch,
+  onMounted,
+} from "vue";
+import { useRouter } from "vue-router";
+import { useOntologyVersion } from "@/views/om/useOntologyVersion";
+import { ElMessage } from "element-plus";
+import {
+  listType,
+  listTypeExcludeChild,
+  getType,
+  addType,
+  updateType,
+  delType,
+  listTypeTargets,
+} from "@/api/om/object/type";
+import { listTerm } from "@/api/om/term/term";
+import auth from "@/plugins/auth";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
-defineOptions({name: 'OmObjectType'});
+defineOptions({ name: "OmObjectType" });
 // 项目版本优先从 URL 获取，嵌入使用时兼容上层传入。
 const props = defineProps({
-  versionId: {type: [Number, String], default: undefined},
-  targetDetail: {type: Object, default: () => {}}
+  versionId: { type: [Number, String], default: undefined },
+  targetDetail: { type: Object, default: () => {} },
 });
 const router = useRouter();
-const {proxy} = getCurrentInstance();
-const {versionId, requireVersion} = useOntologyVersion(() => props.versionId);
+const { proxy } = getCurrentInstance();
+const { versionId, requireVersion } = useOntologyVersion(() => props.versionId);
 const pageRef = ref();
 const typeRef = ref();
 const termTableRef = ref();
@@ -341,105 +379,174 @@ const tableRef = ref();
 const { creatorPhones } = useCreatorPhones();
 const isExpandAll = ref(true);
 const refreshTable = ref(true);
-const dialogTitle = ref('新增对象类型');
+const dialogTitle = ref("新增对象类型");
 const rows = ref([]);
-const queryParams = reactive({ name: '', parentId: undefined });
+const queryParams = reactive({ name: "", parentId: undefined });
 const appliedParentId = ref();
-const sort = reactive({ prop: 'orderNum', order: 'ascending' });
+const sort = reactive({ prop: "orderNum", order: "ascending" });
 // 输入内容仅在提交查询时生效。
-const appliedName = ref('');
+const appliedName = ref("");
 const columns = reactive([
-    { prop: 'name', label: '对象类型名称', slot: 'text', minWidth: 250, align: 'left', showOverflowTooltip: { effect: 'light' } },
-    { prop: 'description', label: '描述', slot: 'description', minWidth: 260, align: 'left', showOverflowTooltip: { effect: 'light' } },
-    { prop: 'orderNum', label: '显示顺序', slot: 'text', width: 100, sortable: 'custom' },
-    { prop: 'attributeCount', label: '属性数量', slot: 'text', width: 90 },
-    { prop: 'relationCount', label: '关系数量', slot: 'text', width: 90 },
-    { prop: 'createBy', label: '创建人', slot: 'creator', width: 130, align: 'left', headerAlign: 'left' },
-    { prop: 'createTime', label: '创建时间', slot: 'createTime', width: 160, sortable: 'custom' },
-    { label: '操作', slot: 'operation', width: 240, fixed: 'right' },
+  {
+    prop: "name",
+    label: "对象类型名称",
+    slot: "text",
+    minWidth: 250,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    prop: "description",
+    label: "描述",
+    slot: "description",
+    minWidth: 260,
+    align: "left",
+    showOverflowTooltip: { effect: "light" },
+  },
+  {
+    prop: "orderNum",
+    label: "显示顺序",
+    slot: "text",
+    width: 100,
+    sortable: "custom",
+  },
+  { prop: "attributeCount", label: "属性数量", slot: "text", width: 90 },
+  { prop: "relationCount", label: "关系数量", slot: "text", width: 90 },
+  {
+    prop: "createBy",
+    label: "创建人",
+    slot: "creator",
+    width: 130,
+    align: "left",
+    headerAlign: "left",
+  },
+  {
+    prop: "createTime",
+    label: "创建时间",
+    slot: "createTime",
+    width: 160,
+    sortable: "custom",
+  },
+  { label: "操作", slot: "operation", width: 240, fixed: "right" },
 ]);
 const tableConfig = computed(() => ({
-    notPagination: true,
-    sort: true,
-    table: {
-        rowKey: 'id', height: '60vh', stripe: true,
-        defaultExpandAll: isExpandAll.value,
-        treeProps: { children: 'children', hasChildren: 'hasChildren' },
-        defaultSort: { prop: sort.prop, order: sort.order },
-    },
+  notPagination: true,
+  sort: true,
+  table: {
+    rowKey: "id",
+    height: "60vh",
+    stripe: true,
+    defaultExpandAll: isExpandAll.value,
+    treeProps: { children: "children", hasChildren: "hasChildren" },
+    defaultSort: { prop: sort.prop, order: sort.order },
+  },
 }));
 const tableEvents = {
-    onSortChange({ orderByColumn, isAsc }) {
-        sort.prop = isAsc ? orderByColumn : 'orderNum';
-        sort.order = isAsc || 'ascending';
-    },
+  onSortChange({ orderByColumn, isAsc }) {
+    sort.prop = isAsc ? orderByColumn : "orderNum";
+    sort.order = isAsc || "ascending";
+  },
 };
 const listActions = { getList };
-function readTree() { return Promise.resolve({ data: filteredTree.value }); }
+function readTree() {
+  return Promise.resolve({ data: filteredTree.value });
+}
 const emptyForm = () => ({
   id: undefined,
   workspaceId: 1001,
   versionId: versionId.value,
-  name: '',
-  description: '',
+  name: "",
+  description: "",
   parentId: null,
-  orderNum: 0
+  orderNum: 0,
 });
 const form = ref(emptyForm());
 // 以打开弹窗时的节点层级判断，清空普通节点父级不会立即隐藏控件。
 const editingRoot = ref(false);
 const rules = {
-  orderNum: [{required: true, message: '显示顺序不能为空', trigger: 'blur'}],
-  name: [{required: true, whitespace: true, message: '对象类型名称不能为空', trigger: 'blur'}, {
-    max: 128,
-    message: '名称不能超过128个字符',
-    trigger: 'blur'
-  }],
-  description: [{
-    max: 256,
-    message: '描述不能超过256个字符',
-    trigger: 'blur'
-  }]
+  orderNum: [{ required: true, message: "显示顺序不能为空", trigger: "blur" }],
+  name: [
+    {
+      required: true,
+      whitespace: true,
+      message: "对象类型名称不能为空",
+      trigger: "blur",
+    },
+    {
+      max: 128,
+      message: "名称不能超过128个字符",
+      trigger: "blur",
+    },
+  ],
+  description: [
+    {
+      max: 256,
+      message: "描述不能超过256个字符",
+      trigger: "blur",
+    },
+  ],
 };
 
 function buildTree(items) {
-  const nodes = new Map(items.map(item => [String(item.id), {...item, children: []}]));
+  const nodes = new Map(
+    items.map((item) => [String(item.id), { ...item, children: [] }])
+  );
   const roots = [];
   for (const node of nodes.values()) {
     const parent = nodes.get(String(node.parentId));
-    if (parent && parent !== node) parent.children.push(node); else roots.push(node);
+    if (parent && parent !== node) parent.children.push(node);
+    else roots.push(node);
   }
   return roots;
 }
 
 const tree = computed(() => buildTree(rows.value));
 const filteredTree = computed(() => {
-    const keyword = appliedName.value.trim().toLowerCase();
-    const parentId = appliedParentId.value;
-    function filter(nodes, inherited = false, matchedParent = false) {
-        return nodes.flatMap((node) => {
-            const inScope = inherited || parentId == null || parentId === '' || String(node.parentId) === String(parentId);
-            const matches = matchedParent || !keyword || node.name?.toLowerCase().includes(keyword);
-            const children = filter(node.children, inScope, inScope && matches);
-            if (inScope && matches) return [{ ...node, children }];
-            return children.length ? [{ ...node, children }] : [];
-        }).sort((a, b) => {
-            const direction = sort.order === 'descending' ? -1 : 1;
-            const comparison = sort.prop === 'orderNum'
-                ? Number(a.orderNum ?? 0) - Number(b.orderNum ?? 0)
-                : String(a.createTime || '').localeCompare(String(b.createTime || ''));
-            return comparison * direction;
-        });
-    }
-    return filter(tree.value);
+  const keyword = appliedName.value.trim().toLowerCase();
+  const parentId = appliedParentId.value;
+  function filter(nodes, inherited = false, matchedParent = false) {
+    return nodes
+      .flatMap((node) => {
+        const inScope =
+          inherited ||
+          parentId == null ||
+          parentId === "" ||
+          String(node.parentId) === String(parentId);
+        const matches =
+          matchedParent ||
+          !keyword ||
+          node.name?.toLowerCase().includes(keyword);
+        const children = filter(node.children, inScope, inScope && matches);
+        if (inScope && matches) return [{ ...node, children }];
+        return children.length ? [{ ...node, children }] : [];
+      })
+      .sort((a, b) => {
+        const direction = sort.order === "descending" ? -1 : 1;
+        const comparison =
+          sort.prop === "orderNum"
+            ? Number(a.orderNum ?? 0) - Number(b.orderNum ?? 0)
+            : String(a.createTime || "").localeCompare(
+                String(b.createTime || "")
+              );
+        return comparison * direction;
+      });
+  }
+  return filter(tree.value);
 });
 const searchItems = computed(() => [
-    { label: '对象类型名称', prop: 'name', component: { is: 'input' } },
-    { label: '上级对象类型', prop: 'parentId', component: {
-        is: 'tree-select', data: tree.value,
-        props: { value: 'id', label: 'name', children: 'children' },
-        valueKey: 'id', checkStrictly: true, clearable: true,
-    } },
+  { label: "对象类型名称", prop: "name", component: { is: "input" } },
+  {
+    label: "上级对象类型",
+    prop: "parentId",
+    component: {
+      is: "tree-select",
+      data: tree.value,
+      props: { value: "id", label: "name", children: "children" },
+      valueKey: "id",
+      checkStrictly: true,
+      clearable: true,
+    },
+  },
 ]);
 watch(filteredTree, () => tableRef.value?.getList());
 const parentOptions = ref([]);
@@ -448,11 +555,20 @@ let editRequest = 0;
 
 async function getList() {
   const request = ++listRequest;
-  if (!versionId.value || !props.targetDetail?.id) { rows.value = []; loading.value = false; return; }
+  if (!versionId.value || !props.targetDetail?.id) {
+    rows.value = [];
+    loading.value = false;
+    return;
+  }
   loading.value = true;
   try {
-    const response = await listType({workspaceId: 1001, versionId: versionId.value, pageNum: 1, pageSize: -1,
-      targetIdList: [props.targetDetail.id]});
+    const response = await listType({
+      workspaceId: 1001,
+      versionId: versionId.value,
+      pageNum: 1,
+      pageSize: -1,
+      targetIdList: [props.targetDetail.id],
+    });
     if (request !== listRequest) return;
     rows.value = response.data.rows || [];
   } finally {
@@ -484,12 +600,17 @@ async function handleAdd(parent) {
   if (parent) {
     form.value.parentId = parent.id;
   }
-  dialogTitle.value = '新增对象类型';
+  dialogTitle.value = "新增对象类型";
   open.value = true;
   nextTick(() => typeRef.value?.clearValidate());
-  const response = await listType({workspaceId: 1001, versionId: versionId.value, pageNum: 1, pageSize: -1});
+  const response = await listType({
+    workspaceId: 1001,
+    versionId: versionId.value,
+    pageNum: 1,
+    pageSize: -1,
+  });
   if (request !== editRequest || !open.value) return;
-  parentOptions.value = proxy.handleTree(response.data.rows || [], 'id');
+  parentOptions.value = proxy.handleTree(response.data.rows || [], "id");
 }
 
 async function handleUpdate(row) {
@@ -497,30 +618,37 @@ async function handleUpdate(row) {
   form.value = emptyForm();
   existingTargetIds.value = [];
   parentOptions.value = [];
-  const [response, targetsResponse] = await Promise.all([getType(row.id), listTypeTargets(row.id)]);
+  const [response, targetsResponse] = await Promise.all([
+    getType(row.id),
+    listTypeTargets(row.id),
+  ]);
   if (request !== editRequest) return;
-  editingRoot.value = response.data.parentId == null || String(response.data.parentId) === '0';
+  editingRoot.value =
+    response.data.parentId == null || String(response.data.parentId) === "0";
   if (!editingRoot.value) {
     const optionsResponse = await listTypeExcludeChild(row.id);
     if (request !== editRequest) return;
-    parentOptions.value = proxy.handleTree(optionsResponse.data || [], 'id');
+    parentOptions.value = proxy.handleTree(optionsResponse.data || [], "id");
   }
   form.value = {
-    ...emptyForm(), ...response.data,
-    parentId: editingRoot.value ? 0 : response.data.parentId
+    ...emptyForm(),
+    ...response.data,
+    parentId: editingRoot.value ? 0 : response.data.parentId,
   };
-  existingTargetIds.value = (targetsResponse.data || []).map(target => String(target.id));
-  dialogTitle.value = '修改对象类型';
+  existingTargetIds.value = (targetsResponse.data || []).map((target) =>
+    String(target.id)
+  );
+  dialogTitle.value = "修改对象类型";
   open.value = true;
   nextTick(() => typeRef.value?.clearValidate());
 }
 
 function handleDetail(row) {
   router.push({
-    name: 'OmTargetDetailObjectType',
-    params: {id: row.id, versionId: versionId.value},
+    name: "OmTargetDetailObjectType",
+    params: { id: row.id, versionId: versionId.value },
     // 携带当前建模目标 id，供对象类型详情页“返回”时还原目标详情上下文
-    query: {targetId: props.targetDetail?.id}
+    query: { targetId: props.targetDetail?.id },
   });
 }
 
@@ -530,8 +658,15 @@ async function submitForm() {
   const submittingVersion = versionId.value;
   const request = editRequest;
   const valid = await typeRef.value.validate().catch(() => false);
-  if (!valid || saving.value || !open.value || request !== editRequest
-      || submittingVersion !== versionId.value || targetId !== props.targetDetail?.id) return;
+  if (
+    !valid ||
+    saving.value ||
+    !open.value ||
+    request !== editRequest ||
+    submittingVersion !== versionId.value ||
+    targetId !== props.targetDetail?.id
+  )
+    return;
   saving.value = true;
   try {
     const data = {
@@ -540,13 +675,22 @@ async function submitForm() {
       versionId: submittingVersion,
       orderNum: form.value.orderNum,
       targetIds: [...new Set([String(targetId), ...existingTargetIds.value])],
-      parentId: editingRoot.value || form.value.parentId == null || form.value.parentId === '' ? 0 : form.value.parentId,
+      parentId:
+        editingRoot.value ||
+        form.value.parentId == null ||
+        form.value.parentId === ""
+          ? 0
+          : form.value.parentId,
       name: form.value.name.trim(),
-      description: (form.value.description ?? '').trim()
+      description: (form.value.description ?? "").trim(),
     };
     await (data.id ? updateType(data) : addType(data));
-    if (submittingVersion !== versionId.value || targetId !== props.targetDetail?.id) return;
-    ElMessage.success(data.id ? '修改成功' : '新增成功');
+    if (
+      submittingVersion !== versionId.value ||
+      targetId !== props.targetDetail?.id
+    )
+      return;
+    ElMessage.success(data.id ? "修改成功" : "新增成功");
     open.value = false;
     await getList();
   } finally {
@@ -568,22 +712,22 @@ async function handleDelete(row) {
   deleting.value = true;
   try {
     await delType(row.id);
-    ElMessage.success('删除成功');
+    ElMessage.success("删除成功");
     await getList();
   } finally {
     deleting.value = false;
   }
 }
 
-const termQuery = reactive({stdName: '', pageNum: 1, pageSize: 10});
+const termQuery = reactive({ stdName: "", pageNum: 1, pageSize: 10 });
 const terms = ref([]);
 const termTotal = ref(0);
 const termLoading = ref(false);
 const selectedTerm = ref();
 const termFields = [
-  { prop: 'alias', label: '术语别名', width: 105 },
-  { prop: 'abbr', label: '业务缩写', width: 80 },
-  { prop: 'source', label: '来源', width: 105 },
+  { prop: "alias", label: "术语别名", width: 160 },
+  { prop: "abbr", label: "业务缩写", width: 120 },
+  { prop: "source", label: "来源", width: 180 },
 ];
 let termRequest = 0;
 
@@ -597,9 +741,18 @@ async function getTerms() {
   termLoading.value = true;
   selectedTerm.value = undefined;
   try {
-    const response = await listTerm({...termQuery, workspaceId: 1001, versionId: versionId.value, status: 1, orderByColumn: "createTime", isAsc: "descending"});
+    const response = await listTerm({
+      ...termQuery,
+      workspaceId: 1001,
+      versionId: versionId.value,
+      status: 1,
+      orderByColumn: "createTime",
+      isAsc: "descending",
+    });
     if (request !== termRequest) return;
-    terms.value = (response.data.rows || []).filter(row => Number(row.status) === 1);
+    terms.value = (response.data.rows || []).filter(
+      (row) => Number(row.status) === 1
+    );
     termTotal.value = response.data.total || 0;
     await nextTick();
     termTableRef.value?.setCurrentRow();
@@ -619,14 +772,14 @@ function searchTerms() {
 }
 
 function resetTerms() {
-  termQuery.stdName = '';
+  termQuery.stdName = "";
   searchTerms();
 }
 
 function applyTerm() {
   if (Number(selectedTerm.value?.status) !== 1) return;
-  if ((selectedTerm.value.stdName || '').length > 128) {
-    ElMessage.warning('术语名称超过128个字符，请手动输入对象类型名称');
+  if ((selectedTerm.value.stdName || "").length > 128) {
+    ElMessage.warning("术语名称超过128个字符，请手动输入对象类型名称");
     return;
   }
   form.value.name = selectedTerm.value.stdName;
@@ -641,33 +794,40 @@ watch(versionId, () => {
   termOpen.value = false;
   getList();
 });
-watch(() => props.targetDetail?.id, () => {
-  ++editRequest;
-  open.value = false;
-  rows.value = [];
-  queryParams.name = '';
-  queryParams.parentId = undefined;
-  appliedName.value = '';
-  appliedParentId.value = undefined;
-  getList();
-});
+watch(
+  () => props.targetDetail?.id,
+  () => {
+    ++editRequest;
+    open.value = false;
+    rows.value = [];
+    queryParams.name = "";
+    queryParams.parentId = undefined;
+    appliedName.value = "";
+    appliedParentId.value = undefined;
+    getList();
+  }
+);
 onMounted(getList);
 </script>
 
 <style scoped lang="scss">
 .toggle-expand-all .svg-icon {
-    font-size: 12px;
-    margin-right: 6px;
+  font-size: 12px;
+  margin-right: 6px;
 }
 .object-type-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    .el-button + .el-button { margin-left: 0; }
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  .el-button + .el-button {
+    margin-left: 0;
+  }
 }
 
-.target-object-types :deep(.qt-wrap--search) { padding: 0; }
+.target-object-types :deep(.qt-wrap--search) {
+  padding: 0;
+}
 
 .name-input {
   display: flex;
@@ -675,7 +835,9 @@ onMounted(getList);
   width: 100%;
 }
 
-.target-table { margin: 0 0 10px 120px; }
+.target-table {
+  margin: 0 0 10px 120px;
+}
 
 .object-type-page :deep(.el-dialog) {
   max-width: calc(100vw - 32px);

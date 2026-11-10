@@ -176,33 +176,21 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <qt-form-item
-          label="枚举名称"
-          prop="enumName"
-          class="row-full"
-        >
+        <qt-form-item label="枚举名称" prop="enumName" class="row-full">
           <el-input
             v-model="form.enumName"
             placeholder="请输入枚举名称"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item
-          label="枚举类型"
-          prop="enumType"
-          class="row-full"
-        >
+        <qt-form-item label="枚举类型" prop="enumType" class="row-full">
           <el-input
             v-model="form.enumType"
             placeholder="请输入枚举类型"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item
-          label="状态"
-          prop="status"
-          class="row-full"
-        >
+        <qt-form-item label="状态" prop="status" class="row-full">
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in enumStatusOptions"
@@ -212,11 +200,7 @@
             </el-radio>
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item
-          label="描述"
-          prop="description"
-          class="row-full"
-        >
+        <qt-form-item label="描述" prop="description" class="row-full">
           <el-input
             v-model="form.description"
             class="character-count"
@@ -300,7 +284,7 @@ const tableStore = reactive({
   },
   columns: [
     { type: "selection", width: 55 },
-    { label: "编号", prop: "enumId", slot: "text", width: 80, sortable: true },
+    { label: "编号", prop: "enumId", slot: "text", width: 60, sortable: true },
     {
       label: "枚举名称",
       prop: "enumName",
@@ -408,7 +392,9 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
-    description: [{ max: 256, message: "描述不能超过256个字符", trigger: "blur" }],
+    description: [
+      { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
+    ],
     remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });
@@ -672,7 +658,9 @@ async function handleDelete(row) {
   const cannotDeleteCount = recordIds.length - deletableIds.length;
   if (!deletableIds.length) {
     try {
-      await proxy.$modal.confirm(`可删除0个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`);
+      await proxy.$modal.confirm(
+        `可删除0个，不可删除${cannotDeleteCount}个，是否删除可删除部分？`
+      );
     } catch {
       return;
     }

@@ -18,23 +18,36 @@
 
 <template>
   <div class="app-container data-rule-page" ref="app-container">
-    <GuideTip tip-id="om/constraint/data.list"/>
+    <GuideTip tip-id="om/constraint/data.list" />
 
     <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
       <template #search>
-        <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef"/>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+        />
       </template>
 
       <template #actions-data>
-        <el-button v-hasPermi="['om:constraint:datarule:add']" type="primary" plain :disabled="saving"
-                   @click="handleAdd" @mousedown="(e) => e.preventDefault()"
+        <el-button
+          v-hasPermi="['om:constraint:datarule:add']"
+          type="primary"
+          plain
+          :disabled="saving"
+          @click="handleAdd"
+          @mousedown="(e) => e.preventDefault()"
         >
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
-        <el-button v-hasPermi="['om:constraint:datarule:remove']" type="danger" plain
-                   :loading="batchDeleteLoading"
-                :disabled="!selectedIds.length || deleting" @click="handleDelete()"
-                   @mousedown="(e) => e.preventDefault()"
+        <el-button
+          v-hasPermi="['om:constraint:datarule:remove']"
+          type="danger"
+          plain
+          :loading="batchDeleteLoading"
+          :disabled="!selectedIds.length || deleting"
+          @click="handleDelete()"
+          @mousedown="(e) => e.preventDefault()"
         >
           <i class="iconfont-mini icon-shanchu-huise mr5"></i>批量删除
         </el-button>
@@ -42,35 +55,62 @@
 
       <qt-table v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
-        <template #text="{row, column_data}">{{ row[column_data.prop] }}</template>
+        <template #text="{ row, column_data }">{{
+          row[column_data.prop]
+        }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
-        <template #creator="{row}">
+        <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
-            <span class="text-ellipsis" :title="row.createBy || ''">{{ row.createBy || '-' }}</span>
-            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{ creatorPhones[row.creatorId] }}</span>
+            <span class="text-ellipsis" :title="row.createBy || ''">{{
+              row.createBy || "-"
+            }}</span>
+            <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
+              creatorPhones[row.creatorId]
+            }}</span>
           </div>
         </template>
-        <template #handle="{row}">
-          <el-button v-hasPermi="['om:constraint:datarule:query']" link type="primary" icon="View"
-                     @click="handleDetail(row)"
-          >详情
+        <template #handle="{ row }">
+          <el-button
+            v-hasPermi="['om:constraint:datarule:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情
           </el-button>
           <!-- 操作区仅三个按钮，直展不折叠到“更多”。 -->
-          <el-button v-if="auth.hasPermi('om:constraint:datarule:edit')" link type="primary" icon="Edit"
-                     :disabled="saving" @click="handleUpdate(row)"
-          >修改
+          <el-button
+            v-if="auth.hasPermi('om:constraint:datarule:edit')"
+            link
+            type="primary"
+            icon="Edit"
+            :disabled="saving"
+            @click="handleUpdate(row)"
+            >修改
           </el-button>
-          <el-button v-if="auth.hasPermi('om:constraint:datarule:remove')" link type="danger" icon="Delete"
-                     :loading="deleteLoading[row.id]"
-                    :disabled="deleting" @click="handleDelete(row)"
-          >删除
+          <el-button
+            v-if="auth.hasPermi('om:constraint:datarule:remove')"
+            link
+            type="danger"
+            icon="Delete"
+            :loading="deleteLoading[row.id]"
+            :disabled="deleting"
+            @click="handleDelete(row)"
+            >删除
           </el-button>
         </template>
       </qt-table>
     </qt-wrap>
-    <el-dialog v-model="open" :title="dialogTitle" width="860px" :append-to="$refs['app-container']"
-               :close-on-press-escape="!saving" :before-close="beforeClose" draggable destroy-on-close
-               @closed="handleDialogClosed"
+    <el-dialog
+      v-model="open"
+      :title="dialogTitle"
+      width="860px"
+      :append-to="$refs['app-container']"
+      :close-on-press-escape="!saving"
+      :before-close="beforeClose"
+      draggable
+      destroy-on-close
+      @closed="handleDialogClosed"
     >
       <guide-tip-panel
         type="hint"
@@ -78,42 +118,77 @@
         allow-wrap
         title="面向属性取值维护数据校验规则，配置校验类型、约束级别与失败条件，保障业务数据符合预期格式与范围。"
       />
-      <el-form ref="ruleRef" :model="form" :rules="rules" label-width="120px" class="rule-form"
-               @submit.prevent="submitForm"
+      <el-form
+        ref="ruleRef"
+        :model="form"
+        :rules="rules"
+        label-width="120px"
+        class="rule-form"
+        @submit.prevent="submitForm"
       >
         <div class="h2-title">基本信息</div>
         <qt-form-item label="规则名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入规则名称" maxlength="128"/>
+          <el-input
+            v-model="form.name"
+            placeholder="请输入规则名称"
+            maxlength="128"
+          />
         </qt-form-item>
-        <qt-form-item label="类型" prop="type" >
-          <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
-            <el-option v-for="item in om_data_rule_type" :key="item.value" :label="item.label" :value="item.value"/>
+        <qt-form-item label="类型" prop="type">
+          <el-select
+            v-model="form.type"
+            placeholder="请选择类型"
+            @change="handleTypeChange"
+          >
+            <el-option
+              v-for="item in om_data_rule_type"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-select>
         </qt-form-item>
-        <qt-form-item label="级别" prop="level" >
+        <qt-form-item label="级别" prop="level">
           <el-radio-group v-model="form.level">
-            <el-radio v-for="item in om_rule_level" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
+            <el-radio
+              v-for="item in om_rule_level"
+              :key="item.value"
+              :value="item.value"
+              >{{ item.label }}</el-radio
+            >
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="描述" prop="description" >
-          <el-input v-model="form.description" class="character-count" type="textarea" :rows="4"
-                    placeholder="请输入描述" :maxlength="256" show-word-limit
+        <qt-form-item label="描述" prop="description">
+          <el-input
+            v-model="form.description"
+            class="character-count"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入描述"
+            :maxlength="256"
+            show-word-limit
           />
         </qt-form-item>
         <div class="h2-title">执行条件</div>
-        <qt-form-item label="条件关系" prop="conditionRelation" >
+        <qt-form-item label="条件关系" prop="conditionRelation">
           <el-radio-group v-model="form.conditionRelation">
             <el-radio value="OR">任一满足（OR）</el-radio>
             <el-radio value="AND">全部满足（AND）</el-radio>
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="失败条件" required >
+        <qt-form-item label="失败条件" required>
           <div class="conditions">
-            <div v-for="(condition, index) in form.conditions" :key="condition.key" class="condition-row">
+            <div
+              v-for="(condition, index) in form.conditions"
+              :key="condition.key"
+              class="condition-row"
+            >
               <div class="condition-label">条件 {{ index + 1 }}：</div>
               <div class="condition-fields">
                 <el-tree-select
-                  :ref="element => setConditionSelectRef(condition.key, element)"
+                  :ref="
+                    (element) => setConditionSelectRef(condition.key, element)
+                  "
                   v-model="condition.objectTypeId"
                   :data="objectTypeTree"
                   :props="objectTypeTreeProps"
@@ -137,35 +212,82 @@
                   :aria-label="'第' + (index + 1) + '条属性'"
                   @change="handleConditionAttributeChange(condition)"
                 >
-                  <el-option v-for="item in getConditionAttributes(condition)" :key="item.id" :label="item.name" :value="item.id"/>
+                  <el-option
+                    v-for="item in getConditionAttributes(condition)"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
                 </el-select>
-                <span v-if="form.type === 'REQUIRED'" class="condition-operator">为空</span>
+                <span v-if="form.type === 'REQUIRED'" class="condition-operator"
+                  >为空</span
+                >
                 <template v-else>
-                  <el-select v-if="form.type === 'RANGE'" v-model="condition.operator" class="condition-comparison"
-                             :aria-label="'第' + (index + 1) + '条比较符'"
+                  <el-select
+                    v-if="form.type === 'RANGE'"
+                    v-model="condition.operator"
+                    class="condition-comparison"
+                    :aria-label="'第' + (index + 1) + '条比较符'"
                   >
-                    <el-option v-for="item in om_rule_operator" :key="item.value" :label="item.label" :value="item.value"/>
+                    <el-option
+                      v-for="item in om_rule_operator"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
                   </el-select>
-                  <span v-else class="condition-operator">{{ conditionOperatorLabel }}</span>
-                  <el-select v-if="form.type === 'FORMAT'" v-model="condition.value" placeholder="请选择日期格式"
-                             class="condition-value" :aria-label="'第' + (index + 1) + '条日期格式'" clearable
+                  <span v-else class="condition-operator">{{
+                    conditionOperatorLabel
+                  }}</span>
+                  <el-select
+                    v-if="form.type === 'FORMAT'"
+                    v-model="condition.value"
+                    placeholder="请选择日期格式"
+                    class="condition-value"
+                    :aria-label="'第' + (index + 1) + '条日期格式'"
+                    clearable
                   >
-                    <el-option v-for="format in dateFormatOptions" :key="format" :label="format" :value="format"/>
+                    <el-option
+                      v-for="format in dateFormatOptions"
+                      :key="format"
+                      :label="format"
+                      :value="format"
+                    />
                   </el-select>
-                  <el-input v-else :model-value="condition.value" :placeholder="conditionValuePlaceholder"
-                            class="condition-value"
-                            :inputmode="form.type === 'RANGE' ? 'decimal' : 'text'"
-                            :aria-label="'第' + (index + 1) + '条条件值'"
-                            @update:model-value="value => handleConditionValueInput(condition, value)"
+                  <el-input
+                    v-else
+                    :model-value="condition.value"
+                    :placeholder="conditionValuePlaceholder"
+                    class="condition-value"
+                    :inputmode="form.type === 'RANGE' ? 'decimal' : 'text'"
+                    :aria-label="'第' + (index + 1) + '条条件值'"
+                    @update:model-value="
+                      (value) => handleConditionValueInput(condition, value)
+                    "
                   />
                 </template>
               </div>
               <div class="condition-actions">
-                <el-button link type="danger" icon="Delete" :disabled="form.conditions.length === 1"
-                           :aria-label="'删除条件' + (index + 1)" :title="form.conditions.length === 1 ? '至少保留一条条件' : '删除条件'"
-                           @click="removeCondition(index)"
+                <el-button
+                  link
+                  type="danger"
+                  icon="Delete"
+                  :disabled="form.conditions.length === 1"
+                  :aria-label="'删除条件' + (index + 1)"
+                  :title="
+                    form.conditions.length === 1
+                      ? '至少保留一条条件'
+                      : '删除条件'
+                  "
+                  @click="removeCondition(index)"
                 />
-                <el-button v-if="index === form.conditions.length - 1" link type="primary" icon="Plus" @click="addCondition">
+                <el-button
+                  v-if="index === form.conditions.length - 1"
+                  link
+                  type="primary"
+                  icon="Plus"
+                  @click="addCondition"
+                >
                   添加条件
                 </el-button>
               </div>
@@ -175,33 +297,74 @@
             </div>
           </div>
         </qt-form-item>
-        <qt-form-item label="失败提示" prop="failureMessage" tip="校验失败时向用户展示的提示文案。">
-          <el-input v-model="form.failureMessage" placeholder="请输入失败提示" maxlength="256"/>
+        <qt-form-item
+          label="失败提示"
+          prop="failureMessage"
+          tip="校验失败时向用户展示的提示文案。"
+        >
+          <el-input
+            v-model="form.failureMessage"
+            placeholder="请输入失败提示"
+            maxlength="256"
+          />
         </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
           <el-button :disabled="saving" @click="cancel">取 消</el-button>
-          <el-button type="primary" :loading="saving" :disabled="saveDisabled" @click="submitForm">确 定</el-button>
+          <el-button
+            type="primary"
+            :loading="saving"
+            :disabled="saveDisabled"
+            @click="submitForm"
+            >确 定</el-button
+          >
         </div>
       </template>
     </el-dialog>
-    <el-dialog v-model="detailOpen" title="数据规则详情" width="860px" :append-to="$refs['app-container']" draggable destroy-on-close>
+    <el-dialog
+      v-model="detailOpen"
+      title="数据规则详情"
+      width="860px"
+      :append-to="$refs['app-container']"
+      draggable
+      destroy-on-close
+    >
       <!-- 详情与模型公理风格一致，用只读文本展示字段，并保留新增弹窗的分组标题。 -->
       <el-form label-width="120px" class="rule-form">
         <div class="h2-title">基本信息</div>
-        <el-form-item v-for="field in basicDetailFields" :key="field.label" :label="field.label">
-          <dict-tag v-if="field.dictOptions" :options="field.dictOptions" :value="field.dictValue" />
-          <div v-else class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+        <el-form-item
+          v-for="field in basicDetailFields"
+          :key="field.label"
+          :label="field.label"
+        >
+          <dict-tag
+            v-if="field.dictOptions"
+            :options="field.dictOptions"
+            :value="field.dictValue"
+          />
+          <div
+            v-else
+            class="form-readonly"
+            :class="{ textarea: field.multiline }"
+          >
+            {{ field.value || "-" }}
+          </div>
         </el-form-item>
         <div class="h2-title">执行条件</div>
         <el-form-item label="条件关系">
-          <div class="form-readonly">{{ conditionRelationLabel(detail.conditionRelation) || '-' }}</div>
+          <div class="form-readonly">
+            {{ conditionRelationLabel(detail.conditionRelation) || "-" }}
+          </div>
         </el-form-item>
         <el-form-item label="失败条件">
           <!-- 失败条件直接照搬修改弹窗的条件行布局，仅将各控件置为只读（disabled），去掉增删按钮。 -->
           <div class="conditions">
-            <div v-for="(condition, index) in detail.conditions" :key="condition.key || index" class="condition-row">
+            <div
+              v-for="(condition, index) in detail.conditions"
+              :key="condition.key || index"
+              class="condition-row"
+            >
               <div class="condition-label">条件 {{ index + 1 }}：</div>
               <div class="condition-fields condition-fields-detail">
                 <el-tree-select
@@ -220,25 +383,65 @@
                   class="condition-attribute"
                   placeholder="请选择属性"
                 >
-                  <el-option v-for="item in getConditionAttributes(condition, detail.type)" :key="item.id" :label="item.name" :value="item.id"/>
+                  <el-option
+                    v-for="item in getConditionAttributes(
+                      condition,
+                      detail.type
+                    )"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
                 </el-select>
-                <span v-if="detail.type === 'REQUIRED'" class="condition-operator">为空</span>
+                <span
+                  v-if="detail.type === 'REQUIRED'"
+                  class="condition-operator"
+                  >为空</span
+                >
                 <template v-else>
-                  <el-select v-if="detail.type === 'RANGE'" :model-value="condition.operator" class="condition-comparison" disabled>
-                    <el-option v-for="item in om_rule_operator" :key="item.value" :label="item.label" :value="item.value"/>
+                  <el-select
+                    v-if="detail.type === 'RANGE'"
+                    :model-value="condition.operator"
+                    class="condition-comparison"
+                    disabled
+                  >
+                    <el-option
+                      v-for="item in om_rule_operator"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
                   </el-select>
-                  <span v-else class="condition-operator">{{ detailConditionOperatorLabel }}</span>
-                  <el-select v-if="detail.type === 'FORMAT'" :model-value="condition.value" placeholder="请选择日期格式" class="condition-value" disabled>
-                    <el-option v-for="format in dateFormatOptions" :key="format" :label="format" :value="format"/>
+                  <span v-else class="condition-operator">{{
+                    detailConditionOperatorLabel
+                  }}</span>
+                  <el-select
+                    v-if="detail.type === 'FORMAT'"
+                    :model-value="condition.value"
+                    placeholder="请选择日期格式"
+                    class="condition-value"
+                    disabled
+                  >
+                    <el-option
+                      v-for="format in dateFormatOptions"
+                      :key="format"
+                      :label="format"
+                      :value="format"
+                    />
                   </el-select>
-                  <el-input v-else :model-value="condition.value" class="condition-value" disabled/>
+                  <el-input
+                    v-else
+                    :model-value="condition.value"
+                    class="condition-value"
+                    disabled
+                  />
                 </template>
               </div>
             </div>
           </div>
         </el-form-item>
         <el-form-item label="失败提示">
-          <div class="form-readonly">{{ detail.failureMessage || '-' }}</div>
+          <div class="form-readonly">{{ detail.failureMessage || "-" }}</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -252,21 +455,42 @@
 
 <script setup>
 import { createRowKey } from "@/utils/rowKey";
-import {computed, getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, watch} from 'vue';
-import {ElMessage} from 'element-plus';
-import {useOntologyVersion} from '@/views/om/useOntologyVersion';
-import { listDataRule, getDataRule, addDataRule, updateDataRule, delDataRule } from '@/api/om/constraint/dataRule';
-import {listRelationTypes} from '@/api/om/object/relation';
-import {listAttributes, listAttributeBusinessDataTypes} from '@/api/om/object/attribute';
+import {
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  reactive,
+  ref,
+  watch,
+} from "vue";
+import { ElMessage } from "element-plus";
+import { useOntologyVersion } from "@/views/om/useOntologyVersion";
+import {
+  listDataRule,
+  getDataRule,
+  addDataRule,
+  updateDataRule,
+  delDataRule,
+} from "@/api/om/constraint/dataRule";
+import { listRelationTypes } from "@/api/om/object/relation";
+import {
+  listAttributes,
+  listAttributeBusinessDataTypes,
+} from "@/api/om/object/attribute";
 import auth from "@/plugins/auth";
-import {useCreatorPhones} from "@/utils/useCreatorPhones";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
-defineOptions({name: 'OmDataRule'});
-const props = defineProps({versionId: {type: [String, Number], default: undefined}});
-const {versionId, requireVersion} = useOntologyVersion(() => props.versionId);
-const {proxy} = getCurrentInstance();
-const {om_data_rule_type, om_rule_level, om_rule_operator} = proxy.useDict(
-  'om_data_rule_type', 'om_rule_level', 'om_rule_operator'
+defineOptions({ name: "OmDataRule" });
+const props = defineProps({
+  versionId: { type: [String, Number], default: undefined },
+});
+const { versionId, requireVersion } = useOntologyVersion(() => props.versionId);
+const { proxy } = getCurrentInstance();
+const { om_data_rule_type, om_rule_level, om_rule_operator } = proxy.useDict(
+  "om_data_rule_type",
+  "om_rule_level",
+  "om_rule_operator"
 );
 
 const tableRef = ref();
@@ -279,9 +503,9 @@ const deleteLoading = ref({});
 const batchDeleteLoading = ref(false);
 const open = ref(false);
 const detailOpen = ref(false);
-const dialogTitle = ref('新增数据规则');
+const dialogTitle = ref("新增数据规则");
 const detail = ref({});
-const {creatorPhones, formatCreator} = useCreatorPhones();
+const { creatorPhones, formatCreator } = useCreatorPhones();
 
 /**
  * 分页查询数据规则列表；版本号缺失时返回空列表，避免无版本上下文发起无效查询。
@@ -290,9 +514,9 @@ const {creatorPhones, formatCreator} = useCreatorPhones();
  */
 function fetchDataRules(params) {
   if (!versionId.value) {
-    return Promise.resolve({data: {rows: [], total: 0}});
+    return Promise.resolve({ data: { rows: [], total: 0 } });
   }
-  return listDataRule({...params, versionId: versionId.value});
+  return listDataRule({ ...params, versionId: versionId.value });
 }
 
 // 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
@@ -301,42 +525,114 @@ const tableStore = reactive({
     sort: true,
     table: {
       stripe: true,
-      rowKey: 'id',
-      defaultSort: {prop: 'createTime', order: 'descending'},
-      onSelectionChange: handleSelectionChange
-    }
+      rowKey: "id",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange,
+    },
   },
   columns: [
-    {type: 'selection', width: 55, minWidth: 55},
-    {label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true},
-    {label: '规则名称', prop: 'name', slot: 'text', minWidth: 200, align: 'left', showOverflowTooltip: {effect: 'light'}},
-    {label: '描述', prop: 'description', slot: 'text', minWidth: 240, align: 'left', showOverflowTooltip: {effect: 'light'}},
-    {label: '规则类型', prop: 'type', dict: 'om_data_rule_type', width: 150, minWidth: 150},
-    {label: '级别', prop: 'level', dict: 'om_rule_level', width: 90, minWidth: 90},
-    {label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left'},
-    {label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true},
-    {label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right'}
+    { type: "selection", width: 55, minWidth: 55 },
+    {
+      label: "编号",
+      prop: "id",
+      slot: "text",
+      width: 60,
+      minWidth: 60,
+      align: "center",
+      sortable: true,
+    },
+    {
+      label: "规则名称",
+      prop: "name",
+      slot: "text",
+      minWidth: 200,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 240,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
+      label: "规则类型",
+      prop: "type",
+      dict: "om_data_rule_type",
+      width: 150,
+      minWidth: 150,
+    },
+    {
+      label: "级别",
+      prop: "level",
+      dict: "om_rule_level",
+      width: 90,
+      minWidth: 90,
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      slot: "creator",
+      width: 130,
+      minWidth: 130,
+      align: "left",
+      headerAlign: "left",
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      date: true,
+      width: 160,
+      minWidth: 160,
+      align: "left",
+      sortable: true,
+    },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 250,
+      minWidth: 250,
+      fixed: "right",
+    },
   ],
   func: fetchDataRules,
   params: {
     name: null,
     type: null,
-    level: null
-  }
+    level: null,
+  },
 });
 
 // 搜索项配置
 const searchStore = reactive({
   items: [
-    {label: '规则名称', prop: 'name', component: {is: 'input'}},
-    {label: '规则类型', prop: 'type', component: {is: 'select', options: om_data_rule_type}},
-    {label: '级别', prop: 'level', component: {is: 'select', options: om_rule_level}}
-  ]
+    { label: "规则名称", prop: "name", component: { is: "input" } },
+    {
+      label: "规则类型",
+      prop: "type",
+      component: { is: "select", options: om_data_rule_type },
+    },
+    {
+      label: "级别",
+      prop: "level",
+      component: { is: "select", options: om_rule_level },
+    },
+  ],
 });
 const objectTypeOptions = ref([]);
-const objectTypeTreeProps = {label: 'name', value: 'id', children: 'children'};
+const objectTypeTreeProps = {
+  label: "name",
+  value: "id",
+  children: "children",
+};
 const objectTypeTree = computed(() =>
-  proxy.handleTree(objectTypeOptions.value.map(item => ({...item})), 'id', 'parentId')
+  proxy.handleTree(
+    objectTypeOptions.value.map((item) => ({ ...item })),
+    "id",
+    "parentId"
+  )
 );
 const attributeOptions = reactive({});
 const businessTypeOptions = reactive({});
@@ -344,57 +640,78 @@ const optionsLoading = ref(false);
 const optionsLoadFailed = ref(false);
 const attributeLoadingCount = ref(0);
 const conditionSelectRefs = new Map();
-const saveDisabled = computed(() => optionsLoading.value || attributeLoadingCount.value > 0 || optionsLoadFailed.value);
+const saveDisabled = computed(
+  () =>
+    optionsLoading.value ||
+    attributeLoadingCount.value > 0 ||
+    optionsLoadFailed.value
+);
 const emptyForm = () => ({
   id: undefined,
   versionId: versionId.value,
-  name: '',
-  description: '',
-  level: 'INFO',
-  type: 'REQUIRED',
-  conditionRelation: 'OR',
+  name: "",
+  description: "",
+  level: "INFO",
+  type: "REQUIRED",
+  conditionRelation: "OR",
   conditions: [createCondition()],
-  failureMessage: ''
+  failureMessage: "",
 });
 const form = ref(emptyForm());
 const rules = {
   name: [
-    {required: true, whitespace: true, message: '规则名称不能为空', trigger: 'blur'},
-    {max: 128, message: '规则名称不能超过128个字符', trigger: 'blur'}
+    {
+      required: true,
+      whitespace: true,
+      message: "规则名称不能为空",
+      trigger: "blur",
+    },
+    { max: 128, message: "规则名称不能超过128个字符", trigger: "blur" },
   ],
-  type: [{required: true, message: '请选择类型', trigger: 'change'}],
-  level: [{required: true, message: '请选择级别', trigger: 'change'}],
+  type: [{ required: true, message: "请选择类型", trigger: "change" }],
+  level: [{ required: true, message: "请选择级别", trigger: "change" }],
   description: [
-    {max: 256, message: '描述不能超过256个字符', trigger: 'blur'}
+    { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
   ],
-  conditionRelation: [{required: true, message: '请选择条件关系', trigger: 'change'}],
+  conditionRelation: [
+    { required: true, message: "请选择条件关系", trigger: "change" },
+  ],
   failureMessage: [
-    {required: true, whitespace: true, message: '失败提示不能为空', trigger: 'blur'},
-    {max: 256, message: '失败提示不能超过256个字符', trigger: 'blur'}
-  ]
+    {
+      required: true,
+      whitespace: true,
+      message: "失败提示不能为空",
+      trigger: "blur",
+    },
+    { max: 256, message: "失败提示不能超过256个字符", trigger: "blur" },
+  ],
 };
 let dialogRequest = 0;
 let contextRequest = 0;
 const attributePlaceholder = computed(() => {
-  if (form.value.type === 'RANGE') return '请选择数值属性';
-  return form.value.type === 'FORMAT' ? '请选择日期属性' : '请选择属性';
+  if (form.value.type === "RANGE") return "请选择数值属性";
+  return form.value.type === "FORMAT" ? "请选择日期属性" : "请选择属性";
 });
-const conditionOperatorLabel = computed(() => form.value.type === 'ENUM' ? '不属于' : '不匹配');
-const detailConditionOperatorLabel = computed(() => detail.value.type === 'ENUM' ? '不属于' : '不匹配');
+const conditionOperatorLabel = computed(() =>
+  form.value.type === "ENUM" ? "不属于" : "不匹配"
+);
+const detailConditionOperatorLabel = computed(() =>
+  detail.value.type === "ENUM" ? "不属于" : "不匹配"
+);
 const dateFormatOptions = [
-  'yyyy',
-  'yyyy-MM',
-  'yyyy-MM-dd',
-  'yyyy/MM/dd',
-  'yyyyMMdd',
-  'yyyy-MM-dd HH:mm',
-  'yyyy-MM-dd HH:mm:ss',
-  'yyyy/MM/dd HH:mm:ss',
-  "yyyy-MM-dd'T'HH:mm:ss"
+  "yyyy",
+  "yyyy-MM",
+  "yyyy-MM-dd",
+  "yyyy/MM/dd",
+  "yyyyMMdd",
+  "yyyy-MM-dd HH:mm",
+  "yyyy-MM-dd HH:mm:ss",
+  "yyyy/MM/dd HH:mm:ss",
+  "yyyy-MM-dd'T'HH:mm:ss",
 ];
 const conditionValuePlaceholder = computed(() => {
-  if (form.value.type === 'ENUM') return '手工输入，以逗号分隔';
-  return form.value.type === 'RANGE' ? '请输入数值' : '请输入内容';
+  if (form.value.type === "ENUM") return "手工输入，以逗号分隔";
+  return form.value.type === "RANGE" ? "请输入数值" : "请输入内容";
 });
 
 /**
@@ -424,10 +741,10 @@ async function loadAllPages(loadPage) {
  */
 async function listObjectTypeOptions(versionId) {
   const response = await listRelationTypes(versionId);
-  return (response.data || []).map(item => ({
+  return (response.data || []).map((item) => ({
     ...item,
     id: String(item.id),
-    parentId: item.parentId == null ? null : String(item.parentId)
+    parentId: item.parentId == null ? null : String(item.parentId),
   }));
 }
 
@@ -439,18 +756,29 @@ async function listObjectTypeOptions(versionId) {
  */
 async function listObjectAttributeOptions(objectTypeId, versionId) {
   const results = await Promise.allSettled([
-    loadAllPages(pageNum => listAttributes({objectTypeId, versionId, pageNum, pageSize: 100})),
-    listAttributeBusinessDataTypes(objectTypeId, 'PROJECT'),
-    listAttributeBusinessDataTypes(objectTypeId, 'GLOBAL')
+    loadAllPages((pageNum) =>
+      listAttributes({ objectTypeId, versionId, pageNum, pageSize: 100 })
+    ),
+    listAttributeBusinessDataTypes(objectTypeId, "PROJECT"),
+    listAttributeBusinessDataTypes(objectTypeId, "GLOBAL"),
   ]);
-  const failed = results.find(result => result.status === 'rejected');
+  const failed = results.find((result) => result.status === "rejected");
   if (failed) throw failed.reason;
   return {
-    attributes: results[0].value.map(item => ({...item, id: String(item.id)})),
+    attributes: results[0].value.map((item) => ({
+      ...item,
+      id: String(item.id),
+    })),
     businessTypes: [
-      ...(results[1].value.data || []).map(item => ({...item, businessTypeSource: 'PROJECT'})),
-      ...(results[2].value.data || []).map(item => ({...item, businessTypeSource: 'GLOBAL'}))
-    ]
+      ...(results[1].value.data || []).map((item) => ({
+        ...item,
+        businessTypeSource: "PROJECT",
+      })),
+      ...(results[2].value.data || []).map((item) => ({
+        ...item,
+        businessTypeSource: "GLOBAL",
+      })),
+    ],
   };
 }
 
@@ -459,7 +787,13 @@ async function listObjectAttributeOptions(objectTypeId, versionId) {
  * @returns {Object} 条件对象
  */
 function createCondition() {
-  return {key: createRowKey(), objectTypeId: '', attributeId: '', operator: 'LT', value: ''};
+  return {
+    key: createRowKey(),
+    objectTypeId: "",
+    attributeId: "",
+    operator: "LT",
+    value: "",
+  };
 }
 
 /**
@@ -469,9 +803,13 @@ function createCondition() {
  * @returns {number|undefined} 基础数据类型编号
  */
 function getBasicTypeCode(attribute, businessTypes) {
-  if (Number(attribute.typeCategory) !== 2) return Number(attribute.basicTypeCode);
-  const businessType = businessTypes.find(item => String(item.id) === String(attribute.businessTypeId)
-    && item.businessTypeSource === (attribute.businessTypeSource || 'GLOBAL'));
+  if (Number(attribute.typeCategory) !== 2)
+    return Number(attribute.basicTypeCode);
+  const businessType = businessTypes.find(
+    (item) =>
+      String(item.id) === String(attribute.businessTypeId) &&
+      item.businessTypeSource === (attribute.businessTypeSource || "GLOBAL")
+  );
   return businessType ? Number(businessType.dataType) : undefined;
 }
 
@@ -483,27 +821,46 @@ function getBasicTypeCode(attribute, businessTypes) {
  * @returns {string} 错误提示文案，校验通过时为空字符串
  */
 function validateConditions(ruleForm, attributes, businessTypes) {
-  if (!ruleForm.conditions.length) return '请至少添加一条失败条件';
+  if (!ruleForm.conditions.length) return "请至少添加一条失败条件";
   for (const [index, condition] of ruleForm.conditions.entries()) {
     const prefix = `第 ${index + 1} 条失败条件：`;
-    if (!condition.objectTypeId || !condition.attributeId) return `${prefix}请选择对象类型和属性`;
-    const attribute = (attributes[condition.objectTypeId] || []).find(item => item.id === condition.attributeId);
+    if (!condition.objectTypeId || !condition.attributeId)
+      return `${prefix}请选择对象类型和属性`;
+    const attribute = (attributes[condition.objectTypeId] || []).find(
+      (item) => item.id === condition.attributeId
+    );
     if (!attribute) return `${prefix}属性已失效，请重新选择`;
-    if (ruleForm.type === 'RANGE') {
-      const code = getBasicTypeCode(attribute, businessTypes[condition.objectTypeId] || []);
+    if (ruleForm.type === "RANGE") {
+      const code = getBasicTypeCode(
+        attribute,
+        businessTypes[condition.objectTypeId] || []
+      );
       if (![1, 2].includes(code)) return `${prefix}只能选择整数或小数属性`;
-      if (!om_rule_operator.value.some(item => item.value === condition.operator)) return `${prefix}请选择比较符`;
+      if (
+        !om_rule_operator.value.some(
+          (item) => item.value === condition.operator
+        )
+      )
+        return `${prefix}请选择比较符`;
       const value = String(condition.value).trim();
-      if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return `${prefix}请输入有效数值`;
+      if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value))
+        return `${prefix}请输入有效数值`;
       if (code === 1 && !/^[+-]?\d+$/.test(value)) return `${prefix}请输入整数`;
-    } else if (ruleForm.type === 'FORMAT') {
-      if (getBasicTypeCode(attribute, businessTypes[condition.objectTypeId] || []) !== 4) return `${prefix}只能选择日期属性`;
-      if (!dateFormatOptions.includes(condition.value)) return `${prefix}请选择日期格式`;
-    } else if (ruleForm.type === 'ENUM' && !String(condition.value).trim()) {
+    } else if (ruleForm.type === "FORMAT") {
+      if (
+        getBasicTypeCode(
+          attribute,
+          businessTypes[condition.objectTypeId] || []
+        ) !== 4
+      )
+        return `${prefix}只能选择日期属性`;
+      if (!dateFormatOptions.includes(condition.value))
+        return `${prefix}请选择日期格式`;
+    } else if (ruleForm.type === "ENUM" && !String(condition.value).trim()) {
       return `${prefix}请输入枚举值`;
     }
   }
-  return '';
+  return "";
 }
 
 /** 刷新当前数据规则列表。 */
@@ -516,7 +873,7 @@ function refreshList() {
  * @param {Array} selection 当前选中的行数据
  */
 function handleSelectionChange(selection) {
-  selectedIds.value = selection.map(row => row.id);
+  selectedIds.value = selection.map((row) => row.id);
 }
 
 /**
@@ -528,7 +885,10 @@ async function loadObjectOptions(objectTypeId) {
   const request = dialogRequest;
   attributeLoadingCount.value++;
   try {
-    const response = await listObjectAttributeOptions(objectTypeId, versionId.value);
+    const response = await listObjectAttributeOptions(
+      objectTypeId,
+      versionId.value
+    );
     if (request !== dialogRequest) return;
     attributeOptions[objectTypeId] = response.attributes;
     businessTypeOptions[objectTypeId] = response.businessTypes;
@@ -565,7 +925,7 @@ function handleAdd() {
   attributeLoadingCount.value = 0;
   form.value = emptyForm();
   detailOpen.value = false;
-  dialogTitle.value = '新增数据规则';
+  dialogTitle.value = "新增数据规则";
   open.value = true;
   nextTick(() => ruleRef.value?.clearValidate());
   loadOptions();
@@ -585,11 +945,14 @@ async function handleUpdate(row) {
     ...emptyForm(),
     ...response.data,
     conditions: response.data?.conditions?.length
-      ? response.data.conditions.map(condition => ({...condition, key: createRowKey()}))
-      : [createCondition()]
+      ? response.data.conditions.map((condition) => ({
+          ...condition,
+          key: createRowKey(),
+        }))
+      : [createCondition()],
   };
   detailOpen.value = false;
-  dialogTitle.value = '修改数据规则';
+  dialogTitle.value = "修改数据规则";
   open.value = true;
   nextTick(() => ruleRef.value?.clearValidate());
   loadOptions();
@@ -621,7 +984,9 @@ async function loadDetailOptions() {
     if (request !== dialogRequest) return;
     objectTypeOptions.value = options;
 
-    await Promise.allSettled(getRecordObjectIds(detail.value).map(loadObjectOptions));
+    await Promise.allSettled(
+      getRecordObjectIds(detail.value).map(loadObjectOptions)
+    );
   } catch {
     // 接口异常由统一请求拦截器提示
   }
@@ -632,8 +997,14 @@ async function submitForm() {
   if (!requireVersion() || saving.value || saveDisabled.value) return;
   const request = dialogRequest;
   const context = contextRequest;
-  if (!await ruleRef.value.validate().catch(() => false)) return;
-  if (request !== dialogRequest || !open.value || saving.value || saveDisabled.value) return;
+  if (!(await ruleRef.value.validate().catch(() => false))) return;
+  if (
+    request !== dialogRequest ||
+    !open.value ||
+    saving.value ||
+    saveDisabled.value
+  )
+    return;
   const error = validateExpression();
   if (error) {
     ElMessage.warning(error);
@@ -643,13 +1014,13 @@ async function submitForm() {
     ...JSON.parse(JSON.stringify(form.value)),
     versionId: versionId.value,
     name: form.value.name.trim(),
-    description: form.value.description.trim()
+    description: form.value.description.trim(),
   };
   saving.value = true;
   try {
     await (data.id ? updateDataRule(data) : addDataRule(data));
     if (context !== contextRequest) return;
-    ElMessage.success(data.id ? '修改成功' : '新增成功');
+    ElMessage.success(data.id ? "修改成功" : "新增成功");
     open.value = false;
     refreshList();
   } finally {
@@ -683,7 +1054,7 @@ async function handleDelete(row) {
     else batchDeleteLoading.value = true;
     await delDataRule(ids);
     if (context !== contextRequest) return;
-    proxy.$modal.msgSuccess('删除成功');
+    proxy.$modal.msgSuccess("删除成功");
     refreshList();
   } finally {
     deleteConfirming.value = false;
@@ -718,7 +1089,11 @@ function handleDialogClosed() {
  * @returns {Array<string>} 去重后的对象类型编号列表
  */
 function getRecordObjectIds(record) {
-  return [...new Set((record.conditions || []).map(item => item.objectTypeId).filter(Boolean))];
+  return [
+    ...new Set(
+      (record.conditions || []).map((item) => item.objectTypeId).filter(Boolean)
+    ),
+  ];
 }
 
 /** 切换规则类型时重置全部失败条件。 */
@@ -732,8 +1107,8 @@ function handleTypeChange() {
  * @param {Object} condition 当前条件对象
  */
 function handleConditionObjectChange(condition) {
-  condition.attributeId = '';
-  condition.value = '';
+  condition.attributeId = "";
+  condition.value = "";
   loadObjectOptions(condition.objectTypeId);
 }
 
@@ -743,18 +1118,30 @@ function handleConditionObjectChange(condition) {
  * @param {string} value 原始输入值
  */
 function handleConditionValueInput(condition, value) {
-  if (form.value.type !== 'RANGE') {
+  if (form.value.type !== "RANGE") {
     condition.value = value;
     return;
   }
-  const attribute = (attributeOptions[condition.objectTypeId] || []).find(item => item.id === condition.attributeId);
-  const code = attribute ? getBasicTypeCode(attribute, businessTypeOptions[condition.objectTypeId] || []) : undefined;
-  let numeric = String(value).replace(/[^\d.+-]/g, '').replace(/(?!^)[+-]/g, '');
+  const attribute = (attributeOptions[condition.objectTypeId] || []).find(
+    (item) => item.id === condition.attributeId
+  );
+  const code = attribute
+    ? getBasicTypeCode(
+        attribute,
+        businessTypeOptions[condition.objectTypeId] || []
+      )
+    : undefined;
+  let numeric = String(value)
+    .replace(/[^\d.+-]/g, "")
+    .replace(/(?!^)[+-]/g, "");
   if (code === 1) {
-    numeric = numeric.replace(/\./g, '');
+    numeric = numeric.replace(/\./g, "");
   } else {
-    const dotIndex = numeric.indexOf('.');
-    if (dotIndex !== -1) numeric = numeric.slice(0, dotIndex + 1) + numeric.slice(dotIndex + 1).replace(/\./g, '');
+    const dotIndex = numeric.indexOf(".");
+    if (dotIndex !== -1)
+      numeric =
+        numeric.slice(0, dotIndex + 1) +
+        numeric.slice(dotIndex + 1).replace(/\./g, "");
   }
   condition.value = numeric;
 }
@@ -764,7 +1151,7 @@ function handleConditionValueInput(condition, value) {
  * @param {Object} condition 当前条件对象
  */
 function handleConditionAttributeChange(condition) {
-  condition.value = '';
+  condition.value = "";
 }
 
 /**
@@ -775,10 +1162,12 @@ function handleConditionAttributeChange(condition) {
  */
 function getConditionAttributes(condition, type = form.value.type) {
   const attributes = attributeOptions[condition.objectTypeId] || [];
-  if (!['RANGE', 'FORMAT'].includes(type)) return attributes;
+  if (!["RANGE", "FORMAT"].includes(type)) return attributes;
   const businessTypes = businessTypeOptions[condition.objectTypeId] || [];
-  const typeCodes = type === 'FORMAT' ? [4] : [1, 2];
-  return attributes.filter(item => typeCodes.includes(getBasicTypeCode(item, businessTypes)));
+  const typeCodes = type === "FORMAT" ? [4] : [1, 2];
+  return attributes.filter((item) =>
+    typeCodes.includes(getBasicTypeCode(item, businessTypes))
+  );
 }
 
 /**
@@ -817,18 +1206,34 @@ function validateExpression() {
 
 /** 将条件关系字典值转为展示文案。 */
 function conditionRelationLabel(value) {
-  return {OR: '任一满足（OR）', AND: '全部满足（AND）'}[value] || '';
+  return { OR: "任一满足（OR）", AND: "全部满足（AND）" }[value] || "";
 }
 
 // 详情“基本信息”分组展示字段，与新增弹窗字段顺序保持一致。
 const basicDetailFields = computed(() => [
-  {label: '规则名称', value: detail.value.name},
-  {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, detail.value.type), dictOptions: om_data_rule_type.value, dictValue: detail.value.type},
-  {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, detail.value.level), dictOptions: om_rule_level.value, dictValue: detail.value.level},
-  {label: '描述', value: detail.value.description, multiline: true},
-  {label: '创建人', value: detail.value.createBy || '-'},
-  {label: '联系方式', value: creatorPhones.value[detail.value.creatorId] || '-'},
-  {label: '创建时间', value: proxy.parseTime(detail.value.createTime, '{y}-{m}-{d} {h}:{i}')}
+  { label: "规则名称", value: detail.value.name },
+  {
+    label: "规则类型",
+    value: proxy.selectDictLabel(om_data_rule_type.value, detail.value.type),
+    dictOptions: om_data_rule_type.value,
+    dictValue: detail.value.type,
+  },
+  {
+    label: "级别",
+    value: proxy.selectDictLabel(om_rule_level.value, detail.value.level),
+    dictOptions: om_rule_level.value,
+    dictValue: detail.value.level,
+  },
+  { label: "描述", value: detail.value.description, multiline: true },
+  { label: "创建人", value: detail.value.createBy || "-" },
+  {
+    label: "联系方式",
+    value: creatorPhones.value[detail.value.creatorId] || "-",
+  },
+  {
+    label: "创建时间",
+    value: proxy.parseTime(detail.value.createTime, "{y}-{m}-{d} {h}:{i}"),
+  },
 ]);
 
 // 版本切换后清空筛选并重置分页刷新列表；首查由 QtTable 挂载时自动执行。
@@ -841,8 +1246,10 @@ watch(versionId, async () => {
   attributeLoadingCount.value = 0;
   optionsLoadFailed.value = false;
   objectTypeOptions.value = [];
-  Object.keys(attributeOptions).forEach(key => delete attributeOptions[key]);
-  Object.keys(businessTypeOptions).forEach(key => delete businessTypeOptions[key]);
+  Object.keys(attributeOptions).forEach((key) => delete attributeOptions[key]);
+  Object.keys(businessTypeOptions).forEach(
+    (key) => delete businessTypeOptions[key]
+  );
   tableStore.params.name = null;
   tableStore.params.type = null;
   tableStore.params.level = null;
@@ -850,7 +1257,7 @@ watch(versionId, async () => {
   tableRef.value?.resetQuery();
 });
 
-watch(open, value => {
+watch(open, (value) => {
   if (value) return;
   ++dialogRequest;
   attributeLoadingCount.value = 0;
@@ -892,7 +1299,7 @@ onBeforeUnmount(() => {
 }
 .h2-title::before {
   display: inline-block;
-  content: '';
+  content: "";
   width: 6px;
   height: 16px;
   border-radius: 3px;
@@ -905,7 +1312,7 @@ onBeforeUnmount(() => {
 }
 
 .character-count :deep(.el-input__count)::after {
-  content: '个字符';
+  content: "个字符";
 }
 
 .character-count :deep(.el-textarea__inner) {
