@@ -16,6 +16,11 @@
   See the LICENSE file in the project root for full license information.
 -->
 
+<!--
+  @file 枚举数据维护页面
+  @description 维护枚举类型下的候选项，定义展示标签与存储键值；支持独立页面和内嵌到枚举详情页两种入口。
+-->
+
 <template>
   <div
       ref="pageRef"
@@ -155,24 +160,24 @@
           class="column-form"
           @submit.prevent="submitForm"
       >
-        <qt-form-item class="row-full" label="枚举类型" >
+        <qt-form-item label="枚举类型" class="row-full">
           <el-input v-model="form.enumType" disabled />
         </qt-form-item>
-        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel" >
+        <qt-form-item label="枚举标签" prop="enumLabel" class="row-full">
           <el-input
               v-model="form.enumLabel"
               placeholder="请输入枚举标签"
               :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="枚举键值" prop="enumValue" >
+        <qt-form-item label="枚举键值" prop="enumValue" class="row-full">
           <el-input
               v-model="form.enumValue"
               placeholder="请输入枚举键值"
               :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="排序" prop="enumSort" >
+        <qt-form-item label="排序" prop="enumSort" class="row-full">
           <el-input-number
               v-model="form.enumSort"
               :min="0"
@@ -181,7 +186,7 @@
               controls-position="right"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="状态" prop="status">
+        <qt-form-item label="状态" prop="status" class="row-full">
           <el-radio-group v-model="form.status">
             <el-radio
                 v-for="dict in sys_normal_disable"
@@ -191,10 +196,9 @@
             </el-radio>
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item class="row-full" label="描述" prop="description">
+        <qt-form-item label="描述" prop="description" class="row-full">
           <el-input
               v-model="form.description"
-
               type="textarea"
               :rows="3"
               maxlength="256个字符"
@@ -202,7 +206,7 @@
               placeholder="请输入描述"
           />
         </qt-form-item>
-        <qt-form-item class="row-full" label="备注" prop="remark">
+        <qt-form-item label="备注" prop="remark" class="row-full">
           <el-input
               v-model="form.remark"
               type="textarea"
@@ -222,11 +226,11 @@
     </el-dialog>
     <el-dialog
         v-model="openDetail"
-        class="enum-detail-dialog"
         title="枚举数据详情"
         width="800px"
         :append-to="pageRef"
         draggable
+        class="enum-detail-dialog"
     >
       <el-form
           :model="detail"
@@ -234,42 +238,44 @@
           label-position="right"
           class="enum-detail-form column-form"
       >
-        <el-form-item class="row-full" label="枚举类型">
+        <el-form-item label="枚举类型" class="row-full">
           <div class="form-readonly">{{ detail.enumType }}</div>
         </el-form-item>
-        <el-form-item class="row-full" label="枚举标签">
+        <el-form-item label="枚举标签" class="row-full">
           <div class="form-readonly">{{ detail.enumLabel ?? "-" }}</div>
         </el-form-item>
-        <el-form-item class="row-full" label="枚举键值">
+        <el-form-item label="枚举键值" class="row-full">
           <div class="form-readonly">{{ detail.enumValue ?? "-" }}</div>
         </el-form-item>
-        <el-form-item class="row-full" label="排序">
+        <el-form-item label="排序" class="row-full">
           <div class="form-readonly">{{ detail.enumSort ?? "-" }}</div>
         </el-form-item>
-        <el-form-item class="row-full" label="状态">
+        <el-form-item label="状态" class="row-full">
           <dict-tag :options="sys_normal_disable" :value="detail.status" />
         </el-form-item>
-        <!-- 与列表一致：创建人姓名后拼接联系电话，未维护电话时只显示姓名。 -->
-        <el-form-item class="row-full" label="描述">
+        <el-form-item label="描述" class="row-full">
           <div class="form-readonly textarea">{{ detail.description || "-" }}</div>
         </el-form-item>
-        <el-form-item class="row-full" label="备注">
+        <el-form-item label="备注" class="row-full">
           <div class="form-readonly textarea">{{ detail.remark || "-" }}</div>
         </el-form-item>
-        <el-form-item class="row-full" label="创建人">
+        <!-- 与列表一致：创建人姓名后拼接联系电话，未维护电话时只显示姓名。 -->
+        <el-form-item label="创建人" class="row-full">
           <div class="form-readonly">{{ detail.createBy || "-" }}</div>
         </el-form-item>
-        <el-form-item class="row-full" label="联系电话">
+        <el-form-item label="联系电话" class="row-full">
           <div class="form-readonly">{{ getPhoneNum(detail.creatorId) }}</div>
         </el-form-item>
-        <el-form-item class="row-full" label="创建时间">
+        <el-form-item label="创建时间" class="row-full">
           <div class="form-readonly">
             {{parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
           </div>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="openDetail = false">关闭</el-button>
+        <div class="dialog-footer">
+          <el-button @click="openDetail = false">关 闭</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -286,7 +292,9 @@ import {
   watch,
   getCurrentInstance,
 } from "vue";
+
 import { useRoute } from "vue-router";
+
 import {
   listData,
   getData,
@@ -297,7 +305,7 @@ import {
 import { getType } from "@/api/basic/enumeration/type";
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
-import {parseTime} from "@/utils/anivia";
+import { parseTime } from "@/utils/anivia.js";
 
 // 传入 enumType 时作为详情页内嵌列表使用；未传入时沿用独立页面的路由加载逻辑。
 const props = defineProps({
@@ -308,7 +316,7 @@ const emit = defineEmits(["dataChange"]);
 const embedded = computed(() => props.enumType !== undefined);
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
-const { creatorPhones ,getPhoneNum} = useCreatorPhones();
+const { creatorPhones, getPhoneNum } = useCreatorPhones();
 const route = useRoute();
 const pageRef = ref();
 const tableRef = ref();
@@ -456,13 +464,20 @@ const { form, rules } = toRefs(data);
 let contextRequest = 0;
 let detailRequest = 0;
 
-/** 提交搜索条件；公共搜索栏随后重置页码并加载表格。 */
+/**
+ * 提交搜索条件：将当前草稿写入 appliedFilters，公共搜索栏随后重置页码并加载表格。
+ * @returns {void}
+ */
 function applyFilters() {
   appliedFilters.enumLabel = (tableStore.params.enumLabel || "").trim();
   appliedFilters.status = tableStore.params.status ?? "";
 }
 
-/** 固定当前枚举编码，取消排序时恢复默认的枚举排序值升序。 */
+/**
+ * 格式化表格请求参数：固定当前枚举编码，取消排序时恢复默认的枚举排序值升序。
+ * @param {Object} params 表格组件传入的分页/排序/筛选参数
+ * @returns {Object} 实际发送给后端的请求参数
+ */
 function formatListParams(params) {
   return {
     ...params,
@@ -473,14 +488,22 @@ function formatListParams(params) {
   };
 }
 
-/** 无枚举编码时返回空页，禁止接口因忽略空条件而查询其他枚举的数据。 */
+/**
+ * 加载枚举数据：无枚举编码时返回空页，禁止接口因忽略空条件而查询其他枚举的数据。
+ * @param {Object} params 已格式化的请求参数
+ * @returns {Promise<Object>} 接口响应，结构为 { data: { rows, total } }
+ */
 function loadEnumData(params) {
   if (!params.enumType)
     return Promise.resolve({ data: { rows: [], total: 0 } });
   return listData(params);
 }
 
-/** 统一公共表格和插槽的空值占位符，保留枚举键值与排序值中的数值零。 */
+/**
+ * 格式化表格行数据：统一公共表格和插槽的空值占位符，保留枚举键值与排序值中的数值零。
+ * @param {Array<Object>} rows 接口返回的原始行数据
+ * @returns {Array<Object>} 替换空值后的行数据副本
+ */
 function formatListData(rows) {
   const fields = tableStore.columns
       .map((column) => column.prop)
@@ -494,18 +517,27 @@ function formatListData(rows) {
   });
 }
 
-/** 列表刷新后移除旧的选中项，避免批量删除使用上一次查询的数据。 */
+/**
+ * 列表刷新后清空选中项，避免批量删除使用上一次查询的数据。
+ * @returns {void}
+ */
 function clearSelection() {
   handleSelectionChange([]);
   tableRef.value?.elTableRef?.clearSelection();
 }
 
-/** 保存后通过公共表格刷新当前页，保留已提交的筛选条件。 */
+/**
+ * 保存后通过公共表格刷新当前页，保留已提交的筛选条件。
+ * @returns {void}
+ */
 function getList() {
   tableRef.value?.getList();
 }
 
-/** 重置新增或修改表单，枚举编码始终取自当前页面上下文。 */
+/**
+ * 重置新增或修改表单，枚举编码始终取自当前页面上下文。
+ * @returns {void}
+ */
 function reset() {
   form.value = {
     enumCode: undefined,
@@ -520,24 +552,39 @@ function reset() {
   clearValidation();
 }
 
-/** 清除表单旧的校验结果。 */
+/**
+ * 清除表单旧的校验结果。
+ * @returns {void}
+ */
 function clearValidation() {
   dataRef.value?.clearValidate();
 }
 
-/** 保存期间阻止关闭弹窗，避免重复操作。 */
+/**
+ * 保存期间阻止关闭弹窗，避免重复操作。
+ * @param {Function} done Element Plus 弹窗关闭回调，调用后真正关闭
+ * @returns {void}
+ */
 function handleBeforeClose(done) {
   if (!saving.value) done();
 }
 
-/** 未保存时关闭弹窗并重置表单。 */
+/**
+ * 未保存时关闭弹窗并重置表单。
+ * @returns {void}
+ */
 function cancel() {
   if (saving.value) return;
   open.value = false;
   reset();
 }
 
-/** 状态开关：确认后只切换当前行状态，取消或失败时还原原值。 */
+/**
+ * 状态开关：确认后只切换当前行状态，取消或失败时还原原值。
+ * @param {Object} row 当前行数据
+ * @param {string} status 新状态值（'0'=正常 / '1'=停用）
+ * @returns {void}
+ */
 function handleStatusChange(row, status) {
   const text = status === "0" ? "启用" : "停用";
   const previous = status === "0" ? "1" : "0";
@@ -567,14 +614,21 @@ function handleStatusChange(row, status) {
       });
 }
 
-/** 同步当前选中的枚举数据编码，并控制批量删除按钮状态。 */
+/**
+ * 同步当前选中的枚举数据编码，并控制批量删除按钮状态。
+ * @param {Array<Object>} selection 表格当前选中的行集合
+ * @returns {void}
+ */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.enumCode);
   selectedRows.value = selection;
   multiple.value = !selection.length;
 }
 
-/** 新增前使旧的弹窗请求失效，避免迟到响应覆盖新增表单。 */
+/**
+ * 新增前使旧的弹窗请求失效，避免迟到响应覆盖新增表单。
+ * @returns {Promise<void>}
+ */
 async function handleAdd() {
   if (!defaultEnumType.value || !contextReady.value) return;
   ++detailRequest;
@@ -585,7 +639,11 @@ async function handleAdd() {
   clearValidation();
 }
 
-/** 加载修改表单，仅采纳当前操作的最新响应。 */
+/**
+ * 加载修改表单，仅采纳当前操作的最新响应。
+ * @param {Object} row 当前行数据，至少包含 enumCode
+ * @returns {Promise<void>}
+ */
 async function handleUpdate(row) {
   const request = ++detailRequest;
   const response = await getData(row?.enumCode ?? ids.value[0]);
@@ -602,7 +660,11 @@ async function handleUpdate(row) {
   clearValidation();
 }
 
-/** 加载选中数据的只读详情，忽略已切换上下文的旧响应。 */
+/**
+ * 加载选中数据的只读详情，忽略已切换上下文的旧响应。
+ * @param {Object} row 当前行数据，至少包含 enumCode
+ * @returns {Promise<void>}
+ */
 async function handleDetail(row) {
   const request = ++detailRequest;
   const response = await getData(row.enumCode);
@@ -615,7 +677,10 @@ async function handleDetail(row) {
   openDetail.value = true;
 }
 
-/** 校验并保存枚举数据，成功后通知父级同步总数并刷新当前列表。 */
+/**
+ * 校验并保存枚举数据，成功后通知父级同步总数并刷新当前列表。
+ * @returns {Promise<void>}
+ */
 async function submitForm() {
   if (saving.value) return;
   const valid = await dataRef.value.validate().catch(() => false);
@@ -648,7 +713,12 @@ async function submitForm() {
   }
 }
 
-/** 确认并删除选中数据，仅在枚举上下文未改变时刷新列表和父级计数。 */
+/**
+ * 确认并删除选中数据，仅在枚举上下文未改变时刷新列表和父级计数。
+ * 传入行对象时为单条删除；批量按钮点击传入 MouseEvent 时按状态筛选可删除行。
+ * @param {Object|MouseEvent} [row] 当前行数据或按钮点击事件
+ * @returns {Promise<void>}
+ */
 async function handleDelete(row) {
   const context = contextRequest;
   // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.enumCode 区分）
@@ -707,7 +777,10 @@ async function handleDelete(row) {
   }
 }
 
-/** 关闭独立数据页签并返回枚举列表。 */
+/**
+ * 关闭独立数据页签并返回枚举列表。
+ * @returns {void}
+ */
 function handleClose() {
   proxy.$tab.closeOpenPage({ path: "/basic/basicEnum" });
 }
@@ -768,24 +841,24 @@ onBeforeUnmount(() => {
 }
 
 .form-readonly {
-  box-sizing: border-box;
-  width: 100%;
-  border: 1px solid #f1f1f1;
-  padding: 0 10px;
-  min-height: 34px;
-  background-color: #fcfcfc;
-  border-radius: 2px;
-  color: #333;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--qt-border-color);
+  border-radius: var(--qt-radius-small);
+  background-color: var(--qt-surface-background);
+  color: var(--qt-text-primary);
   white-space: pre-wrap;
   word-wrap: break-word;
   word-break: break-all;
 }
 
 .form-readonly.textarea {
-  min-height: 85px;
   display: block;
+  min-height: 85px;
 }
 
 /* 内嵌到枚举详情页时，搜索区沿用外层卡片，不再保留独立的宫格间距。 */
@@ -795,26 +868,6 @@ onBeforeUnmount(() => {
 
 .enum-page :deep(.enum-detail-dialog .el-form-item) {
   margin-bottom: 16px;
-}
-
-.enum-page :deep(.enum-detail-dialog .el-dialog__header) {
-  padding: 9px 20px;
-  background: #f8f8f8;
-}
-
-.enum-page :deep(.enum-detail-dialog .el-dialog__body) {
-  padding: 20px 40px !important;
-}
-
-.enum-page :deep(.enum-detail-dialog .el-dialog__footer) {
-  padding: 10px 20px 20px;
-  border-top: 1px solid #f1f1f1;
-}
-
-@media (max-width: 768px) {
-  .enum-page :deep(.enum-detail-dialog .el-dialog__body) {
-    padding: 20px 16px !important;
-  }
 }
 
 .enum-page :deep(.el-dialog) {

@@ -189,12 +189,6 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="状态" prop="status">
-              <dict-tag :options="project_status" :value="form.status" />
-            </el-form-item>
-          </el-col>
-
-          <el-col :span="24">
             <el-form-item label="业务数据类型" prop="dataType">
               <dict-tag
                 :options="basic_data_type"
@@ -307,6 +301,13 @@
               <div class="form-readonly">
                 {{ form.enumType }}
               </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="状态" prop="status">
+              <dict-tag :options="project_status" :value="form.status" />
             </el-form-item>
           </el-col>
         </el-row>

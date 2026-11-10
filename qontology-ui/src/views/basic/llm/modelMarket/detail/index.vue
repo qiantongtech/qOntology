@@ -72,9 +72,6 @@ const detailItems = computed(() => [
   { label: "模型提供方", key: "platform", dictOptions: ai_model_platform.value },
   { label: "支持语言", value: "中/英文" },
   { label: "创建人", key: "createBy" },
-  { label: "创建时间", className: "mt2", key: "createTime", type: "time" },
-  { label: "更新人", className: "mt2", key: "updateBy" },
-  { label: "更新时间", className: "mt2", key: "updateTime", type: "time" },
   {
     label: "描述",
     key: "description",
@@ -82,6 +79,10 @@ const detailItems = computed(() => [
     className: "mt2",
     formatter: (value) => value?.trim() || "-",
   },
+  { label: "创建时间", className: "mt2", key: "createTime", type: "time" },
+  { label: "更新人", className: "mt2", key: "updateBy" },
+  { label: "更新时间", className: "mt2", key: "updateTime", type: "time" },
+
 ]);
 // 监听 id 变化
 watch(
