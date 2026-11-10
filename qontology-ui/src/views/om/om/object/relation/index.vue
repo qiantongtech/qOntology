@@ -361,7 +361,7 @@ function fetchRelations(params) {
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 10, showOverflowTooltip: { effect: 'light' },},
             { label: '反向名称', prop: 'reverseName', slot: 'reverseName', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '创建人', prop: 'createBy', slot: 'creator', width: 130, minWidth: 130, align: 'left', headerAlign: 'left', showOverflowTooltip: { effect: 'light' },},
-            { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'left', sortable: true, showOverflowTooltip: { effect: 'light' },},
+            { label: '创建时间', prop: 'createTime', date: true, width: 160, minWidth: 160, align: 'center', sortable: true, showOverflowTooltip: { effect: 'light' },},
             { label: '操作', slot: 'handle', width: 250, minWidth: 250, fixed: 'right', showOverflowTooltip: { effect: 'light' },}
         ],
         func: fetchRelations,
