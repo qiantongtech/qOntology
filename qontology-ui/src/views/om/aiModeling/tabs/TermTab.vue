@@ -309,7 +309,7 @@
         </el-row>
       </el-form>
       <template #footer>
-        <el-button @click="detailOpen = false">关闭</el-button>
+        <el-button @click="detailOpen = false">关 闭</el-button>
       </template>
     </el-dialog>
 

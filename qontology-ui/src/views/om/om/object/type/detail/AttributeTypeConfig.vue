@@ -95,11 +95,9 @@
         <el-option
           v-for="item in filteredEnums"
           :key="item.enumSource + ':' + item.enumType"
-          :label="item.enumName + ' ' + item.enumType"
+          :label="item.enumName"
           :value="item.enumType"
-        >
-          <span class="enum-option"><span>{{ item.enumName }}</span><small>{{ item.enumType }}</small></span>
-        </el-option>
+        />
       </el-select>
     </qt-form-item>
   </template>
@@ -144,13 +142,5 @@ const enumName = computed(
   display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-.enum-option {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-}
-.enum-option small {
-  color: var(--el-text-color-secondary);
 }
 </style>

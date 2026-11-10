@@ -23,10 +23,10 @@
     <template #dash="{ row, column_data }">{{
       row[column_data.prop] || "-"
     }}</template>
-    <!-- 关联元素与详情页保持一致，按标签组展示对象类型/对象类型关系 -->
+    <!-- 关联元素优先用标签组展示对象类型/对象类型关系；候选行若只有合计数则回退成数字，避免出现空白。 -->
     <template #relatedElementCount="{ row }">
       <qt-tag-group
-        v-if="row.relatedElementTags && row.relatedElementTags.length"
+        v-if="row.relatedElementTags?.length"
         :items="row.relatedElementTags"
         type="none"
         :max-count="2"
@@ -84,19 +84,44 @@ const { creatorPhones } = useCreatorPhones();
 // 关联元素与详情页口径一致：补充对象类型/对象类型关系的标签数据。
 const rows = ref([]);
 let enrichToken = 0;
+
+/**
+ * 候选目标自带对象/关系分类计数时，直接同步拼成「对象类型N / 对象类型关系N」标签，
+ * 与 TargetTab、导入建模目标列表口径一致，无需再按版本异步查询。
+ * @param {Object} row 目标行
+ * @returns {Object} 补全 relatedElementTags 后的行
+ */
+function withSplitTags(row) {
+  if (row.relatedElementTags?.length) return row;
+  if (row.objectElementCount == null && row.relationElementCount == null) {
+    return row;
+  }
+  return {
+    ...row,
+    relatedElementTags: [
+      `对象类型${row.objectElementCount ?? "-"}`,
+      `对象类型关系${row.relationElementCount ?? "-"}`,
+    ],
+  };
+}
+
 watch(
   () => [props.targets, props.versionId],
   async ([targets, versionId]) => {
     const token = ++enrichToken;
-    const list = targets || [];
+    // 先用行自带的分类计数同步拼标签（候选场景），再对仍缺标签的正式目标按版本异步补全。
+    const list = (targets || []).map(withSplitTags);
     rows.value = list;
     if (!list.length) return;
+    const pending = list.filter((row) => !row.relatedElementTags?.length);
+    if (!pending.length) return;
     // 优先使用父级版本，其次回退到目标行自带的版本；都没有时保留原有关联数量展示。
     const resolvedVersion = versionId || list[0]?.versionId;
     if (!resolvedVersion) return;
-    const enriched = await withTargetRelatedElements(list, resolvedVersion);
+    const enriched = await withTargetRelatedElements(pending, resolvedVersion);
     if (token !== enrichToken) return;
-    rows.value = enriched;
+    const enrichMap = new Map(enriched.map((row) => [String(row.id), row]));
+    rows.value = list.map((row) => enrichMap.get(String(row.id)) || row);
   },
   { immediate: true }
 );

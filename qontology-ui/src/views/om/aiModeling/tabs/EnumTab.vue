@@ -317,7 +317,7 @@
         :fields="typeDetailFields"
         :status-options="sys_normal_disable"
       /><template #footer
-        ><el-button @click="typeDetailOpen = false">关闭</el-button></template
+        ><el-button @click="typeDetailOpen = false">关 闭</el-button></template
       ></el-dialog
     >
     <el-dialog
@@ -755,10 +755,11 @@ const typeDetailFields = [
   { prop: "enumName", label: "枚举名称" },
   { prop: "enumType", label: "枚举类型" },
   { prop: "status", label: "状态" },
+  { prop: "description", label: "描述" },
   { prop: "createBy", label: "创建人" },
   { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
-  { prop: "description", label: "描述" },
+
 ];
 const valueDetailFields = [
   { prop: "enumType", label: "枚举类型" },
@@ -766,10 +767,11 @@ const valueDetailFields = [
   { prop: "enumValue", label: "枚举键值" },
   { prop: "enumSort", label: "排序" },
   { prop: "status", label: "状态" },
+  { prop: "description", label: "描述" },
   { prop: "createBy", label: "创建人" },
   { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
-  { prop: "description", label: "描述" },
+
 ];
 
 /**

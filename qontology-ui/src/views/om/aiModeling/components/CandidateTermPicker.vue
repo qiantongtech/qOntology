@@ -1,17 +1,17 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
  You may use qOntology for commercial purposes, but you may not remove, hide,
  modify, or replace the qOntology logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
@@ -58,12 +58,16 @@
       @row-click="selectRow"
     >
       <el-table-column
-        type="index"
+        prop="id"
         label="编号"
-        sortable
-        width="65"
+        width="60"
         align="center"
+        sortable
+        :sort-method="(a, b) => Number(a.id) - Number(b.id)"
       />
+      <el-table-column label="术语信息" min-width="300" align="left">
+        <template #default="{ row }"><TermInfoCell :row="row" /></template>
+      </el-table-column>
       <el-table-column
         v-for="field in fields"
         :key="field.prop"
@@ -72,10 +76,9 @@
         :min-width="field.width"
         align="left"
         :show-overflow-tooltip="{ effect: 'light' }"
-        ><template #default="{ row }">{{
-          row[field.prop] || "-"
-        }}</template></el-table-column
       >
+        <template #default="{ row }">{{ row[field.prop] || "-" }}</template>
+      </el-table-column>
       <template #empty
         ><div class="emptyBg">
           <img src="@/assets/system/images/no_data/noData.png" alt="暂无术语" />
@@ -107,6 +110,7 @@
 <script setup>
 import { reactive, ref, watch } from "vue";
 import { listCandidates } from "@/api/om/aiModeling";
+import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
 const props = defineProps({
   modelValue: Boolean,
   taskId: { type: Number, required: true },
@@ -120,13 +124,11 @@ const visible = ref(false),
   selected = ref(),
   tableRef = ref();
 const query = reactive({ pageNum: 1, pageSize: 10, stdName: "" });
+// 展示字段与对象类型页「从术语表中选择」弹窗保持一致：编号 + 术语信息（标准名/英文名/描述）+ 以下列，无末尾状态列。
 const fields = [
-  { prop: "stdName", label: "标准名称", width: 130 },
-  { prop: "enName", label: "英文名称", width: 130 },
-  { prop: "alias", label: "别名", width: 140 },
-  { prop: "abbr", label: "缩写", width: 100 },
-  { prop: "source", label: "来源", width: 140 },
-  { prop: "description", label: "描述", width: 200 },
+  { prop: "alias", label: "术语别名", width: 160 },
+  { prop: "abbr", label: "业务缩写", width: 120 },
+  { prop: "source", label: "来源", width: 180 },
 ];
 watch(
   () => props.modelValue,

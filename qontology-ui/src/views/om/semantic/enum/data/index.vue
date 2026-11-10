@@ -63,7 +63,7 @@
           plain
           icon="Close"
           @click="handleClose"
-          >关闭</el-button
+          >关 闭</el-button
         >
       </template>
       <!-- 路由入口先解析枚举编码，再挂载表格；切换上下文时重建实例，隔离旧列表响应。 -->
@@ -289,7 +289,7 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="openDetail = false">关闭</el-button>
+        <el-button @click="openDetail = false">关 闭</el-button>
       </template>
     </el-dialog>
   </div>
