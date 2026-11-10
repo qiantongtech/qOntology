@@ -135,12 +135,11 @@
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button size="mini" :disabled="saving" @click="handleCancel"
+        <el-button :disabled="saving" @click="handleCancel"
           >取 消</el-button
         >
         <el-button
           type="primary"
-          size="mini"
           :loading="saving"
           :disabled="validating"
           @click="submitForm"

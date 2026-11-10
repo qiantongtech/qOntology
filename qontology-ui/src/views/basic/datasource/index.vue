@@ -110,7 +110,7 @@
           <!-- 修改与删除收起到更多菜单，沿用各自权限与处理方法。 -->
           <el-popover
             placement="bottom"
-            :width="150"
+            :width="100"
             popper-class="handle-popover"
             trigger="click"
           >
