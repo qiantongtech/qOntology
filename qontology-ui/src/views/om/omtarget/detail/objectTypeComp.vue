@@ -308,6 +308,15 @@
           />
         </template>
       </el-table-column> -->
+      <template #empty>
+        <div class="emptyBg">
+          <img
+            src="@/assets/common/images/empty-state/noData.png"
+            alt="暂无记录"
+          />
+          <p>暂无记录</p>
+        </div>
+      </template>
     </el-table>
     <pagination
       v-show="termTotal > 0"

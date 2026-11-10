@@ -236,42 +236,34 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-else label="业务数据类型" prop="businessTypeId">
-          <el-select
-            v-model="businessKey"
-            placeholder="请选择业务数据类型"
-            style="width: 100%"
-            filterable
-            clearable
-          >
-            <template #label>
-              <span class="business-type-label">
-                {{ selectedBusinessType?.name || "-" }}
-                <el-tag
-                  :type="
-                    form.businessTypeSource === 'PROJECT' ? 'primary' : 'info'
-                  "
-                  size="small"
-                  >{{
-                    form.businessTypeSource === "PROJECT" ? "当前项目" : "全局"
-                  }}</el-tag
-                >
-              </span>
-            </template>
-            <el-option-group
-              v-for="group in businessTypeGroups"
-              :key="group.source"
-              :label="group.label"
+        <template v-else>
+          <el-form-item label="业务类型来源" prop="businessTypeSource">
+            <el-radio-group
+              v-model="form.businessTypeSource"
+              @change="changeBusinessSource"
+            >
+              <el-radio value="PROJECT">当前项目</el-radio>
+              <el-radio value="GLOBAL">全局</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="业务数据类型" prop="businessTypeId">
+            <el-select
+              v-model="form.businessTypeId"
+              placeholder="请选择业务数据类型"
+              style="width: 100%"
+              filterable
+              clearable
+              @change="clearTypeConfig"
             >
               <el-option
-                v-for="item in group.options"
-                :key="group.source + ':' + item.id"
+                v-for="item in filteredBusinessTypes"
+                :key="item.id"
                 :label="item.name"
-                :value="group.source + ':' + item.id"
+                :value="String(item.id)"
               />
-            </el-option-group>
-          </el-select>
-        </el-form-item>
+            </el-select>
+          </el-form-item>
+        </template>
         <template v-if="form.typeCategory === 2 && form.businessTypeId">
           <el-form-item label="基础数据类型">
             <div class="form-readonly">
@@ -283,6 +275,7 @@
           v-if="form.typeCategory === 1 || form.businessTypeId"
           :model="effectiveConfig"
           :readonly="form.typeCategory === 2"
+          :show-enum="form.typeCategory === 2"
           :enum-options="enumOptions"
           :enum-loading="enumsLoading"
           :enum-error="enumsError"
@@ -581,18 +574,12 @@ const dataTypeOptions = computed(() =>
     value: Number(item.value),
   }))
 );
-const businessTypeGroups = computed(() =>
-  [
-    { source: "PROJECT", label: "当前项目" },
-    { source: "GLOBAL", label: "全局" },
-  ]
-    .map((group) => ({
-      ...group,
-      options: businessTypes.value.filter(
-        (item) => item.businessTypeSource === group.source
-      ),
-    }))
-    .filter((group) => group.options.length)
+// 业务数据类型随「业务类型来源」单选联动，只展示当前来源（当前项目/全局）下的可选项。
+const filteredBusinessTypes = computed(() =>
+  businessTypes.value.filter(
+    (item) =>
+      item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL")
+  )
 );
 const selectedBusinessType = computed(() =>
   businessTypes.value.find(
@@ -609,20 +596,6 @@ const effectiveConfig = computed(() =>
       }
     : form.value
 );
-const businessKey = computed({
-  get: () =>
-    form.value.businessTypeId
-      ? `${form.value.businessTypeSource || "GLOBAL"}:${
-          form.value.businessTypeId
-        }`
-      : undefined,
-  set: (value) => {
-    const parts = (value || "").split(":");
-    form.value.businessTypeSource = parts[0] || "GLOBAL";
-    form.value.businessTypeId = parts[1] || undefined;
-  },
-});
-
 const rules = {
   objectCandidateId: [
     { required: true, message: "请选择所属对象类型", trigger: "change" },
@@ -720,8 +693,12 @@ function normalize(row) {
       row.basicTypeCode == null ? undefined : Number(row.basicTypeCode),
     decimalPlaces: row.decimalPlaces == null ? 2 : Number(row.decimalPlaces),
     businessTypeId:
-      row.businessTypeId == null ? undefined : String(row.businessTypeId),
+      row.businessTypeId == null || row.businessTypeId === ""
+        ? undefined
+        : String(row.businessTypeId),
     businessTypeSource: row.businessTypeSource || "GLOBAL",
+    // 与参考页一致：AI 候选可能未回传枚举来源，默认回到当前项目，保证打开修改弹窗时联动有默认值。
+    enumSource: row.enumSource || "PROJECT",
   };
 }
 
@@ -736,15 +713,41 @@ function clearTypeConfig() {
   });
 }
 
-/** 切换数据类型分类时重置类型与配置项。 */
+/** 切换数据类型分类时重置类型与配置项，业务类型来源默认回到当前项目，与正式属性页一致。 */
 function changeTypeCategory() {
   Object.assign(form.value, {
     basicTypeCode: undefined,
     businessTypeId: undefined,
-    businessTypeSource: "GLOBAL",
+    businessTypeSource: "PROJECT",
   });
   clearTypeConfig();
   nextTick(() => formRef.value?.clearValidate());
+}
+
+/** 切换业务类型来源（当前项目/全局）时清空已选业务数据类型并重置联动配置。 */
+function changeBusinessSource() {
+  form.value.businessTypeId = undefined;
+  clearTypeConfig();
+  nextTick(() => formRef.value?.clearValidate("businessTypeId"));
+}
+
+/**
+ * AI 候选可能未回传或回传错误的业务类型来源，按已选业务数据类型编号在可选池中反推当前项目/全局，
+ * 保证「业务类型来源」单选、下拉过滤与下方基础数据类型/类型配置联动一致。
+ */
+function alignBusinessSource() {
+  const current = form.value;
+  if (Number(current.typeCategory) !== 2 || !current.businessTypeId) return;
+  const matched = businessTypes.value.some(
+    (item) =>
+      String(item.id) === String(current.businessTypeId) &&
+      item.businessTypeSource === (current.businessTypeSource || "GLOBAL"),
+  );
+  if (matched) return;
+  const fallback = businessTypes.value.find(
+    (item) => String(item.id) === String(current.businessTypeId),
+  );
+  if (fallback) current.businessTypeSource = fallback.businessTypeSource;
 }
 
 /** 加载对象类型候选，供所属对象类型回显和下拉选择使用。 */
@@ -810,6 +813,7 @@ async function edit(row) {
   form.value = normalize(row);
   open.value = true;
   await loadTypeOptions();
+  alignBusinessSource();
   await loadEnums();
   nextTick(() => formRef.value?.clearValidate());
 }
@@ -876,11 +880,6 @@ loadObjects();
   border-radius: 3px;
   background: var(--el-color-primary);
   margin-right: 8px;
-}
-.business-type-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 .attribute-dialog-form :deep(.el-form-item__label) {
   white-space: nowrap;

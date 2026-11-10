@@ -64,7 +64,7 @@
       :maxlength="128"
     />
   </qt-form-item>
-  <template v-if="typeCode === 5">
+  <template v-if="showEnum && typeCode === 5">
     <qt-form-item
       :tip="readonly ? undefined : '选择枚举类型来自当前项目还是全局，切换后会重新筛选可选类型。'"
       label="枚举来源"
@@ -112,6 +112,8 @@ const props = defineProps({
   readonly: { type: Boolean, default: false },
   enumOptions: { type: Array, default: () => [] },
   enumLoading: { type: Boolean, default: false },
+  // 枚举来源/枚举类型是否展示：默认展示，保持各页既有行为；需要按“仅业务类型展示”约束的调用方显式传 false。
+  showEnum: { type: Boolean, default: true },
 });
 const emit = defineEmits(["enumOpen"]);
 const typeCode = computed(() =>
