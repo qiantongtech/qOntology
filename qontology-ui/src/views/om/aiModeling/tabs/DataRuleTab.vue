@@ -448,7 +448,7 @@ const tableStore = reactive({
       date: true,
       width: 160,
       minWidth: 160,
-      align: "left",
+      align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },

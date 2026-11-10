@@ -156,10 +156,11 @@
         ref="formRef"
         :model="form"
         :rules="rules"
-        label-width="120px"
+        label-width="140px"
         class="column-form"
         @submit.prevent="save"
       >
+        <div class="h2-titles row-full">基础信息</div>
         <qt-form-item
           class="row-full"
           label="起点类型"
@@ -182,12 +183,12 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          label="关系名称"
+          label="对象类型关系名称"
           prop="name"
         >
           <el-input
             v-model="form.name"
-            placeholder="请输入关系名称，例如：提供、采购物料"
+            placeholder="请输入对象类型关系名称，例如：提供、采购物料"
             :maxlength="128"
           />
         </qt-form-item>
@@ -244,7 +245,6 @@
           class="row-full"
           label="描述"
           prop="description"
-          tip="描述关系适用的业务场景、职责或关联规则，最多256个字符。"
         >
           <el-input
             v-model="form.description"
@@ -256,18 +256,21 @@
             show-word-limit
           />
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="关联建模目标"
-          prop="targetIds"
-          tip="选择该对象关系支撑的建模目标，便于核对业务需求覆盖情况。"
-        >
-          <el-button type="primary" plain @click="targetPickerOpen = true">导入建模目标</el-button>
-        </qt-form-item>
-        <div class="target-table">
+        <div class="row-full">
+          <div class="h2-titles mb15">关联建模目标</div>
+          <div class="mb15">
+            <el-form-item prop="targetIds" label-width="0">
+              <el-button type="primary" plain :disabled="saving" @click="targetPickerOpen = true">
+                <el-icon class="mr5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-578.304V704h-64V247.296L237.248 490.048 192 444.8 508.8 128l316.8 316.8-45.312 45.248z"></path></svg></el-icon>
+                导入建模目标
+              </el-button>
+              <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
+            </el-form-item>
+          </div>
           <TargetTable
             :targets="selectedTargets"
             editable
+            :disabled="saving"
             @remove="removeTarget"
           />
         </div>
@@ -296,13 +299,13 @@
       :append-to="pageRef"
       draggable
     >
-      <el-form label-width="110px">
+      <el-form label-width="140px">
         <el-form-item label="起点类型">
           <div class="form-readonly">
             {{ objectName(detail.startObjectCandidateId) }}
           </div>
         </el-form-item>
-        <el-form-item label="关系名称">
+        <el-form-item label="对象类型关系名称">
           <div class="form-readonly">
             {{ detail.name || "-" }}
           </div>
@@ -337,7 +340,7 @@
         </el-form-item>
         <el-form-item label="创建时间">
           <div class="form-readonly">
-            {{ detail.createTime || "-" }}
+            {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
           </div>
         </el-form-item>
       </el-form>
@@ -393,7 +396,7 @@ const selectedTargets = ref([]);
 function required(row) {
   const missing = [];
   if (!row.startObjectCandidateId) missing.push("起点类型");
-  if (!row.name?.trim()) missing.push("关系名称");
+  if (!row.name?.trim()) missing.push("对象类型关系名称");
   if (!row.endObjectCandidateId) missing.push("终点类型");
   if (![0, 1].includes(Number(row.reversibleFlag))) missing.push("是否可逆");
   if (Number(row.reversibleFlag) === 1 && !row.reverseName?.trim())
@@ -468,9 +471,8 @@ const tableStore = reactive({
       sortOrders: ["descending", "ascending", null],
     },
     { label: "起点类型", slot: "startTypeName", minWidth: 140, align: "left" },
-    { label: "关系名称", prop: "name", slot: "text", minWidth: 160, align: "left" },
+    { label: "对象类型关系名称", prop: "name", slot: "text", minWidth: 160, align: "left" },
     { label: "终点类型", slot: "endTypeName", minWidth: 140, align: "left" },
-    { label: "反向名称", prop: "reverseName", slot: "text", minWidth: 150, align: "left" },
     { label: "描述", prop: "description", slot: "text", minWidth: 200, align: "left", showOverflowTooltip: { effect: "light" } },
     {
       label: "是否可逆",
@@ -480,6 +482,7 @@ const tableStore = reactive({
       minWidth: 100,
       align: "center",
     },
+    { label: "反向名称", prop: "reverseName", slot: "text", minWidth: 150, align: "left" },
     {
       label: "采纳状态",
       prop: "adoptStatus",
@@ -503,7 +506,7 @@ const tableStore = reactive({
       date: true,
       width: 160,
       minWidth: 160,
-      align: "left",
+      align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
@@ -527,10 +530,10 @@ const rules = {
     {
       required: true,
       whitespace: true,
-      message: "关系名称不能为空",
+      message: "对象类型关系名称不能为空",
       trigger: "blur",
     },
-    { max: 128, message: "关系名称不能超过128个字符", trigger: "blur" },
+    { max: 128, message: "对象类型关系名称不能超过128个字符", trigger: "blur" },
   ],
   endObjectCandidateId: [
     { required: true, message: "请选择终点类型", trigger: "change" },

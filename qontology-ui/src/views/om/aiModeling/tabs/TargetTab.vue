@@ -160,53 +160,72 @@
       :close-on-press-escape="!saving"
       draggable
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="目标问题" prop="question">
-          <el-input
-            v-model="form.question"
-            type="textarea"
-            :maxlength="256"
-            show-word-limit
-            placeholder="请输入目标问题"
-          />
-        </el-form-item>
-        <el-form-item label="问题来源" prop="questionSource">
-          <el-input
-            v-model="form.questionSource"
-            type="textarea"
-            :maxlength="256"
-            show-word-limit
-            placeholder="请输入问题来源"
-          />
-        </el-form-item>
-        <el-form-item label="业务场景" prop="businessScenarios">
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="围绕需要解决的业务问题定义建模目标，明确问题来源、业务场景、优先级和验收标准，为后续对象与关系建模及目标验证提供依据。"
+      />
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="90px"
+        class="column-form"
+        @submit.prevent="save"
+      >
+        <qt-form-item
+          label="目标问题"
+          prop="question"
+          class="row-full"
+          tip="填写本次建模需要回答的具体业务问题，建议使用清晰、可验证的问句。"
+        >
+          <el-input v-model="form.question" placeholder="请输入目标问题，例如：哪些采购订单尚未完成入库？" :maxlength="256" />
+        </qt-form-item>
+        <qt-form-item
+          label="问题来源"
+          prop="questionSource"
+          class="row-full"
+        >
+          <el-input v-model="form.questionSource" placeholder="请输入问题来源，例如：采购管理部门提出" :maxlength="256" />
+        </qt-form-item>
+        <qt-form-item
+          label="优先级"
+          prop="priority"
+          class="row-full"
+        >
+          <el-radio-group v-model="form.priority"><el-radio v-for="dict in om_target_priority" :key="dict.value" :value="Number(dict.value)">{{ dict.label }}</el-radio></el-radio-group>
+        </qt-form-item>
+        <qt-form-item
+          label="业务场景"
+          prop="businessScenarios"
+          class="row-full"
+        >
           <el-input
             v-model="form.businessScenarios"
+            class="target-textarea"
             type="textarea"
-            :maxlength="256"
+            :rows="3"
+            placeholder="请输入业务场景，例如：采购人员在订单到货后核对订单与入库记录"
+            maxlength="256个字符"
             show-word-limit
-            placeholder="请输入业务场景"
           />
-        </el-form-item>
-        <el-form-item label="验收标准" prop="acceptCriterion">
+        </qt-form-item>
+        <qt-form-item
+          label="验收标准"
+          prop="acceptCriterion"
+          class="row-full"
+        >
           <el-input
             v-model="form.acceptCriterion"
+            class="target-textarea"
             type="textarea"
-            :maxlength="256"
+            :rows="3"
+            placeholder="请输入验收标准，例如：能够按采购订单查询全部关联入库记录"
+            maxlength="256个字符"
             show-word-limit
-            placeholder="请输入验收标准"
           />
-        </el-form-item>
-        <el-form-item label="优先级" prop="priority">
-          <el-radio-group v-model="form.priority">
-            <el-radio
-              v-for="dict in om_target_priority"
-              :key="dict.value"
-              :value="Number(dict.value)"
-              >{{ dict.label }}</el-radio
-            >
-          </el-radio-group>
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -232,25 +251,24 @@
           :key="field.prop"
           :label="field.label"
         >
-          <div class="form-readonly" :class="{ textarea: field.textarea }">
-            <template v-if="field.prop === 'priority'">
-              <dict-tag
-                :options="om_target_priority"
-                :value="String(detail.priority || 1)"
-              />
-            </template>
-            <template v-else-if="field.prop === 'acceptStatus'">
-              <dict-tag
-                :options="om_accept_status"
-                :value="detail.acceptStatus || '0'"
-              />
-            </template>
-            <template v-else-if="field.prop === 'createBy'">
+          <dict-tag
+            v-if="field.prop === 'priority'"
+            :options="om_target_priority"
+            :value="String(detail.priority || 1)"
+          />
+          <dict-tag
+            v-else-if="field.prop === 'acceptStatus'"
+            :options="om_accept_status"
+            :value="detail.acceptStatus || '0'"
+          />
+          <div v-else class="form-readonly" :class="{ textarea: field.textarea }">
+            <template v-if="field.prop === 'createBy'">
               {{ detail.createBy || "-" }}
             </template>
             <template v-else-if="field.prop === 'contact'">
               {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
             </template>
+            <template v-else-if="field.prop === 'createTime'">{{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}</template>
             <template v-else>{{ detail[field.prop] ?? "-" }}</template>
           </div>
         </el-form-item>

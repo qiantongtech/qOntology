@@ -603,10 +603,7 @@ function confirmAlias() {
   const values = aliasRows.value.flatMap((item) =>
     item.value.split(/[,，]/).map((value) => value.trim()),
   );
-  if (!values.length || values.some((value) => !value)) {
-    proxy.$modal.msgWarning("术语别名每一项都不能为空，请完善后提交");
-    return false;
-  }
+
   if (new Set(values).size !== values.length) {
     proxy.$modal.msgWarning("术语别名不能重复，请检查后提交");
     return false;

@@ -45,7 +45,7 @@ const { creatorPhones } = useCreatorPhones();
 
 function displayValue(prop) {
   if (["createTime", "updateTime"].includes(prop)) {
-    return proxy.parseTime(props.row[prop]) || "-";
+    return proxy.parseTime(props.row[prop], "{y}-{m}-{d} {h}:{i}") || "-";
   }
   return props.row[prop] ?? "-";
 }

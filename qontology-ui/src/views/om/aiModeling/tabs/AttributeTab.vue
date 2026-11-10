@@ -151,6 +151,12 @@
       destroy-on-close
       @closed="formRef?.clearValidate()"
     >
+      <guide-tip-panel
+          type="hint"
+          class="mb15"
+          allow-wrap
+          title="维护对象类型的属性定义，统一属性名称、代码与取值规则，为后续关系建模和数据映射提供一致的字段依据。"
+      />
       <el-form
         ref="formRef"
         class="attribute-dialog-form"
@@ -331,15 +337,6 @@
             {{ detail.description || "-" }}
           </div>
         </el-form-item>
-        <div class="h2-title">数据定义</div>
-        <el-form-item label="数据类型">
-          <dict-tag :options="om_attribute_data_type" :value="detail.typeCategory" />
-        </el-form-item>
-        <el-form-item label="类型配置">
-          <div class="form-readonly">
-            {{ typeSummary(detail) }}
-          </div>
-        </el-form-item>
         <el-form-item label="创建人">
           <div class="form-readonly">
             {{ detail.createBy || "-" }}
@@ -352,7 +349,16 @@
         </el-form-item>
         <el-form-item label="创建时间">
           <div class="form-readonly">
-            {{ detail.createTime || "-" }}
+            {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
+        </el-form-item>
+        <div class="h2-title">数据定义</div>
+        <el-form-item label="数据类型">
+          <dict-tag :options="om_attribute_data_type" :value="detail.typeCategory" />
+        </el-form-item>
+        <el-form-item label="类型配置">
+          <div class="form-readonly">
+            {{ typeSummary(detail) }}
           </div>
         </el-form-item>
       </el-form>
@@ -497,6 +503,14 @@ const tableStore = reactive({
       showOverflowTooltip: { effect: "light" },
     },
     {
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 260,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
       label: "属性代码",
       prop: "code",
       slot: "text",
@@ -514,14 +528,7 @@ const tableStore = reactive({
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
-    {
-      label: "描述",
-      prop: "description",
-      slot: "text",
-      minWidth: 260,
-      align: "left",
-      showOverflowTooltip: { effect: "light" },
-    },
+
     {
       label: "数据类型",
       prop: "typeCategory",

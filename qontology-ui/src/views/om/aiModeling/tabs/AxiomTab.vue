@@ -179,7 +179,7 @@
         @submit.prevent="save"
       >
         <div class="h2-title">基本信息</div>
-        <qt-form-item label="公理名称" prop="name" required tip="填写公理的业务名称，便于在列表中识别与检索。">
+        <qt-form-item label="公理名称" prop="name" required >
           <el-input
             v-model="form.name"
             placeholder="请输入公理名称"
@@ -200,7 +200,7 @@
             />
           </el-select>
         </qt-form-item>
-        <qt-form-item label="级别" prop="level" required tip="设置公理的约束强度，决定校验失败时的处理方式。">
+        <qt-form-item label="级别" prop="level" required >
           <el-radio-group v-model="form.level">
             <el-radio v-for="i in om_rule_level" :key="i.value" :value="i.value">{{
               i.label
@@ -533,7 +533,7 @@ const tableStore = reactive({
       date: true,
       width: 160,
       minWidth: 160,
-      align: "left",
+      align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },

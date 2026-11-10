@@ -47,14 +47,14 @@
     <div class="pagecont-top">
       <div class="infotop">
         <div class="main wizard-content">
-          <section v-show="activeStep === 0" class="base-step">
-            <div class="h2-titles">基础信息</div>
-            <guide-tip-panel
+          <guide-tip-panel
               type="hint"
               class="mb15"
               allow-wrap
               title="上传业务文档并填写任务信息，AI 将自动解析生成术语、枚举、对象等候选结果，供下一步人工审核采纳。"
-            />
+          />
+          <section v-show="activeStep === 0" class="base-step">
+            <div class="h2-titles">基础信息</div>
             <el-form
               ref="formRef"
               :model="form"

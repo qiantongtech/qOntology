@@ -272,7 +272,6 @@
           label="枚举名称"
           prop="enumName"
           class="row-full"
-          tip="填写枚举定义的业务名称，例如“供应商类别”。"
         >
           <el-input v-model="typeForm.enumName" placeholder="请输入枚举名称" :maxlength="128" />
         </qt-form-item>
@@ -280,7 +279,6 @@
           label="枚举类型"
           prop="enumType"
           class="row-full"
-          tip="填写唯一的英文编码，以字母开头，仅支持字母、数字和下划线。"
         >
           <el-input v-model="typeForm.enumType" placeholder="请输入枚举类型" :maxlength="128" />
         </qt-form-item>
@@ -288,19 +286,17 @@
           label="状态"
           prop="status"
           class="row-full"
-          tip="启用后可用于业务取值，禁用后保留已有定义。"
         >
           <el-radio-group v-model="typeForm.status">
             <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
           </el-radio-group>
         </qt-form-item>
         <qt-form-item
-          label="备注"
+          label="描述"
           prop="remark"
           class="row-full"
-          tip="补充取值含义、适用场景或使用约定，最多256个字符。"
         >
-          <el-input v-model="typeForm.remark" type="textarea" :rows="3" :maxlength="256" show-word-limit placeholder="请输入备注" />
+          <el-input v-model="typeForm.description" type="textarea" :rows="3"  maxlength="256个字符" show-word-limit placeholder="请输入描述" />
         </qt-form-item>
       </el-form>
       <template #footer>
@@ -363,14 +359,14 @@
               >{{ dict.label }}</el-radio
             ></el-radio-group
           ></el-form-item
-        ><el-form-item label="备注" prop="remark"
+        ><el-form-item label="描述" prop="remark"
           ><el-input
-            v-model="valueForm.remark"
+            v-model="valueForm.description"
             type="textarea"
             :rows="3"
             :maxlength="256"
             show-word-limit
-            placeholder="请输入备注" /></el-form-item></el-form
+            placeholder="请输入描述" /></el-form-item></el-form
       ><template #footer
         ><div class="dialog-footer">
           <el-button @click="valueOpen = false">取 消</el-button
@@ -762,7 +758,7 @@ const typeDetailFields = [
   { prop: "createBy", label: "创建人" },
   { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
-  { prop: "remark", label: "备注" },
+  { prop: "description", label: "描述" },
 ];
 const valueDetailFields = [
   { prop: "enumType", label: "枚举类型" },
@@ -773,7 +769,7 @@ const valueDetailFields = [
   { prop: "createBy", label: "创建人" },
   { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
-  { prop: "remark", label: "备注" },
+  { prop: "description", label: "描述" },
 ];
 
 /**

@@ -317,7 +317,7 @@ const tableStore = reactive({
       date: true,
       width: 160,
       minWidth: 160,
-      align: "left",
+      align: "center",
       sortable: true,
     },
     { label: "操作", slot: "handle", width: 280, minWidth: 280, fixed: "right" },

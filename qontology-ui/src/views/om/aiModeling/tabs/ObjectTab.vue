@@ -61,7 +61,7 @@
         </el-button>
       </template>
 
-      <qt-table v-bind="tableStore" ref="tableRef">
+      <qt-table v-if="refreshTable" v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染。 -->
         <template #text="{ row, column_data }">{{
           row[column_data.prop] ?? "-"
@@ -168,12 +168,12 @@
         class="column-form"
         @submit.prevent="save"
       >
+        <div class="h2-titles row-full">基础信息</div>
         <qt-form-item
         v-if="!editingRoot"
         class="row-full"
         label="上级对象类型"
         prop="parentCandidateId"
-        tip="选择该类型所属的父级对象类型，留空则为顶级对象类型。"
         >
           <el-tree-select
             v-model="form.parentCandidateId"
@@ -190,7 +190,6 @@
           class="row-full"
           label="对象类型名称"
           prop="name"
-          tip="填写业务对象的标准名称，也可从术语表选择，保持业务概念命名一致。"
         >
           <div class="name-input">
             <el-input
@@ -207,11 +206,11 @@
           class="row-full"
           label="显示顺序"
           prop="orderNum"
-          tip="用于控制同一父级下的展示顺序，数值越小越靠前。"
         >
           <el-input-number
             v-model="form.orderNum"
             :min="0"
+            :max="2147483647"
             :precision="0"
             controls-position="right"
             style="width: 100%"
@@ -221,30 +220,28 @@
           class="row-full"
           label="描述"
           prop="description"
-          tip="说明该对象类型代表的业务概念、职责及适用范围，最多256个字符。"
         >
           <el-input
             v-model="form.description"
             class="character-count"
             type="textarea"
             :rows="4"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
             placeholder="请输入对象类型描述，说明业务含义、职责和适用范围"
           />
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="关联建模目标"
-          prop="targetIds"
-          tip="选择该对象类型需要支撑的建模目标，便于检查设计对业务问题的覆盖情况。"
-        >
-          <el-button type="primary" plain @click="targetPickerOpen = true">
-            <el-icon class="mr5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-578.304V704h-64V247.296L237.248 490.048 192 444.8 508.8 128l316.8 316.8-45.312 45.248z"></path></svg></el-icon>
-            导入建模目标</el-button
-          >
-        </qt-form-item>
-        <div class="target-table">
+        <div class="row-full">
+          <div class="h2-titles mb15">关联建模目标</div>
+          <div class="mb15">
+            <el-form-item prop="targetIds" label-width="0">
+              <el-button type="primary" plain @click="targetPickerOpen = true">
+                <el-icon class="mr5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-578.304V704h-64V247.296L237.248 490.048 192 444.8 508.8 128l316.8 316.8-45.312 45.248z"></path></svg></el-icon>
+                导入建模目标
+              </el-button>
+              <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
+            </el-form-item>
+          </div>
           <TargetTable
             :targets="selectedTargets"
             editable
@@ -305,7 +302,7 @@
           </div></el-form-item
         ><el-form-item label="创建时间"
           ><div class="form-readonly">
-            {{ detail.createTime || "-" }}
+            {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
           </div></el-form-item
         ></el-form
       ><template #footer
@@ -343,6 +340,7 @@ const form = ref({});
 const detail = ref({});
 const selectedTargets = ref([]);
 const isExpandAll = ref(true);
+const refreshTable = ref(true);
 const editingRoot = ref(false);
 // 平铺的对象候选：既用于弹窗内上级/名称回显查询，也用于构建表格树。
 const objectRows = ref([]);
@@ -446,16 +444,7 @@ const tableStore = reactive({
       align: "center",
       selectable: () => true,
     },
-    {
-      label: "编号",
-      prop: "id",
-      slot: "text",
-      width: 80,
-      minWidth: 80,
-      align: "center",
-      sortable: "custom",
-      sortOrders: ["descending", "ascending", null],
-    },
+
     {
       label: "对象类型名称",
       prop: "name",
@@ -509,6 +498,7 @@ const tableStore = reactive({
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
+
     {
       label: "操作",
       slot: "handle",
@@ -548,10 +538,14 @@ const objectName = (id) =>
 const hasParent = (row) =>
   row.parentCandidateId != null && String(row.parentCandidateId) !== "0";
 
-/** 展开或折叠全部树节点，借助 el-table 实例的全量切换方法。 */
-function toggleExpandAll() {
+/** 展开或折叠全部树节点：切换 defaultExpandAll 后重建表格使状态生效（与对象类型管理页一致）。 */
+async function toggleExpandAll() {
+  if (!refreshTable.value) return;
+  refreshTable.value = false;
   isExpandAll.value = !isExpandAll.value;
-  nextTick(() => tableRef.value?.elTableRef?.toggleAllExpansion());
+  tableStore.config.table.defaultExpandAll = isExpandAll.value;
+  await nextTick();
+  refreshTable.value = true;
 }
 function addTargets(targets) {
   selectedTargets.value = [...selectedTargets.value, ...targets];

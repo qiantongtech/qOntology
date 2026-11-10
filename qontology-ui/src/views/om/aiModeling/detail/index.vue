@@ -142,7 +142,12 @@ const detailItems = [
   { label: "候选数量", key: "candidateCount", formatter: (val) => val ?? 0 },
   { label: "任务描述", key: "description", span: 24, className: "mt2 mb2" },
   { label: "文档名称", slot: "documents", span: 16, className: "mb2" },
-  { label: "更新人", key: "updateBy", className: "mb2" },
+  {
+    label: "更新人",
+    key: "updateBy",
+    formatter: (_name, record) => formatCreator(record),
+    className: "mb2"
+  },
   {
     label: "创建人",
     key: "createBy",
