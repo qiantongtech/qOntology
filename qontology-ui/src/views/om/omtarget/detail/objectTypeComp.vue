@@ -100,16 +100,16 @@
                 auth.hasPermiOr(['om:object:type:add', 'om:object:type:remove'])
               "
               placement="bottom"
-              :width="110"
+              :width="150"
               trigger="click"
-              popper-class="table-action-popover handle-popover"
+              popper-class="handle-popover"
             >
               <template #reference
                 ><el-button link type="primary" icon="ArrowDown"
                   >更多</el-button
                 ></template
               >
-              <div class="object-type-actions">
+              <div class="task-action-list">
                 <el-button
                   v-hasPermi="['om:object:type:add']"
                   link
@@ -814,15 +814,6 @@ onMounted(getList);
 .toggle-expand-all .svg-icon {
   font-size: 12px;
   margin-right: 6px;
-}
-.object-type-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  .el-button + .el-button {
-    margin-left: 0;
-  }
 }
 
 .target-object-types :deep(.qt-wrap--search) {
