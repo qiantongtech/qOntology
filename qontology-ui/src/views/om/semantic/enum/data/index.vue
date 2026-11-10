@@ -302,7 +302,7 @@
         </el-form-item>
         <el-form-item class="row-full" label="创建时间">
           <div class="form-readonly">
-            {{ parseTime(detail.createTime) || "-" }}
+            {{ parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
           </div>
         </el-form-item>
 

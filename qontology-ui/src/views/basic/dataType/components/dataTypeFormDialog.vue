@@ -49,7 +49,7 @@
         @submit.prevent="submitForm"
     >
       <qt-form-item label="业务数据名称" prop="name" class="row-full" >
-        <el-input v-model="localForm.name" :maxlength="128" placeholder="请输入名称"/>
+        <el-input v-model="localForm.name" :maxlength="128" placeholder="请输入业务数据名称"/>
       </qt-form-item>
       <qt-form-item label="业务数据类型" prop="dataType" class="row-full" >
         <!-- 类型选择只切换配置区，不触发选择框校验；点击确定时统一校验。 -->

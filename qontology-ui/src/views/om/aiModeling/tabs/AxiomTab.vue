@@ -312,19 +312,24 @@
               <el-option v-for="item in basic_data_type" :key="item.value" :label="item.label" :value="Number(item.value)" />
             </el-select>
           </qt-form-item>
-          <qt-form-item v-else label="业务数据类型" prop="businessTypeId" required tip="按当前项目与全局两个分类展开，选择属性关联的业务数据类型。">
-            <el-tree-select
-              v-model="businessKey"
-              :data="businessTypeTree"
-              :props="businessTypeTreeProps"
-              value-key="id"
-              check-strictly
-              filterable
-              clearable
-              default-expand-all
-              placeholder="请选择业务数据类型"
-            />
-          </qt-form-item>
+          <template v-else>
+            <qt-form-item label="数据范围" prop="businessTypeSource" required tip="选择业务数据类型来自当前项目还是全局，下方业务数据类型会按该范围过滤。">
+              <el-radio-group v-model="form.businessTypeSource" @change="handleBusinessSourceChange">
+                <el-radio value="PROJECT">当前项目</el-radio>
+                <el-radio value="GLOBAL">全局</el-radio>
+              </el-radio-group>
+            </qt-form-item>
+            <qt-form-item label="业务数据类型" prop="businessTypeId" required tip="按所选数据范围，选择属性关联的业务数据类型。">
+              <el-select v-model="form.businessTypeId" filterable clearable style="width: 100%" placeholder="请选择业务数据类型">
+                <el-option
+                  v-for="item in filteredBusinessTypes"
+                  :key="item.businessTypeSource + ':' + item.id"
+                  :label="item.name"
+                  :value="String(item.id)"
+                />
+              </el-select>
+            </qt-form-item>
+          </template>
           <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
             <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
           </el-form-item>
@@ -570,34 +575,10 @@ const objectAttributes = computed(() =>
 );
 const selectedBusinessType = computed(() => businessTypes.value.find((item) => String(item.id) === String(form.value.businessTypeId) && item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL")));
 const effectiveConfig = computed(() => form.value.typeCategory === 2 && selectedBusinessType.value ? { ...selectedBusinessType.value, basicTypeCode: Number(selectedBusinessType.value.dataType) } : form.value);
-const businessKey = computed({
-  get: () => form.value.businessTypeId ? `${form.value.businessTypeSource || "GLOBAL"}:${form.value.businessTypeId}` : undefined,
-  set: (value) => {
-    const [source, id] = (value || "").split(":");
-    form.value.businessTypeSource = source || "GLOBAL";
-    form.value.businessTypeId = id || undefined;
-  },
-});
-
-const businessTypeTreeProps = { label: 'name', value: 'id', children: 'children', disabled: 'disabled' };
-const businessTypeTree = computed(() =>
-  [
-    { source: 'PROJECT', label: '当前项目' },
-    { source: 'GLOBAL', label: '全局' }
-  ]
-    .map((group) => ({
-      id: group.source,
-      name: group.label,
-      disabled: true,
-      children: businessTypes.value
-        .filter((item) => item.businessTypeSource === group.source)
-        .map((item) => ({
-          id: `${item.businessTypeSource}:${item.id}`,
-          name: item.name,
-          businessTypeSource: item.businessTypeSource
-        }))
-    }))
-    .filter((group) => group.children.length)
+const filteredBusinessTypes = computed(() =>
+  businessTypes.value.filter(
+    (item) => item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL")
+  )
 );
 const basicTypeLabel = (value) => proxy.selectDictLabel(basic_data_type.value, value) || "-";
 const rules = {
@@ -652,6 +633,10 @@ function handleObjectChange() {
 function handleTypeCategoryChange() {
   Object.assign(form.value, { basicTypeCode: undefined, businessTypeId: undefined, businessTypeSource: "GLOBAL", unit: "", decimalPlaces: 2, format: "", enumType: undefined, enumSource: "PROJECT" });
   nextTick(() => formRef.value?.clearValidate());
+}
+function handleBusinessSourceChange() {
+  form.value.businessTypeId = undefined;
+  nextTick(() => formRef.value?.clearValidate("businessTypeId"));
 }
 async function loadTypeOptions() {
   businessTypes.value = [];

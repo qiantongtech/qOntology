@@ -63,9 +63,7 @@
           <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
           <template #description="{ row }">{{ row.description?.trim() }}</template>
           <template #typeCategory="{ row }">
-            <el-tag :type="row.typeCategory === 2 ? 'success' : 'primary'" effect="light">
-              {{ dataTypeLabel(row.typeCategory) }}
-            </el-tag>
+            <dict-tag :options="om_attribute_data_type" :value="row.typeCategory" />
           </template>
           <template #createBy="{ row }">
             <div class="flex-column overflow-hidden">
@@ -471,9 +469,6 @@ const dataTypeOptions = computed(() =>
     value: Number(dict.value),
   }))
 );
-
-const dataTypeLabel = (value) =>
-  dataTypeOptions.value.find((option) => option.value === value)?.label || "-";
 
 const columns = reactive([
   { type: "selection", width: 55, align: "center", fixed: "left" },

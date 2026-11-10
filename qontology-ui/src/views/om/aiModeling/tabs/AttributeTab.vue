@@ -66,11 +66,7 @@
           objectName(row.objectCandidateId)
         }}</template>
         <template #dataType="{ row }">
-          <el-tag
-            :type="row.typeCategory === 2 ? 'success' : 'primary'"
-            effect="light"
-            >{{ dataTypeLabel(row.typeCategory) }}</el-tag
-          >
+          <dict-tag :options="om_attribute_data_type" :value="row.typeCategory" />
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -674,15 +670,6 @@ const rules = {
  */
 const objectName = (id) =>
   objects.value.find((item) => item.id === id)?.name || "-";
-
-/**
- * 取数据类型字典文案。
- * @param {number|string} value 数据类型分类
- * @returns {string} 字典标签
- */
-const dataTypeLabel = (value) =>
-  dataTypeOptions.value.find((item) => item.value === Number(value))?.label ||
-  "-";
 
 /**
  * 取基础数据类型字典文案。

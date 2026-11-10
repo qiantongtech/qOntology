@@ -240,21 +240,32 @@
                                 />
                             </el-select>
                         </qt-form-item>
-                        <qt-form-item v-else label="业务数据类型" prop="businessTypeKey" tip="按当前项目与全局两个分类展开，选择属性关联的业务数据类型。">
-                            <el-tree-select
-                                v-model="form.businessTypeKey"
-                                :data="businessTypeTree"
-                                :props="businessTypeTreeProps"
-                                value-key="id"
-                                :loading="optionsLoading"
-                                check-strictly
-                                filterable
-                                clearable
-                                default-expand-all
-                                placeholder="请选择业务数据类型"
-                                @change="handleBusinessTypeChange"
-                            />
-                        </qt-form-item>
+                        <template v-else>
+                            <qt-form-item label="数据范围" prop="businessTypeSource" required tip="选择业务数据类型来自当前项目还是全局，下方业务数据类型会按该范围过滤。">
+                                <el-radio-group v-model="form.businessTypeSource" @change="handleBusinessSourceChange">
+                                    <el-radio value="PROJECT">当前项目</el-radio>
+                                    <el-radio value="GLOBAL">全局</el-radio>
+                                </el-radio-group>
+                            </qt-form-item>
+                            <qt-form-item label="业务数据类型" prop="businessTypeKey" tip="按所选数据范围，选择属性关联的业务数据类型。">
+                                <el-select
+                                    v-model="form.businessTypeKey"
+                                    placeholder="请选择业务数据类型"
+                                    style="width: 100%"
+                                    :loading="optionsLoading"
+                                    filterable
+                                    clearable
+                                    @change="handleBusinessTypeChange"
+                                >
+                                    <el-option
+                                        v-for="item in filteredBusinessTypes"
+                                        :key="item.key"
+                                        :label="item.name"
+                                        :value="item.key"
+                                    />
+                                </el-select>
+                            </qt-form-item>
+                        </template>
                         <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
                             <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
                         </el-form-item>
@@ -469,6 +480,7 @@
         typeCategory: 1,
         basicTypeCode: undefined,
         businessTypeKey: '',
+        businessTypeSource: 'PROJECT',
         unit: '',
         decimalPlaces: 2,
         format: '',
@@ -540,25 +552,10 @@
     const effectiveConfig = computed(() => resolvedConfig(form.value));
     const detailConfig = computed(() => resolvedConfig(detail.value));
     const basicTypeLabel = (value) => proxy.selectDictLabel(basic_data_type.value, value) || '未设置';
-    const businessTypeTreeProps = { label: 'name', value: 'id', children: 'children', disabled: 'disabled' };
-    const businessTypeTree = computed(() =>
-        [
-            { source: 'PROJECT', label: '当前项目' },
-            { source: 'GLOBAL', label: '全局' }
-        ]
-            .map((group) => ({
-                id: group.source,
-                name: group.label,
-                disabled: true,
-                children: currentBusinessTypes.value
-                    .filter((item) => item.businessTypeSource === group.source)
-                    .map((item) => ({
-                        id: item.key,
-                        name: item.name,
-                        businessTypeSource: item.businessTypeSource
-                    }))
-            }))
-            .filter((group) => group.children.length)
+    const filteredBusinessTypes = computed(() =>
+        currentBusinessTypes.value.filter(
+            (item) => item.businessTypeSource === (form.value.businessTypeSource || 'PROJECT')
+        )
     );
 
     const detailFields = computed(() => [
@@ -765,7 +762,11 @@
         if (request !== dialogRequest) return;
         attributeLoadingCount.value = 0;
         resetEnums();
-        form.value = { ...emptyForm(), ...response.data };
+        form.value = {
+            ...emptyForm(),
+            ...response.data,
+            businessTypeSource: String(response.data.businessTypeKey || '').split(':')[0] || 'PROJECT'
+        };
         detailOpen.value = false;
         dialogTitle.value = '修改模型公理';
         open.value = true;
@@ -967,6 +968,7 @@
     function handleValueTypeChange() {
         form.value.basicTypeCode = undefined;
         form.value.businessTypeKey = '';
+        form.value.businessTypeSource = 'PROJECT';
         clearTypeConfig();
         nextTick(() => ruleRef.value?.clearValidate(['basicTypeCode', 'businessTypeKey']));
     }
@@ -991,6 +993,13 @@
     /** 切换业务数据类型时重置值配置。 */
     function handleBusinessTypeChange() {
         clearTypeConfig();
+    }
+
+    /** 切换数据范围时清空已选业务数据类型并重置值配置。 */
+    function handleBusinessSourceChange() {
+        form.value.businessTypeKey = '';
+        clearTypeConfig();
+        nextTick(() => ruleRef.value?.clearValidate(['businessTypeKey']));
     }
 
     /** 清空枚举选项并释放加载中状态。 */

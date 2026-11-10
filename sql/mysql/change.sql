@@ -18,3 +18,6 @@ UPDATE `app_task_log` SET `workspace_id` = 1001, `task_id` = 12, `task_type` = 0
 DELETE FROM `app_task_log` WHERE id = 32
 INSERT INTO `app_task_log` VALUES (27, 1001, 12, 1, '供应链采购与仓储协同抽取', 1, NULL, '2026-11-06 13:33:44', '2026-11-06 13:34:59', 1, 0, '吴同', 2, '2026-11-06 13:33:44', NULL, NULL, '2026-11-06 13:33:44', NULL);
 INSERT INTO `app_task_log` VALUES (28, 1001, 13, 1, '供应链采购与仓储协同业务实例描述文档抽取', 1, NULL, '2026-11-06 13:33:44', '2026-11-06 13:34:59', 1, 0, '吴同', 2, '2026-11-06 13:33:44', NULL, NULL, '2026-11-06 13:33:44', NULL);
+
+
+UPDATE `system_dict_data` SET `dict_sort` = 1, `dict_label` = '基础数据类型', `dict_value` = '1', `dict_type` = 'om_attribute_data_type', `css_class` = '', `list_class` = 'success', `is_default` = 'Y', `status` = '0', `create_by` = 'admin', `create_time` = '2026-10-16 09:48:41', `update_by` = '吴同', `update_time` = '2026-11-10 10:31:47', `remark` = '' WHERE `dict_code` = 51;
