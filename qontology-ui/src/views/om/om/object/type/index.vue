@@ -341,17 +341,6 @@
           align="left"
           :show-overflow-tooltip="{ effect: 'light' }"
         />
-        <el-table-column label="状态" width="90" align="center">
-          <template #default="{ row }">
-            <el-switch
-              :model-value="Number(row.status)"
-              :active-value="1"
-              :inactive-value="0"
-              disabled
-              :aria-label="`${row.stdName}状态`"
-            />
-          </template>
-        </el-table-column>
       </el-table>
       <pagination
         v-show="termTotal > 0"

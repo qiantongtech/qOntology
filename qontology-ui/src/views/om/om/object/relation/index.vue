@@ -240,6 +240,7 @@
             :targets="selectedTargets"
             editable
             :disabled="saving"
+            :version-id="versionId"
             @remove="removeTarget"
           />
         </div>
