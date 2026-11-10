@@ -183,12 +183,12 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          label="对象类型关系名称"
+          label="对象类型关系"
           prop="name"
         >
           <el-input
             v-model="form.name"
-            placeholder="请输入对象类型关系名称，例如：提供、采购物料"
+            placeholder="请输入对象类型关系，例如：提供、采购物料"
             :maxlength="128"
           />
         </qt-form-item>
@@ -305,7 +305,7 @@
             {{ objectName(detail.startObjectCandidateId) }}
           </div>
         </el-form-item>
-        <el-form-item label="对象类型关系名称">
+        <el-form-item label="对象类型关系">
           <div class="form-readonly">
             {{ detail.name || "-" }}
           </div>
@@ -396,7 +396,7 @@ const selectedTargets = ref([]);
 function required(row) {
   const missing = [];
   if (!row.startObjectCandidateId) missing.push("起点类型");
-  if (!row.name?.trim()) missing.push("对象类型关系名称");
+  if (!row.name?.trim()) missing.push("对象类型关系");
   if (!row.endObjectCandidateId) missing.push("终点类型");
   if (![0, 1].includes(Number(row.reversibleFlag))) missing.push("是否可逆");
   if (Number(row.reversibleFlag) === 1 && !row.reverseName?.trim())
@@ -429,7 +429,7 @@ const {
 // 候选列表搜索：字段与接口契约一致，查询和重置由 QtSearchBar 回到第一页。
 const searchStore = reactive({
   items: [
-    { label: "对象类型关系名称", prop: "name", component: { is: "input" } },
+    { label: "对象类型关系", prop: "name", component: { is: "input" } },
     { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
   ],
 });
@@ -471,7 +471,7 @@ const tableStore = reactive({
       sortOrders: ["descending", "ascending", null],
     },
     { label: "起点类型", slot: "startTypeName", minWidth: 140, align: "left" },
-    { label: "对象类型关系名称", prop: "name", slot: "text", minWidth: 160, align: "left" },
+    { label: "对象类型关系", prop: "name", slot: "text", minWidth: 160, align: "left" },
     { label: "终点类型", slot: "endTypeName", minWidth: 140, align: "left" },
     { label: "描述", prop: "description", slot: "text", minWidth: 200, align: "left", showOverflowTooltip: { effect: "light" } },
     {
@@ -530,10 +530,10 @@ const rules = {
     {
       required: true,
       whitespace: true,
-      message: "对象类型关系名称不能为空",
+      message: "对象类型关系不能为空",
       trigger: "blur",
     },
-    { max: 128, message: "对象类型关系名称不能超过128个字符", trigger: "blur" },
+    { max: 128, message: "对象类型关系不能超过128个字符", trigger: "blur" },
   ],
   endObjectCandidateId: [
     { required: true, message: "请选择终点类型", trigger: "change" },

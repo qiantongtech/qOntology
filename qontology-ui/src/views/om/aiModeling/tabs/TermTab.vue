@@ -200,7 +200,6 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          tip="填写同一业务概念的其他叫法；可逐条新增，避免重复别名。"
           label="术语别名"
           prop="alias"
         >
@@ -219,7 +218,6 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          tip="填写常用的简短业务标识，例如采购订单的业务缩写 PO。"
           label="业务缩写"
           prop="abbr"
         >
@@ -227,7 +225,6 @@
         </qt-form-item>
         <qt-form-item
           class="row-full"
-          tip="说明该术语的业务出处，例如制度规范、需求材料或提出部门。"
           label="来源"
           prop="source"
         >

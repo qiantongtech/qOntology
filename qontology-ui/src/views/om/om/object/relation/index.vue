@@ -138,10 +138,10 @@
 
         <qt-form-item
           class="row-full"
-          label="对象类型关系名称"
+          label="对象类型关系"
           prop="name"
         >
-          <el-input v-model="form.name" placeholder="请输入对象类型关系名称，例如：提供、采购物料" maxlength="128" />
+          <el-input v-model="form.name" placeholder="请输入对象类型关系，例如：提供、采购物料" maxlength="128" />
         </qt-form-item>
 
         <qt-form-item
@@ -320,7 +320,7 @@
             { type: 'selection', width: 55, minWidth: 55 },
             { label: '编号', prop: 'id', slot: 'text', width: 80, minWidth: 80, align: 'center', sortable: true },
             { label: '起点类型', prop: 'startTypeName', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
-            { label: '关系名称', prop: 'name', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
+            { label: '对象类型关系', prop: 'name', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '终点类型', prop: 'endTypeName', slot: 'text', minWidth: 140, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '描述', prop: 'description', slot: 'text', minWidth: 256, align: 'left', showOverflowTooltip: { effect: 'light' } },
             { label: '是否可逆', prop: 'reversibleFlag', slot: 'reversible', width: 100, minWidth: 10, showOverflowTooltip: { effect: 'light' },},
@@ -339,7 +339,7 @@
     // 搜索项配置
     const searchStore = reactive({
         items: [
-            { label: '对象类型关系名称', prop: 'name', component: { is: 'input', showOverflowTooltip: { effect: 'light' },
+            { label: '对象类型关系', prop: 'name', component: { is: 'input', showOverflowTooltip: { effect: 'light' },
 } },
             { label: '是否可逆', prop: 'reversibleFlag', component: { is: 'select', options: reversibleOptions, showOverflowTooltip: { effect: 'light' },
 } }
@@ -361,10 +361,10 @@
     const rules = {
         targetIds: [{ type: 'array', required: true, min: 1, message: '请至少关联一个建模目标', trigger: 'change' }],
         name: [
-            { required: true, whitespace: true, message: '对象类型关系名称不能为空', trigger: 'blur' },
+            { required: true, whitespace: true, message: '对象类型关系不能为空', trigger: 'blur' },
             {
                 max: 128,
-                message: '对象类型关系名称不能超过128个字符',
+                message: '对象类型关系不能超过128个字符',
                 trigger: 'blur'
             }
         ],
@@ -629,7 +629,6 @@
 
 <style scoped lang="scss">
 
-    /* 带标签的边：关系名称在上、箭头在下，整体居中。 */
     /* 反向名称：仅可逆关系展示在箭头下方。 */
     /* 表单控件撑满所在列宽，避免行内 style。 */
     .form-control-full {

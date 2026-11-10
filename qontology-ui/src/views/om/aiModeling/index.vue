@@ -148,14 +148,14 @@
           allow-wrap
           title="维护任务基本信息与待解析文档，修改后如需重新提取候选，请保存后点击列表“重新解析”。"
         />
-        <qt-form-item label="任务名称" prop="taskName" tip="填写本次建模任务的名称，便于在列表中区分不同任务。">
+        <qt-form-item label="任务名称" prop="taskName">
           <el-input
             v-model="editForm.taskName"
             placeholder="请输入任务名称"
             maxlength="100"
           />
         </qt-form-item>
-        <qt-form-item label="任务描述" tip="补充本次建模的业务背景、范围或重点关注内容。">
+        <qt-form-item label="任务描述" >
           <el-input
             v-model="editForm.description"
             type="textarea"
@@ -165,7 +165,7 @@
             show-word-limit
           />
         </qt-form-item>
-        <qt-form-item label="上传文件" prop="filePaths" tip="上传需解析的业务文档，支持多个文件，保存后需重新解析生效。">
+        <qt-form-item label="上传文件" prop="filePaths" >
           <FileUpload2
             v-model="editForm.filePaths"
             :file-name="editForm.fileNames"
