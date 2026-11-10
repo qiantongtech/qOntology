@@ -445,7 +445,7 @@ import {
 
 import { ElMessage } from "element-plus";
 
-import AttributeTypeConfig from "./AttributeTypeConfig.vue";
+import AttributeTypeConfig from "@/views/om/om/object/type/detail/AttributeTypeConfig.vue";
 
 import {
   listAttributes,

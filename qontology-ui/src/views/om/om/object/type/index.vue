@@ -392,8 +392,8 @@ import {
 import { listTerm } from "@/api/om/term/term";
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
-import TargetPicker from "./TargetPicker.vue";
-import TargetTable from "./TargetTable.vue";
+import TargetPicker from "@/views/om/om/object/type/TargetPicker.vue";
+import TargetTable from "@/views/om/om/object/type/TargetTable.vue";
 
 defineOptions({ name: "OmObjectType" });
 // 项目版本优先从 URL 获取，嵌入使用时兼容上层传入

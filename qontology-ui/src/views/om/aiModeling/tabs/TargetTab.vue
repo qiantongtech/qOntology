@@ -269,7 +269,7 @@
               {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
             </template>
             <template v-else-if="field.prop === 'createTime'">{{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}</template>
-            <template v-else>{{ detail[field.prop] ?? "-" }}</template>
+            <template v-else>{{ detail[field.prop] === "" || detail[field.prop] == null ? "-" : detail[field.prop] }}</template>
           </div>
         </el-form-item>
       </el-form>
@@ -285,8 +285,8 @@
 <script setup>
 import { updateCandidate } from "@/api/om/aiModeling";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
-import CandidateEvidenceDrawer from "../components/CandidateEvidenceDrawer.vue";
-import { useCandidateTab } from "./useCandidateTab";
+import CandidateEvidenceDrawer from "@/views/om/aiModeling/components/CandidateEvidenceDrawer.vue";
+import { useCandidateTab } from "@/views/om/aiModeling/tabs/useCandidateTab";
 
 const props = defineProps({ taskId: { type: Number, required: true } });
 const { proxy } = getCurrentInstance();

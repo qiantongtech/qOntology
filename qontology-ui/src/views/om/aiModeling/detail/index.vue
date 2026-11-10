@@ -91,15 +91,15 @@
 <script setup name="AiModelingDetail">
 import { useRoute, useRouter } from "vue-router";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
-import TargetTab from "../tabs/TargetTab.vue";
-import TermTab from "../tabs/TermTab.vue";
-import EnumTab from "../tabs/EnumTab.vue";
-import ObjectTab from "../tabs/ObjectTab.vue";
-import AttributeTab from "../tabs/AttributeTab.vue";
-import RelationTab from "../tabs/RelationTab.vue";
-import AxiomTab from "../tabs/AxiomTab.vue";
-import DataRuleTab from "../tabs/DataRuleTab.vue";
-import TimelineTab from "../tabs/TimelineTab.vue";
+import TargetTab from "@/views/om/aiModeling/tabs/TargetTab.vue";
+import TermTab from "@/views/om/aiModeling/tabs/TermTab.vue";
+import EnumTab from "@/views/om/aiModeling/tabs/EnumTab.vue";
+import ObjectTab from "@/views/om/aiModeling/tabs/ObjectTab.vue";
+import AttributeTab from "@/views/om/aiModeling/tabs/AttributeTab.vue";
+import RelationTab from "@/views/om/aiModeling/tabs/RelationTab.vue";
+import AxiomTab from "@/views/om/aiModeling/tabs/AxiomTab.vue";
+import DataRuleTab from "@/views/om/aiModeling/tabs/DataRuleTab.vue";
+import TimelineTab from "@/views/om/aiModeling/tabs/TimelineTab.vue";
 import { adoptAll, getAiFiles, getAiTask } from "@/api/om/aiModeling";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 

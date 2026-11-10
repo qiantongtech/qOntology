@@ -476,7 +476,7 @@ import {
   listAttributeBusinessDataTypes,
   listAttributeEnums,
 } from "@/api/om/object/attribute";
-import AttributeTypeConfig from "../../object/type/detail/AttributeTypeConfig.vue";
+import AttributeTypeConfig from "@/views/om/om/object/type/detail/AttributeTypeConfig.vue";
 import auth from "@/plugins/auth";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 

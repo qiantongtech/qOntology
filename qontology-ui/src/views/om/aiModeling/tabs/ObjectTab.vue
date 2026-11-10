@@ -368,11 +368,11 @@ import {
   updateCandidate,
 } from "@/api/om/aiModeling";
 import {useCreatorPhones} from "@/utils/useCreatorPhones";
-import TargetTable from "../../om/object/type/TargetTable.vue";
-import CandidateTargetPicker from "../components/CandidateTargetPicker.vue";
-import CandidateTermPicker from "../components/CandidateTermPicker.vue";
-import CandidateEvidenceDrawer from "../components/CandidateEvidenceDrawer.vue";
-import {useCandidateTab} from "./useCandidateTab";
+import TargetTable from "@/views/om/om/object/type/TargetTable.vue";
+import CandidateTargetPicker from "@/views/om/aiModeling/components/CandidateTargetPicker.vue";
+import CandidateTermPicker from "@/views/om/aiModeling/components/CandidateTermPicker.vue";
+import CandidateEvidenceDrawer from "@/views/om/aiModeling/components/CandidateEvidenceDrawer.vue";
+import {useCandidateTab} from "@/views/om/aiModeling/tabs/useCandidateTab";
 
 const props = defineProps({taskId: {type: Number, required: true}});
 const {proxy} = getCurrentInstance();

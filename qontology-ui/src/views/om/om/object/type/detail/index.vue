@@ -60,8 +60,8 @@
     import { useRoute, useRouter } from 'vue-router';
     import { ElMessage } from 'element-plus';
     import { getType } from '@/api/om/object/type';
-    import TargetPanel from './TargetPanel.vue';
-    import AttributePanel from './AttributePanel.vue';
+    import TargetPanel from '@/views/om/om/object/type/detail/TargetPanel.vue';
+    import AttributePanel from '@/views/om/om/object/type/detail/AttributePanel.vue';
     import { useCreatorPhones } from '@/utils/useCreatorPhones';
 
     defineOptions({ name: 'OmObjectTypeDetail' });

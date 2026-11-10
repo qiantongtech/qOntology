@@ -47,7 +47,7 @@
     import { InfoFilled } from '@element-plus/icons-vue';
     import { pageRelationTargets } from '@/api/om/object/relation';
     import { useOntologyVersion } from '@/views/om/useOntologyVersion';
-    import TargetTable from '../../type/TargetTable.vue';
+    import TargetTable from '@/views/om/om/object/type/TargetTable.vue';
     const props = defineProps({ relationId: { type: [String, Number], required: true } });
     // 关联元素需要按当前版本补充对象类型/关系标签，与建设目标列表页保持一致。
     const { versionId } = useOntologyVersion();

@@ -374,9 +374,9 @@ import {
   listAiAttributeEnums,
 } from "@/api/om/aiModeling";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
-import CandidateEvidenceDrawer from "../components/CandidateEvidenceDrawer.vue";
-import AttributeTypeConfig from "../../om/object/type/detail/AttributeTypeConfig.vue";
-import { useCandidateTab } from "./useCandidateTab";
+import CandidateEvidenceDrawer from "@/views/om/aiModeling/components/CandidateEvidenceDrawer.vue";
+import AttributeTypeConfig from "@/views/om/om/object/type/detail/AttributeTypeConfig.vue";
+import { useCandidateTab } from "@/views/om/aiModeling/tabs/useCandidateTab";
 
 const props = defineProps({ taskId: { type: Number, required: true } });
 const { proxy } = getCurrentInstance();

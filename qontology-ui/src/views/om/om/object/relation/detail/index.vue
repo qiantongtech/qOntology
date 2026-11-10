@@ -52,7 +52,7 @@
     import { ElMessage } from 'element-plus';
     import { getRelation } from '@/api/om/object/relation';
     import { useCreatorPhones } from '@/utils/useCreatorPhones';
-    import TargetPanel from './TargetPanel.vue';
+    import TargetPanel from '@/views/om/om/object/relation/detail/TargetPanel.vue';
 
     defineOptions({ name: 'OmObjectTypeRelationDetail' });
     const route = useRoute();

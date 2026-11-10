@@ -279,7 +279,7 @@
 </template>
 
 <script setup>
-import TermInfoCell from "./TermInfoCell.vue";
+import TermInfoCell from "@/views/om/semantic/term/TermInfoCell.vue";
 import { onBeforeUnmount, computed, nextTick, watch, reactive, ref } from "vue";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 import { ElMessage, ElMessageBox } from "element-plus";

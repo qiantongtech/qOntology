@@ -293,14 +293,14 @@ import { useRoute, useRouter } from "vue-router";
 import useTagsViewStore from "@/store/system/tagsView";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 import FileUpload2 from "@/components/FileUpload2";
-import TargetTab from "../tabs/TargetTab.vue";
-import TermTab from "../tabs/TermTab.vue";
-import EnumTab from "../tabs/EnumTab.vue";
-import ObjectTab from "../tabs/ObjectTab.vue";
-import AttributeTab from "../tabs/AttributeTab.vue";
-import RelationTab from "../tabs/RelationTab.vue";
-import AxiomTab from "../tabs/AxiomTab.vue";
-import DataRuleTab from "../tabs/DataRuleTab.vue";
+import TargetTab from "@/views/om/aiModeling/tabs/TargetTab.vue";
+import TermTab from "@/views/om/aiModeling/tabs/TermTab.vue";
+import EnumTab from "@/views/om/aiModeling/tabs/EnumTab.vue";
+import ObjectTab from "@/views/om/aiModeling/tabs/ObjectTab.vue";
+import AttributeTab from "@/views/om/aiModeling/tabs/AttributeTab.vue";
+import RelationTab from "@/views/om/aiModeling/tabs/RelationTab.vue";
+import AxiomTab from "@/views/om/aiModeling/tabs/AxiomTab.vue";
+import DataRuleTab from "@/views/om/aiModeling/tabs/DataRuleTab.vue";
 import {
   adoptAll,
   createAiTask,

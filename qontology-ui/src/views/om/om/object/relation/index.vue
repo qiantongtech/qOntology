@@ -304,8 +304,8 @@ import {
 } from "@/api/om/object/relation";
 import auth from "@/plugins/auth";
 import {useCreatorPhones} from "@/utils/useCreatorPhones";
-import TargetPicker from "../type/TargetPicker.vue";
-import TargetTable from "../type/TargetTable.vue";
+import TargetPicker from "@/views/om/om/object/type/TargetPicker.vue";
+import TargetTable from "@/views/om/om/object/type/TargetTable.vue";
 
 defineOptions({name: "OmObjectTypeRelation"});
 const props = defineProps({
