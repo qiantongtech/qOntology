@@ -704,6 +704,7 @@ function reset() {
     updaterId: null,
     updateTime: null,
     remark: null,
+    status:0,
   };
   proxy.resetForm("daDatasourceRef");
 }

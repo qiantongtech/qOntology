@@ -353,6 +353,8 @@
           />
         </el-select>
       </qt-form-item>
+      <!-- 描述字段前的扩展插槽，供父页面注入状态等表单项；form 与提交快照同源。 -->
+      <slot name="before-description" :form="localForm" />
       <qt-form-item label="描述" prop="description" class="row-full">
         <el-input
           v-model="localForm.description"

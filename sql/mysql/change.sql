@@ -21,3 +21,5 @@ INSERT INTO `app_task_log` VALUES (28, 1001, 13, 1, '供应链采购与仓储协
 
 
 UPDATE `system_dict_data` SET `dict_sort` = 1, `dict_label` = '基础数据类型', `dict_value` = '1', `dict_type` = 'om_attribute_data_type', `css_class` = '', `list_class` = 'success', `is_default` = 'Y', `status` = '0', `create_by` = 'admin', `create_time` = '2026-10-16 09:48:41', `update_by` = '吴同', `update_time` = '2026-11-10 10:31:47', `remark` = '' WHERE `dict_code` = 51;
+
+UPDATE system_dict_data SET dict_sort=0, dict_label='停用', dict_value='0', dict_type='project_status', css_class=NULL, list_class='danger', is_default='N', status='0', create_by='吴同', create_time='2026-10-12 15:11:21', update_by='吴同', update_time='2026-11-10 14:54:15', remark=NULL WHERE dict_code=58;

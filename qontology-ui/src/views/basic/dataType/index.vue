@@ -155,7 +155,11 @@
       <template #before-description="{ form: draft }">
         <qt-form-item label="状态" prop="status" class="row-full">
           <el-radio-group v-model="draft.status">
-            <el-radio v-for="item in project_status" :key="item.value" :value="Number(item.value)">{{ item.label }}</el-radio>
+            <el-radio
+              v-for="item in project_status"
+              :key="item.value"
+              :label="Number(item.value)"
+            >{{ item.label }}</el-radio>
           </el-radio-group>
         </qt-form-item>
       </template>
@@ -762,8 +766,8 @@ function handleUpdate(row) {
   // 只读模式即使通过脚本调用方法，也不允许执行写操作。
   if (props.readOnly) return;
   reset();
-  const _id = row.id || ids.value;
-  getDataType(_id).then((response) => {
+  const targetId = row.id || ids.value;
+  getDataType(targetId).then((response) => {
     form.value = {
       ...response.data,
       status: Number(response.data.status ?? 1),
@@ -778,8 +782,8 @@ function handleUpdate(row) {
 /** 详情按钮操作 */
 function handleDetail(row) {
   reset();
-  const _id = row.id || ids.value;
-  getDataType(_id).then((response) => {
+  const targetId = row.id || ids.value;
+  getDataType(targetId).then((response) => {
     form.value = {
       ...response.data,
       status: Number(response.data.status ?? 1),
@@ -827,11 +831,11 @@ function handleDelete(row) {
   if (props.readOnly) return;
   // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.id 区分）
   if (row?.id != null) {
-    const _ids = row.id;
+    const deleteId = row.id;
     proxy.$modal
-      .confirm('是否确认删除数据类型编号为"' + _ids + '"的数据项？')
+      .confirm('是否确认删除数据类型编号为"' + deleteId + '"的数据项？')
       .then(function () {
-        return delDataType(_ids);
+        return delDataType(deleteId);
       })
       .then(() => {
         // 删除后回到第一页，避免移除末页全部关联记录后停留在空页。
