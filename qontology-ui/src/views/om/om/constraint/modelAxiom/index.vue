@@ -395,8 +395,9 @@
       destroy-on-close
     >
       <el-form label-width="120px" class="column-form">
+        <!-- 类型配置（单位、小数位数等）由 AttributeTypeConfig 渲染，需紧跟数据类型字段之后，故拆成前后两组。 -->
         <el-form-item
-          v-for="field in detailFields"
+          v-for="field in detailFieldsHead"
           :key="field.label"
           :label="field.label"
           :class="{ 'row-full': field.multiline }"
@@ -420,6 +421,25 @@
           readonly
           :enum-options="enumOptions"
         />
+        <el-form-item
+          v-for="field in detailFieldsTail"
+          :key="field.label"
+          :label="field.label"
+          :class="{ 'row-full': field.multiline }"
+        >
+          <dict-tag
+            v-if="field.dictOptions"
+            :options="field.dictOptions"
+            :value="field.dictValue"
+          />
+          <div
+            v-else
+            class="form-readonly"
+            :class="{ textarea: field.multiline }"
+          >
+            {{ field.value || "-" }}
+          </div>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -570,7 +590,7 @@ const tableStore = reactive({
       date: true,
       width: 160,
       minWidth: 160,
-      align: "left",
+      align: "center",
       sortable: true,
     },
     {
@@ -729,7 +749,9 @@ const tableStore = reactive({
         )
     );
 
-const detailFields = computed(() => [
+// 详情弹窗通用字段：属性范围类型的单位、小数位数等由 AttributeTypeConfig 渲染并紧跟数据类型之后，
+// 故这里拆成前后两组，中间插入类型配置。
+const detailFieldsHead = computed(() => [
   { label: "公理名称", value: detail.value.name },
   {
     label: "类型",
@@ -744,6 +766,8 @@ const detailFields = computed(() => [
     dictValue: detail.value.level,
   },
   ...getDetailFields(detail.value),
+]);
+const detailFieldsTail = computed(() => [
   { label: "描述", value: detail.value.description, multiline: true },
   { label: "创建人", value: detail.value.createBy || "-" },
   {

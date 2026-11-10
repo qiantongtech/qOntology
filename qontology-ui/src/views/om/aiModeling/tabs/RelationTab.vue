@@ -252,7 +252,7 @@
             type="textarea"
             :rows="4"
             placeholder="请输入关系描述，说明业务联系和适用场景"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>

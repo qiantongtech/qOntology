@@ -185,7 +185,7 @@
             type="textarea"
             :rows="4"
             placeholder="请输入描述"
-            maxlength="256个字符"
+            maxlength="256"
             show-word-limit
           />
         </qt-form-item>
