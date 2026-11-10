@@ -81,8 +81,11 @@
       </el-table-column>
       <template #empty
         ><div class="emptyBg">
-          <img src="@/assets/system/images/no_data/noData.png" alt="暂无术语" />
-          <p>暂无术语</p>
+          <img
+            src="@/assets/common/images/empty-state/noData.png"
+            alt="暂无记录"
+          />
+          <p>暂无记录</p>
         </div></template
       >
     </el-table>

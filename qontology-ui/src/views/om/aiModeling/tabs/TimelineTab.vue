@@ -68,11 +68,10 @@
         </el-card>
       </el-timeline-item>
     </el-timeline>
-    <el-empty
-      v-else-if="!loading"
-      description="暂无解析过程数据"
-      :image-size="90"
-    />
+    <div v-else-if="!loading" class="emptyBg">
+      <img src="@/assets/common/images/empty-state/noData.png" alt="暂无记录" />
+      <p>暂无记录</p>
+    </div>
   </div>
 </template>
 

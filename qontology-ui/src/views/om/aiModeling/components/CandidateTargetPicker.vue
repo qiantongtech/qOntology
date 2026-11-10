@@ -36,10 +36,10 @@
       <template #empty>
         <div class="emptyBg target-empty">
           <img
-            src="@/assets/system/images/no_data/noData.png"
-            alt="暂无建模目标"
+            src="@/assets/common/images/empty-state/noData.png"
+            alt="暂无记录"
           />
-          <p>暂无建模目标</p>
+          <p>暂无记录</p>
         </div>
       </template>
     </qt-table>
@@ -199,7 +199,6 @@ watch(
   padding: 20px 0;
 }
 .target-empty img {
-  width: 100px;
-  height: 100px;
+  width: 200px;
 }
 </style>

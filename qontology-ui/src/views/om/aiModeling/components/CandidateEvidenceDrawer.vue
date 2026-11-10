@@ -36,8 +36,11 @@
       <div class="evidence-content">{{ item.content }}</div>
     </el-card>
     <div v-if="!evidences.length" class="emptyBg">
-      <img src="@/assets/system/images/no_data/noData.png" alt="暂无来源证据" />
-      <p>暂无来源证据</p>
+      <img
+        src="@/assets/common/images/empty-state/noData.png"
+        alt="暂无记录"
+      />
+      <p>暂无记录</p>
     </div>
     <template #footer>
       <div class="dialog-footer">

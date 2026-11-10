@@ -133,7 +133,7 @@
           <template #empty>
             <div class="emptyBg">
               <img
-                src="@/assets/system/images/no_data/noData.png"
+                src="@/assets/common/images/empty-state/noData.png"
                 alt="暂无记录"
               />
               <p>暂无记录</p>

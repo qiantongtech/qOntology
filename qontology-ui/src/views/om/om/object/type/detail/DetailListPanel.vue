@@ -36,7 +36,7 @@
             </el-table-column>
             <template #empty>
                 <div class="emptyBg">
-                    <img src="@/assets/system/images/no_data/noData.png" :alt="emptyText" />
+                    <img src="@/assets/common/images/empty-state/noData.png" :alt="emptyText" />
                     <p>{{ emptyText }}</p>
                 </div>
             </template>

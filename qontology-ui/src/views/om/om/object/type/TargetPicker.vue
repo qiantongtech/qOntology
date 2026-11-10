@@ -59,10 +59,10 @@
       <template #empty>
         <div class="emptyBg target-empty">
           <img
-            src="@/assets/system/images/no_data/noData.png"
-            alt="暂无建模目标"
+            src="@/assets/common/images/empty-state/noData.png"
+            alt="暂无记录"
           />
-          <p>暂无建模目标</p>
+          <p>暂无记录</p>
         </div>
       </template>
     </qt-table>
