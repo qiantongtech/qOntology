@@ -55,7 +55,7 @@
 ├─qontology-ui              # 前端模块
 ├─sql                       # sql脚本
 ├─README.md                 # 相关介绍
-├─QUICKSTART.md                 # 快速启动
+├─QUICKSTART.md             # 快速启动
 ```
 
 ### 2.2 前端结构;
@@ -115,25 +115,23 @@ mysql:
 #### 步骤 1: 关闭Neo4j服务
 - 进入Neo4j安装目录，在bin目录下，执行`./neo4j stop`将服务关掉。
 
-#### 步骤 2: 导入数据库
-- 进入Neo4j安装目录，在bin目录下，执行以下导入命令。
+#### 步骤 2: 复制演示数据
 
-```bash
-# 命令说明: --force 表示强制覆盖，database如果不存在，则创建新数据库。
-# dump文件: sql/neo4j/neo4j.dump。      注：以下命令行中的路径请填写您的绝对路径。
-./neo4j-admin load --from=dump文件路径 --database=您的数据库名称   --force 
+- 停止 Neo4j 后，先备份 Neo4j 安装目录下已有的 `conf` 和 `data` 目录。
+- 将仓库 `sql/neo4j` 下的 `conf` 和 `data` 复制到 Neo4j 安装目录根目录，与 `bin` 同级。
+
+**注意**：复制仓库提供的 `conf` 后，如果启动 Neo4j 时提示事务日志保留策略（`db.tx_log.rotation.retention_policy`）校验失败，请打开 Neo4j 安装目录下的 `conf/neo4j.conf`，将该配置项替换为下方内容，保存后重新启动 Neo4j。
+
+```properties
+db.tx_log.rotation.retention_policy=12 hours 500M
 ```
-
-- 进入Neo4j安装目录，在conf目录下，找到`neo4j.conf`文件，修改数据库名称:`dbms.default_database=您的数据库名称`
-
-> Tips：若使用docker运行neo4j，发生停止主进程自动退出容器现象，可以修改容器启动方式，例如：通过使用 --init 参数，让主进程停止，容器不会立即退出。具体操作方式请自行百度或AI。
 
 #### 步骤 3: 启动Neo4j服务
 - 进入Neo4j安装目录，在bin目录下，执行`./neo4j start`启动服务
 
 ### 4. 修改Neo4j数据库连接配置
 
-路径：`qOntology/qontology-framework/qontology-graphis/src/main/resources/application-graphis-dev.yml`
+路径：`qOntology/qontology-framework/qontology-graphis/qontology-graphis-starter/src/main/resources/application-graphis-dev.yml`
 
 ```yaml
 neo4j:
