@@ -152,43 +152,43 @@
     });
 
     const iconNameMap = {
-        大暴雨: '特大暴雨',
-        小雨: '下雨',
-        中雨: '下雨',
-        大雨: '下雨',
-        阴: '多云',
-        小雪: '雪',
-        中雪: '雪',
-        大雪: '雪',
-        大风: '风',
-        飓风: '风',
-        热带风暴: '风',
-        龙卷风: '风'
+        大暴雨: 'extreme-rainstorm',
+        小雨: 'rain',
+        中雨: 'rain',
+        大雨: 'rain',
+        阴: 'cloudy',
+        小雪: 'snow',
+        中雪: 'snow',
+        大雪: 'snow',
+        大风: 'wind',
+        飓风: 'wind',
+        热带风暴: 'wind',
+        龙卷风: 'wind'
     };
 
     const knownIconNames = [
-        '晴',
-        '多云',
-        '多云转晴',
-        '暴雨',
-        '雷阵雨',
-        '雷阵雨伴有冰雹',
-        '特大暴雨',
-        '雪',
-        '阵雪',
-        '暴雪',
-        '雨夹雪',
-        '薄雾',
-        '雾',
-        '台风',
-        '下雨',
-        '大风',
-        '强阵雨',
-        '风'
+        'sunny',
+        'cloudy',
+        'cloudy-to-sunny',
+        'rainstorm',
+        'thunderstorm',
+        'thunderstorm-with-hail',
+        'extreme-rainstorm',
+        'snow',
+        'snow-showers',
+        'blizzard',
+        'sleet',
+        'mist',
+        'fog',
+        'typhoon',
+        'rain',
+        'windy',
+        'heavy-shower',
+        'wind'
     ];
 
     function getWeatherIcon(name) {
-        const iconName = iconNameMap[name] || (knownIconNames.includes(name) ? name : '晴');
+        const iconName = iconNameMap[name] || (knownIconNames.includes(name) ? name : 'sunny');
         return new URL(`../../assets/system/images/index/weather/${iconName}.png`, import.meta.url)
             .href;
     }

@@ -97,7 +97,7 @@
           <section v-if="activeStep === 1" class="analysis-step">
             <div class="analysis-hero">
               <div class="ai-document-icon">
-                <svg-icon icon-class="AI辅助建模" />
+                <svg-icon icon-class="ai-assisted-modeling" />
               </div>
               <div class="analysis-main">
                 <div class="analysis-heading">

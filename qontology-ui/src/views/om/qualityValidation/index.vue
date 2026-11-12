@@ -60,7 +60,7 @@
         </div>
         <div class="ai-summary">
           <div class="ai-badge">
-            <svg-icon icon-class="AI辅助建模" class="ai-icon" />
+            <svg-icon icon-class="ai-assisted-modeling" class="ai-icon" />
             <span>AI 综合结论</span>
           </div>
           <p class="ai-text">{{ aiSummary }}</p>

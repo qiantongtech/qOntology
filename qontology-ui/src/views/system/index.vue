@@ -477,45 +477,53 @@ function toPolicy() {
 const entranceList = [
   {
     name: "项目管理",
+    iconKey: "project-management",
     path: "/basic/project",
     perm: ["basic:project:project:list"],
   },
   {
     name: "枚举管理",
+    iconKey: "enumeration-management",
     path: "/basic/basicEnum",
     perm: ["basic:enumeration:type:list"],
   },
   {
     name: "数据源",
+    iconKey: "data-source",
     path: "/basic/datasource",
     perm: ["basic:datasource:datasource:list"],
   },
   {
     name: "文件分类",
+    iconKey: "file-category",
     path: "/basic/file/fileCategory",
     perm: ["basic:file:category:list"],
   },
   {
     name: "文件管理",
+    iconKey: "file-management",
     path: "/basic/file/fileManager",
     perm: ["basic:file:manager:list"],
   },
   {
     name: "建模目标",
+    iconKey: "modeling-goal",
     path: "/om/:versionId/target",
     perm: ["om:target:target:list"],
   },
   {
     name: "语义资产",
+    iconKey: "semantic-asset",
     path: "/om/:versionId/semantic/term",
     perm: ["om:term:term:list"],
   },
   {
     name: "本体建模",
+    iconKey: "ontology-modeling",
     path: "/om/:versionId/ontology/objectType",
     perm: ["om:object:type:list"],
   },
-].map((item) => ({ ...item, iconPath: getEntranceIcon(`${item.name}.png`) }));
+].map((item) => ({ ...item, iconPath: getEntranceIcon(`${item.iconKey}.png`) }));
 const visibleEntranceList = computed(() => {
   const permissions = userStore.permissions || [];
   const routes = router.getRoutes();
