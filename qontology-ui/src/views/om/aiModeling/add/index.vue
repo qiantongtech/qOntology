@@ -16,7 +16,7 @@
  See the LICENSE file in the project root for full license information.
 -->
 <template>
-  <div class="app-container ai-modeling-page wizard-page" style="background-color: #f0f2f5">
+  <div class="app-container ai-modeling-page wizard-page">
     <div class="custom-card">
       <div class="steps-inner">
         <ul class="zl-step">
@@ -48,10 +48,10 @@
       <div class="infotop">
         <div class="main wizard-content">
           <guide-tip-panel
-              type="hint"
-              class="mb15"
-              allow-wrap
-              title="上传业务文档并填写任务信息，AI 将自动解析生成术语、枚举、对象等候选结果，供下一步人工审核采纳。"
+            type="hint"
+            class="mb15"
+            allow-wrap
+            title="上传业务文档并填写任务信息，AI 将自动解析生成术语、枚举、对象等候选结果，供下一步人工审核采纳。"
           />
           <section v-show="activeStep === 0" class="base-step">
             <div class="h2-titles">基础信息</div>
@@ -233,12 +233,12 @@
                 type="primary"
                 class="adopt-all-button"
                 @click="adoptEverything"
-                >
-                  <template #icon>
-                    <svg-icon icon-class="adopt" />
-                  </template>
-                  一键采纳
-                </el-button>
+              >
+                <template #icon>
+                  <svg-icon icon-class="adopt" />
+                </template>
+                一键采纳
+              </el-button>
             </div>
             <el-tabs v-model="activeTab">
               <el-tab-pane
@@ -248,11 +248,13 @@
                 :name="tab.name"
               />
             </el-tabs>
-            <component
-              :is="currentTab.component"
-              :key="currentTab.name"
-              :task-id="taskId"
-            />
+            <div class="review-body">
+              <component
+                :is="currentTab.component"
+                :key="currentTab.name"
+                :task-id="taskId"
+              />
+            </div>
           </section>
         </div>
 
@@ -264,7 +266,12 @@
             >
           </template>
           <template v-else-if="activeStep === 1">
-            <!-- <el-button @click="goList">取消</el-button> -->
+            <el-button
+              v-if="task.status === 2 || task.status === 3"
+              type="primary"
+              @click="goList"
+              >返回列表</el-button
+            >
             <el-button
               type="primary"
               plain
@@ -329,6 +336,7 @@ const reasoningContainers = new Map();
 let streamController = null;
 const durationTick = ref(0);
 let durationTimer = null;
+const failureNotified = ref(false);
 
 function startDurationTimer() {
   stopDurationTimer();
@@ -437,14 +445,18 @@ const progressStatus = computed(() =>
 );
 const analysisTitle = computed(() =>
   task.value.status === 2
-    ? "AI解析完成"
+    ? task.value.failureReason
+      ? "AI解析完成（存在质量警告）"
+      : "AI解析完成"
     : task.value.status === 3
     ? "AI解析失败"
     : "AI正在解析文档..."
 );
 const analysisTip = computed(() => {
   if (task.value.status === 2)
-    return "解析结果已生成，请点击下一步进入人工审核与采纳。";
+    return task.value.failureReason
+      ? `${task.value.failureReason} 请确认后再进入人工审核与采纳。`
+      : "解析结果已生成，请点击下一步进入人工审核与采纳。";
   if (task.value.status === 3)
     return task.value.failureReason || "解析失败，请返回列表后重新解析。";
   return "解析可能耗时较长，您可以留在当前页面查看进度，或点击“后端运行”返回列表。";
@@ -497,6 +509,7 @@ async function saveAndContinue() {
 async function startAnalysisStream() {
   if (!taskId.value) return;
   stopAnalysisStream();
+  failureNotified.value = false;
   streamController = new AbortController();
 
   try {
@@ -532,10 +545,12 @@ function handleStreamEvent(streamEvent) {
   if (streamEvent.eventType === "snapshot") {
     task.value = streamEvent.task || {};
     stages.value = streamEvent.stages || [];
+    handleTerminalTaskState();
     return;
   }
   if (streamEvent.eventType === "task") {
     task.value = { ...task.value, ...(streamEvent.task || {}) };
+    handleTerminalTaskState();
     return;
   }
   if (streamEvent.eventType !== "stage" || !streamEvent.stage) return;
@@ -559,6 +574,19 @@ function handleStreamEvent(streamEvent) {
     expandedReasoning.value.push(String(streamEvent.stage.id));
   }
   nextTick(() => scrollReasoningToBottom(streamEvent.stage.id));
+}
+
+/** 任务成功或失败后立即停止计时和 SSE；失败只提醒一次。 */
+function handleTerminalTaskState() {
+  if (task.value.status !== 2 && task.value.status !== 3) return;
+  stopDurationTimer();
+  stopAnalysisStream();
+  if (task.value.status === 3 && !failureNotified.value) {
+    failureNotified.value = true;
+    proxy.$modal.msgError(
+      task.value.failureReason || "AI解析失败，任务已终止"
+    );
+  }
 }
 
 function stopAnalysisStream() {
@@ -807,20 +835,29 @@ onMounted(async () => {
 }
 .pagecont-top {
   position: relative;
-  height: auto;
-  min-height: 74vh;
-  padding-bottom: 60px;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  /* 底部操作按钮固定在预留区域内，内容区不会伸到按钮下方 */
+  padding-bottom: 68px;
 }
 .infotop {
-  min-height: 74vh;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
 }
 .main {
-  flex: 1;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
   padding: 0 25px;
   background-color: #fff;
+  overflow-y: auto;
 }
 .wizard-content {
-  min-height: calc(100vh - 290px);
+  min-height: 0;
 }
 .h2-titles {
   display: flex;
@@ -849,9 +886,10 @@ onMounted(async () => {
 }
 .analysis-step {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  height: calc(100vh - 325px);
-  min-height: 500px;
+  /* 解析过程占满可视区域，内容超出时在时间线内部滚动，不撑高页面 */
+  min-height: 360px;
 }
 .analysis-hero {
   display: flex;
@@ -971,6 +1009,7 @@ onMounted(async () => {
   overflow-y: auto;
   padding: 4px 8px 10px;
   box-sizing: border-box;
+  height: 384px;
 }
 .stage-card {
   border-color: #e5e9f2;
@@ -1039,6 +1078,27 @@ onMounted(async () => {
   color: #909399;
   font-size: 13px;
 }
+.review-step {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 320px;
+  overflow: hidden;
+}
+/* 页签在此只渲染标题栏，列表组件单独渲染在下方；
+ * 不能让 el-tabs 及空的内容区分摊剩余高度，否则会把列表整体往下推出一段空白。 */
+.review-step :deep(.el-tabs) {
+  flex: 0 0 auto;
+}
+.review-step :deep(.el-tabs__content) {
+  display: none;
+}
+/* 审核列表区域固定在可视范围内，表格超出时在内部滚动。 */
+.review-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
 .review-summary {
   display: flex;
   align-items: center;
@@ -1048,13 +1108,14 @@ onMounted(async () => {
   border: 1px solid #d9e5ff;
   background: #f5f8ff;
 }
+/* 底部操作区固定在预留区域内，与内容区分离，避免遮住解析过程与审核列表。 */
 .button-style {
   position: absolute;
   right: 0;
   bottom: 0;
   left: 0;
   z-index: 10;
-  padding: 0 35px 25px 0;
+  padding: 0px 35px 16px 0;
   background: #fff;
   text-align: right;
 }
@@ -1072,6 +1133,10 @@ onMounted(async () => {
 /* 模块内 SVG 使用按钮图标的 1em 尺寸，避免通用 SvgIcon 的 1.2em 放大。
  * 图文间距由 Element Plus icon 插槽处理；同时统一旧返回图标的尺寸与垂直对齐。
  */
+
+.ai-modeling-page {
+  background-color: var(--qt-page-background);
+}
 .ai-modeling-page :deep(.el-button .svg-icon) {
   width: 1em;
   height: 1em;

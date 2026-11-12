@@ -37,6 +37,9 @@ public interface IOmAiModelingService {
     /** 全量重新解析 AI 建模任务。 */
     void reparse(Long id);
 
+    /** 从成功阶段和窗口检查点继续解析中断任务。 */
+    void resume(Long id);
+
     /** 获得任务上传文件。 */
     List<OmAiFileDO> files(Long taskId);
 

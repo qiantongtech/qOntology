@@ -60,15 +60,6 @@
       </template>
     </detail-info>
 
-    <el-alert
-      v-if="task.status === 3 && task.failureReason"
-      class="mb15"
-      type="error"
-      :closable="false"
-      show-icon
-      :title="task.failureReason"
-    />
-
     <div class="pagecont-bottom">
       <el-tabs v-model="activeTab">
         <el-tab-pane
@@ -146,7 +137,7 @@ const detailItems = [
     label: "更新人",
     key: "updateBy",
     formatter: (_name, record) => formatCreator(record),
-    className: "mb2"
+    className: "mb2",
   },
   {
     label: "创建人",

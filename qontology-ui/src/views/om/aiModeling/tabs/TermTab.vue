@@ -68,16 +68,18 @@
               <span
                 class="info-title"
                 :title="`${row.stdName || '-'}（${row.enName || '-'}）`"
-              >{{ row.stdName || "-" }}（{{ row.enName || "-" }}）</span>
+                >{{ row.stdName || "-" }}（{{ row.enName || "-" }}）</span
+              >
             </div>
             <div class="info-desc" :title="row.description">
               {{ row.description || "-" }}
             </div>
           </div>
         </template>
-        <template #alias="{ row }">{{ row.alias || "-" }}</template>
-        <template #abbr="{ row }">{{ row.abbr || "-" }}</template>
-        <template #source="{ row }">{{ row.source || "-" }}</template>
+        <!-- null 占位符由 QtTable 统一输出，这里只补空字符串场景，避免叠成两个短横线。 -->
+        <template #alias="{ row }">{{ row.alias === "" ? "-" : row.alias }}</template>
+        <template #abbr="{ row }">{{ row.abbr === "" ? "-" : row.abbr }}</template>
+        <template #source="{ row }">{{ row.source === "" ? "-" : row.source }}</template>
         <template #createTime="{ row }">{{
           proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "—"
         }}</template>
@@ -101,7 +103,7 @@
             type="primary"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >
+          >
             <template #icon>
               <svg-icon icon-class="adopt" />
             </template>
@@ -116,37 +118,35 @@
           >
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              link
-              type="primary"
-              icon="View"
-              @click="openDetail(row)"
+            <el-button link type="primary" icon="View" @click="openDetail(row)"
               >详情</el-button
             >
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.adoptStatus === 1"
-              @click="edit(row)"
-              >修改</el-button
-            >
-            <el-button
-              link
-              type="danger"
-              icon="Delete"
-              :loading="deleteLoading[row.id]"
-              :disabled="deleting"
-              @click="remove(row)"
-              >删除</el-button
-            >
+            <div class="task-action-list">
+              <el-button
+                link
+                type="primary"
+                icon="Edit"
+                :disabled="row.adoptStatus === 1"
+                @click="edit(row)"
+                >修改</el-button
+              >
+              <el-button
+                link
+                type="danger"
+                icon="Delete"
+                :loading="deleteLoading[row.id]"
+                :disabled="deleting"
+                @click="remove(row)"
+                >删除</el-button
+              >
+            </div>
           </el-popover>
         </template>
       </qt-table>
@@ -177,19 +177,14 @@
         class="column-form"
         @submit.prevent="save"
       >
-        <qt-form-item
-          class="row-full"
-
-          label="术语名称"
-          prop="stdName"
-        >
-          <el-input v-model="form.stdName" placeholder="请输入术语名称" :maxlength="256" />
+        <qt-form-item class="row-full" label="术语名称" prop="stdName">
+          <el-input
+            v-model="form.stdName"
+            placeholder="请输入术语名称"
+            :maxlength="256"
+          />
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="英文名称"
-          prop="enName"
-        >
+        <qt-form-item class="row-full" label="英文名称" prop="enName">
           <el-input
             v-model="form.enName"
             :formatter="formatEnglishName"
@@ -198,13 +193,13 @@
             :maxlength="256"
           />
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="术语别名"
-          prop="alias"
-        >
+        <qt-form-item class="row-full" label="术语别名" prop="alias">
           <div class="alias-list">
-            <div v-for="(item, index) in aliasRows" :key="item.id" class="alias-row">
+            <div
+              v-for="(item, index) in aliasRows"
+              :key="item.id"
+              class="alias-row"
+            >
               <el-input
                 v-model="item.value"
                 placeholder="请输入术语别名"
@@ -216,18 +211,14 @@
             </div>
           </div>
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="业务缩写"
-          prop="abbr"
-        >
-          <el-input v-model="form.abbr" placeholder="请输入业务缩写" :maxlength="256" />
+        <qt-form-item class="row-full" label="业务缩写" prop="abbr">
+          <el-input
+            v-model="form.abbr"
+            placeholder="请输入业务缩写"
+            :maxlength="256"
+          />
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="来源"
-          prop="source"
-        >
+        <qt-form-item class="row-full" label="来源" prop="source">
           <el-input
             v-model="form.source"
             class="term-character-count"
@@ -238,11 +229,7 @@
             show-word-limit
           />
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="描述"
-          prop="description"
-        >
+        <qt-form-item class="row-full" label="描述" prop="description">
           <el-input
             v-model="form.description"
             class="term-character-count"
@@ -256,8 +243,12 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button size="mini" :disabled="saving" @click="open = false">取 消</el-button>
-          <el-button type="primary" size="mini" :loading="saving" @click="save">确 定</el-button>
+          <el-button size="mini" :disabled="saving" @click="open = false"
+            >取 消</el-button
+          >
+          <el-button type="primary" size="mini" :loading="saving" @click="save"
+            >确 定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -287,13 +278,21 @@
                 v-else-if="field.prop === 'createTime'"
                 class="form-readonly"
               >
-                {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+                {{
+                  proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") ||
+                  "-"
+                }}
               </div>
               <div v-else-if="field.prop === 'createBy'" class="form-readonly">
                 {{ detail.createBy || "-" }}
               </div>
               <div v-else-if="field.prop === 'contact'" class="form-readonly">
-                {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
+                {{
+                  detail.creatorId != null &&
+                  creatorPhones[String(detail.creatorId)]
+                    ? creatorPhones[String(detail.creatorId)]
+                    : "-"
+                }}
               </div>
               <div
                 v-else
@@ -380,7 +379,11 @@ const {
 const searchStore = reactive({
   items: [
     { label: "术语名称", prop: "stdName", component: { is: "input" } },
-    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
   ],
 });
 
@@ -413,8 +416,8 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       fixed: "left",
       sortable: "custom",
@@ -491,11 +494,21 @@ const tableStore = reactive({
 
 const rules = {
   stdName: [
-    { required: true, whitespace: true, message: "术语名称不能为空", trigger: "blur" },
+    {
+      required: true,
+      whitespace: true,
+      message: "术语名称不能为空",
+      trigger: "blur",
+    },
     { max: 256, message: "术语名称长度不能超过256个字符", trigger: "blur" },
   ],
   enName: [
-    { required: true, whitespace: true, message: "英文名称不能为空", trigger: "blur" },
+    {
+      required: true,
+      whitespace: true,
+      message: "英文名称不能为空",
+      trigger: "blur",
+    },
     { max: 256, message: "英文名称长度不能超过256个字符", trigger: "blur" },
     {
       pattern: /^[A-Za-z][A-Za-z0-9_]*$/,
@@ -504,15 +517,30 @@ const rules = {
     },
   ],
   alias: [
-    { required: true, whitespace: true, message: "术语别名不能为空", trigger: "blur" },
+    {
+      required: true,
+      whitespace: true,
+      message: "术语别名不能为空",
+      trigger: "blur",
+    },
     { max: 1024, message: "术语别名长度不能超过1024个字符", trigger: "blur" },
   ],
   abbr: [
-    { required: true, whitespace: true, message: "业务缩写不能为空", trigger: "blur" },
+    {
+      required: true,
+      whitespace: true,
+      message: "业务缩写不能为空",
+      trigger: "blur",
+    },
     { max: 256, message: "业务缩写长度不能超过256个字符", trigger: "blur" },
   ],
   source: [
-    { required: true, whitespace: true, message: "来源不能为空", trigger: "blur" },
+    {
+      required: true,
+      whitespace: true,
+      message: "来源不能为空",
+      trigger: "blur",
+    },
     { max: 256, message: "来源长度不能超过256个字符", trigger: "blur" },
   ],
   description: [
@@ -542,7 +570,7 @@ function parseAliases(value) {
       (value || "")
         .split(/[,，]/)
         .map((item) => item.trim())
-        .filter(Boolean),
+        .filter(Boolean)
     ),
   ];
 }
@@ -598,7 +626,7 @@ function removeAliasRow(index) {
 /** 校验并合并别名，写回表单；不通过时给出提示。 */
 function confirmAlias() {
   const values = aliasRows.value.flatMap((item) =>
-    item.value.split(/[,，]/).map((value) => value.trim()),
+    item.value.split(/[,，]/).map((value) => value.trim())
   );
 
   if (new Set(values).size !== values.length) {

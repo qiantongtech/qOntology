@@ -133,7 +133,7 @@
               ])
             "
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
@@ -187,17 +187,21 @@
       >
         <el-row :gutter="20">
           <el-col :span="24">
-            <qt-form-item label="版本号" prop="version" tip="填写本版本的标识，例如 V1.0，用于区分不同版本。">
+            <qt-form-item
+              label="版本号"
+              prop="version"
+              tip="填写本版本的标识，例如 V1.0，用于区分不同版本。"
+            >
               <el-input v-model="form.version" placeholder="请输入版本号" />
             </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <qt-form-item label="状态" prop="status" >
+            <qt-form-item label="状态" prop="status">
               <el-radio-group v-model="form.status">
                 <el-radio
-                    v-for="dict in project_status"
-                    :key="Number(dict.value)"
-                    :value="Number(dict.value)"
+                  v-for="dict in project_status"
+                  :key="Number(dict.value)"
+                  :value="Number(dict.value)"
                 >
                   {{ dict.label }}
                 </el-radio>
@@ -205,7 +209,7 @@
             </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <qt-form-item label="描述" prop="description" >
+            <qt-form-item label="描述" prop="description">
               <el-input
                 v-model="form.description"
                 type="textarea"
@@ -216,7 +220,11 @@
             </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <qt-form-item label="基准版本" prop="baseVersion" tip="当前版本所基于的版本，新建首个版本时可为空。">
+            <qt-form-item
+              label="基准版本"
+              prop="baseVersion"
+              tip="当前版本所基于的版本，新建首个版本时可为空。"
+            >
               <el-input
                 disabled
                 v-model="form.baseVersion"
@@ -224,7 +232,6 @@
               />
             </qt-form-item>
           </el-col>
-
         </el-row>
       </el-form>
       <template #footer>
@@ -338,8 +345,8 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       sortable: true,
     },
@@ -634,16 +641,16 @@ function handleDiff(row) {
   let versionId = props.embedded ? row.id : route.params.versionId;
   let projectId = props.embedded ? props.projectId : row.projectId;
   let compareVersion = row.id;
-  if(route.path === '/basic/project/detail'){
+  if (route.path === "/basic/project/detail") {
     router.push({
-    path: `/basic/project/detail/versionDiff`,
-    query: {
-      projectId: projectId,
-      currentVersion: versionId,
-      compareVersion: compareVersion
-    },
-  });
-  } else{
+      path: `/basic/project/detail/versionDiff`,
+      query: {
+        projectId: projectId,
+        currentVersion: versionId,
+        compareVersion: compareVersion,
+      },
+    });
+  } else {
     router.push({
       path: `/om/${props.embedded ? row.id : versionId}/projectVersion/diff`,
       query: {
@@ -654,7 +661,6 @@ function handleDiff(row) {
       },
     });
   }
-
 }
 </script>
 

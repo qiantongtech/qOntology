@@ -44,6 +44,8 @@ public class OmAiEnumDataRespVO implements Serializable {
     private String enumLabel;
     @Schema(description = "枚举键值")
     private String enumValue;
+    @Schema(description = "描述")
+    private String description;
     @Schema(description = "状态")
     private String status;
     @Schema(description = "采纳状态：0待采纳 1已采纳 2采纳失败")

@@ -114,7 +114,9 @@
                 trigger="click"
               >
                 <template #reference>
-                  <el-button link type="primary" icon="ArrowDown">更多</el-button>
+                  <el-button link type="primary" icon="ArrowDown"
+                    >更多</el-button
+                  >
                 </template>
                 <div class="task-action-list">
                   <el-button
@@ -122,22 +124,23 @@
                     type="primary"
                     icon="View"
                     @click="handlePreview(row)"
-                    >预览</el-button>
-                  <el-button
-                      link
-                      type="primary"
-                      icon="Download"
-                      @click="handleDownload(row)"
-                      >下载</el-button>
-                  <el-button
-                      v-hasPermi="['basic:file:manager:remove']"
-                      link
-                      type="danger"
-                      icon="Delete"
-                      @click="handleDelete(row)"
-                      >删除
-                    </el-button
+                    >预览</el-button
                   >
+                  <el-button
+                    link
+                    type="primary"
+                    icon="Download"
+                    @click="handleDownload(row)"
+                    >下载</el-button
+                  >
+                  <el-button
+                    v-hasPermi="['basic:file:manager:remove']"
+                    link
+                    type="danger"
+                    icon="Delete"
+                    @click="handleDelete(row)"
+                    >删除
+                  </el-button>
                 </div>
               </el-popover>
             </template>
@@ -251,7 +254,7 @@ const tableStore = reactive({
     table: { rowKey: "id", stripe: true, height: "60vh", defaultSort },
   },
   columns: [
-    { label: "编号", prop: "id", slot: "text", width: 80, sortable: true },
+    { label: "编号", prop: "id", slot: "text", width: 60, sortable: true },
     // 与任务信息列使用同一 info 配置：图标及名称在首行，描述在下方，名称进入详情。
     {
       label: "文件名称",
@@ -291,7 +294,14 @@ const tableStore = reactive({
       width: 160,
       sortable: true,
     },
-    { label: "操作", slot: "handle", width: 240, minWidth: 240, align: "center", fixed: "right" },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 240,
+      minWidth: 240,
+      align: "center",
+      fixed: "right",
+    },
   ],
   params: { fileName: "", fileSuffix: "" },
   func: listModelDataFile,

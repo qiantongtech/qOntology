@@ -57,15 +57,22 @@
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
-        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <!-- 纯文本列沿用统一 text 插槽渲染；null 占位符由 QtTable 统一输出，这里只补空字符串场景，避免叠成两个短横线。 -->
         <template #text="{ row, column_data }">{{
-          row[column_data.prop] ?? "-"
+          row[column_data.prop] === "" ? "-" : row[column_data.prop]
         }}</template>
-        <template #startTypeName="{ row }">{{ objectName(row.startObjectCandidateId) }}</template>
-        <template #endTypeName="{ row }">{{ objectName(row.endObjectCandidateId) }}</template>
+        <template #startTypeName="{ row }">{{
+          objectName(row.startObjectCandidateId)
+        }}</template>
+        <template #endTypeName="{ row }">{{
+          objectName(row.endObjectCandidateId)
+        }}</template>
         <!-- 是否可逆用 dict-tag 渲染。 -->
         <template #reversible="{ row }">
-          <dict-tag :options="sys_yes_no" :value="row.reversibleFlag === 1 ? 'Y' : 'N'" />
+          <dict-tag
+            :options="sys_yes_no"
+            :value="row.reversibleFlag === 1 ? 'Y' : 'N'"
+          />
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -87,7 +94,7 @@
             type="primary"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >
+          >
             <template #icon>
               <svg-icon icon-class="adopt" />
             </template>
@@ -98,37 +105,43 @@
             type="primary"
             icon="Document"
             @click="showEvidence(row)"
-            >来源</el-button>
+            >来源</el-button
+          >
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              link
-              type="primary"
-              icon="View"
-              @click="showDetail(row)"
-              >详情</el-button>
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.adoptStatus === 1"
-              @click="edit(row)"
-              >修改</el-button>
-            <el-button
-              link
-              type="danger"
-              icon="Delete"
-              :loading="deleteLoading[row.id]"
-              :disabled="deleting"
-              @click="remove(row)"
-              >删除</el-button>
+            <div class="task-action-list">
+              <el-button
+                link
+                type="primary"
+                icon="View"
+                @click="showDetail(row)"
+                >详情</el-button
+              >
+              <el-button
+                link
+                type="primary"
+                icon="Edit"
+                :disabled="row.adoptStatus === 1"
+                @click="edit(row)"
+                >修改</el-button
+              >
+              <el-button
+                link
+                type="danger"
+                icon="Delete"
+                :loading="deleteLoading[row.id]"
+                :disabled="deleting"
+                @click="remove(row)"
+                >删除</el-button
+              >
+            </div>
           </el-popover>
         </template>
       </qt-table>
@@ -181,11 +194,7 @@
             />
           </el-select>
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="对象类型关系"
-          prop="name"
-        >
+        <qt-form-item class="row-full" label="对象类型关系" prop="name">
           <el-input
             v-model="form.name"
             placeholder="请输入对象类型关系，例如：提供、采购物料"
@@ -211,11 +220,7 @@
             />
           </el-select>
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="是否可逆"
-          prop="reversibleFlag"
-        >
+        <qt-form-item class="row-full" label="是否可逆" prop="reversibleFlag">
           <el-radio-group
             v-model="form.reversibleFlag"
             @change="(value) => value !== 1 && (form.reverseName = '')"
@@ -224,7 +229,8 @@
               v-for="dict in sys_yes_no"
               :key="dict.value"
               :value="dict.value === 'Y' ? 1 : 0"
-              >{{ dict.label }}</el-radio>
+              >{{ dict.label }}</el-radio
+            >
           </el-radio-group>
         </qt-form-item>
         <qt-form-item
@@ -241,11 +247,7 @@
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item
-          class="row-full"
-          label="描述"
-          prop="description"
-        >
+        <qt-form-item class="row-full" label="描述" prop="description">
           <el-input
             v-model="form.description"
             class="character-count"
@@ -260,11 +262,27 @@
           <div class="h2-titles mb15">关联建模目标</div>
           <div class="mb15">
             <el-form-item prop="targetIds" label-width="0">
-              <el-button type="primary" plain :disabled="saving" @click="targetPickerOpen = true">
-                <el-icon class="mr5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-578.304V704h-64V247.296L237.248 490.048 192 444.8 508.8 128l316.8 316.8-45.312 45.248z"></path></svg></el-icon>
+              <el-button
+                type="primary"
+                plain
+                :disabled="saving"
+                @click="targetPickerOpen = true"
+              >
+                <el-icon class="mr5"
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 1024 1024"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-578.304V704h-64V247.296L237.248 490.048 192 444.8 508.8 128l316.8 316.8-45.312 45.248z"
+                    ></path></svg
+                ></el-icon>
                 导入建模目标
               </el-button>
-              <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
+              <span class="desc-text ml10"
+                >点击导入建模目标，选中结果将在下方列表中回显。</span
+              >
             </el-form-item>
           </div>
           <TargetTable
@@ -278,7 +296,9 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button :disabled="saving" @click="open = false">取 消</el-button>
-          <el-button type="primary" :loading="saving" @click="save">确 定</el-button>
+          <el-button type="primary" :loading="saving" @click="save"
+            >确 定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -316,7 +336,10 @@
           </div>
         </el-form-item>
         <el-form-item label="是否可逆">
-          <dict-tag :options="sys_yes_no" :value="detail.reversibleFlag === 1 ? 'Y' : 'N'" />
+          <dict-tag
+            :options="sys_yes_no"
+            :value="detail.reversibleFlag === 1 ? 'Y' : 'N'"
+          />
         </el-form-item>
         <el-form-item v-if="detail.reversibleFlag === 1" label="反向名称">
           <div class="form-readonly">
@@ -335,12 +358,19 @@
         </el-form-item>
         <el-form-item label="联系方式">
           <div class="form-readonly">
-            {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
+            {{
+              detail.creatorId != null &&
+              creatorPhones[String(detail.creatorId)]
+                ? creatorPhones[String(detail.creatorId)]
+                : "-"
+            }}
           </div>
         </el-form-item>
         <el-form-item label="创建时间">
           <div class="form-readonly">
-            {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+            {{
+              proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+            }}
           </div>
         </el-form-item>
       </el-form>
@@ -430,7 +460,11 @@ const {
 const searchStore = reactive({
   items: [
     { label: "对象类型关系", prop: "name", component: { is: "input" } },
-    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
   ],
 });
 
@@ -463,17 +497,30 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       fixed: "left",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
     { label: "起点类型", slot: "startTypeName", minWidth: 140, align: "left" },
-    { label: "对象类型关系", prop: "name", slot: "text", minWidth: 160, align: "left" },
+    {
+      label: "对象类型关系",
+      prop: "name",
+      slot: "text",
+      minWidth: 160,
+      align: "left",
+    },
     { label: "终点类型", slot: "endTypeName", minWidth: 140, align: "left" },
-    { label: "描述", prop: "description", slot: "text", minWidth: 200, align: "left", showOverflowTooltip: { effect: "light" } },
+    {
+      label: "描述",
+      prop: "description",
+      slot: "text",
+      minWidth: 200,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
     {
       label: "是否可逆",
       prop: "reversibleFlag",
@@ -482,7 +529,13 @@ const tableStore = reactive({
       minWidth: 100,
       align: "center",
     },
-    { label: "反向名称", prop: "reverseName", slot: "text", minWidth: 150, align: "left" },
+    {
+      label: "反向名称",
+      prop: "reverseName",
+      slot: "text",
+      minWidth: 150,
+      align: "left",
+    },
     {
       label: "采纳状态",
       prop: "adoptStatus",

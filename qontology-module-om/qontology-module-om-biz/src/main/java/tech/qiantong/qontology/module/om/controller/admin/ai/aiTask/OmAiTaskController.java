@@ -160,6 +160,15 @@ public class OmAiTaskController extends BaseController {
         return CommonResult.success(true);
     }
 
+    /** 从上次成功阶段和窗口继续解析。 */
+    @Operation(summary = "断点继续AI辅助建模任务")
+    @PreAuthorize("@ss.hasPermi('om:aiModeling:reparse')")
+    @PostMapping("/{id}/resume")
+    public CommonResult<Boolean> resume(@PathVariable Long id) {
+        modelingService.resume(id);
+        return CommonResult.success(true);
+    }
+
     /** 查询任务上传文件。 */
     @Operation(summary = "查询任务上传文件")
     @PreAuthorize("@ss.hasPermi('om:aiModeling:list')")

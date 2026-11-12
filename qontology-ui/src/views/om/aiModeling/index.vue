@@ -93,7 +93,7 @@
               auth.hasPermiOr(['om:aiModeling:edit', 'om:aiModeling:remove'])
             "
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
@@ -155,7 +155,7 @@
             maxlength="100"
           />
         </qt-form-item>
-        <qt-form-item label="任务描述" >
+        <qt-form-item label="任务描述">
           <el-input
             v-model="editForm.description"
             type="textarea"
@@ -165,7 +165,7 @@
             show-word-limit
           />
         </qt-form-item>
-        <qt-form-item label="上传文件" prop="filePaths" >
+        <qt-form-item label="上传文件" prop="filePaths">
           <FileUpload2
             v-model="editForm.filePaths"
             :file-name="editForm.fileNames"
@@ -265,8 +265,8 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       sortable: true,
     },
@@ -286,7 +286,13 @@ const tableStore = reactive({
       align: "left",
       showOverflowTooltip: { effect: "light" },
     },
-    { label: "任务状态", prop: "status", slot: "status", width: 120, minWidth: 120 },
+    {
+      label: "任务状态",
+      prop: "status",
+      slot: "status",
+      width: 120,
+      minWidth: 120,
+    },
     {
       label: "失败原因",
       prop: "failureReason",
@@ -320,7 +326,13 @@ const tableStore = reactive({
       align: "center",
       sortable: true,
     },
-    { label: "操作", slot: "handle", width: 280, minWidth: 280, fixed: "right" },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 280,
+      minWidth: 280,
+      fixed: "right",
+    },
   ],
   func: fetchTasks,
   params: {
@@ -537,7 +549,9 @@ async function removeTasks(row) {
 async function reparseTask(row) {
   if (reparsing.value) return;
   try {
-    await proxy.$modal.confirm("重新解析会清除旧候选结果和解析过程，是否继续？");
+    await proxy.$modal.confirm(
+      "重新解析会清除旧候选结果和解析过程，是否继续？"
+    );
   } catch {
     return;
   }
