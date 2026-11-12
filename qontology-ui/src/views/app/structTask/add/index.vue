@@ -106,7 +106,7 @@
           </div>
         </div>
         <div class="struct-task-actions">
-          <el-button type="primary" @click="handleSuccess">返回列表</el-button>
+          <el-button @click="handleSuccess">返回列表</el-button>
           <el-button v-if="activeReult != 0" @click="handleLastStep">上一步</el-button>
           <el-button
             type="primary"
@@ -116,7 +116,13 @@
           >
             确定并退出
           </el-button>
-          <el-button v-if="activeReult !== 2" @click="handleNextStep">下一步</el-button>
+          <el-button
+            v-if="activeReult !== 2"
+            type="primary"
+            @click="handleNextStep"
+          >
+            下一步
+          </el-button>
         </div>
       </div>
     </div>
@@ -1214,29 +1220,44 @@ function sleep(ms) {
 }
 
 .app-container {
+  display: flex;
+  height: calc(100vh - 84px);
+  overflow: hidden;
+  flex-direction: column;
   background-color: var(--qt-page-background);
 }
 
 .pagecont-top {
-  position: relative;
-  min-height: 74vh;
-  padding-bottom: 60px;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border-radius: var(--qt-radius-small);
+  background: var(--qt-surface-background);
+}
+
+.infotop {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  flex-direction: column;
 }
 
 .struct-task-actions {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 10;
-  padding: 0 35px 25px 0;
+  flex: 0 0 auto;
+  padding: 15px 35px 15px 0;
+  border-top: 1px solid var(--qt-border-color-light);
   background: var(--qt-surface-background);
   text-align: right;
 }
 
 .struct-task-form {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 0 25px;
+  overflow-y: auto;
   background-color: var(--qt-surface-background);
 }
 
