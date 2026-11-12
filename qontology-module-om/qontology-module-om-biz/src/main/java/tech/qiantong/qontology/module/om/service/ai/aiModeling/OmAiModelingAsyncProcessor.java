@@ -20,12 +20,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 import tech.qiantong.qontology.common.constant.Constants;
 import tech.qiantong.qontology.ai.api.chat.AiChatMessage;
+import tech.qiantong.qontology.ai.api.chat.AiChatMedia;
 import tech.qiantong.qontology.ai.api.chat.AiChatRequest;
 import tech.qiantong.qontology.ai.api.chat.AiChatService;
 import tech.qiantong.qontology.module.ai.api.modelMarket.IAiModelApiService;
@@ -97,21 +104,23 @@ public class OmAiModelingAsyncProcessor {
             """;
     @Value("${dromara.x-file-storage.local-plus[0].storage-path}")
     private String localStoragePath;
-
-    /** 单个模型窗口的证据字符预算，避免固定块数导致 PDF 页面等大块撑爆上下文。 */
-    private static final int EVIDENCE_CHAR_BUDGET = 8000;
-    /** 候选上下文字符预算；只传相关明细和精简目录，不传无限增长的完整候选。 */
-    private static final int CANDIDATE_CONTEXT_CHAR_BUDGET = 14000;
-    private static final int WINDOW_OVERLAP = 2;
-    private static final int MIN_SPLIT_WINDOW_SIZE = 2;
     /** AI 辅助建模固定使用的通义模型配置。 */
     private static final Long MODEL_KEY_ID = 1L;
     private static final String TEXT_MODEL_NAME = "qwen3.6-plus";
+    /** 模型上下文、流式调用和思考展示统一策略；其余限制均由这些核心参数推导。 */
+    private static final int MODEL_CONTEXT_CHAR_BUDGET = 14000;
+    private static final int THINKING_TOKEN_BUDGET = 1800;
+    private static final long STREAM_FIRST_CHUNK_MILLIS = 30000L;
+    private static final long STREAM_IDLE_MILLIS = 45000L;
+    private static final long STREAM_MAX_MILLIS = 180000L;
+    private static final long REASONING_FLUSH_MILLIS = 5000L;
     private final Set<Long> runningTaskIds = ConcurrentHashMap.newKeySet();
     private final ThreadLocal<Long> currentCreatorId = new ThreadLocal<>();
     private final ThreadLocal<String> currentCreateBy = new ThreadLocal<>();
     private final ThreadLocal<Long> currentStageId = new ThreadLocal<>();
     private final ThreadLocal<OmAiStageDO> currentStage = new ThreadLocal<>();
+    private final ThreadLocal<List<String>> currentWarnings = new ThreadLocal<>();
+    private final ThreadLocal<Boolean> currentImageRecognitionEnabled = new ThreadLocal<>();
 
 
     @Resource
@@ -172,6 +181,8 @@ public class OmAiModelingAsyncProcessor {
     private OmEnumTypeMapper formalEnumTypeMapper;
     @Resource
     private BasicEnumDataMapper basicEnumDataMapper;
+    @Resource
+    private TransactionTemplate transactionTemplate;
 
     @Resource
     private OmAiModelingStreamPublisher streamPublisher;
@@ -182,27 +193,53 @@ public class OmAiModelingAsyncProcessor {
      * @param taskId 任务编号
      */
     public void process(Long taskId) {
+        process(taskId, false);
+    }
+
+    /** 从已有成功阶段和窗口检查点继续执行中断任务。 */
+    public void resume(Long taskId) {
+        process(taskId, true);
+    }
+
+    private void process(Long taskId, boolean resume) {
         OmAiTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
             runningTaskIds.remove(taskId);
             return;
         }
         try {
+            currentWarnings.set(new ArrayList<>());
+            currentImageRecognitionEnabled.set(true);
             startTask(task);
             initializeStages(task);
-            runStage(task, OmAiModelingStageEnum.FILE_PARSE.getCode(), () -> parseSourceFiles(taskId));
-            runStage(task, OmAiModelingStageEnum.EVIDENCE_INDEX.getCode(), this::summarizeEvidenceIndex);
+            runStageIfRequired(task, OmAiModelingStageEnum.FILE_PARSE.getCode(), resume,
+                    () -> parseSourceFiles(taskId));
+            runStageIfRequired(task, OmAiModelingStageEnum.EVIDENCE_INDEX.getCode(), resume,
+                    this::summarizeEvidenceIndex);
             for (OmAiExtractionRoundEnum round : OmAiExtractionRoundEnum.values()) {
-                runStage(task, round.getStage().getCode(), () -> executeRound(task, round));
+                runStageIfRequired(task, round.getStage().getCode(), resume, () -> executeRound(task, round));
             }
-            runStage(task, OmAiModelingStageEnum.FINISH.getCode(), () -> finishTask(task));
+            runStageIfRequired(task, OmAiModelingStageEnum.FINISH.getCode(), resume, () -> finishTask(task));
             // 结果汇总阶段先完成推送，再发送任务完成事件并结束页面流。
             streamPublisher.publishTask(task);
         } catch (Exception exception) {
             failTask(task, exception);
         } finally {
+            currentWarnings.remove();
+            currentImageRecognitionEnabled.remove();
             runningTaskIds.remove(taskId);
         }
+    }
+
+    private void runStageIfRequired(OmAiTaskDO task, String stageCode, boolean resume, StageAction action) {
+        if (resume) {
+            OmAiStageDO stage = stageMapper.selectOne(new QueryWrapper<OmAiStageDO>()
+                    .eq("task_id", task.getId()).eq("stage_code", stageCode));
+            if (stage != null && OmAiStageStatusEnum.SUCCESS.getCode().equals(stage.getStatus())) {
+                return;
+            }
+        }
+        runStage(task, stageCode, action);
     }
 
     /** 判断任务是否确实在当前应用进程的后台线程中执行。 */
@@ -298,14 +335,41 @@ public class OmAiModelingAsyncProcessor {
         }
         int totalBlocks = 0;
         int completedFiles = 0;
+        int failedFiles = 0;
+        int recognizedImages = 0;
+        int skippedImages = 0;
         for (OmAiFileDO file : files) {
+            long existingBlocks = evidenceMapper.selectCount(new QueryWrapper<OmAiEvidenceDO>()
+                    .eq("task_id", taskId).eq("file_id", file.getId()));
+            if (OmAiFileParseStatusEnum.SUCCESS.getCode().equals(file.getParseStatus()) && existingBlocks > 0) {
+                completedFiles++;
+                totalBlocks += (int) existingBlocks;
+                continue;
+            }
             updateStageProgress(
                     10 + (completedFiles * 75 / files.size()),
                     "正在解析文件 " + (completedFiles + 1) + "/" + files.size() + "：" + file.getFileName(),
                     null, completedFiles, totalBlocks);
             try {
-                List<OmAiDocumentParser.Block> blocks = documentParser.parse(
+                // 仅重建当前失败或未完成文件的证据，避免断点续跑产生重复块。
+                evidenceMapper.delete(new QueryWrapper<OmAiEvidenceDO>()
+                        .eq("task_id", taskId).eq("file_id", file.getId()));
+                OmAiDocumentParser.ParseResult parseResult = documentParser.parseWithMedia(
                         file.getFileName(), download(file.getFileUrl()));
+                List<OmAiDocumentParser.Block> blocks = new ArrayList<>(parseResult.blocks());
+                List<RecognizedMedia> recognizedMedia = new ArrayList<>();
+                for (OmAiDocumentParser.MediaBlock media : parseResult.media()) {
+                    String recognized = recognizeDocumentMedia(file, media);
+                    if (recognized == null || recognized.isBlank()) {
+                        skippedImages++;
+                        continue;
+                    }
+                    recognizedMedia.add(new RecognizedMedia(media, recognized));
+                    recognizedImages++;
+                }
+                if (!recognizedMedia.isEmpty()) {
+                    blocks = mergeMediaBlocks(blocks, recognizedMedia);
+                }
                 if (blocks.isEmpty()) {
                     throw new IllegalStateException("文件未解析出有效内容：" + file.getFileName());
                 }
@@ -332,10 +396,120 @@ public class OmAiModelingAsyncProcessor {
             } catch (Exception exception) {
                 file.setParseStatus(OmAiFileParseStatusEnum.FAILED.getCode());
                 fileMapper.updateById(file);
-                throw new IllegalStateException("文件解析失败：" + file.getFileName() + "，" + exception.getMessage(), exception);
+                failedFiles++;
+                addWarning("文件“" + file.getFileName() + "”解析失败，已跳过该文件："
+                        + trim(Optional.ofNullable(exception.getMessage()).orElse("未知错误"), 300));
+                log.error("AI 建模文件解析失败，已跳过并继续其他文件，taskId={}, fileId={}, fileName={}",
+                        taskId, file.getId(), file.getFileName(), exception);
             }
         }
-        return "已解析 " + files.size() + " 个文件，生成 " + totalBlocks + " 个带原文位置的证据块";
+        if (completedFiles == 0) {
+            throw new IllegalStateException("全部文件解析失败，无法继续抽取");
+        }
+        return "成功解析 " + completedFiles + " 个文件，失败并跳过 " + failedFiles
+                + " 个，生成 " + totalBlocks
+                + " 个证据块；文档内图片识别成功 " + recognizedImages
+                + " 张，跳过 " + skippedImages + " 张";
+    }
+
+    /** 将文档内图片识别结果按原始锚点插回正文证据顺序，并重新生成连续块编号。 */
+    private List<OmAiDocumentParser.Block> mergeMediaBlocks(List<OmAiDocumentParser.Block> source,
+                                                             List<RecognizedMedia> mediaList) {
+        Map<Integer, List<RecognizedMedia>> anchored = mediaList.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        item -> Optional.ofNullable(item.media().anchorBlockNo()).orElse(Integer.MAX_VALUE),
+                        LinkedHashMap::new, java.util.stream.Collectors.toList()));
+        List<OmAiDocumentParser.Block> merged = new ArrayList<>();
+        int blockNo = 1;
+        for (RecognizedMedia item : anchored.getOrDefault(0, List.of())) {
+            OmAiDocumentParser.MediaBlock media = item.media();
+            merged.add(new OmAiDocumentParser.Block(blockNo++, "IMAGE_TEXT", media.pageNo(),
+                    media.chapterPath(), media.paragraphNo(), null, null, null, media.imageNo(),
+                    null, null, item.content()));
+        }
+        for (OmAiDocumentParser.Block block : source) {
+            merged.add(copyBlockWithNo(block, blockNo++));
+            for (RecognizedMedia item : anchored.getOrDefault(block.no(), List.of())) {
+                OmAiDocumentParser.MediaBlock media = item.media();
+                merged.add(new OmAiDocumentParser.Block(blockNo++, "IMAGE_TEXT", media.pageNo(),
+                        media.chapterPath(), media.paragraphNo(), null, null, null, media.imageNo(),
+                        null, null, item.content()));
+            }
+        }
+        for (Map.Entry<Integer, List<RecognizedMedia>> entry : anchored.entrySet()) {
+            if (entry.getKey() == 0 || (entry.getKey() != Integer.MAX_VALUE
+                    && source.stream().anyMatch(block -> block.no() == entry.getKey()))) {
+                continue;
+            }
+            for (RecognizedMedia item : entry.getValue()) {
+                OmAiDocumentParser.MediaBlock media = item.media();
+                merged.add(new OmAiDocumentParser.Block(blockNo++, "IMAGE_TEXT", media.pageNo(),
+                        media.chapterPath(), media.paragraphNo(), null, null, null, media.imageNo(),
+                        null, null, item.content()));
+            }
+        }
+        return merged;
+    }
+
+    private OmAiDocumentParser.Block copyBlockWithNo(OmAiDocumentParser.Block block, int no) {
+        return new OmAiDocumentParser.Block(no, block.type(), block.pageNo(), block.chapterPath(),
+                block.paragraphNo(), block.tableNo(), block.rowNo(), block.columnNo(), block.imageNo(),
+                block.lineStart(), block.lineEnd(), block.content());
+    }
+
+    /** 使用主抽取模型识别文档内图片；模型明确不支持视觉输入时，当前任务后续图片全部跳过。 */
+    private String recognizeDocumentMedia(OmAiFileDO file, OmAiDocumentParser.MediaBlock media) {
+        if (Boolean.FALSE.equals(currentImageRecognitionEnabled.get())) {
+            return null;
+        }
+        try {
+            String prompt = "请识别这张业务文档图片中的全部可见文字、表格字段、流程节点和关系。"
+                    + "按原始阅读顺序输出纯文本并保留关键换行；不要编造不可见内容，不要输出Markdown代码块。";
+            AiChatRequest request = new AiChatRequest(
+                    modelApi.getModelRef(MODEL_KEY_ID, TEXT_MODEL_NAME),
+                    List.of(AiChatMessage.system(CHINESE_OUTPUT_SYSTEM_PROMPT),
+                            AiChatMessage.user(prompt, List.of(new AiChatMedia(
+                                    media.mimeType(), media.data(), media.name())))),
+                    0.0, 4000, Map.of("enable_thinking", false));
+            String content = Optional.ofNullable(chatService.chat(request).content()).orElse("").trim();
+            return content.isBlank() ? null : "【" + media.description() + "识别结果】\n" + trim(content, 12000);
+        } catch (Exception exception) {
+            if (isImageCapabilityUnsupported(exception)) {
+                currentImageRecognitionEnabled.set(false);
+                addWarning("当前抽取模型“" + TEXT_MODEL_NAME + "”不支持图片输入，已跳过文档内图片识别。");
+                log.info("主抽取模型不支持图片输入，当前任务后续图片将跳过，model={}, fileId={}, cause={}",
+                        TEXT_MODEL_NAME, file.getId(), rootCauseMessage(exception));
+                return null;
+            }
+            throw new IllegalStateException("文档内图片识别失败：" + media.name() + "，"
+                    + trim(Optional.ofNullable(exception.getMessage()).orElse("未知错误"), 500), exception);
+        }
+    }
+
+    private boolean isImageCapabilityUnsupported(Throwable throwable) {
+        String message = rootCauseMessage(throwable).toLowerCase(java.util.Locale.ROOT);
+        return message.contains("image input is not supported")
+                || message.contains("does not support image")
+                || message.contains("doesn't support image")
+                || message.contains("vision is not supported")
+                || message.contains("multimodal is not supported")
+                || message.contains("unsupported image")
+                || message.contains("unsupported media")
+                || message.contains("不支持图片")
+                || message.contains("不支持图像")
+                || message.contains("不支持多模态");
+    }
+
+    private String rootCauseMessage(Throwable throwable) {
+        Throwable current = throwable;
+        String message = Optional.ofNullable(current.getMessage()).orElse("未知错误");
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+            if (current.getMessage() != null && !current.getMessage().isBlank()) {
+                message = current.getMessage();
+            }
+        }
+        return message;
     }
 
     /** 汇总证据索引策略。 */
@@ -352,13 +526,14 @@ public class OmAiModelingAsyncProcessor {
         if (evidenceList.isEmpty()) {
             throw new IllegalStateException("没有可用于本轮抽取的证据，任务已终止");
         }
-        List<EvidenceWindow> windows = buildEvidenceWindows(evidenceList, EVIDENCE_CHAR_BUDGET);
+        List<EvidenceWindow> windows = buildEvidenceWindows(evidenceList, MODEL_CONTEXT_CHAR_BUDGET);
         int totalCalls = windows.size();
         int[] completedCalls = {0};
         int successfulCalls = executeTextWindows(task, round, windows, totalCalls, completedCalls);
         if (successfulCalls == 0) {
             throw new IllegalStateException(round.getStage().getLabel() + "没有任何证据窗口抽取成功");
         }
+        validateRoundCoverage(task.getId(), round);
         return round.getStage().getLabel();
     }
 
@@ -374,10 +549,7 @@ public class OmAiModelingAsyncProcessor {
         return successfulCalls;
     }
 
-    /**
-     * 执行单个窗口。超时、供应商异常或格式异常时自动二分证据窗口；单块仍失败时隔离并记录，
-     * 避免一个异常文件块导致此前所有成功结果被清空。
-     */
+    /** 窗口失败时先拆分，最小窗口重试一次；仍失败则隔离，全部窗口失败才终止本轮。 */
     private int executeWindowResilient(OmAiTaskDO task, OmAiExtractionRoundEnum round, EvidenceWindow window,
                                        int windowNo, int totalCalls, int[] completedCalls, int retryCount) {
         try {
@@ -389,10 +561,10 @@ public class OmAiModelingAsyncProcessor {
                     TEXT_MODEL_NAME, window.evidence().size(), completedCalls[0]);
             AiChatRequest request = auditableStreamingRequest(
                     modelApi.getModelRef(MODEL_KEY_ID, TEXT_MODEL_NAME),
-                    List.of(AiChatMessage.user(prompt)), maxOutputTokens(round), enableThinking(round));
+                    List.of(AiChatMessage.user(prompt)), maxOutputTokens(round));
+            String batchName = "文本证据窗口 " + windowNo;
             String responseContent = streamModelResponse(
-                    request, TEXT_MODEL_NAME, callProgress(completedCalls[0], totalCalls),
-                    "文本证据窗口 " + windowNo);
+                    request, round, TEXT_MODEL_NAME, callProgress(completedCalls[0], totalCalls), batchName);
             validateRoundResponse(round, responseContent);
             handleRoundResponse(task, round, responseContent);
             completedCalls[0]++;
@@ -404,8 +576,10 @@ public class OmAiModelingAsyncProcessor {
                     "证据窗口 " + windowNo + " 分析完成。模型分析摘要：" + analysisSummary,
                     TEXT_MODEL_NAME, window.evidence().size(), completedCalls[0]);
             return 1;
+        } catch (StructuredOutputException exception) {
+            throw exception;
         } catch (Exception exception) {
-            if (window.evidence().size() >= MIN_SPLIT_WINDOW_SIZE) {
+            if (window.evidence().size() > 1) {
                 int middle = window.evidence().size() / 2;
                 EvidenceWindow left = evidenceWindow(window.evidence().subList(0, middle));
                 EvidenceWindow right = evidenceWindow(window.evidence().subList(middle, window.evidence().size()));
@@ -424,19 +598,48 @@ public class OmAiModelingAsyncProcessor {
                 updateStageReasoning(joinReasoning(
                         Optional.ofNullable(currentStage.get()).map(OmAiStageDO::getReasoningContent).orElse(""),
                         "最小窗口重试", "证据块 " + window.evidence().get(0).getId()
-                                + " 首次返回异常，正在重新请求结构化结果：" + trim(exception.getMessage(), 500)));
+                                + " 首次返回异常，正在重新请求：" + trim(exception.getMessage(), 500)));
                 return executeWindowResilient(
                         task, round, window, windowNo, totalCalls, completedCalls, retryCount + 1);
             }
             completedCalls[0]++;
             log.error("AI 建模单证据块执行失败并已隔离，taskId={}, round={}, evidenceId={}",
                     task.getId(), round.getCode(), window.evidence().get(0).getId(), exception);
+            addWarning("" + round.getStage().getLabel() + "中证据块 " + window.evidence().get(0).getId()
+                    + " 多次执行失败，已隔离：" + trim(exception.getMessage(), 300));
             updateStageReasoning(joinReasoning(
                     Optional.ofNullable(currentStage.get()).map(OmAiStageDO::getReasoningContent).orElse(""),
                     "异常证据隔离", "证据块 " + window.evidence().get(0).getId()
                             + " 多次执行失败，已隔离并继续处理其他证据：" + trim(exception.getMessage(), 500)));
             return 0;
         }
+    }
+
+    /** 校验每轮最终落库覆盖度，避免数组合法但全部为空或全部被过滤后仍显示完全成功。 */
+    private void validateRoundCoverage(Long taskId, OmAiExtractionRoundEnum round) {
+        if (round == OmAiExtractionRoundEnum.FOUNDATION) {
+            long targetCount = targetMapper.selectCount(new QueryWrapper<OmAiTargetDO>()
+                    .eq("task_id", taskId).eq("del_flag", 0));
+            if (targetCount == 0) {
+                throw new IllegalStateException("未抽取到有效建模目标，无法继续建立对象、关系及目标关联，请检查文档是否明确描述了建模目的、业务问题或应用场景");
+            }
+        }
+        long count = switch (round) {
+            case FOUNDATION -> targetMapper.selectCount(new QueryWrapper<OmAiTargetDO>().eq("task_id", taskId).eq("del_flag", 0))
+                    + termMapper.selectCount(new QueryWrapper<OmAiTermDO>().eq("task_id", taskId).eq("del_flag", 0))
+                    + enumTypeMapper.selectCount(new QueryWrapper<OmAiEnumTypeDO>().eq("task_id", taskId).eq("del_flag", 0));
+            case OBJECT -> objectMapper.selectCount(new QueryWrapper<OmAiObjectDO>().eq("task_id", taskId).eq("del_flag", 0));
+            case MEMBERS -> attributeMapper.selectCount(new QueryWrapper<OmAiAttributeDO>().eq("task_id", taskId).eq("del_flag", 0))
+                    + relationMapper.selectCount(new QueryWrapper<OmAiRelationDO>().eq("task_id", taskId).eq("del_flag", 0));
+            case RULES -> axiomMapper.selectCount(new QueryWrapper<OmAiAxiomDO>().eq("task_id", taskId).eq("del_flag", 0))
+                    + dataRuleMapper.selectCount(new QueryWrapper<OmAiDataRuleDO>().eq("task_id", taskId).eq("del_flag", 0));
+        };
+        if (count > 0) return;
+        if (round == OmAiExtractionRoundEnum.RULES) {
+            addWarning("规则轮未生成可落库的公理或数据规则，请人工确认文档是否包含明确约束。");
+            return;
+        }
+        throw new IllegalStateException(round.getStage().getLabel() + "未生成任何可落库候选，可能是模型空返回或候选全部未通过格式与引用校验");
     }
 
     /** 构建当前轮次的文本提示词。 */
@@ -478,7 +681,8 @@ public class OmAiModelingAsyncProcessor {
             if (end >= evidenceList.size()) {
                 break;
             }
-            start = Math.max(start + 1, end - WINDOW_OVERLAP);
+            // 固定保留两个相邻证据块，兼顾跨段语义和窗口数量。
+            start = Math.max(start + 1, end - 2);
         }
         return windows;
     }
@@ -494,7 +698,7 @@ public class OmAiModelingAsyncProcessor {
 
     /** 处理当前轮次模型响应。 */
     private void handleRoundResponse(OmAiTaskDO task, OmAiExtractionRoundEnum round, String content) {
-        persistCandidates(task, content);
+        transactionTemplate.executeWithoutResult(status -> persistCandidates(task, content));
     }
 
     /** 完成任务并统计候选数量。 */
@@ -505,10 +709,20 @@ public class OmAiModelingAsyncProcessor {
         }
         task.setCandidateCount(count);
         task.setStatus(OmAiTaskStatusEnum.SUCCESS.getCode());
+        List<String> warnings = Optional.ofNullable(currentWarnings.get()).orElse(List.of());
+        task.setFailureReason(warnings.isEmpty() ? null
+                : trim("抽取已完成，但存在以下覆盖或质量警告：" + String.join("；", warnings), 1000));
         task.setCurrentStage(OmAiModelingStageEnum.FINISH.getCode());
         task.setFinishedTime(new Date());
         taskMapper.updateById(task);
-        return "四轮抽取完成，共生成 " + count + " 条待审核候选数据";
+        return "四轮抽取完成，共生成 " + count + " 条待审核候选数据"
+                + (warnings.isEmpty() ? "" : "，存在 " + warnings.size() + " 条质量警告");
+    }
+
+    private void addWarning(String warning) {
+        if (warning == null || warning.isBlank()) return;
+        List<String> warnings = currentWarnings.get();
+        if (warnings != null && warnings.stream().noneMatch(warning::equals)) warnings.add(warning);
     }
 
     /** 将任务和运行中阶段更新为失败。 */
@@ -577,7 +791,7 @@ public class OmAiModelingAsyncProcessor {
         context.put("projectBusinessTypes", trimList(dataTypeMapper.selectAiOptionsByTaskId(taskId), 80));
         context.put("globalBusinessTypes", trimList(basicDataTypeMapper.selectAiOptions(), 80));
         String json = JSON.toJSONString(context);
-        if (json.length() <= CANDIDATE_CONTEXT_CHAR_BUDGET) {
+        if (json.length() <= MODEL_CONTEXT_CHAR_BUDGET) {
             return json;
         }
         Map<String, Object> reduced = new LinkedHashMap<>();
@@ -590,7 +804,7 @@ public class OmAiModelingAsyncProcessor {
         reduced.put("projectBusinessTypes", trimList(dataTypeMapper.selectAiOptionsByTaskId(taskId), 30));
         reduced.put("globalBusinessTypes", trimList(basicDataTypeMapper.selectAiOptions(), 30));
         String reducedJson = JSON.toJSONString(reduced);
-        if (reducedJson.length() <= CANDIDATE_CONTEXT_CHAR_BUDGET) {
+        if (reducedJson.length() <= MODEL_CONTEXT_CHAR_BUDGET) {
             return reducedJson;
         }
         Map<String, Object> minimal = new LinkedHashMap<>();
@@ -941,8 +1155,9 @@ public class OmAiModelingAsyncProcessor {
                 .anyMatch(codePoint -> codePoint >= 0x4E00 && codePoint <= 0x9FFF);
     }
 
-    /** 流式调用模型，页面仅展示中文、可审计的分析进度，不透传供应商隐藏推理。 */
-    private String streamModelResponse(AiChatRequest request, String modelName, int progress, String batchName) {
+    /** 流式调用模型，页面实时展示思考过程；缺少最终 JSON 时自动追加一次结构化收敛请求。 */
+    private String streamModelResponse(AiChatRequest request, OmAiExtractionRoundEnum round,
+                                       String modelName, int progress, String batchName) {
         StringBuilder content = new StringBuilder();
         StringBuilder modelReasoning = new StringBuilder();
         Long streamingStageId = currentStageId.get();
@@ -956,58 +1171,302 @@ public class OmAiModelingAsyncProcessor {
         int[] lastContentLength = {-1};
         int[] lastReasoningLength = {-1};
         String[] lastAnalysisProcess = {""};
-        chatService.stream(request, chunk -> {
-            if (chunk.content() != null && !chunk.content().isEmpty()) {
-                content.append(chunk.content());
+        long startedAt = System.currentTimeMillis();
+        long[] lastChunkAt = {startedAt};
+        long[] lastDatabaseFlushAt = {0L};
+        AtomicBoolean receivedChunk = new AtomicBoolean(false);
+        AtomicBoolean cancelled = new AtomicBoolean(false);
+        CompletableFuture<Void> streamFuture = null;
+        RuntimeException streamFailure = null;
+        try {
+            streamFuture = CompletableFuture.runAsync(() -> chatService.stream(request, chunk -> {
+                if (cancelled.get()) return;
+                long now = System.currentTimeMillis();
+                receivedChunk.set(true);
+                lastChunkAt[0] = now;
+                if (chunk.content() != null && !chunk.content().isEmpty()) {
+                    content.append(chunk.content());
+                }
+                if (chunk.reasoningContent() != null && !chunk.reasoningContent().isEmpty()) {
+                    modelReasoning.append(chunk.reasoningContent());
+                }
+                String analysisProcess = extractStreamingJsonString(content.toString(), "analysisProcess");
+                boolean streamChanged = content.length() != lastContentLength[0]
+                        || modelReasoning.length() != lastReasoningLength[0]
+                        || !analysisProcess.equals(lastAnalysisProcess[0]);
+                if (chunk.finished() || (streamChanged && now - lastUpdateTime[0] >= 1000L)) {
+                    String currentReasoning = composeVisibleReasoning(modelReasoning.toString(), analysisProcess);
+                    applyStageProgress(streamingStage, progress,
+                            analysisProcess.isBlank()
+                                    ? "正在分析" + batchName + "，模型思考过程正在流式输出。"
+                                    : "正在分析" + batchName + "，结构化分析过程正在流式输出。",
+                            modelName, null, modelReasoning.length() + content.length());
+                    String visibleReasoning = joinReasoning(previousReasoning, batchName, currentReasoning);
+                    streamingStage.setReasoningContent(visibleReasoning);
+                    streamPublisher.publishStage(streamingStage);
+                    boolean shouldPersist = chunk.finished()
+                            || now - lastDatabaseFlushAt[0] >= REASONING_FLUSH_MILLIS;
+                    if (shouldPersist) {
+                        persistStageSnapshot(streamingStageId, streamingStage);
+                        lastDatabaseFlushAt[0] = now;
+                    }
+                    lastUpdateTime[0] = now;
+                    lastContentLength[0] = content.length();
+                    lastReasoningLength[0] = modelReasoning.length();
+                    lastAnalysisProcess[0] = analysisProcess;
+                }
+            }));
+            while (!streamFuture.isDone()) {
+                long now = System.currentTimeMillis();
+                if (!receivedChunk.get() && now - startedAt > STREAM_FIRST_CHUNK_MILLIS) {
+                    throw new IllegalStateException("等待模型首个分片超时：" + batchName);
+                }
+                if (receivedChunk.get() && now - lastChunkAt[0] > STREAM_IDLE_MILLIS) {
+                    throw new IllegalStateException("模型流式输出长时间无新分片：" + batchName);
+                }
+                if (now - startedAt > STREAM_MAX_MILLIS) {
+                    throw new IllegalStateException("模型思考超过保护时长：" + batchName);
+                }
+                try {
+                    streamFuture.get(500, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException ignored) {
+                    // 周期性检查首包、空闲和总时长。
+                }
             }
-            if (chunk.reasoningContent() != null && !chunk.reasoningContent().isEmpty()) {
-                modelReasoning.append(chunk.reasoningContent());
+            streamFuture.get();
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            streamFailure = new IllegalStateException("模型流式调用被中断：" + batchName, exception);
+        } catch (ExecutionException exception) {
+            Throwable cause = exception.getCause();
+            streamFailure = cause instanceof RuntimeException runtimeException
+                    ? runtimeException : new IllegalStateException("模型流式调用失败：" + batchName, cause);
+        } catch (RuntimeException exception) {
+            streamFailure = exception;
+        } finally {
+            cancelled.set(true);
+            if (streamFuture != null && !streamFuture.isDone()) {
+                streamFuture.cancel(true);
             }
-            String analysisProcess = extractStreamingJsonString(content.toString(), "analysisProcess");
-            long now = System.currentTimeMillis();
-            boolean streamChanged = content.length() != lastContentLength[0]
-                    || modelReasoning.length() != lastReasoningLength[0]
-                    || !analysisProcess.equals(lastAnalysisProcess[0]);
-            if (chunk.finished() || (streamChanged && now - lastUpdateTime[0] >= 1000L)) {
-                String currentReasoning = composeVisibleReasoning(modelReasoning.toString(), analysisProcess);
-                updateStageProgress(streamingStageId, streamingStage, progress,
-                        analysisProcess.isBlank()
-                                ? "正在分析" + batchName + "，模型推理过程正在流式输出。"
-                                : "正在分析" + batchName + "，结构化分析过程正在流式输出。",
-                        modelName, null, modelReasoning.length() + content.length());
-                updateStageReasoning(streamingStageId, streamingStage,
-                        joinReasoning(previousReasoning, batchName, currentReasoning));
-                lastUpdateTime[0] = now;
-                lastContentLength[0] = content.length();
-                lastReasoningLength[0] = modelReasoning.length();
-                lastAnalysisProcess[0] = analysisProcess;
-            }
-        });
-        String result = removeThinkContent(content.toString());
-        if (result.isBlank()) {
-            throw new IllegalStateException("模型流式调用结束但未返回结构化正文：" + batchName);
         }
-        return result;
+        String finalVisibleReasoning = joinReasoning(previousReasoning, batchName,
+                composeVisibleReasoning(modelReasoning.toString(),
+                        extractStreamingJsonString(content.toString(), "analysisProcess")));
+        updateStageReasoning(streamingStageId, streamingStage, finalVisibleReasoning);
+        String result = removeThinkContent(content.toString());
+        if (containsCompleteJson(result)) {
+            return result;
+        }
+        String locallyRepaired = repairTrailingAnalysisFields(result, round);
+        if (containsCompleteJson(locallyRepaired)) {
+            log.info("模型候选数组完整，仅尾部分析字段被截断，已本地修复，batch={}", batchName);
+            return locallyRepaired;
+        }
+        if (result.isBlank() && modelReasoning.isEmpty() && streamFailure != null) {
+            throw streamFailure;
+        }
+        updateStageProgress(streamingStageId, streamingStage, progress,
+                "模型思考已完成，最终 JSON 未完整闭合，正在关闭思考并仅补交 JSON，不会重新分析证据。",
+                modelName, null, modelReasoning.length() + content.length());
+        String converged = removeThinkContent(
+                convergeStructuredJson(request, round, result, batchName));
+        if (!containsCompleteJson(converged)) {
+            throw new StructuredOutputException("模型经格式补交后仍未返回完整 JSON：" + batchName, streamFailure);
+        }
+        return converged;
     }
 
     /**
-     * 组合页面可见的模型推理流和结构化分析过程。模型开始返回正文前直接展示推理分片，
-     * 正文中的 analysisProcess 出现后继续追加，避免长时间显示固定等待文案。
+     * 组合页面可见的模型思考流和结构化分析过程。
      */
     private String composeVisibleReasoning(String modelReasoning, String analysisProcess) {
         String reasoning = Optional.ofNullable(modelReasoning).orElse("").trim();
         String analysis = Optional.ofNullable(analysisProcess).orElse("").trim();
         if (reasoning.isBlank() && analysis.isBlank()) {
-            return "模型请求已建立，正在等待首个推理分片。";
+            return "模型请求已建立，正在等待首个分析分片。";
         }
         if (reasoning.isBlank()) {
             return "【分析过程】\n" + analysis;
         }
         if (analysis.isBlank()) {
-            return "【模型推理过程】\n" + trim(reasoning, 60000);
+            return "【模型思考过程】\n" + trim(reasoning, 60000);
         }
-        return "【模型推理过程】\n" + trim(reasoning, 60000)
+        return "【模型思考过程】\n" + trim(reasoning, 60000)
                 + "\n\n【分析过程】\n" + analysis;
+    }
+
+    private boolean containsCompleteJson(String content) {
+        try {
+            parseJsonObject(content);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * 仅使用本轮字段规范、最终分析结论和未完成 JSON 补交结果。
+     * 不再重复传入原始文档、候选索引、完整提示词或原始思考过程，降低上下文和响应耗时。
+     */
+    private String convergeStructuredJson(AiChatRequest originalRequest, OmAiExtractionRoundEnum round,
+                                          String partialContent, String batchName) {
+        String recoveryPrompt = buildRecoveryPrompt(round, partialContent);
+        List<AiChatMessage> messages = List.of(
+                AiChatMessage.system(CHINESE_OUTPUT_SYSTEM_PROMPT),
+                AiChatMessage.user(recoveryPrompt));
+        AiChatRequest convergenceRequest = new AiChatRequest(originalRequest.model(), messages, 0.0,
+                Optional.ofNullable(originalRequest.maxTokens()).orElse(maxOutputTokens(round)),
+                Map.of("enable_thinking", false,
+                        "response_format", Map.of("type", "json_object")));
+        try {
+            String result = callStructuredRecovery(convergenceRequest, batchName);
+            if (!containsCompleteJson(result)) {
+                throw new IllegalStateException("JSON 补交结果仍不完整");
+            }
+            return result;
+        } catch (Exception exception) {
+            throw new StructuredOutputException("模型 JSON 格式补交请求失败：" + batchName, exception);
+        }
+    }
+
+    private String buildRecoveryPrompt(OmAiExtractionRoundEnum round, String partialContent) {
+        return "上一轮业务分析已经完成，只是最终 JSON 输出被截断或格式不完整。\n"
+                + "请根据下面的本轮字段规范和未完成 JSON，只恢复候选数据数组，输出一个完整 JSON 对象。\n"
+                + "禁止重新分析证据，禁止增加结论中不存在的候选，禁止输出 Markdown、解释或第二个 JSON。\n"
+                + "不要输出 analysisProcess、analysisSummary 或任何思考过程；缺少的候选数组必须输出空数组。\n\n"
+                + "【本轮字段规范】\n" + recoveryJsonSchema(round) + "\n\n"
+                + buildConvergenceContext(partialContent);
+    }
+
+    /** JSON 补交关闭思考但仍使用流式传输，避免大 JSON 等待完整响应时被网关取消。 */
+    private String callStructuredRecovery(AiChatRequest request, String batchName) {
+        StringBuilder content = new StringBuilder();
+        AtomicBoolean receivedChunk = new AtomicBoolean(false);
+        long startedAt = System.currentTimeMillis();
+        long[] lastChunkAt = {startedAt};
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> chatService.stream(request, chunk -> {
+            if (chunk.content() != null && !chunk.content().isEmpty()) {
+                content.append(chunk.content());
+                receivedChunk.set(true);
+                lastChunkAt[0] = System.currentTimeMillis();
+            }
+        }));
+        try {
+            while (!future.isDone()) {
+                long now = System.currentTimeMillis();
+                if (!receivedChunk.get() && now - startedAt > STREAM_FIRST_CHUNK_MILLIS) {
+                    throw new IllegalStateException("等待模型 JSON 补交首个分片超时：" + batchName);
+                }
+                if (receivedChunk.get() && now - lastChunkAt[0] > STREAM_IDLE_MILLIS) {
+                    throw new IllegalStateException("模型 JSON 补交长时间无新分片：" + batchName);
+                }
+                if (now - startedAt > STREAM_MAX_MILLIS) {
+                    throw new IllegalStateException("模型 JSON 补交超过最大保护时长：" + batchName);
+                }
+                try {
+                    future.get(500, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException ignored) {
+                    // 周期性检查首包、空闲和总时长。
+                }
+            }
+            future.get();
+            return content.toString().trim();
+        } catch (InterruptedException exception) {
+            future.cancel(true);
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("模型 JSON 格式补交被中断：" + batchName, exception);
+        } catch (ExecutionException exception) {
+            Throwable cause = exception.getCause();
+            if (cause instanceof RuntimeException runtimeException) throw runtimeException;
+            throw new IllegalStateException("模型 JSON 格式补交调用失败：" + batchName, cause);
+        } catch (RuntimeException exception) {
+            future.cancel(true);
+            throw exception;
+        }
+    }
+
+    /** JSON 收敛只保留候选数据尾部和简短摘要，不再传递详细分析过程。 */
+    private String buildConvergenceContext(String partialContent) {
+        String partial = Optional.ofNullable(partialContent).orElse("").trim();
+        int jsonStart = partial.indexOf('{');
+        if (jsonStart >= 0) partial = partial.substring(jsonStart);
+        partial = removeJsonStringField(partial, "analysisProcess");
+        partial = removeJsonStringField(partial, "analysisSummary");
+        int recoveryContextLimit = MODEL_CONTEXT_CHAR_BUDGET;
+        partial = trim(partial, recoveryContextLimit - 100);
+        return trim("【未完成候选JSON】\n" + partial, recoveryContextLimit);
+    }
+
+    /** 候选数组优先输出后，若只截断了尾部分析字段，可直接本地补齐而无需再次调用模型。 */
+    private String repairTrailingAnalysisFields(String content, OmAiExtractionRoundEnum round) {
+        String json = Optional.ofNullable(content).orElse("").trim();
+        int start = json.indexOf('{');
+        if (start < 0) return json;
+        json = json.substring(start);
+        int analysisSummary = json.indexOf("\"analysisSummary\"");
+        int analysisProcess = json.indexOf("\"analysisProcess\"");
+        int cut = analysisSummary >= 0 && analysisProcess >= 0
+                ? Math.min(analysisSummary, analysisProcess) : Math.max(analysisSummary, analysisProcess);
+        if (cut < 0) return json;
+        int comma = json.lastIndexOf(',', cut);
+        if (comma < 0) return json;
+        String candidateJson = json.substring(0, comma).trim() + "}";
+        try {
+            JSONObject root = parseJsonObject(candidateJson);
+            for (String field : candidateArrayFields(round)) {
+                if (!(root.get(field) instanceof JSONArray)) return json;
+            }
+            return candidateJson;
+        } catch (Exception ignored) {
+            return json;
+        }
+    }
+
+    private List<String> candidateArrayFields(OmAiExtractionRoundEnum round) {
+        return switch (round) {
+            case FOUNDATION -> List.of("targets", "terms", "enumTypes");
+            case OBJECT -> List.of("objects");
+            case MEMBERS -> List.of("attributes", "relations");
+            case RULES -> List.of("axioms", "dataRules");
+        };
+    }
+
+    /** 从不完整 JSON 中移除指定字符串字段，降低恢复请求上下文。 */
+    private String removeJsonStringField(String json, String fieldName) {
+        if (json == null || json.isBlank()) return "";
+        String marker = "\"" + fieldName + "\"";
+        int fieldStart = json.indexOf(marker);
+        if (fieldStart < 0) return json;
+        int colon = json.indexOf(':', fieldStart + marker.length());
+        if (colon < 0) return json;
+        int quote = json.indexOf('"', colon + 1);
+        if (quote < 0) return json;
+        boolean escaped = false;
+        int end = quote + 1;
+        for (; end < json.length(); end++) {
+            char character = json.charAt(end);
+            if (escaped) {
+                escaped = false;
+            } else if (character == '\\') {
+                escaped = true;
+            } else if (character == '"') {
+                end++;
+                break;
+            }
+        }
+        while (end < json.length() && Character.isWhitespace(json.charAt(end))) end++;
+        if (end < json.length() && json.charAt(end) == ',') end++;
+        return json.substring(0, fieldStart) + json.substring(Math.min(end, json.length()));
+    }
+
+    /** JSON 恢复只需要当前轮次的字段骨架，不重新携带原始业务提示词。 */
+    private String recoveryJsonSchema(OmAiExtractionRoundEnum round) {
+        return switch (round) {
+            case FOUNDATION -> "{targets:[{question,questionSource,businessScenarios,priority,acceptCriterion,candidateKey,evidenceBlockNos,confidence}],terms:[{stdName,enName,alias,abbr,source,description,candidateKey,evidenceBlockNos,confidence}],enumTypes:[{enumName,enumType,description,candidateKey,values:[{enumLabel,enumValue,enumSort,description}],evidenceBlockNos,confidence}]}";
+            case OBJECT -> "{objects:[{name,description,candidateKey,parentCandidateKey,parentName,targetCandidateKeys,targetQuestions,evidenceBlockNos,confidence}]}";
+            case MEMBERS -> "{attributes:[{objectCandidateKey,objectName,name,code,description,suggestedTypeCategory,suggestedBasicTypeCode,businessTypeId,businessTypeSource,unit,decimalPlaces,format,enumType,enumSource,evidenceBlockNos,confidence}],relations:[{name,description,startObjectCandidateKey,startObjectName,endObjectCandidateKey,endObjectName,reversibleFlag,reverseName,targetCandidateKeys,targetQuestions,evidenceBlockNos,confidence}]}";
+            case RULES -> "{axioms:[{name,description,type,level,objectCandidateId,objectName,otherObjectCandidateId,otherObjectName,relationName,domainCandidateId,domainObjectName,rangeCandidateId,rangeObjectName,attributeCandidateId,attributeName,evidenceBlockNos,confidence}],dataRules:[{name,description,type,level,conditionRelation,conditions:[{objectCandidateId,objectName,attributeCandidateId,attributeName,operator,value}],failureMessage,evidenceBlockNos,confidence}],issues:[{level,message,evidenceBlockNos}]}";
+        };
     }
 
     /**
@@ -1078,26 +1537,23 @@ public class OmAiModelingAsyncProcessor {
      * reasoningContent 与正文 analysisProcess 均通过当前阶段 SSE 实时推送。
      */
     private AiChatRequest auditableStreamingRequest(tech.qiantong.qontology.ai.api.model.AiModelRef model,
-                                                     List<AiChatMessage> messages, int maxTokens,
-                                                     boolean enableThinking) {
+                                                     List<AiChatMessage> messages, int maxTokens) {
         List<AiChatMessage> requestMessages = new ArrayList<>();
         requestMessages.add(AiChatMessage.system(CHINESE_OUTPUT_SYSTEM_PROMPT));
         requestMessages.addAll(messages);
-        return new AiChatRequest(model, requestMessages, 0.0, maxTokens,
-                Map.of("enable_thinking", enableThinking));
-    }
-
-    /** 基础、对象和成员抽取重事实召回，关闭深度思考提升速度；规则轮才开启。 */
-    private boolean enableThinking(OmAiExtractionRoundEnum round) {
-        return round == OmAiExtractionRoundEnum.RULES;
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("enable_thinking", true);
+        attributes.put("response_format", Map.of("type", "json_object"));
+        attributes.put("thinking_budget", THINKING_TOKEN_BUDGET);
+        return new AiChatRequest(model, requestMessages, 0.0, maxTokens, attributes);
     }
 
     private int maxOutputTokens(OmAiExtractionRoundEnum round) {
         return switch (round) {
-            case FOUNDATION -> 5000;
-            case OBJECT -> 4000;
-            case MEMBERS -> 6000;
-            case RULES -> 6000;
+            case FOUNDATION -> 6000;
+            case OBJECT -> 5000;
+            case MEMBERS -> 10000;
+            case RULES -> 10000;
         };
     }
 
@@ -1108,10 +1564,28 @@ public class OmAiModelingAsyncProcessor {
         }
         for (Object value : array) {
             JSONObject object = (JSONObject) value;
+            String enumName = cleanRequiredText(object.getString("enumName"));
+            if (enumName == null) {
+                continue;
+            }
+            OmAiEnumTypeDO existing = findEnumTypeCandidate(taskId, enumName, object.getString("enumType"));
+            if (existing != null) {
+                if ((existing.getDescription() == null || existing.getDescription().isBlank())
+                        && object.getString("description") != null) {
+                    existing.setDescription(trim(object.getString("description"), 512));
+                    enumTypeMapper.updateById(existing);
+                }
+                bindEvidence(taskId, OmAiCandidateTypeEnum.ENUM_TYPE, existing.getId(),
+                        object.getJSONArray("evidenceBlockNos"));
+                mergeEnumValues(taskId, existing.getId(), object.getJSONArray("values"),
+                        object.getJSONArray("evidenceBlockNos"));
+                continue;
+            }
             OmAiEnumTypeDO enumType = new OmAiEnumTypeDO();
             enumType.setTaskId(taskId);
-            enumType.setEnumName(object.getString("enumName"));
+            enumType.setEnumName(enumName);
             enumType.setEnumType(resolveEnumType(taskId, object));
+            enumType.setDescription(trim(object.getString("description"), 512));
             enumType.setStatus("0");
             enumType.setAdoptStatus(OmAiAdoptStatusEnum.PENDING.getCode());
             enumType.setConfidence(object.getBigDecimal("confidence"));
@@ -1120,26 +1594,45 @@ public class OmAiModelingAsyncProcessor {
             enumTypeMapper.insert(enumType);
             bindEvidence(taskId, OmAiCandidateTypeEnum.ENUM_TYPE, enumType.getId(),
                     object.getJSONArray("evidenceBlockNos"));
-            JSONArray values = object.getJSONArray("values");
-            if (values == null) {
-                continue;
-            }
-            for (Object item : values) {
+            mergeEnumValues(taskId, enumType.getId(), object.getJSONArray("values"),
+                    object.getJSONArray("evidenceBlockNos"));
+        }
+    }
+
+    private void mergeEnumValues(Long taskId, Long enumTypeId, JSONArray values, JSONArray evidenceIds) {
+        if (values == null) {
+            return;
+        }
+        for (Object item : values) {
                 JSONObject enumValue = (JSONObject) item;
+                String label = cleanRequiredText(enumValue.getString("enumLabel"));
+                String value = cleanRequiredText(enumValue.getString("enumValue"));
+                OmAiEnumDataDO existing = findEnumDataCandidate(taskId, enumTypeId, label, value);
+                if (existing != null) {
+                    if ((existing.getDescription() == null || existing.getDescription().isBlank())
+                            && enumValue.getString("description") != null) {
+                        existing.setDescription(trim(enumValue.getString("description"), 512));
+                        enumDataMapper.updateById(existing);
+                    }
+                    bindEvidence(taskId, OmAiCandidateTypeEnum.ENUM_DATA, existing.getId(), evidenceIds);
+                    continue;
+                }
+                if (label == null || value == null) {
+                    continue;
+                }
                 OmAiEnumDataDO enumData = new OmAiEnumDataDO();
                 enumData.setTaskId(taskId);
-                enumData.setEnumTypeId(enumType.getId());
+                enumData.setEnumTypeId(enumTypeId);
                 enumData.setEnumSort(Optional.ofNullable(enumValue.getLong("enumSort")).orElse(0L));
-                enumData.setEnumLabel(enumValue.getString("enumLabel"));
-                enumData.setEnumValue(enumValue.getString("enumValue"));
+                enumData.setEnumLabel(label);
+                enumData.setEnumValue(value);
+                enumData.setDescription(trim(enumValue.getString("description"), 512));
                 enumData.setStatus("0");
                 enumData.setAdoptStatus(OmAiAdoptStatusEnum.PENDING.getCode());
                 enumData.setDelFlag(false);
                 applyCreator(enumData);
                 enumDataMapper.insert(enumData);
-                bindEvidence(taskId, OmAiCandidateTypeEnum.ENUM_DATA, enumData.getId(),
-                        object.getJSONArray("evidenceBlockNos"));
-            }
+                bindEvidence(taskId, OmAiCandidateTypeEnum.ENUM_DATA, enumData.getId(), evidenceIds);
         }
     }
 
@@ -1321,10 +1814,20 @@ public class OmAiModelingAsyncProcessor {
             Long endId = findObjectCandidateId(taskId, object.getString("endObjectName"));
             String name = cleanRequiredText(object.getString("name"));
             Long existingId = findRelationCandidateId(taskId, startId, endId, name);
+            String extractedReverseName = cleanRequiredText(object.getString("reverseName"));
+            Integer reversibleFlag = Integer.valueOf(1).equals(object.getInteger("reversibleFlag"))
+                    && extractedReverseName != null ? 1 : 0;
+            String reverseName = reversibleFlag == 1 ? extractedReverseName : null;
             if (startId == null || endId == null || startId.equals(endId) || name == null) {
                 continue;
             }
             if (existingId != null) {
+                OmAiRelationDO existing = relationMapper.selectById(existingId);
+                if (existing != null) {
+                    existing.setReversibleFlag(reversibleFlag);
+                    existing.setReverseName(reverseName);
+                    relationMapper.updateById(existing);
+                }
                 bindEvidence(taskId, OmAiCandidateTypeEnum.RELATION, existingId,
                         object.getJSONArray("evidenceBlockNos"));
                 continue;
@@ -1335,8 +1838,8 @@ public class OmAiModelingAsyncProcessor {
             candidate.setDescription(object.getString("description"));
             candidate.setStartObjectCandidateId(startId);
             candidate.setEndObjectCandidateId(endId);
-            candidate.setReversibleFlag(Optional.ofNullable(object.getInteger("reversibleFlag")).orElse(0));
-            candidate.setReverseName(object.getString("reverseName"));
+            candidate.setReversibleFlag(reversibleFlag);
+            candidate.setReverseName(reverseName);
             candidate.setAdoptStatus(OmAiAdoptStatusEnum.PENDING.getCode());
             candidate.setConfidence(object.getBigDecimal("confidence"));
             candidate.setDelFlag(false);
@@ -1397,6 +1900,13 @@ public class OmAiModelingAsyncProcessor {
                 log.warn("模型公理引用校验失败，taskId={}, name={}, type={}, object={}, other={}, domain={}, range={}, relation={}, attribute={}",
                         taskId, object.getString("name"), type, objectName, otherObjectName, domainObjectName,
                         rangeObjectName, relationName, attributeName);
+                continue;
+            }
+            Long existingId = findAxiomCandidateId(taskId, type, objectId, otherObjectId,
+                    resolvedRelationName, domainId, rangeId, attributeId);
+            if (existingId != null) {
+                bindEvidence(taskId, OmAiCandidateTypeEnum.AXIOM, existingId,
+                        object.getJSONArray("evidenceBlockNos"));
                 continue;
             }
             OmAiAxiomDO candidate = new OmAiAxiomDO();
@@ -1466,6 +1976,13 @@ public class OmAiModelingAsyncProcessor {
                 }
             }
             if (!valid) {
+                continue;
+            }
+            Long existingId = findDataRuleCandidateId(taskId, type, object.getString("name"),
+                    resolvedConditions.toJSONString());
+            if (existingId != null) {
+                bindEvidence(taskId, OmAiCandidateTypeEnum.DATA_RULE, existingId,
+                        object.getJSONArray("evidenceBlockNos"));
                 continue;
             }
             OmAiDataRuleDO candidate = new OmAiDataRuleDO();
@@ -1786,7 +2303,7 @@ public class OmAiModelingAsyncProcessor {
         return Math.min(95, 10 + (completedCalls * 85 / Math.max(1, totalCalls)));
     }
 
-    /** 持久化并直接推送当前阶段的实时进度与模型流式内容。 */
+    /** 更新、持久化并推送非流式阶段的进度。 */
     private void updateStageProgress(int progress, String summary, String modelName, Integer inputCount, Integer outputCount) {
         updateStageProgress(currentStageId.get(), currentStage.get(), progress, summary,
                 modelName, inputCount, outputCount);
@@ -1798,6 +2315,14 @@ public class OmAiModelingAsyncProcessor {
         if (stageId == null || stage == null) {
             return;
         }
+        applyStageProgress(stage, progress, summary, modelName, inputCount, outputCount);
+        persistStageProgress(stageId, stage, modelName != null, inputCount != null, outputCount != null);
+        streamPublisher.publishStage(stage);
+    }
+
+    /** 流式回调只更新内存对象；页面实时推送，数据库由低频快照统一持久化。 */
+    private void applyStageProgress(OmAiStageDO stage, int progress, String summary,
+                                    String modelName, Integer inputCount, Integer outputCount) {
         stage.setProgress(Math.max(1, Math.min(99, progress)));
         stage.setSummary(trim(summary, 2000));
         if (modelName != null) {
@@ -1809,21 +2334,24 @@ public class OmAiModelingAsyncProcessor {
         if (outputCount != null) {
             stage.setOutputCount(outputCount);
         }
+    }
+
+    private void persistStageProgress(Long stageId, OmAiStageDO stage, boolean includeModel,
+                                      boolean includeInput, boolean includeOutput) {
         UpdateWrapper<OmAiStageDO> update = new UpdateWrapper<OmAiStageDO>()
                 .eq("id", stageId)
                 .set("progress", stage.getProgress())
                 .set("summary", stage.getSummary());
-        if (modelName != null) {
-            update.set("model_name", modelName);
+        if (includeModel) {
+            update.set("model_name", stage.getModelName());
         }
-        if (inputCount != null) {
-            update.set("input_count", inputCount);
+        if (includeInput) {
+            update.set("input_count", stage.getInputCount());
         }
-        if (outputCount != null) {
-            update.set("output_count", outputCount);
+        if (includeOutput) {
+            update.set("output_count", stage.getOutputCount());
         }
         stageMapper.update(null, update);
-        streamPublisher.publishStage(stage);
     }
 
     /** 持久化并推送模型真实的流式思考过程。 */
@@ -1837,10 +2365,21 @@ public class OmAiModelingAsyncProcessor {
             return;
         }
         stage.setReasoningContent(reasoningContent);
+        persistStageSnapshot(stageId, stage);
+        streamPublisher.publishStage(stage);
+    }
+
+    /** 一条 SQL 同时保存流式阶段的进度、输出计数和思考内容。 */
+    private void persistStageSnapshot(Long stageId, OmAiStageDO stage) {
+        if (stageId == null || stage == null) return;
         stageMapper.update(null, new UpdateWrapper<OmAiStageDO>()
                 .eq("id", stageId)
-                .set("reasoning_content", reasoningContent));
-        streamPublisher.publishStage(stage);
+                .set("progress", stage.getProgress())
+                .set("summary", stage.getSummary())
+                .set("model_name", stage.getModelName())
+                .set("input_count", stage.getInputCount())
+                .set("output_count", stage.getOutputCount())
+                .set("reasoning_content", stage.getReasoningContent()));
     }
 
     /** 绑定候选数据与来源证据。 */
@@ -1918,6 +2457,50 @@ public class OmAiModelingAsyncProcessor {
                 .map(OmAiRelationDO::getId).findFirst().orElse(null);
     }
 
+    private OmAiEnumTypeDO findEnumTypeCandidate(Long taskId, String enumName, String enumType) {
+        String normalizedName = normalizeReference(enumName);
+        String normalizedType = normalizeReference(enumType);
+        return enumTypeMapper.selectList(new QueryWrapper<OmAiEnumTypeDO>()
+                        .eq("task_id", taskId).eq("del_flag", 0)).stream()
+                .filter(item -> normalizedName.equals(normalizeReference(item.getEnumName()))
+                        || (!normalizedType.isBlank()
+                        && normalizedType.equals(normalizeReference(item.getEnumType()))))
+                .findFirst().orElse(null);
+    }
+
+    private OmAiEnumDataDO findEnumDataCandidate(Long taskId, Long enumTypeId, String label, String value) {
+        String normalizedLabel = normalizeReference(label);
+        String normalizedValue = normalizeReference(value);
+        return enumDataMapper.selectList(new QueryWrapper<OmAiEnumDataDO>()
+                        .eq("task_id", taskId).eq("enum_type_id", enumTypeId).eq("del_flag", 0)).stream()
+                .filter(item -> normalizedLabel.equals(normalizeReference(item.getEnumLabel()))
+                        && normalizedValue.equals(normalizeReference(item.getEnumValue())))
+                .findFirst().orElse(null);
+    }
+
+    private Long findAxiomCandidateId(Long taskId, String type, Long objectId, Long otherObjectId,
+                                      String relationName, Long domainId, Long rangeId, Long attributeId) {
+        String normalizedRelation = normalizeReference(relationName);
+        return axiomMapper.selectList(new QueryWrapper<OmAiAxiomDO>()
+                        .eq("task_id", taskId).eq("type", type).eq("del_flag", 0)).stream()
+                .filter(item -> Objects.equals(objectId, item.getObjectCandidateId())
+                        && Objects.equals(otherObjectId, item.getOtherObjectCandidateId())
+                        && Objects.equals(domainId, item.getDomainCandidateId())
+                        && Objects.equals(rangeId, item.getRangeCandidateId())
+                        && Objects.equals(attributeId, item.getAttributeCandidateId())
+                        && normalizedRelation.equals(normalizeReference(item.getRelationName())))
+                .map(OmAiAxiomDO::getId).findFirst().orElse(null);
+    }
+
+    private Long findDataRuleCandidateId(Long taskId, String type, String name, String conditions) {
+        String normalizedName = normalizeReference(name);
+        return dataRuleMapper.selectList(new QueryWrapper<OmAiDataRuleDO>()
+                        .eq("task_id", taskId).eq("type", type).eq("del_flag", 0)).stream()
+                .filter(item -> normalizedName.equals(normalizeReference(item.getName()))
+                        || Objects.equals(conditions, item.getConditions()))
+                .map(OmAiDataRuleDO::getId).findFirst().orElse(null);
+    }
+
     private String cleanRequiredText(String value) {
         String text = Optional.ofNullable(value).orElse("").trim();
         return text.isBlank() || "null".equalsIgnoreCase(text) ? null : text;
@@ -1949,7 +2532,22 @@ public class OmAiModelingAsyncProcessor {
         return value.length() > maxLength ? value.substring(0, maxLength) : value;
     }
 
+    private static String tail(String value, int maxLength) {
+        if (value == null || maxLength <= 0) return "";
+        return value.length() > maxLength ? value.substring(value.length() - maxLength) : value;
+    }
+
     private record EvidenceWindow(List<OmAiEvidenceDO> evidence, int characterCount) {
+    }
+
+    private record RecognizedMedia(OmAiDocumentParser.MediaBlock media, String content) {
+    }
+
+    /** 已完成业务分析但最终结构化正文无法恢复；此类错误不得触发完整抽取重试。 */
+    private static final class StructuredOutputException extends RuntimeException {
+        private StructuredOutputException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
     /** 阶段执行动作。 */

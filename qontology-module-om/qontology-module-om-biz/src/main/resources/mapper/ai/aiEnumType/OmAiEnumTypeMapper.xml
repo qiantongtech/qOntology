@@ -15,12 +15,12 @@
     <select id="selectCandidateIndex" resultType="java.util.LinkedHashMap">
         SELECT id,
                enum_name AS enumName,
-               enum_type AS enumType
+               enum_type AS enumType,
+               description
         FROM om_ai_enum_type
         WHERE task_id = #{taskId}
           AND del_flag = 0
         ORDER BY id
-        LIMIT 500
     </select>
 
 </mapper>

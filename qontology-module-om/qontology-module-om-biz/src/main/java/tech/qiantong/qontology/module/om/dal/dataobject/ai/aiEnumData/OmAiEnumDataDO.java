@@ -53,6 +53,8 @@ public class OmAiEnumDataDO extends BaseEntity {
     private String enumLabel;
     /** 枚举键值。 */
     private String enumValue;
+    /** 描述。 */
+    private String description;
     /** 状态。 */
     private String status;
     /** 采纳状态：0待采纳 1已采纳 2采纳失败。 */

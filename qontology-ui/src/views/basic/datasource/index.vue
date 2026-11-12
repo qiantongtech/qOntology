@@ -141,10 +141,10 @@
         </template>
         <template #status="{ row }">
           <el-switch
-              v-model="row.status"
-              :active-value="0"
-              :inactive-value="1"
-              @change="value => handleStatusChange(row, value)"
+            v-model="row.status"
+            :active-value="0"
+            :inactive-value="1"
+            @change="(value) => handleStatusChange(row, value)"
           ></el-switch>
         </template>
       </qt-table>
@@ -257,7 +257,7 @@
         </el-row>
         <el-row v-if="form.datasourceType" :gutter="20">
           <el-col :span="12">
-            <qt-form-item label="数据库名称" prop="dbname" >
+            <qt-form-item label="数据库名称" prop="dbname">
               <el-input
                 v-model="form.dbname"
                 :disabled="form.id != null"
@@ -266,7 +266,7 @@
             </qt-form-item>
           </el-col>
           <el-col v-if="showSchema" :span="12">
-            <qt-form-item label="模式" prop="sid" >
+            <qt-form-item label="模式" prop="sid">
               <el-input
                 v-model="form.sid"
                 :disabled="form.id != null"
@@ -283,7 +283,8 @@
                   v-for="dict in sys_normal_disable"
                   :key="dict.value"
                   :label="Number(dict.value)"
-                >{{ dict.label }}</el-radio>
+                  >{{ dict.label }}</el-radio
+                >
               </el-radio-group>
             </qt-form-item>
           </el-col>
@@ -334,10 +335,7 @@
             >测试连接</el-button
           >
           <el-button @click="cancel">取 消</el-button>
-          <el-button
-            type="primary"
-            :disabled="testLoading"
-            @click="submitForm"
+          <el-button type="primary" :disabled="testLoading" @click="submitForm"
             >确 定</el-button
           >
         </div>
@@ -458,7 +456,9 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="创建时间" prop="createTime">
-              <div class="form-readonly">{{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}</div>
+              <div class="form-readonly">
+                {{ parseTime(form.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+              </div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -487,7 +487,10 @@ import { getDatasourceIcon } from "@/utils/datasource.js";
 import { useCreatorPhones } from "@/utils/useCreatorPhones";
 
 const { proxy } = getCurrentInstance();
-const { datasource_type,sys_normal_disable  } = proxy.useDict("datasource_type","sys_normal_disable");
+const { datasource_type, sys_normal_disable } = proxy.useDict(
+  "datasource_type",
+  "sys_normal_disable"
+);
 const route = useRoute();
 const tableRef = ref(null);
 const { creatorPhones } = useCreatorPhones();
@@ -543,7 +546,7 @@ const tableStore = reactive({
     {
       label: "编号",
       prop: "id",
-      width: 80,
+      width: 60,
       align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending"],
@@ -571,8 +574,11 @@ const tableStore = reactive({
     },
     { label: "数据源类型", slot: "datasourceType", width: 120 },
     {
-      label: "状态", prop: "status", slot: "status",
-      width: 100, minWidth: 100,
+      label: "状态",
+      prop: "status",
+      slot: "status",
+      width: 100,
+      minWidth: 100,
     },
     {
       label: "创建人",
@@ -592,7 +598,14 @@ const tableStore = reactive({
       sortable: "custom",
       sortOrders: ["descending", "ascending"],
     },
-    { label: "操作", slot: "handle", width: 240, minWidth: 240, align: "center", fixed: "right" },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 240,
+      minWidth: 240,
+      align: "center",
+      fixed: "right",
+    },
   ],
 });
 
@@ -704,7 +717,7 @@ function reset() {
     updaterId: null,
     updateTime: null,
     remark: null,
-    status:0,
+    status: 0,
   };
   proxy.resetForm("daDatasourceRef");
 }
@@ -890,19 +903,21 @@ function submitForm() {
 async function handleStatusChange(row, value) {
   let data = {
     ...row,
-    status: value
-  }
+    status: value,
+  };
   proxy.$modal
-      .confirm(`确认要${value === 0 ? "启用" : "停用"}数据源“${row.datasourceName}”吗？`)
-      .then(function () {
-        return updateDaDatasource(data);
-      })
-      .then(() => {
-        proxy.$modal.msgSuccess("操作成功");
-      })
-      .catch(function () {
-        row.status = row.status === 0 ? 1 : 0;
-      });
+    .confirm(
+      `确认要${value === 0 ? "启用" : "停用"}数据源“${row.datasourceName}”吗？`
+    )
+    .then(function () {
+      return updateDaDatasource(data);
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess("操作成功");
+    })
+    .catch(function () {
+      row.status = row.status === 0 ? 1 : 0;
+    });
 }
 /** 删除按钮操作 */
 function handleDelete(row) {
@@ -947,7 +962,6 @@ function handleDelete(row) {
 }
 </script>
 <style scoped lang="scss">
-
 .prefix-icon {
   width: 20px;
   height: 20px;

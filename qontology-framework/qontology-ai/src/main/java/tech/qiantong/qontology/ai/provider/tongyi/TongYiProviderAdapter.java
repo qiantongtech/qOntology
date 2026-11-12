@@ -37,6 +37,7 @@ import tech.qiantong.qontology.ai.provider.support.SpringAiProviderSupport;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Set;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -154,8 +155,11 @@ public final class TongYiProviderAdapter extends SpringAiProviderSupport impleme
         String modelName = request.model().modelName();
         Object thinkingAttribute = request.attributes().get("enable_thinking");
         Boolean enableThinking = thinkingAttribute instanceof Boolean value ? value : null;
+        Object thinkingBudget = request.attributes().get("thinking_budget");
+        Object responseFormat = request.attributes().get("response_format");
         ModelCacheKey key = ModelCacheKey.of(config.id(), providerCode(), config.baseUrl(), config.apiKey(),
-                modelName, "chat:" + request.temperature() + ":" + request.maxTokens() + ":" + enableThinking);
+                modelName, "chat:" + request.temperature() + ":" + request.maxTokens() + ":"
+                        + enableThinking + ":" + thinkingBudget + ":" + responseFormat);
         return cachedModel(key, OpenAiChatModel.class, () -> {
             OpenAiChatOptions.Builder options = OpenAiChatOptions.builder().model(modelName);
             if (request.temperature() != null) {
@@ -164,8 +168,18 @@ public final class TongYiProviderAdapter extends SpringAiProviderSupport impleme
             if (request.maxTokens() != null) {
                 options.maxTokens(request.maxTokens());
             }
+            Map<String, Object> extraBody = new LinkedHashMap<>();
             if (enableThinking != null) {
-                options.extraBody(Map.of("enable_thinking", enableThinking));
+                extraBody.put("enable_thinking", enableThinking);
+            }
+            if (thinkingBudget instanceof Number) {
+                extraBody.put("thinking_budget", thinkingBudget);
+            }
+            if (responseFormat instanceof Map<?, ?>) {
+                extraBody.put("response_format", responseFormat);
+            }
+            if (!extraBody.isEmpty()) {
+                options.extraBody(extraBody);
             }
             return OpenAiChatModel.builder().openAiApi(chatApi(config))
                     // 重试由治理层统一控制，避免任务已失败而底层继续发送请求。

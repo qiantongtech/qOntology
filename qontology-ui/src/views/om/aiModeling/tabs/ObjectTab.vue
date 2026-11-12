@@ -18,226 +18,211 @@
 <template>
   <div ref="pageRef" class="candidate-tab-page">
     <qt-wrap
-        :columns="tableStore.columns"
-        :table-ref="tableRef"
-        :config="wrapConfig"
+      :columns="tableStore.columns"
+      :table-ref="tableRef"
+      :config="wrapConfig"
     >
       <template #search>
         <qt-search-bar
-            :items="searchStore.items"
-            :params="tableStore.params"
-            :table-ref="tableRef"
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
         />
       </template>
 
       <template #actions-data>
         <el-button
-            type="primary"
-            plain
-            :disabled="!selectedIds.length"
-            @click="adoptBatch"
-            @mousedown="(e) => e.preventDefault()"
+          type="primary"
+          plain
+          :disabled="!selectedIds.length"
+          @click="adoptBatch"
+          @mousedown="(e) => e.preventDefault()"
         >
           <template #icon>
-            <svg-icon icon-class="adopt"/>
+            <svg-icon icon-class="adopt" />
           </template>
           批量采纳
         </el-button>
         <el-button
-            type="danger"
-            icon="Delete"
-            plain
-            :loading="batchDeleteLoading"
-            :disabled="!selectedIds.length || deleting"
-            @click="remove()"
-            @mousedown="(e) => e.preventDefault()"
+          type="danger"
+          icon="Delete"
+          plain
+          :loading="batchDeleteLoading"
+          :disabled="!selectedIds.length || deleting"
+          @click="remove()"
+          @mousedown="(e) => e.preventDefault()"
         >
           批量删除
         </el-button>
-        <el-button type="primary" plain @click="toggleExpandAll">
-          <svg-icon :icon-class="isExpandAll ? 'toggle' : 'expand'"/>
-          <span>{{
-              isExpandAll ? "折叠" : "展开"
-            }}</span>
+        <el-button
+          type="primary"
+          plain
+          @click="toggleExpandAll"
+          class="toggle-expand-all"
+        >
+          <svg-icon :icon-class="isExpandAll ? 'toggle' : 'expand'" />
+          <span>{{ isExpandAll ? "折叠" : "展开" }}</span>
         </el-button>
       </template>
 
       <qt-table v-if="refreshTable" v-bind="tableStore" ref="tableRef">
-        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
-        <template #text="{ row, column_data }">{{
-            row[column_data.prop] ?? "-"
-          }}
+        <!-- 纯文本列沿用统一 text 插槽渲染；null 占位符由 QtTable 统一输出，这里只补空字符串场景，避免叠成两个短横线。 -->
+        <template #text="{ row, column_data }"
+          >{{ row[column_data.prop] === "" ? "-" : row[column_data.prop] }}
         </template>
-        <!-- 描述与外部对象类型一致，空值统一展示为短横线。 -->
-        <template #description="{ row }">{{
-            row.description?.trim() || "-"
-          }}
+        <!-- 描述与外部对象类型一致，空值统一展示为短横线；null 占位符由 QtTable 统一输出，避免叠成两个短横线。 -->
+        <template #description="{ row }"
+          >{{ row.description?.trim() === "" ? "-" : row.description?.trim() }}
         </template>
         <!-- 创建时间与外部对象类型一致，格式到分钟。 -->
-        <template #createTime="{ row }">{{
-            proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-          }}
+        <template #createTime="{ row }"
+          >{{ proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
           <div class="flex-column overflow-hidden">
             <span class="text-ellipsis" :title="row.createBy || ''">{{
-                row.createBy || "-"
-              }}</span>
+              row.createBy || "-"
+            }}</span>
             <span v-if="creatorPhones[row.creatorId]" class="desc-text">{{
-                creatorPhones[row.creatorId]
-              }}</span>
+              creatorPhones[row.creatorId]
+            }}</span>
           </div>
         </template>
         <template #adoptStatus="{ row }">
-          <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus"/>
+          <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus" />
         </template>
         <template #handle="{ row }">
           <el-button
-              link
-              type="primary"
-              :disabled="row.adoptStatus === 1"
-              @click="adoptOne(row)"
+            link
+            type="primary"
+            :disabled="row.adoptStatus === 1"
+            @click="adoptOne(row)"
           >
             <template #icon>
-              <svg-icon icon-class="adopt"/>
+              <svg-icon icon-class="adopt" />
             </template>
             采纳
           </el-button>
           <el-button
-              link
-              type="primary"
-              icon="Document"
-              @click="showEvidence(row)"
-          >来源
-          </el-button
-          >
+            link
+            type="primary"
+            icon="Document"
+            @click="showEvidence(row)"
+            >来源
+          </el-button>
           <el-popover
-              placement="bottom"
-              :width="107"
-              popper-class="handle-popover"
-              trigger="click"
+            placement="bottom"
+            :width="150"
+            popper-class="handle-popover"
+            trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
+            <div class="task-action-list">
+              <el-button
                 link
                 type="primary"
                 icon="View"
                 @click="showDetail(row)"
-            >详情
-            </el-button
-            >
-            <el-button
+                >详情
+              </el-button>
+              <el-button
                 link
                 type="primary"
                 icon="Edit"
                 :disabled="row.adoptStatus === 1"
                 @click="edit(row)"
-            >修改
-            </el-button
-            >
-            <el-button
+                >修改
+              </el-button>
+              <el-button
                 link
                 type="danger"
                 icon="Delete"
                 :loading="deleteLoading[row.id]"
                 :disabled="deleting"
                 @click="remove(row)"
-            >删除
-            </el-button
-            >
+                >删除
+              </el-button>
+            </div>
           </el-popover>
         </template>
       </qt-table>
     </qt-wrap>
 
     <el-dialog
-        v-model="open"
-        title="修改对象类型"
-        width="1100px"
-        :append-to="pageRef"
-        :close-on-click-modal="false"
-        draggable
-        destroy-on-close
+      v-model="open"
+      title="修改对象类型"
+      width="1100px"
+      :append-to="pageRef"
+      :close-on-click-modal="false"
+      draggable
+      destroy-on-close
     >
       <guide-tip-panel
-          type="hint"
-          class="mb15"
-          allow-wrap
-          title="定义业务对象及其层级结构，维护对象类型名称、描述和关联建模目标，为后续属性与关系建模提供基础。"
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="定义业务对象及其层级结构，维护对象类型名称、描述和关联建模目标，为后续属性与关系建模提供基础。"
       />
       <el-form
-          ref="formRef"
-          :model="form"
-          :rules="rules"
-          label-width="120px"
-          class="column-form"
-          @submit.prevent="save"
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="120px"
+        class="column-form"
+        @submit.prevent="save"
       >
         <div class="h2-titles row-full">基础信息</div>
         <qt-form-item
-            v-if="!editingRoot"
-            class="row-full"
-            label="上级对象类型"
-            prop="parentCandidateId"
+          v-if="!editingRoot"
+          class="row-full"
+          label="上级对象类型"
+          prop="parentCandidateId"
         >
           <el-tree-select
-              v-model="form.parentCandidateId"
-              :data="parentOptions"
-              :props="{ label: 'name', value: 'id', children: 'children' }"
-              value-key="id"
-              placeholder="请选择上级对象类型，留空则为顶级对象类型"
-              check-strictly
-              clearable
-              style="width: 100%"
+            v-model="form.parentCandidateId"
+            :data="parentOptions"
+            :props="{ label: 'name', value: 'id', children: 'children' }"
+            value-key="id"
+            placeholder="请选择上级对象类型，留空则为顶级对象类型"
+            check-strictly
+            clearable
+            style="width: 100%"
           />
         </qt-form-item>
-        <qt-form-item
-            class="row-full"
-            label="对象类型名称"
-            prop="name"
-        >
+        <qt-form-item class="row-full" label="对象类型名称" prop="name">
           <div class="name-input">
             <el-input
-                v-model="form.name"
-                :maxlength="128"
-                placeholder="请输入对象类型名称"
+              v-model="form.name"
+              :maxlength="128"
+              placeholder="请输入对象类型名称"
             />
             <el-button type="primary" @click="termPickerOpen = true"
-            >从术语表中选择
-            </el-button
-            >
+              >从术语表中选择
+            </el-button>
           </div>
         </qt-form-item>
-        <qt-form-item
-            class="row-full"
-            label="显示顺序"
-            prop="orderNum"
-        >
+        <qt-form-item class="row-full" label="显示顺序" prop="orderNum">
           <el-input-number
-              v-model="form.orderNum"
-              :min="0"
-              :max="2147483647"
-              :precision="0"
-              controls-position="right"
-              style="width: 100%"
+            v-model="form.orderNum"
+            :min="0"
+            :max="2147483647"
+            :precision="0"
+            controls-position="right"
+            style="width: 100%"
           />
         </qt-form-item>
-        <qt-form-item
-            class="row-full"
-            label="描述"
-            prop="description"
-        >
+        <qt-form-item class="row-full" label="描述" prop="description">
           <el-input
-              v-model="form.description"
-              class="character-count"
-              type="textarea"
-              :rows="4"
-              maxlength="256个字符"
-              show-word-limit
-              placeholder="请输入对象类型描述，说明业务含义、职责和适用范围"
+            v-model="form.description"
+            class="character-count"
+            type="textarea"
+            :rows="4"
+            maxlength="256个字符"
+            show-word-limit
+            placeholder="请输入对象类型描述，说明业务含义、职责和适用范围"
           />
         </qt-form-item>
         <div class="row-full">
@@ -246,140 +231,129 @@
             <el-form-item prop="targetIds" label-width="0">
               <el-button type="primary" plain @click="targetPickerOpen = true">
                 <el-icon class="mr5">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-                    <path fill="currentColor"
-                          d="M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-578.304V704h-64V247.296L237.248 490.048 192 444.8 508.8 128l316.8 316.8-45.312 45.248z"></path>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 1024 1024"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M160 832h704a32 32 0 1 1 0 64H160a32 32 0 1 1 0-64m384-578.304V704h-64V247.296L237.248 490.048 192 444.8 508.8 128l316.8 316.8-45.312 45.248z"
+                    ></path>
                   </svg>
                 </el-icon>
                 导入建模目标
               </el-button>
-              <span class="desc-text ml10">点击导入建模目标，选中结果将在下方列表中回显。</span>
+              <span class="desc-text ml10"
+                >点击导入建模目标，选中结果将在下方列表中回显。</span
+              >
             </el-form-item>
           </div>
           <TargetTable
-              :targets="selectedTargets"
-              editable
-              @remove="removeTarget"
+            :targets="selectedTargets"
+            editable
+            @remove="removeTarget"
           />
         </div>
       </el-form>
-      <template #footer
-      >
+      <template #footer>
         <div class="dialog-footer">
-          <el-button @click="open = false">取 消
-          </el-button
-          >
+          <el-button @click="open = false">取 消 </el-button>
           <el-button type="primary" @click="save">确 定</el-button>
         </div>
-      </template
-      >
+      </template>
     </el-dialog>
     <CandidateTargetPicker
-        v-model="targetPickerOpen"
-        :task-id="taskId"
-        :selected-targets="selectedTargets"
-        :append-to="pageRef"
-        @confirm="addTargets"
+      v-model="targetPickerOpen"
+      :task-id="taskId"
+      :selected-targets="selectedTargets"
+      :append-to="pageRef"
+      @confirm="addTargets"
     />
     <CandidateTermPicker
-        v-model="termPickerOpen"
-        :task-id="taskId"
-        :append-to="pageRef"
-        @confirm="applyTerm"
+      v-model="termPickerOpen"
+      :task-id="taskId"
+      :append-to="pageRef"
+      @confirm="applyTerm"
     />
     <el-dialog
-        v-model="detailOpen"
-        title="对象类型详情"
-        width="800px"
-        :append-to="pageRef"
-        draggable
+      v-model="detailOpen"
+      title="对象类型详情"
+      width="800px"
+      :append-to="pageRef"
+      draggable
     >
-      <el-form label-width="110px"
-      >
-        <el-form-item label="对象类型名称"
-        >
+      <el-form label-width="110px">
+        <el-form-item label="对象类型名称">
           <div class="form-readonly">
             {{ detail.name || "-" }}
           </div>
-        </el-form-item
-        >
-        <el-form-item v-if="hasParent(detail)" label="上级对象类型"
-        >
+        </el-form-item>
+        <el-form-item v-if="hasParent(detail)" label="上级对象类型">
           <div class="form-readonly">
             {{ objectName(detail.parentCandidateId) }}
           </div>
-        </el-form-item
-        >
-        <el-form-item label="显示顺序"
-        >
+        </el-form-item>
+        <el-form-item label="显示顺序">
           <div class="form-readonly">
             {{ detail.orderNum ?? "-" }}
           </div>
-        </el-form-item
-        >
-        <el-form-item label="描述"
-        >
+        </el-form-item>
+        <el-form-item label="描述">
           <div class="form-readonly textarea">
             {{ detail.description || "-" }}
           </div>
-        </el-form-item
-        >
-        <el-form-item label="创建人"
-        >
+        </el-form-item>
+        <el-form-item label="创建人">
           <div class="form-readonly">
             {{ detail.createBy || "-" }}
           </div>
-        </el-form-item
-        >
-        <el-form-item label="联系方式"
-        >
+        </el-form-item>
+        <el-form-item label="联系方式">
           <div class="form-readonly">
             {{
-              (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-"
+              detail.creatorId != null &&
+              creatorPhones[String(detail.creatorId)]
+                ? creatorPhones[String(detail.creatorId)]
+                : "-"
             }}
           </div>
-        </el-form-item
-        >
-        <el-form-item label="创建时间"
-        >
+        </el-form-item>
+        <el-form-item label="创建时间">
           <div class="form-readonly">
-            {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+            {{
+              proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+            }}
           </div>
-        </el-form-item
-        >
-      </el-form
-      >
-      <template #footer
-      >
+        </el-form-item>
+      </el-form>
+      <template #footer>
         <el-button @click="detailOpen = false">关 闭</el-button>
-      </template
-      >
-    </el-dialog
-    >
-    <CandidateEvidenceDrawer v-model="evidenceVisible" :evidences="evidences"/>
+      </template>
+    </el-dialog>
+    <CandidateEvidenceDrawer v-model="evidenceVisible" :evidences="evidences" />
   </div>
 </template>
 <script setup>
-import {computed, getCurrentInstance, nextTick, ref} from "vue";
+import { computed, getCurrentInstance, nextTick, ref } from "vue";
 import {
   getCandidateTargets,
   listCandidates,
   saveCandidateTargets,
   updateCandidate,
 } from "@/api/om/aiModeling";
-import {useCreatorPhones} from "@/utils/useCreatorPhones";
+import { useCreatorPhones } from "@/utils/useCreatorPhones";
 import TargetTable from "@/views/om/om/object/type/TargetTable.vue";
 import CandidateTargetPicker from "@/views/om/aiModeling/components/CandidateTargetPicker.vue";
 import CandidateTermPicker from "@/views/om/aiModeling/components/CandidateTermPicker.vue";
 import CandidateEvidenceDrawer from "@/views/om/aiModeling/components/CandidateEvidenceDrawer.vue";
-import {useCandidateTab} from "@/views/om/aiModeling/tabs/useCandidateTab";
+import { useCandidateTab } from "@/views/om/aiModeling/tabs/useCandidateTab";
 
-const props = defineProps({taskId: {type: Number, required: true}});
-const {proxy} = getCurrentInstance();
-const {om_ai_adopt_status} = proxy.useDict("om_ai_adopt_status");
+const props = defineProps({ taskId: { type: Number, required: true } });
+const { proxy } = getCurrentInstance();
+const { om_ai_adopt_status } = proxy.useDict("om_ai_adopt_status");
 const pageRef = ref();
 const formRef = ref();
-const {creatorPhones} = useCreatorPhones();
+const { creatorPhones } = useCreatorPhones();
 const open = ref(false);
 const detailOpen = ref(false);
 const targetPickerOpen = ref(false);
@@ -417,8 +391,12 @@ const {
 // 候选列表搜索：字段与接口契约一致，查询和重置由 QtSearchBar 回到第一页。
 const searchStore = reactive({
   items: [
-    {label: "对象类型名称", prop: "name", component: {is: "input"}},
-    {label: "采纳状态", prop: "adoptStatus", component: {is: "select", options: om_ai_adopt_status}},
+    { label: "对象类型名称", prop: "name", component: { is: "input" } },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
   ],
 });
 
@@ -457,7 +435,7 @@ function formatData(data) {
  */
 function buildTree(items) {
   const nodes = new Map(
-      items.map((item) => [String(item.id), {...item, children: []}])
+    items.map((item) => [String(item.id), { ...item, children: [] }])
   );
   const roots = [];
   for (const node of nodes.values()) {
@@ -470,7 +448,7 @@ function buildTree(items) {
 
 // 表格配置：对象类型为树形结构，关闭分页并一次性取全量后本地组树。
 const tableStore = reactive({
-  params: {name: null, adoptStatus: null},
+  params: { name: null, adoptStatus: null },
   config: {
     sort: true,
     notPagination: true,
@@ -478,12 +456,12 @@ const tableStore = reactive({
       rowKey: "id",
       stripe: true,
       defaultExpandAll: true,
-      treeProps: {children: "children"},
-      defaultSort: {prop: "createTime", order: "descending"},
+      treeProps: { children: "children" },
+      defaultSort: { prop: "createTime", order: "descending" },
       onSelectionChange: handleSelectionChange,
     },
   },
-  events: {formatData},
+  events: { formatData },
   columns: [
     {
       type: "selection",
@@ -501,7 +479,7 @@ const tableStore = reactive({
       minWidth: 250,
       align: "left",
       fixed: "left",
-      showOverflowTooltip: {effect: "light"},
+      showOverflowTooltip: { effect: "light" },
     },
     {
       label: "描述",
@@ -509,7 +487,7 @@ const tableStore = reactive({
       slot: "description",
       minWidth: 260,
       align: "left",
-      showOverflowTooltip: {effect: "light"},
+      showOverflowTooltip: { effect: "light" },
     },
     {
       label: "显示顺序",
@@ -560,16 +538,21 @@ const tableStore = reactive({
 });
 
 const parentOptions = computed(() =>
-    buildTree(objectRows.value.filter((item) => item.id !== form.value.id))
+  buildTree(objectRows.value.filter((item) => item.id !== form.value.id))
 );
 const rules = {
   name: [
-    {required: true, whitespace: true, message: "对象类型名称不能为空", trigger: "blur"},
-    {max: 128, message: "名称不能超过128个字符", trigger: "blur"},
+    {
+      required: true,
+      whitespace: true,
+      message: "对象类型名称不能为空",
+      trigger: "blur",
+    },
+    { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
   ],
-  orderNum: [{required: true, message: "显示顺序不能为空", trigger: "blur"}],
+  orderNum: [{ required: true, message: "显示顺序不能为空", trigger: "blur" }],
   description: [
-    {max: 256, message: "描述不能超过256个字符", trigger: "blur"},
+    { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
   ],
   targetIds: [
     {
@@ -582,9 +565,9 @@ const rules = {
   ],
 };
 const objectName = (id) =>
-    objectRows.value.find((item) => item.id === id)?.name || "-";
+  objectRows.value.find((item) => item.id === id)?.name || "-";
 const hasParent = (row) =>
-    row.parentCandidateId != null && String(row.parentCandidateId) !== "0";
+  row.parentCandidateId != null && String(row.parentCandidateId) !== "0";
 
 /** 展开或折叠全部树节点：切换 defaultExpandAll 后重建表格使状态生效（与对象类型管理页一致）。 */
 async function toggleExpandAll() {
@@ -603,7 +586,7 @@ function addTargets(targets) {
 
 function removeTarget(row) {
   selectedTargets.value = selectedTargets.value.filter(
-      (item) => String(item.id) !== String(row.id)
+    (item) => String(item.id) !== String(row.id)
   );
   form.value.targetIds = selectedTargets.value.map((item) => item.id);
 }
@@ -614,9 +597,9 @@ function applyTerm(term) {
 }
 
 async function edit(row) {
-  form.value = {...row, orderNum: row.orderNum ?? 0, targetIds: []};
+  form.value = { ...row, orderNum: row.orderNum ?? 0, targetIds: [] };
   editingRoot.value =
-      row.parentCandidateId == null || String(row.parentCandidateId) === "0";
+    row.parentCandidateId == null || String(row.parentCandidateId) === "0";
   const response = await getCandidateTargets("object", row.id);
   selectedTargets.value = response.data || [];
   form.value.targetIds = selectedTargets.value.map((item) => item.id);
@@ -646,6 +629,11 @@ async function save() {
 </script>
 
 <style scoped lang="scss">
+.toggle-expand-all .svg-icon {
+  font-size: 12px;
+  margin-right: 6px;
+}
+
 /* 与建模目标详情一致：嵌入页签的搜索区不重复添加容器内边距。 */
 .candidate-tab-page :deep(.qt-wrap--search) {
   padding: 0;

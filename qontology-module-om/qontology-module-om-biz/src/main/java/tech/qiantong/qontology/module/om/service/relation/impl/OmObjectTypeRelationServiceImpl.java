@@ -289,6 +289,9 @@ public class OmObjectTypeRelationServiceImpl
         if (reversible == 1 && reverseName.isEmpty()) {
             throw new ServiceException("可逆关系的反向名称不能为空", 601);
         }
+        if (reversible == 0) {
+            reverseName = "";
+        }
         requireType(request.getStartTypeId(), request.getWorkspaceId(), request.getVersionId());
         requireType(request.getEndTypeId(), request.getWorkspaceId(), request.getVersionId());
         QueryWrapper<OmObjectTypeRelationDO> duplicate = new QueryWrapper<OmObjectTypeRelationDO>()

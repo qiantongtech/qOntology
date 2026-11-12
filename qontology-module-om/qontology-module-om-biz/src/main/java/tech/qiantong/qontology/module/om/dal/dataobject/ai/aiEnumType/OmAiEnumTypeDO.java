@@ -50,6 +50,8 @@ public class OmAiEnumTypeDO extends BaseEntity {
     /** 枚举类型。 */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String enumType;
+    /** 描述。 */
+    private String description;
     /** 状态。 */
     private String status;
     /** 采纳状态：0待采纳 1已采纳 2采纳失败。 */

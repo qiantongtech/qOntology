@@ -48,6 +48,9 @@ public class OmAiEnumDataSaveReqVO {
     @NotBlank(message = "枚举键值不能为空")
     @Size(max = 128, message = "枚举键值长度不能超过128个字符")
     private String enumValue;
+    @Schema(description = "描述")
+    @Size(max = 512, message = "描述长度不能超过512个字符")
+    private String description;
     @Schema(description = "状态")
     private String status;
     @Schema(description = "备注")

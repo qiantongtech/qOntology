@@ -57,9 +57,9 @@
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
-        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <!-- 纯文本列沿用统一 text 插槽渲染；null 占位符由 QtTable 统一输出，这里只补空字符串场景，避免叠成两个短横线。 -->
         <template #text="{ row, column_data }">{{
-          row[column_data.prop] ?? "-"
+          row[column_data.prop] === "" ? "-" : row[column_data.prop]
         }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -87,7 +87,7 @@
             type="primary"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >
+          >
             <template #icon>
               <svg-icon icon-class="adopt" />
             </template>
@@ -102,37 +102,39 @@
           >
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              link
-              type="primary"
-              icon="View"
-              @click="openForm(row, true)"
-              >详情</el-button
-            >
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.adoptStatus === 1"
-              @click="openForm(row, false)"
-              >修改</el-button
-            >
-            <el-button
-              link
-              type="danger"
-              icon="Delete"
-              :loading="deleteLoading[row.id]"
-              :disabled="deleting"
-              @click="remove(row)"
-              >删除</el-button
-            >
+            <div class="task-action-list">
+              <el-button
+                link
+                type="primary"
+                icon="View"
+                @click="openForm(row, true)"
+                >详情</el-button
+              >
+              <el-button
+                link
+                type="primary"
+                icon="Edit"
+                :disabled="row.adoptStatus === 1"
+                @click="openForm(row, false)"
+                >修改</el-button
+              >
+              <el-button
+                link
+                type="danger"
+                icon="Delete"
+                :loading="deleteLoading[row.id]"
+                :disabled="deleting"
+                @click="remove(row)"
+                >删除</el-button
+              >
+            </div>
           </el-popover>
         </template>
       </qt-table>
@@ -156,13 +158,33 @@
       <!-- 详情弹窗只读风格 -->
       <el-form v-if="readonly" label-width="120px" class="rule-form">
         <div class="h2-title">基本信息</div>
-        <el-form-item v-for="field in basicDetailFields" :key="field.label" :label="field.label">
-          <dict-tag v-if="field.dictOptions" :options="field.dictOptions" :value="field.dictValue" />
-          <div v-else class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+        <el-form-item
+          v-for="field in basicDetailFields"
+          :key="field.label"
+          :label="field.label"
+        >
+          <dict-tag
+            v-if="field.dictOptions"
+            :options="field.dictOptions"
+            :value="field.dictValue"
+          />
+          <div
+            v-else
+            class="form-readonly"
+            :class="{ textarea: field.multiline }"
+          >
+            {{ field.value || "-" }}
+          </div>
         </el-form-item>
         <div class="h2-title">执行条件</div>
-        <el-form-item v-for="field in conditionDetailFields" :key="field.label" :label="field.label">
-          <div class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+        <el-form-item
+          v-for="field in conditionDetailFields"
+          :key="field.label"
+          :label="field.label"
+        >
+          <div class="form-readonly" :class="{ textarea: field.multiline }">
+            {{ field.value || "-" }}
+          </div>
         </el-form-item>
       </el-form>
       <!-- 修改弹窗可编辑风格 -->
@@ -182,8 +204,12 @@
             maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item label="类型" prop="type" required >
-          <el-select v-model="form.type" placeholder="请选择类型" @change="handleTypeChange">
+        <qt-form-item label="类型" prop="type" required>
+          <el-select
+            v-model="form.type"
+            placeholder="请选择类型"
+            @change="handleTypeChange"
+          >
             <el-option
               v-for="i in om_data_rule_type"
               :key="i.value"
@@ -192,14 +218,17 @@
             />
           </el-select>
         </qt-form-item>
-        <qt-form-item label="级别" prop="level" required >
+        <qt-form-item label="级别" prop="level" required>
           <el-radio-group v-model="form.level">
-            <el-radio v-for="i in om_rule_level" :key="i.value" :value="i.value">{{
-              i.label
-            }}</el-radio>
+            <el-radio
+              v-for="i in om_rule_level"
+              :key="i.value"
+              :value="i.value"
+              >{{ i.label }}</el-radio
+            >
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="描述" prop="description" >
+        <qt-form-item label="描述" prop="description">
           <el-input
             v-model="form.description"
             class="character-count"
@@ -211,15 +240,19 @@
           />
         </qt-form-item>
         <div class="h2-title">执行条件</div>
-        <qt-form-item label="条件关系" prop="conditionRelation" required >
+        <qt-form-item label="条件关系" prop="conditionRelation" required>
           <el-radio-group v-model="form.conditionRelation">
             <el-radio value="OR">任一满足（OR）</el-radio>
             <el-radio value="AND">全部满足（AND）</el-radio>
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="失败条件" required >
+        <qt-form-item label="失败条件" required>
           <div class="conditions">
-            <div v-for="(condition, index) in form.conditionItems" :key="condition.key" class="condition-row">
+            <div
+              v-for="(condition, index) in form.conditionItems"
+              :key="condition.key"
+              class="condition-row"
+            >
               <div class="condition-label">条件 {{ index + 1 }}：</div>
               <div class="condition-fields">
                 <el-tree-select
@@ -242,28 +275,79 @@
                   class="condition-attribute"
                   @change="condition.value = ''"
                 >
-                  <el-option v-for="item in getConditionAttributes(condition)" :key="item.id" :label="item.name" :value="item.id" />
+                  <el-option
+                    v-for="item in getConditionAttributes(condition)"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  />
                 </el-select>
-                <span v-if="form.type === 'REQUIRED'" class="condition-operator">为空</span>
+                <span v-if="form.type === 'REQUIRED'" class="condition-operator"
+                  >为空</span
+                >
                 <template v-else>
-                  <el-select v-if="form.type === 'RANGE'" v-model="condition.operator" class="condition-comparison">
-                    <el-option v-for="item in om_rule_operator" :key="item.value" :label="item.label" :value="item.value" />
+                  <el-select
+                    v-if="form.type === 'RANGE'"
+                    v-model="condition.operator"
+                    class="condition-comparison"
+                  >
+                    <el-option
+                      v-for="item in om_rule_operator"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
                   </el-select>
-                  <span v-else class="condition-operator">{{ conditionOperatorLabel }}</span>
-                  <el-select v-if="form.type === 'FORMAT'" v-model="condition.value" placeholder="请选择日期格式" class="condition-value" clearable>
-                    <el-option v-for="format in dateFormatOptions" :key="format" :label="format" :value="format" />
+                  <span v-else class="condition-operator">{{
+                    conditionOperatorLabel
+                  }}</span>
+                  <el-select
+                    v-if="form.type === 'FORMAT'"
+                    v-model="condition.value"
+                    placeholder="请选择日期格式"
+                    class="condition-value"
+                    clearable
+                  >
+                    <el-option
+                      v-for="format in dateFormatOptions"
+                      :key="format"
+                      :label="format"
+                      :value="format"
+                    />
                   </el-select>
-                  <el-input v-else v-model="condition.value" :placeholder="conditionValuePlaceholder" class="condition-value" />
+                  <el-input
+                    v-else
+                    v-model="condition.value"
+                    :placeholder="conditionValuePlaceholder"
+                    class="condition-value"
+                  />
                 </template>
               </div>
               <div class="condition-actions">
-                <el-button link type="danger" icon="Delete" :disabled="form.conditionItems.length === 1" @click="removeCondition(index)" />
-                <el-button v-if="index === form.conditionItems.length - 1" link type="primary" icon="Plus" @click="addCondition">添加条件</el-button>
+                <el-button
+                  link
+                  type="danger"
+                  icon="Delete"
+                  :disabled="form.conditionItems.length === 1"
+                  @click="removeCondition(index)"
+                />
+                <el-button
+                  v-if="index === form.conditionItems.length - 1"
+                  link
+                  type="primary"
+                  icon="Plus"
+                  @click="addCondition"
+                  >添加条件</el-button
+                >
               </div>
             </div>
           </div>
         </qt-form-item>
-        <qt-form-item label="失败提示" prop="failureMessage" tip="校验失败时向用户展示的提示文案。">
+        <qt-form-item
+          label="失败提示"
+          prop="failureMessage"
+          tip="校验失败时向用户展示的提示文案。"
+        >
           <el-input
             v-model="form.failureMessage"
             placeholder="请输入失败提示"
@@ -352,8 +436,16 @@ const {
 const searchStore = reactive({
   items: [
     { label: "规则名称", prop: "name", component: { is: "input" } },
-    { label: "规则类型", prop: "type", component: { is: "select", options: om_data_rule_type } },
-    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+    {
+      label: "规则类型",
+      prop: "type",
+      component: { is: "select", options: om_data_rule_type },
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
   ],
 });
 
@@ -386,8 +478,8 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       fixed: "left",
       sortable: "custom",
@@ -465,42 +557,95 @@ const tableStore = reactive({
 });
 
 const treeProps = { label: "name", value: "id", children: "children" };
-const objectTree = computed(() => proxy.handleTree(objects.value.map((item) => ({ ...item })), "id", "parentCandidateId"));
-const dateFormatOptions = ["yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss", "yyyy/MM/dd", "yyyy年MM月dd日"];
-const attributePlaceholder = computed(() => form.value.type === "RANGE" ? "请选择整数或小数属性" : form.value.type === "FORMAT" ? "请选择日期属性" : "请选择属性");
-const conditionValuePlaceholder = computed(() => form.value.type === "ENUM" ? "请输入枚举值" : "条件值");
-const conditionOperatorLabel = computed(() => form.value.type === "ENUM" ? "不属于" : "不匹配");
+const objectTree = computed(() =>
+  proxy.handleTree(
+    objects.value.map((item) => ({ ...item })),
+    "id",
+    "parentCandidateId"
+  )
+);
+const dateFormatOptions = [
+  "yyyy-MM-dd",
+  "yyyy-MM-dd HH:mm:ss",
+  "yyyy/MM/dd",
+  "yyyy年MM月dd日",
+];
+const attributePlaceholder = computed(() =>
+  form.value.type === "RANGE"
+    ? "请选择整数或小数属性"
+    : form.value.type === "FORMAT"
+    ? "请选择日期属性"
+    : "请选择属性"
+);
+const conditionValuePlaceholder = computed(() =>
+  form.value.type === "ENUM" ? "请输入枚举值" : "条件值"
+);
+const conditionOperatorLabel = computed(() =>
+  form.value.type === "ENUM" ? "不属于" : "不匹配"
+);
 const rules = {
-  name: [{ required: true, whitespace: true, message: "数据规则名称不能为空", trigger: "blur" }],
+  name: [
+    {
+      required: true,
+      whitespace: true,
+      message: "数据规则名称不能为空",
+      trigger: "blur",
+    },
+  ],
   type: [{ required: true, message: "请选择类型", trigger: "change" }],
   level: [{ required: true, message: "请选择级别", trigger: "change" }],
-  conditionRelation: [{ required: true, message: "请选择条件关系", trigger: "change" }],
+  conditionRelation: [
+    { required: true, message: "请选择条件关系", trigger: "change" },
+  ],
 };
 function createCondition(source = {}) {
-  return { key: createRowKey(), objectCandidateId: source.objectCandidateId, attributeCandidateId: source.attributeCandidateId, operator: source.operator || "LT", value: source.value ?? "" };
+  return {
+    key: createRowKey(),
+    objectCandidateId: source.objectCandidateId,
+    attributeCandidateId: source.attributeCandidateId,
+    operator: source.operator || "LT",
+    value: source.value ?? "",
+  };
 }
 function getBasicTypeCode(attribute) {
-  if (Number(attribute.typeCategory) !== 2) return Number(attribute.basicTypeCode);
-  const businessType = businessTypes.value.find((item) => String(item.id) === String(attribute.businessTypeId) && item.businessTypeSource === (attribute.businessTypeSource || "GLOBAL"));
+  if (Number(attribute.typeCategory) !== 2)
+    return Number(attribute.basicTypeCode);
+  const businessType = businessTypes.value.find(
+    (item) =>
+      String(item.id) === String(attribute.businessTypeId) &&
+      item.businessTypeSource === (attribute.businessTypeSource || "GLOBAL")
+  );
   return businessType ? Number(businessType.dataType) : undefined;
 }
 function getConditionAttributes(condition) {
-  const options = attributes.value.filter((item) => item.objectCandidateId === condition.objectCandidateId);
-  if (form.value.type === "RANGE") return options.filter((item) => [1, 2].includes(getBasicTypeCode(item)));
-  if (form.value.type === "FORMAT") return options.filter((item) => getBasicTypeCode(item) === 4);
+  const options = attributes.value.filter(
+    (item) => item.objectCandidateId === condition.objectCandidateId
+  );
+  if (form.value.type === "RANGE")
+    return options.filter((item) => [1, 2].includes(getBasicTypeCode(item)));
+  if (form.value.type === "FORMAT")
+    return options.filter((item) => getBasicTypeCode(item) === 4);
   return options;
 }
 async function openForm(row, view) {
   readonly.value = view;
   const d = (await getCandidate("data_rule", row.id)).data;
   const conditions = JSON.parse(d.conditions || "[]");
-  form.value = { ...d, conditionItems: (conditions.length ? conditions : [{}]).map(createCondition) };
+  form.value = {
+    ...d,
+    conditionItems: (conditions.length ? conditions : [{}]).map(
+      createCondition
+    ),
+  };
   open.value = true;
 }
 async function save() {
   if (!(await formRef.value.validate().catch(() => false))) return;
   const validationMessage = validateConditions();
-  if (validationMessage) { proxy.$modal.msgWarning(validationMessage); return; }
+  if (validationMessage) {
+    proxy.$modal.msgWarning(validationMessage);
+    return;
+  }
   await updateCandidate("data_rule", {
     ...form.value,
     conditions: JSON.stringify(form.value.conditionItems),
@@ -511,10 +656,17 @@ async function save() {
 }
 async function loadBusinessTypes() {
   businessTypes.value = [];
-  await Promise.allSettled(["PROJECT", "GLOBAL"].map(async (source) => {
-    const response = await listAiAttributeBusinessTypes(props.taskId, source);
-    businessTypes.value.push(...(response.data || []).map((item) => ({ ...item, businessTypeSource: source })));
-  }));
+  await Promise.allSettled(
+    ["PROJECT", "GLOBAL"].map(async (source) => {
+      const response = await listAiAttributeBusinessTypes(props.taskId, source);
+      businessTypes.value.push(
+        ...(response.data || []).map((item) => ({
+          ...item,
+          businessTypeSource: source,
+        }))
+      );
+    })
+  );
 }
 function handleTypeChange() {
   form.value.conditionItems = [createCondition()];
@@ -524,15 +676,30 @@ function handleConditionObjectChange(condition) {
   condition.attributeCandidateId = undefined;
   condition.value = "";
 }
-function addCondition() { form.value.conditionItems.push(createCondition()); }
-function removeCondition(index) { if (form.value.conditionItems.length > 1) form.value.conditionItems.splice(index, 1); }
+function addCondition() {
+  form.value.conditionItems.push(createCondition());
+}
+function removeCondition(index) {
+  if (form.value.conditionItems.length > 1)
+    form.value.conditionItems.splice(index, 1);
+}
 function validateConditions() {
   for (const [index, condition] of form.value.conditionItems.entries()) {
     const prefix = `第 ${index + 1} 条失败条件：`;
-    if (!condition.objectCandidateId || !condition.attributeCandidateId) return prefix + "请选择对象类型和属性";
-    if (form.value.type === "RANGE" && (!condition.operator || String(condition.value).trim() === "")) return prefix + "请选择比较符并填写数值";
-    if (form.value.type === "FORMAT" && !dateFormatOptions.includes(condition.value)) return prefix + "请选择日期格式";
-    if (form.value.type === "ENUM" && !String(condition.value).trim()) return prefix + "请输入枚举值";
+    if (!condition.objectCandidateId || !condition.attributeCandidateId)
+      return prefix + "请选择对象类型和属性";
+    if (
+      form.value.type === "RANGE" &&
+      (!condition.operator || String(condition.value).trim() === "")
+    )
+      return prefix + "请选择比较符并填写数值";
+    if (
+      form.value.type === "FORMAT" &&
+      !dateFormatOptions.includes(condition.value)
+    )
+      return prefix + "请选择日期格式";
+    if (form.value.type === "ENUM" && !String(condition.value).trim())
+      return prefix + "请输入枚举值";
   }
   return "";
 }
@@ -541,51 +708,92 @@ function validateConditions() {
  * 按规则类型返回条件比较符文案。
  */
 function conditionOperator(type, operator) {
-  if (type === 'REQUIRED') return '为空';
-  if (type === 'ENUM') return '不属于';
-  if (type === 'FORMAT') return '不匹配';
+  if (type === "REQUIRED") return "为空";
+  if (type === "ENUM") return "不属于";
+  if (type === "FORMAT") return "不匹配";
   return proxy.selectDictLabel(om_rule_operator.value, operator);
 }
 
 /** 将条件关系字典值转为展示文案。 */
 function conditionRelationLabel(value) {
-  return {OR: '任一满足（OR）', AND: '全部满足（AND）'}[value] || '';
+  return { OR: "任一满足（OR）", AND: "全部满足（AND）" }[value] || "";
 }
 
 /**
  * 将失败条件拼为“条件N：操作 值”的多行文本。
  */
 function detailConditions(record) {
-  return (record.conditionItems || []).map((condition, index) => {
-    const operator = conditionOperator(record.type, condition.operator);
-    const value = record.type === 'REQUIRED' || !condition.value ? '' : ` ${condition.value}`;
-    const obj = objects.value.find((item) => item.id === condition.objectCandidateId)?.name || condition.objectCandidateId || '';
-    const attr = attributes.value.find((item) => item.id === condition.attributeCandidateId)?.name || condition.attributeCandidateId || '';
-    return `条件 ${index + 1}：${obj} - ${attr} ${operator}${value}`;
-  }).join('\n');
+  return (record.conditionItems || [])
+    .map((condition, index) => {
+      const operator = conditionOperator(record.type, condition.operator);
+      const value =
+        record.type === "REQUIRED" || !condition.value
+          ? ""
+          : ` ${condition.value}`;
+      const obj =
+        objects.value.find((item) => item.id === condition.objectCandidateId)
+          ?.name ||
+        condition.objectCandidateId ||
+        "";
+      const attr =
+        attributes.value.find(
+          (item) => item.id === condition.attributeCandidateId
+        )?.name ||
+        condition.attributeCandidateId ||
+        "";
+      return `条件 ${index + 1}：${obj} - ${attr} ${operator}${value}`;
+    })
+    .join("\n");
 }
 
 // 详情弹窗展示字段
 const basicDetailFields = computed(() => [
-  {label: '规则名称', value: form.value.name},
-  {label: '规则类型', value: proxy.selectDictLabel(om_data_rule_type.value, form.value.type), dictOptions: om_data_rule_type.value, dictValue: form.value.type},
-  {label: '级别', value: proxy.selectDictLabel(om_rule_level.value, form.value.level), dictOptions: om_rule_level.value, dictValue: form.value.level},
-  {label: '描述', value: form.value.description, multiline: true},
-  {label: '创建人', value: form.value.createBy || '-'},
-  {label: '联系方式', value: creatorPhones.value[form.value.creatorId] || '-'},
-  {label: '创建时间', value: proxy.parseTime(form.value.createTime, '{y}-{m}-{d} {h}:{i}')}
+  { label: "规则名称", value: form.value.name },
+  {
+    label: "规则类型",
+    value: proxy.selectDictLabel(om_data_rule_type.value, form.value.type),
+    dictOptions: om_data_rule_type.value,
+    dictValue: form.value.type,
+  },
+  {
+    label: "级别",
+    value: proxy.selectDictLabel(om_rule_level.value, form.value.level),
+    dictOptions: om_rule_level.value,
+    dictValue: form.value.level,
+  },
+  { label: "描述", value: form.value.description, multiline: true },
+  { label: "创建人", value: form.value.createBy || "-" },
+  {
+    label: "联系方式",
+    value: creatorPhones.value[form.value.creatorId] || "-",
+  },
+  {
+    label: "创建时间",
+    value: proxy.parseTime(form.value.createTime, "{y}-{m}-{d} {h}:{i}"),
+  },
 ]);
 const conditionDetailFields = computed(() => [
-  {label: '条件关系', value: conditionRelationLabel(form.value.conditionRelation)},
-  {label: '失败条件', value: detailConditions(form.value), multiline: true},
-  {label: '失败提示', value: form.value.failureMessage}
+  {
+    label: "条件关系",
+    value: conditionRelationLabel(form.value.conditionRelation),
+  },
+  { label: "失败条件", value: detailConditions(form.value), multiline: true },
+  { label: "失败提示", value: form.value.failureMessage },
 ]);
 
 /** 加载对象、属性与业务类型候选，供数据规则弹窗的条件构建器使用。 */
 async function loadSupportData() {
   const [o, a] = await Promise.all([
-    listCandidates("object", { taskId: props.taskId, pageNum: 1, pageSize: 1000 }),
-    listCandidates("attribute", { taskId: props.taskId, pageNum: 1, pageSize: 1000 }),
+    listCandidates("object", {
+      taskId: props.taskId,
+      pageNum: 1,
+      pageSize: 1000,
+    }),
+    listCandidates("attribute", {
+      taskId: props.taskId,
+      pageNum: 1,
+      pageSize: 1000,
+    }),
   ]);
   objects.value = o.data?.rows || [];
   attributes.value = a.data?.rows || [];
@@ -650,13 +858,52 @@ loadSupportData();
   border: 1px solid #d9e2ff;
   border-radius: 4px;
 }
-.condition-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.condition-label { flex: 0 0 62px; }
-.condition-label, .condition-operator { color: #606266; font-size: 14px; line-height: 32px; white-space: nowrap; }
-.condition-fields { display: flex; align-items: center; flex: 1 1 330px; min-width: 0; gap: 10px; flex-wrap: wrap; }
-.condition-fields > .condition-object, .condition-fields > .condition-attribute { flex: 1 1 140px; width: auto; min-width: 0; }
-.condition-fields > .condition-comparison { flex: 0 1 110px; width: 110px; min-width: 90px; }
-.condition-fields > .condition-value { flex: 1 1 180px; min-width: 0; }
-.condition-actions { display: flex; align-items: center; flex: 0 0 120px; gap: 12px; }
-.condition-actions .el-button + .el-button { margin-left: 0; }
+.condition-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.condition-label {
+  flex: 0 0 62px;
+}
+.condition-label,
+.condition-operator {
+  color: #606266;
+  font-size: 14px;
+  line-height: 32px;
+  white-space: nowrap;
+}
+.condition-fields {
+  display: flex;
+  align-items: center;
+  flex: 1 1 330px;
+  min-width: 0;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.condition-fields > .condition-object,
+.condition-fields > .condition-attribute {
+  flex: 1 1 140px;
+  width: auto;
+  min-width: 0;
+}
+.condition-fields > .condition-comparison {
+  flex: 0 1 110px;
+  width: 110px;
+  min-width: 90px;
+}
+.condition-fields > .condition-value {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.condition-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 120px;
+  gap: 12px;
+}
+.condition-actions .el-button + .el-button {
+  margin-left: 0;
+}
 </style>

@@ -57,9 +57,9 @@
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
-        <!-- 纯文本列沿用统一 text 插槽渲染。 -->
+        <!-- 纯文本列沿用统一 text 插槽渲染；null 占位符由 QtTable 统一输出，这里只补空字符串场景，避免叠成两个短横线。 -->
         <template #text="{ row, column_data }">{{
-          row[column_data.prop] ?? "-"
+          row[column_data.prop] === "" ? "-" : row[column_data.prop]
         }}</template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -81,7 +81,7 @@
             type="primary"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >
+          >
             <template #icon>
               <svg-icon icon-class="adopt" />
             </template>
@@ -96,53 +96,55 @@
           >
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              link
-              type="primary"
-              icon="View"
-              @click="openForm(row, true)"
-              >详情</el-button
-            >
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.adoptStatus === 1"
-              @click="openForm(row, false)"
-              >修改</el-button
-            >
-            <el-button
-              link
-              type="danger"
-              icon="Delete"
-              :loading="deleteLoading[row.id]"
-              :disabled="deleting"
-              @click="remove(row)"
-              >删除</el-button
-            >
+            <div class="task-action-list">
+              <el-button
+                link
+                type="primary"
+                icon="View"
+                @click="openForm(row, true)"
+                >详情</el-button
+              >
+              <el-button
+                link
+                type="primary"
+                icon="Edit"
+                :disabled="row.adoptStatus === 1"
+                @click="openForm(row, false)"
+                >修改</el-button
+              >
+              <el-button
+                link
+                type="danger"
+                icon="Delete"
+                :loading="deleteLoading[row.id]"
+                :disabled="deleting"
+                @click="remove(row)"
+                >删除</el-button
+              >
+            </div>
           </el-popover>
         </template>
       </qt-table>
     </qt-wrap>
 
     <el-dialog
-        v-model="open"
-        :title="readonly ? '模型公理详情' : '修改模型公理'"
-        width="860px"
-        :append-to="pageRef"
-        :close-on-press-escape="!saving"
-        :before-close="beforeClose"
-        draggable
-        destroy-on-close
-        @closed="handleDialogClosed"
-      >
+      v-model="open"
+      :title="readonly ? '模型公理详情' : '修改模型公理'"
+      width="860px"
+      :append-to="pageRef"
+      :close-on-press-escape="!saving"
+      :before-close="beforeClose"
+      draggable
+      destroy-on-close
+      @closed="handleDialogClosed"
+    >
       <guide-tip-panel
         v-if="!readonly"
         type="hint"
@@ -158,8 +160,18 @@
           :label="field.label"
           :class="{ 'row-full': field.multiline }"
         >
-          <dict-tag v-if="field.dictOptions" :options="field.dictOptions" :value="field.dictValue" />
-          <div v-else class="form-readonly" :class="{ textarea: field.multiline }">{{ field.value || '-' }}</div>
+          <dict-tag
+            v-if="field.dictOptions"
+            :options="field.dictOptions"
+            :value="field.dictValue"
+          />
+          <div
+            v-else
+            class="form-readonly"
+            :class="{ textarea: field.multiline }"
+          >
+            {{ field.value || "-" }}
+          </div>
         </el-form-item>
         <AttributeTypeConfig
           v-if="form.type === 'PROPERTY_RANGE'"
@@ -179,14 +191,14 @@
         @submit.prevent="save"
       >
         <div class="h2-title">基本信息</div>
-        <qt-form-item label="公理名称" prop="name" required >
+        <qt-form-item label="公理名称" prop="name" required>
           <el-input
             v-model="form.name"
             placeholder="请输入公理名称"
             maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item label="类型" prop="type" required >
+        <qt-form-item label="类型" prop="type" required>
           <el-select
             v-model="form.type"
             placeholder="请选择类型"
@@ -200,14 +212,17 @@
             />
           </el-select>
         </qt-form-item>
-        <qt-form-item label="级别" prop="level" required >
+        <qt-form-item label="级别" prop="level" required>
           <el-radio-group v-model="form.level">
-            <el-radio v-for="i in om_rule_level" :key="i.value" :value="i.value">{{
-              i.label
-            }}</el-radio>
+            <el-radio
+              v-for="i in om_rule_level"
+              :key="i.value"
+              :value="i.value"
+              >{{ i.label }}</el-radio
+            >
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item label="描述" prop="description" >
+        <qt-form-item label="描述" prop="description">
           <el-input
             v-model="form.description"
             class="character-count"
@@ -220,7 +235,12 @@
         </qt-form-item>
         <div class="h2-title">公理表达</div>
         <template v-if="form.type === 'DOMAIN_RANGE'">
-          <qt-form-item label="关系" prop="relationName" required tip="填写该约束作用的关系名称。">
+          <qt-form-item
+            label="关系"
+            prop="relationName"
+            required
+            tip="填写该约束作用的关系名称。"
+          >
             <el-input
               v-model="form.relationName"
               placeholder="请输入关系名称"
@@ -228,7 +248,12 @@
               clearable
             />
           </qt-form-item>
-          <qt-form-item label="Domain" prop="domainCandidateId" required tip="选择关系起点（定义域）对应的对象类型。">
+          <qt-form-item
+            label="Domain"
+            prop="domainCandidateId"
+            required
+            tip="选择关系起点（定义域）对应的对象类型。"
+          >
             <el-tree-select
               v-model="form.domainCandidateId"
               :data="objectTree"
@@ -241,7 +266,12 @@
               @change="handleDomainChange"
             />
           </qt-form-item>
-          <qt-form-item label="Range" prop="rangeCandidateId" required tip="选择关系终点（值域）对应的对象类型。">
+          <qt-form-item
+            label="Range"
+            prop="rangeCandidateId"
+            required
+            tip="选择关系终点（值域）对应的对象类型。"
+          >
             <el-tree-select
               v-model="form.rangeCandidateId"
               :data="rangeObjectTree"
@@ -255,7 +285,12 @@
           </qt-form-item>
         </template>
         <template v-else>
-          <qt-form-item :label="firstTypeLabel" prop="objectCandidateId" required tip="选择该公理作用的主体对象类型。">
+          <qt-form-item
+            :label="firstTypeLabel"
+            prop="objectCandidateId"
+            required
+            tip="选择该公理作用的主体对象类型。"
+          >
             <el-tree-select
               v-model="form.objectCandidateId"
               :data="objectTree"
@@ -287,63 +322,127 @@
             />
           </qt-form-item>
           <template v-else>
-          <qt-form-item label="对象类型属性" prop="attributeCandidateId" required tip="选择当前对象类型下需要约束的属性。">
-            <el-select
-              v-model="form.attributeCandidateId"
-              filterable
-              clearable
-              placeholder="请选择当前对象类型的属性"
+            <qt-form-item
+              label="对象类型属性"
+              prop="attributeCandidateId"
+              required
+              tip="选择当前对象类型下需要约束的属性。"
             >
-              <el-option
-                v-for="i in objectAttributes"
-                :key="i.id"
-                :label="i.name"
-                :value="i.id"
-              />
-            </el-select>
-          </qt-form-item>
-          <qt-form-item label="数据类型" prop="typeCategory" required tip="选择属性取值的基础数据类型或业务数据类型。">
-            <el-radio-group v-model="form.typeCategory" @change="handleTypeCategoryChange">
-              <el-radio v-for="item in om_attribute_data_type" :key="item.value" :value="Number(item.value)">{{ item.label }}</el-radio>
-            </el-radio-group>
-          </qt-form-item>
-          <qt-form-item v-if="form.typeCategory === 1" label="基础数据类型" prop="basicTypeCode" required tip="选择属性对应的基础数据类型。">
-            <el-select v-model="form.basicTypeCode" placeholder="请选择基础数据类型" clearable>
-              <el-option v-for="item in basic_data_type" :key="item.value" :label="item.label" :value="Number(item.value)" />
-            </el-select>
-          </qt-form-item>
-          <template v-else>
-            <qt-form-item label="数据范围" prop="businessTypeSource" required tip="选择业务数据类型来自当前项目还是全局，下方业务数据类型会按该范围过滤。">
-              <el-radio-group v-model="form.businessTypeSource" @change="handleBusinessSourceChange">
-                <el-radio value="PROJECT">当前项目</el-radio>
-                <el-radio value="GLOBAL">全局</el-radio>
-              </el-radio-group>
-            </qt-form-item>
-            <qt-form-item label="业务数据类型" prop="businessTypeId" required tip="按所选数据范围，选择属性关联的业务数据类型。">
-              <el-select v-model="form.businessTypeId" filterable clearable style="width: 100%" placeholder="请选择业务数据类型">
+              <el-select
+                v-model="form.attributeCandidateId"
+                filterable
+                clearable
+                placeholder="请选择当前对象类型的属性"
+              >
                 <el-option
-                  v-for="item in filteredBusinessTypes"
-                  :key="item.businessTypeSource + ':' + item.id"
-                  :label="item.name"
-                  :value="String(item.id)"
+                  v-for="i in objectAttributes"
+                  :key="i.id"
+                  :label="i.name"
+                  :value="i.id"
                 />
               </el-select>
             </qt-form-item>
-          </template>
-          <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType" label="基础数据类型">
-            <div class="form-readonly">{{ basicTypeLabel(effectiveConfig.basicTypeCode) }}</div>
-          </el-form-item>
-          <AttributeTypeConfig
-            v-if="form.typeCategory === 1 || selectedBusinessType"
-            :model="effectiveConfig"
-            :readonly="readonly || form.typeCategory === 2"
-            :enum-options="enumOptions"
-            :enum-loading="enumsLoading"
-            @enum-open="loadEnums"
-          />
-          <el-form-item v-if="form.typeCategory === 2 && selectedBusinessType?.description" label="类型描述">
-            <div class="form-readonly textarea">{{ selectedBusinessType.description }}</div>
-          </el-form-item>
+            <qt-form-item
+              label="数据类型"
+              prop="typeCategory"
+              required
+              tip="选择属性取值的基础数据类型或业务数据类型。"
+            >
+              <el-radio-group
+                v-model="form.typeCategory"
+                @change="handleTypeCategoryChange"
+              >
+                <el-radio
+                  v-for="item in om_attribute_data_type"
+                  :key="item.value"
+                  :value="Number(item.value)"
+                  >{{ item.label }}</el-radio
+                >
+              </el-radio-group>
+            </qt-form-item>
+            <qt-form-item
+              v-if="form.typeCategory === 1"
+              label="基础数据类型"
+              prop="basicTypeCode"
+              required
+              tip="选择属性对应的基础数据类型。"
+            >
+              <el-select
+                v-model="form.basicTypeCode"
+                placeholder="请选择基础数据类型"
+                clearable
+              >
+                <el-option
+                  v-for="item in basic_data_type"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="Number(item.value)"
+                />
+              </el-select>
+            </qt-form-item>
+            <template v-else>
+              <qt-form-item
+                label="数据范围"
+                prop="businessTypeSource"
+                required
+                tip="选择业务数据类型来自当前项目还是全局，下方业务数据类型会按该范围过滤。"
+              >
+                <el-radio-group
+                  v-model="form.businessTypeSource"
+                  @change="handleBusinessSourceChange"
+                >
+                  <el-radio value="PROJECT">当前项目</el-radio>
+                  <el-radio value="GLOBAL">全局</el-radio>
+                </el-radio-group>
+              </qt-form-item>
+              <qt-form-item
+                label="业务数据类型"
+                prop="businessTypeId"
+                required
+                tip="按所选数据范围，选择属性关联的业务数据类型。"
+              >
+                <el-select
+                  v-model="form.businessTypeId"
+                  filterable
+                  clearable
+                  style="width: 100%"
+                  placeholder="请选择业务数据类型"
+                >
+                  <el-option
+                    v-for="item in filteredBusinessTypes"
+                    :key="item.businessTypeSource + ':' + item.id"
+                    :label="item.name"
+                    :value="String(item.id)"
+                  />
+                </el-select>
+              </qt-form-item>
+            </template>
+            <el-form-item
+              v-if="form.typeCategory === 2 && selectedBusinessType"
+              label="基础数据类型"
+            >
+              <div class="form-readonly">
+                {{ basicTypeLabel(effectiveConfig.basicTypeCode) }}
+              </div>
+            </el-form-item>
+            <AttributeTypeConfig
+              v-if="form.typeCategory === 1 || selectedBusinessType"
+              :model="effectiveConfig"
+              :readonly="readonly || form.typeCategory === 2"
+              :enum-options="enumOptions"
+              :enum-loading="enumsLoading"
+              @enum-open="loadEnums"
+            />
+            <el-form-item
+              v-if="
+                form.typeCategory === 2 && selectedBusinessType?.description
+              "
+              label="类型描述"
+            >
+              <div class="form-readonly textarea">
+                {{ selectedBusinessType.description }}
+              </div>
+            </el-form-item>
           </template>
         </template>
       </el-form>
@@ -352,10 +451,7 @@
           <el-button v-if="readonly" @click="open = false">关 闭</el-button>
           <template v-else>
             <el-button @click="open = false">取 消</el-button>
-            <el-button
-              type="primary"
-              :loading="saving"
-              @click="save"
+            <el-button type="primary" :loading="saving" @click="save"
               >确 定</el-button
             >
           </template>
@@ -479,8 +575,8 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       fixed: "left",
       sortable: "custom",
@@ -519,6 +615,14 @@ const tableStore = reactive({
       align: "center",
     },
     {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      slot: "adoptStatus",
+      width: 90,
+      minWidth: 90,
+      align: "center",
+    },
+    {
       label: "创建人",
       prop: "createBy",
       slot: "creator",
@@ -537,15 +641,7 @@ const tableStore = reactive({
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
     },
-    {
-      label: "采纳状态",
-      prop: "adoptStatus",
-      slot: "adoptStatus",
-      width: 90,
-      minWidth: 90,
-      align: "center",
-      fixed: "right",
-    },
+
     {
       label: "操作",
       slot: "handle",
@@ -563,35 +659,108 @@ const tableStore = reactive({
 });
 
 const treeProps = { label: "name", value: "id", children: "children" };
-const objectTree = computed(() => proxy.handleTree(objects.value.map((item) => ({ ...item })), "id", "parentCandidateId"));
-const otherObjectTree = computed(() => proxy.handleTree(objects.value.map((item) => ({ ...item, disabled: item.id === form.value.objectCandidateId })), "id", "parentCandidateId"));
-const rangeObjectTree = computed(() => proxy.handleTree(objects.value.map((item) => ({ ...item, disabled: item.id === form.value.domainCandidateId })), "id", "parentCandidateId"));
-const firstTypeLabel = computed(() => form.value.type === "SUBCLASS" ? "子类型" : form.value.type === "PROPERTY_RANGE" ? "对象类型" : "对象类型A");
-const secondTypeLabel = computed(() => form.value.type === "SUBCLASS" ? "父类型" : "对象类型B");
+const objectTree = computed(() =>
+  proxy.handleTree(
+    objects.value.map((item) => ({ ...item })),
+    "id",
+    "parentCandidateId"
+  )
+);
+const otherObjectTree = computed(() =>
+  proxy.handleTree(
+    objects.value.map((item) => ({
+      ...item,
+      disabled: item.id === form.value.objectCandidateId,
+    })),
+    "id",
+    "parentCandidateId"
+  )
+);
+const rangeObjectTree = computed(() =>
+  proxy.handleTree(
+    objects.value.map((item) => ({
+      ...item,
+      disabled: item.id === form.value.domainCandidateId,
+    })),
+    "id",
+    "parentCandidateId"
+  )
+);
+const firstTypeLabel = computed(() =>
+  form.value.type === "SUBCLASS"
+    ? "子类型"
+    : form.value.type === "PROPERTY_RANGE"
+    ? "对象类型"
+    : "对象类型A"
+);
+const secondTypeLabel = computed(() =>
+  form.value.type === "SUBCLASS" ? "父类型" : "对象类型B"
+);
 const objectAttributes = computed(() =>
   attributes.value.filter(
     (i) => i.objectCandidateId === form.value.objectCandidateId
   )
 );
-const selectedBusinessType = computed(() => businessTypes.value.find((item) => String(item.id) === String(form.value.businessTypeId) && item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL")));
-const effectiveConfig = computed(() => form.value.typeCategory === 2 && selectedBusinessType.value ? { ...selectedBusinessType.value, basicTypeCode: Number(selectedBusinessType.value.dataType) } : form.value);
-const filteredBusinessTypes = computed(() =>
-  businessTypes.value.filter(
-    (item) => item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL")
+const selectedBusinessType = computed(() =>
+  businessTypes.value.find(
+    (item) =>
+      String(item.id) === String(form.value.businessTypeId) &&
+      item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL")
   )
 );
-const basicTypeLabel = (value) => proxy.selectDictLabel(basic_data_type.value, value) || "-";
+const effectiveConfig = computed(() =>
+  form.value.typeCategory === 2 && selectedBusinessType.value
+    ? {
+        ...selectedBusinessType.value,
+        basicTypeCode: Number(selectedBusinessType.value.dataType),
+      }
+    : form.value
+);
+const filteredBusinessTypes = computed(() =>
+  businessTypes.value.filter(
+    (item) =>
+      item.businessTypeSource === (form.value.businessTypeSource || "GLOBAL")
+  )
+);
+const basicTypeLabel = (value) =>
+  proxy.selectDictLabel(basic_data_type.value, value) || "-";
 const rules = {
-  name: [{ required: true, whitespace: true, message: "模型公理名称不能为空", trigger: "blur" }],
+  name: [
+    {
+      required: true,
+      whitespace: true,
+      message: "模型公理名称不能为空",
+      trigger: "blur",
+    },
+  ],
   type: [{ required: true, message: "请选择类型", trigger: "change" }],
   level: [{ required: true, message: "请选择级别", trigger: "change" }],
-  relationName: [{ required: true, whitespace: true, message: "关系名称不能为空", trigger: "blur" }],
-  domainCandidateId: [{ required: true, message: "请选择Domain", trigger: "change" }],
-  rangeCandidateId: [{ required: true, message: "请选择Range", trigger: "change" }],
-  objectCandidateId: [{ required: true, message: "请选择对象类型", trigger: "change" }],
-  otherObjectCandidateId: [{ required: true, message: "请选择另一对象类型", trigger: "change" }],
-  attributeCandidateId: [{ required: true, message: "请选择对象类型属性", trigger: "change" }],
-  typeCategory: [{ required: true, message: "请选择数据类型", trigger: "change" }],
+  relationName: [
+    {
+      required: true,
+      whitespace: true,
+      message: "关系名称不能为空",
+      trigger: "blur",
+    },
+  ],
+  domainCandidateId: [
+    { required: true, message: "请选择Domain", trigger: "change" },
+  ],
+  rangeCandidateId: [
+    { required: true, message: "请选择Range", trigger: "change" },
+  ],
+  objectCandidateId: [
+    { required: true, message: "请选择对象类型", trigger: "change" },
+  ],
+  otherObjectCandidateId: [
+    { required: true, message: "请选择另一对象类型", trigger: "change" },
+  ],
+  attributeCandidateId: [
+    { required: true, message: "请选择对象类型属性", trigger: "change" },
+  ],
+  typeCategory: [
+    { required: true, message: "请选择数据类型", trigger: "change" },
+  ],
 };
 
 async function openForm(row, view) {
@@ -600,8 +769,10 @@ async function openForm(row, view) {
   form.value = {
     ...data,
     typeCategory: data.typeCategory == null ? 1 : Number(data.typeCategory),
-    basicTypeCode: data.basicTypeCode == null ? undefined : Number(data.basicTypeCode),
-    businessTypeId: data.businessTypeId == null ? undefined : String(data.businessTypeId),
+    basicTypeCode:
+      data.basicTypeCode == null ? undefined : Number(data.basicTypeCode),
+    businessTypeId:
+      data.businessTypeId == null ? undefined : String(data.businessTypeId),
     businessTypeSource: data.businessTypeSource || "GLOBAL",
     decimalPlaces: data.decimalPlaces == null ? 2 : Number(data.decimalPlaces),
   };
@@ -614,16 +785,26 @@ async function save() {
   await updateCandidate("axiom", {
     ...form.value,
     taskId: props.taskId,
-    businessTypeId: form.value.typeCategory === 2 ? Number(form.value.businessTypeId) : null,
-    businessTypeSource: form.value.typeCategory === 2 ? form.value.businessTypeSource : null,
-    basicTypeCode: form.value.typeCategory === 1 ? form.value.basicTypeCode : null,
+    businessTypeId:
+      form.value.typeCategory === 2 ? Number(form.value.businessTypeId) : null,
+    businessTypeSource:
+      form.value.typeCategory === 2 ? form.value.businessTypeSource : null,
+    basicTypeCode:
+      form.value.typeCategory === 1 ? form.value.basicTypeCode : null,
   });
   proxy.$modal.msgSuccess("修改成功");
   open.value = false;
   refresh();
 }
 function handleTypeChange() {
-  Object.assign(form.value, { objectCandidateId: undefined, otherObjectCandidateId: undefined, relationName: "", domainCandidateId: undefined, rangeCandidateId: undefined, attributeCandidateId: undefined });
+  Object.assign(form.value, {
+    objectCandidateId: undefined,
+    otherObjectCandidateId: undefined,
+    relationName: "",
+    domainCandidateId: undefined,
+    rangeCandidateId: undefined,
+    attributeCandidateId: undefined,
+  });
   nextTick(() => formRef.value?.clearValidate());
 }
 function handleObjectChange() {
@@ -631,7 +812,16 @@ function handleObjectChange() {
   form.value.attributeCandidateId = undefined;
 }
 function handleTypeCategoryChange() {
-  Object.assign(form.value, { basicTypeCode: undefined, businessTypeId: undefined, businessTypeSource: "GLOBAL", unit: "", decimalPlaces: 2, format: "", enumType: undefined, enumSource: "PROJECT" });
+  Object.assign(form.value, {
+    basicTypeCode: undefined,
+    businessTypeId: undefined,
+    businessTypeSource: "GLOBAL",
+    unit: "",
+    decimalPlaces: 2,
+    format: "",
+    enumType: undefined,
+    enumSource: "PROJECT",
+  });
   nextTick(() => formRef.value?.clearValidate());
 }
 function handleBusinessSourceChange() {
@@ -640,25 +830,45 @@ function handleBusinessSourceChange() {
 }
 async function loadTypeOptions() {
   businessTypes.value = [];
-  await Promise.allSettled(["PROJECT", "GLOBAL"].map(async (source) => {
-    const response = await listAiAttributeBusinessTypes(props.taskId, source);
-    businessTypes.value.push(...(response.data || []).map((item) => ({ ...item, id: String(item.id), businessTypeSource: source })));
-  }));
+  await Promise.allSettled(
+    ["PROJECT", "GLOBAL"].map(async (source) => {
+      const response = await listAiAttributeBusinessTypes(props.taskId, source);
+      businessTypes.value.push(
+        ...(response.data || []).map((item) => ({
+          ...item,
+          id: String(item.id),
+          businessTypeSource: source,
+        }))
+      );
+    })
+  );
 }
 async function loadEnums() {
   if (enumsLoading.value) return;
   enumsLoading.value = true;
   try {
     enumOptions.value = [];
-    await Promise.allSettled(["PROJECT", "GLOBAL"].map(async (source) => {
-      const response = await listAiAttributeEnums(props.taskId, source);
-      enumOptions.value.push(...(response.data || []).map((item) => ({ ...item, enumSource: source })));
-    }));
-  } finally { enumsLoading.value = false; }
+    await Promise.allSettled(
+      ["PROJECT", "GLOBAL"].map(async (source) => {
+        const response = await listAiAttributeEnums(props.taskId, source);
+        enumOptions.value.push(
+          ...(response.data || []).map((item) => ({
+            ...item,
+            enumSource: source,
+          }))
+        );
+      })
+    );
+  } finally {
+    enumsLoading.value = false;
+  }
 }
 
 function handleDomainChange() {
-  if (form.value.domainCandidateId && form.value.domainCandidateId === form.value.rangeCandidateId) {
+  if (
+    form.value.domainCandidateId &&
+    form.value.domainCandidateId === form.value.rangeCandidateId
+  ) {
     form.value.rangeCandidateId = undefined;
   }
 }
@@ -682,53 +892,129 @@ function handleDialogClosed() {
  * @returns {Array<Object>} 展示字段列表
  */
 function getDetailFields(record) {
-  const typeLabel = proxy.selectDictLabel(om_axiom_type.value, record.type) || '-';
-  const levelLabel = proxy.selectDictLabel(om_rule_level.value, record.level) || '-';
+  const typeLabel =
+    proxy.selectDictLabel(om_axiom_type.value, record.type) || "-";
+  const levelLabel =
+    proxy.selectDictLabel(om_rule_level.value, record.level) || "-";
 
   let specificFields = [];
-  if (record.type === 'DOMAIN_RANGE') {
+  if (record.type === "DOMAIN_RANGE") {
     specificFields = [
-      { label: '关系', value: record.relationName },
-      { label: 'Domain', value: objectTree.value.find(item => item.id === record.domainCandidateId)?.name || record.domainCandidateId || '-' },
-      { label: 'Range', value: objectTree.value.find(item => item.id === record.rangeCandidateId)?.name || record.rangeCandidateId || '-' }
-    ];
-  } else if (record.type === 'PROPERTY_RANGE') {
-    const businessType = businessTypes.value.find((item) => String(item.id) === String(record.businessTypeId) && item.businessTypeSource === (record.businessTypeSource || "GLOBAL"));
-    specificFields = [
-      { label: '对象类型', value: objectTree.value.find(item => item.id === record.objectCandidateId)?.name || record.objectCandidateId || '-' },
-      { label: '对象类型属性', value: attributes.value.find(item => item.id === record.attributeCandidateId)?.name || record.attributeCandidateId || '-' },
-      { label: '数据类型', value: record.typeCategory === 1 ? '基础数据类型' : '业务数据类型' },
+      { label: "关系", value: record.relationName },
       {
-        label: '数据类型',
-        value: record.typeCategory === 1
-          ? proxy.selectDictLabel(basic_data_type.value, record.basicTypeCode)
-          : businessType?.name || record.businessTypeId
-      }
+        label: "Domain",
+        value:
+          objectTree.value.find((item) => item.id === record.domainCandidateId)
+            ?.name ||
+          record.domainCandidateId ||
+          "-",
+      },
+      {
+        label: "Range",
+        value:
+          objectTree.value.find((item) => item.id === record.rangeCandidateId)
+            ?.name ||
+          record.rangeCandidateId ||
+          "-",
+      },
+    ];
+  } else if (record.type === "PROPERTY_RANGE") {
+    const businessType = businessTypes.value.find(
+      (item) =>
+        String(item.id) === String(record.businessTypeId) &&
+        item.businessTypeSource === (record.businessTypeSource || "GLOBAL")
+    );
+    specificFields = [
+      {
+        label: "对象类型",
+        value:
+          objectTree.value.find((item) => item.id === record.objectCandidateId)
+            ?.name ||
+          record.objectCandidateId ||
+          "-",
+      },
+      {
+        label: "对象类型属性",
+        value:
+          attributes.value.find(
+            (item) => item.id === record.attributeCandidateId
+          )?.name ||
+          record.attributeCandidateId ||
+          "-",
+      },
+      {
+        label: "数据类型",
+        value: record.typeCategory === 1 ? "基础数据类型" : "业务数据类型",
+      },
+      {
+        label: "数据类型",
+        value:
+          record.typeCategory === 1
+            ? proxy.selectDictLabel(basic_data_type.value, record.basicTypeCode)
+            : businessType?.name || record.businessTypeId,
+      },
     ];
     if (record.typeCategory === 2) {
-      specificFields.push({ label: '基础数据类型', value: basicTypeLabel(businessType ? Number(businessType.dataType) : record.basicTypeCode) });
+      specificFields.push({
+        label: "基础数据类型",
+        value: basicTypeLabel(
+          businessType ? Number(businessType.dataType) : record.basicTypeCode
+        ),
+      });
       if (businessType?.description) {
-        specificFields.push({ label: '类型描述', value: businessType.description, multiline: true });
+        specificFields.push({
+          label: "类型描述",
+          value: businessType.description,
+          multiline: true,
+        });
       }
     }
   } else {
-    const firstType = record.type === 'SUBCLASS' ? '子类型' : '对象类型A';
-    const secondType = record.type === 'SUBCLASS' ? '父类型' : '对象类型B';
+    const firstType = record.type === "SUBCLASS" ? "子类型" : "对象类型A";
+    const secondType = record.type === "SUBCLASS" ? "父类型" : "对象类型B";
     specificFields = [
-      { label: firstType, value: objectTree.value.find(item => item.id === record.objectCandidateId)?.name || record.objectCandidateId || '-' },
-      { label: secondType, value: objectTree.value.find(item => item.id === record.otherObjectCandidateId)?.name || record.otherObjectCandidateId || '-' }
+      {
+        label: firstType,
+        value:
+          objectTree.value.find((item) => item.id === record.objectCandidateId)
+            ?.name ||
+          record.objectCandidateId ||
+          "-",
+      },
+      {
+        label: secondType,
+        value:
+          objectTree.value.find(
+            (item) => item.id === record.otherObjectCandidateId
+          )?.name ||
+          record.otherObjectCandidateId ||
+          "-",
+      },
     ];
   }
 
   return [
-    { label: '公理名称', value: record.name },
-    { label: '类型', value: typeLabel, dictOptions: om_axiom_type.value, dictValue: record.type },
-    { label: '级别', value: levelLabel, dictOptions: om_rule_level.value, dictValue: record.level },
+    { label: "公理名称", value: record.name },
+    {
+      label: "类型",
+      value: typeLabel,
+      dictOptions: om_axiom_type.value,
+      dictValue: record.type,
+    },
+    {
+      label: "级别",
+      value: levelLabel,
+      dictOptions: om_rule_level.value,
+      dictValue: record.level,
+    },
     ...specificFields,
-    { label: '描述', value: record.description, multiline: true },
-    { label: '创建人', value: record.createBy || '-' },
-    { label: '联系方式', value: creatorPhones.value[record.creatorId] || '-' },
-    { label: '创建时间', value: proxy.parseTime(record.createTime, '{y}-{m}-{d} {h}:{i}') }
+    { label: "描述", value: record.description, multiline: true },
+    { label: "创建人", value: record.createBy || "-" },
+    { label: "联系方式", value: creatorPhones.value[record.creatorId] || "-" },
+    {
+      label: "创建时间",
+      value: proxy.parseTime(record.createTime, "{y}-{m}-{d} {h}:{i}"),
+    },
   ];
 }
 
@@ -738,8 +1024,16 @@ const detailConfig = computed(() => effectiveConfig.value);
 /** 加载对象与属性候选，供公理表达弹窗的树形下拉与属性下拉使用。 */
 async function loadSupportData() {
   const [o, at] = await Promise.all([
-    listCandidates("object", { taskId: props.taskId, pageNum: 1, pageSize: 1000 }),
-    listCandidates("attribute", { taskId: props.taskId, pageNum: 1, pageSize: 1000 }),
+    listCandidates("object", {
+      taskId: props.taskId,
+      pageNum: 1,
+      pageSize: 1000,
+    }),
+    listCandidates("attribute", {
+      taskId: props.taskId,
+      pageNum: 1,
+      pageSize: 1000,
+    }),
   ]);
   objects.value = o.data?.rows || [];
   attributes.value = at.data?.rows || [];
@@ -795,6 +1089,6 @@ loadSupportData();
 }
 
 .character-count :deep(.el-textarea__inner) {
-        padding-bottom: 24px;
-    }
+  padding-bottom: 24px;
+}
 </style>

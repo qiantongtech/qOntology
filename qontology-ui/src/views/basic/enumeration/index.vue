@@ -172,21 +172,21 @@
         class="column-form"
         @submit.prevent="submitForm"
       >
-        <qt-form-item label="枚举名称" prop="enumName" class="row-full" >
+        <qt-form-item label="枚举名称" prop="enumName" class="row-full">
           <el-input
             v-model="form.enumName"
             placeholder="请输入枚举名称"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item label="枚举类型" prop="enumType" class="row-full" >
+        <qt-form-item label="枚举类型" prop="enumType" class="row-full">
           <el-input
             v-model="form.enumType"
             placeholder="请输入枚举类型"
             :maxlength="128"
           />
         </qt-form-item>
-        <qt-form-item label="状态" prop="status" >
+        <qt-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio
               v-for="dict in sys_normal_disable"
@@ -199,7 +199,6 @@
         <qt-form-item label="描述" prop="description" class="row-full">
           <el-input
             v-model="form.description"
-
             type="textarea"
             :rows="3"
             maxlength="256个字符"
@@ -281,7 +280,7 @@ const tableStore = reactive({
   },
   columns: [
     { type: "selection", width: 55 },
-    { label: "编号", prop: "enumId", slot: "text", width: 80, sortable: true },
+    { label: "编号", prop: "enumId", slot: "text", width: 60, sortable: true },
     {
       label: "枚举名称",
       prop: "enumName",
@@ -332,7 +331,14 @@ const tableStore = reactive({
       width: 160,
       sortable: true,
     },
-    { label: "操作", slot: "handle", width: 240, minWidth: 240, align: "center", fixed: "right" },
+    {
+      label: "操作",
+      slot: "handle",
+      width: 240,
+      minWidth: 240,
+      align: "center",
+      fixed: "right",
+    },
   ],
   func: listType,
   params: { enumName: "", enumType: "", status: "" },
@@ -383,7 +389,9 @@ const data = reactive({
       },
     ],
     status: [{ required: true, message: "请选择状态", trigger: "change" }],
-    description: [{ max: 256, message: "描述不能超过256个字符", trigger: "blur" }],
+    description: [
+      { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
+    ],
     remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
   },
 });

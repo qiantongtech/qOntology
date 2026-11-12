@@ -64,7 +64,11 @@
         }}</template>
         <!-- 枚举类型列可点击下钻到该类型的枚举数据。 -->
         <template #enumName="{ row }">
-          <el-link type="primary" :underline="false" @click="showTypeDetail(row)">
+          <el-link
+            type="primary"
+            :underline="false"
+            @click="showTypeDetail(row)"
+          >
             {{ row.enumName || "-" }}
           </el-link>
         </template>
@@ -99,7 +103,7 @@
             type="primary"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >
+          >
             <template #icon>
               <svg-icon icon-class="adopt" />
             </template>
@@ -114,37 +118,39 @@
           >
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              link
-              type="primary"
-              icon="View"
-              @click="showTypeDetail(row)"
-              >详情</el-button
-            >
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.adoptStatus === 1"
-              @click="editType(row)"
-              >修改</el-button
-            >
-            <el-button
-              link
-              type="danger"
-              icon="Delete"
-              :loading="deleteLoading[row.id]"
-              :disabled="deleting"
-              @click="remove(row)"
-              >删除</el-button
-            >
+            <div class="task-action-list">
+              <el-button
+                link
+                type="primary"
+                icon="View"
+                @click="showTypeDetail(row)"
+                >详情</el-button
+              >
+              <el-button
+                link
+                type="primary"
+                icon="Edit"
+                :disabled="row.adoptStatus === 1"
+                @click="editType(row)"
+                >修改</el-button
+              >
+              <el-button
+                link
+                type="danger"
+                icon="Delete"
+                :loading="deleteLoading[row.id]"
+                :disabled="deleting"
+                @click="remove(row)"
+                >删除</el-button
+              >
+            </div>
           </el-popover>
         </template>
       </qt-table>
@@ -181,7 +187,11 @@
         >
       </template>
 
-      <qt-table v-bind="valueTableStore" ref="valueTableRef" :key="currentType.id">
+      <qt-table
+        v-bind="valueTableStore"
+        ref="valueTableRef"
+        :key="currentType.id"
+      >
         <template #text="{ row, column_data }">{{
           row[column_data.prop] === "" ? "-" : row[column_data.prop]
         }}</template>
@@ -218,7 +228,7 @@
           >
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
@@ -268,35 +278,39 @@
         class="column-form"
         @submit.prevent="saveType"
       >
-        <qt-form-item
-          label="枚举名称"
-          prop="enumName"
-          class="row-full"
-        >
-          <el-input v-model="typeForm.enumName" placeholder="请输入枚举名称" :maxlength="128" />
+        <qt-form-item label="枚举名称" prop="enumName" class="row-full">
+          <el-input
+            v-model="typeForm.enumName"
+            placeholder="请输入枚举名称"
+            :maxlength="128"
+          />
         </qt-form-item>
-        <qt-form-item
-          label="枚举类型"
-          prop="enumType"
-          class="row-full"
-        >
-          <el-input v-model="typeForm.enumType" placeholder="请输入枚举类型" :maxlength="128" />
+        <qt-form-item label="枚举类型" prop="enumType" class="row-full">
+          <el-input
+            v-model="typeForm.enumType"
+            placeholder="请输入枚举类型"
+            :maxlength="128"
+          />
         </qt-form-item>
-        <qt-form-item
-          label="状态"
-          prop="status"
-          class="row-full"
-        >
+        <qt-form-item label="状态" prop="status" class="row-full">
           <el-radio-group v-model="typeForm.status">
-            <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
+            <el-radio
+              v-for="dict in sys_normal_disable"
+              :key="dict.value"
+              :value="dict.value"
+              >{{ dict.label }}</el-radio
+            >
           </el-radio-group>
         </qt-form-item>
-        <qt-form-item
-          label="描述"
-          prop="remark"
-          class="row-full"
-        >
-          <el-input v-model="typeForm.description" type="textarea" :rows="3"  maxlength="256个字符" show-word-limit placeholder="请输入描述" />
+        <qt-form-item label="描述" prop="remark" class="row-full">
+          <el-input
+            v-model="typeForm.description"
+            type="textarea"
+            :rows="3"
+            maxlength="256个字符"
+            show-word-limit
+            placeholder="请输入描述"
+          />
         </qt-form-item>
       </el-form>
       <template #footer>
@@ -325,55 +339,91 @@
       :title="valueForm.id ? '修改枚举数据' : '新增枚举数据'"
       width="800px"
       :append-to="pageRef"
+      :close-on-click-modal="!valueSaving"
+      :close-on-press-escape="!valueSaving"
+      :before-close="handleValueBeforeClose"
       draggable
-      ><el-form
+      @closed="clearValueValidation"
+    >
+      <guide-tip-panel
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护当前枚举类型下的业务取值，明确标签、键值、顺序和状态，保证业务字段取值一致。"
+      />
+      <el-form
         ref="valueFormRef"
         :model="valueForm"
         :rules="valueRules"
         label-width="90px"
-        ><el-form-item label="枚举类型"
-          ><el-input
-            :model-value="currentType?.enumType || '-'"
-            disabled /></el-form-item
-        ><el-form-item label="枚举标签" prop="enumLabel"
-          ><el-input
+        class="column-form"
+        @submit.prevent="saveValue"
+      ><qt-form-item class="row-full" label="枚举类型">
+          <el-input v-model="valueForm.enumType" disabled />
+        </qt-form-item>
+        <qt-form-item class="row-full" label="枚举标签" prop="enumLabel">
+          <el-input
             v-model="valueForm.enumLabel"
             placeholder="请输入枚举标签"
-            :maxlength="128" /></el-form-item
-        ><el-form-item label="枚举键值" prop="enumValue"
-          ><el-input
+            :maxlength="128"
+          />
+        </qt-form-item>
+        <qt-form-item class="row-full" label="枚举键值" prop="enumValue">
+          <el-input
             v-model="valueForm.enumValue"
             placeholder="请输入枚举键值"
-            :maxlength="128" /></el-form-item
-        ><el-form-item label="排序" prop="enumSort"
-          ><el-input-number
+            :maxlength="128"
+          />
+        </qt-form-item>
+        <qt-form-item class="row-full" label="排序" prop="enumSort">
+          <el-input-number
             v-model="valueForm.enumSort"
             :min="0"
-            controls-position="right" /></el-form-item
-        ><el-form-item label="状态" prop="status"
-          ><el-radio-group v-model="valueForm.status"
-            ><el-radio
+            :max="2147483647"
+            :precision="0"
+            controls-position="right"
+          />
+        </qt-form-item>
+        <qt-form-item class="row-full" label="状态" prop="status">
+          <el-radio-group v-model="valueForm.status">
+            <el-radio
               v-for="dict in sys_normal_disable"
               :key="dict.value"
-              :value="dict.value"
+              :label="dict.value"
               >{{ dict.label }}</el-radio
-            ></el-radio-group
-          ></el-form-item
-        ><el-form-item label="描述" prop="remark"
-          ><el-input
+            >
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item class="row-full" label="描述" prop="description">
+          <el-input
             v-model="valueForm.description"
+            class="character-count"
             type="textarea"
             :rows="3"
-            :maxlength="256"
+            maxlength="256个字符"
             show-word-limit
-            placeholder="请输入描述" /></el-form-item></el-form
-      ><template #footer
-        ><div class="dialog-footer">
-          <el-button @click="valueOpen = false">取 消</el-button
-          ><el-button type="primary" @click="saveValue">确 定</el-button>
-        </div></template
-      ></el-dialog
-    >
+            placeholder="请输入描述"
+          />
+        </qt-form-item>
+        <qt-form-item class="row-full" label="备注" prop="remark">
+          <el-input
+            v-model="valueForm.remark"
+            class="character-count"
+            type="textarea"
+            :rows="3"
+            maxlength="256个字符"
+            show-word-limit
+            placeholder="请输入备注"
+          />
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelValue">取 消</el-button>
+          <el-button type="primary" @click="saveValue">确 定</el-button>
+        </div>
+      </template>
+    </el-dialog>
     <el-dialog
       v-model="valueDetailOpen"
       title="枚举数据详情"
@@ -418,6 +468,7 @@ const { om_ai_adopt_status, sys_normal_disable } = proxy.useDict(
 const pageRef = ref();
 const typeFormRef = ref();
 const valueFormRef = ref();
+const valueSaving = ref(false);
 const { creatorPhones } = useCreatorPhones();
 const currentType = ref(null);
 const typeOpen = ref(false);
@@ -482,8 +533,16 @@ const searchStore = reactive({
   items: [
     { label: "枚举名称", prop: "enumName", component: { is: "input" } },
     { label: "枚举类型", prop: "enumType", component: { is: "input" } },
-    { label: "状态", prop: "status", component: { is: "select", options: sys_normal_disable } },
-    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+    {
+      label: "状态",
+      prop: "status",
+      component: { is: "select", options: sys_normal_disable },
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
   ],
 });
 
@@ -491,8 +550,16 @@ const searchStore = reactive({
 const valueSearchStore = reactive({
   items: [
     { label: "枚举标签", prop: "enumLabel", component: { is: "input" } },
-    { label: "状态", prop: "status", component: { is: "select", options: sys_normal_disable } },
-    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+    {
+      label: "状态",
+      prop: "status",
+      component: { is: "select", options: sys_normal_disable },
+    },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
   ],
 });
 
@@ -525,8 +592,8 @@ const typeTableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
@@ -647,8 +714,8 @@ const valueTableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       sortable: "custom",
       sortOrders: ["descending", "ascending", null],
@@ -746,10 +813,38 @@ const typeRules = {
   status: [{ required: true, message: "请选择状态" }],
 };
 const valueRules = {
-  enumLabel: [{ required: true, message: "枚举标签不能为空" }],
-  enumValue: [{ required: true, message: "枚举键值不能为空" }],
-  enumSort: [{ required: true, message: "排序不能为空" }],
-  status: [{ required: true, message: "请选择状态" }],
+  enumLabel: [
+    {
+      required: true,
+      whitespace: true,
+      message: "枚举标签不能为空",
+      trigger: "blur",
+    },
+    { max: 128, message: "枚举标签不能超过128个字符", trigger: "blur" },
+  ],
+  enumValue: [
+    {
+      required: true,
+      whitespace: true,
+      message: "枚举键值不能为空",
+      trigger: "blur",
+    },
+    { max: 128, message: "枚举键值不能超过128个字符", trigger: "blur" },
+  ],
+  enumSort: [
+    {
+      required: true,
+      type: "number",
+      min: 0,
+      message: "请输入非负整数排序值",
+      trigger: "change",
+    },
+  ],
+  status: [{ required: true, message: "请选择状态", trigger: "change" }],
+  description: [
+    { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
+  ],
+  remark: [{ max: 256, message: "备注不能超过256个字符", trigger: "blur" }],
 };
 const typeDetailFields = [
   { prop: "enumName", label: "枚举名称" },
@@ -759,7 +854,6 @@ const typeDetailFields = [
   { prop: "createBy", label: "创建人" },
   { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
-
 ];
 const valueDetailFields = [
   { prop: "enumType", label: "枚举类型" },
@@ -768,10 +862,10 @@ const valueDetailFields = [
   { prop: "enumSort", label: "排序" },
   { prop: "status", label: "状态" },
   { prop: "description", label: "描述" },
+  { prop: "remark", label: "备注" },
   { prop: "createBy", label: "创建人" },
   { prop: "contact", label: "联系方式" },
   { prop: "createTime", label: "创建时间" },
-
 ];
 
 /**
@@ -828,8 +922,15 @@ function closeValues() {
  * @param {Object} row 当前行数据
  */
 function editValue(row) {
-  valueForm.value = { ...row, status: row.status || "0" };
+  valueForm.value = {
+    ...row,
+    enumType: currentType.value?.enumType || row.enumType || "",
+    status: row.status || "0",
+    description: row.description || "",
+    remark: row.remark || "",
+  };
   valueOpen.value = true;
+  nextTick(() => clearValueValidation());
 }
 
 /**
@@ -843,22 +944,46 @@ function showValueDetail(row) {
 
 /** 保存枚举数据，新增或修改后刷新数据列表。 */
 async function saveValue() {
+  if (valueSaving.value) return;
   if (!(await valueFormRef.value.validate().catch(() => false))) return;
-  const payload = {
-    id: valueForm.value.id,
-    taskId: props.taskId,
-    enumTypeId: currentType.value.id,
-    enumSort: valueForm.value.enumSort,
-    enumLabel: valueForm.value.enumLabel,
-    enumValue: valueForm.value.enumValue,
-    status: valueForm.value.status,
-    remark: valueForm.value.remark,
-  };
-  if (payload.id) await updateCandidate("enum_data", payload);
-  else await createCandidate("enum_data", payload);
-  proxy.$modal.msgSuccess(payload.id ? "修改成功" : "新增成功");
+  valueSaving.value = true;
+  try {
+    const payload = {
+      id: valueForm.value.id,
+      taskId: props.taskId,
+      enumTypeId: currentType.value.id,
+      enumSort: valueForm.value.enumSort,
+      enumLabel: (valueForm.value.enumLabel || "").trim(),
+      enumValue: (valueForm.value.enumValue || "").trim(),
+      status: valueForm.value.status,
+      description: (valueForm.value.description || "").trim(),
+      remark: (valueForm.value.remark || "").trim(),
+    };
+    if (payload.id) await updateCandidate("enum_data", payload);
+    else await createCandidate("enum_data", payload);
+    proxy.$modal.msgSuccess(payload.id ? "修改成功" : "新增成功");
+    valueOpen.value = false;
+    valueTableRef.value?.getList();
+  } finally {
+    valueSaving.value = false;
+  }
+}
+
+/** 清除枚举数据表单旧的校验结果。 */
+function clearValueValidation() {
+  valueFormRef.value?.clearValidate();
+}
+
+/** 保存期间阻止关闭弹窗。 */
+function handleValueBeforeClose(done) {
+  if (!valueSaving.value) done();
+}
+
+/** 未保存时关闭弹窗并清除校验。 */
+function cancelValue() {
+  if (valueSaving.value) return;
   valueOpen.value = false;
-  valueTableRef.value?.getList();
+  clearValueValidation();
 }
 
 /**
@@ -880,5 +1005,9 @@ async function showValueEvidence(row) {
 
 :deep(.el-input-number) {
   width: 100%;
+}
+
+.character-count :deep(.el-textarea__inner) {
+  padding-bottom: 24px;
 }
 </style>

@@ -154,25 +154,24 @@
             </template>
             <div class="task-action-list">
               <el-button
-                  v-if="auth.hasPermi('basic:project:project:edit')"
-                  link
-                  type="primary"
-                  icon="Edit"
-                  :disabled="row.status === 1"
-                  @click="handleUpdate(row)"
-              >修改
+                v-if="auth.hasPermi('basic:project:project:edit')"
+                link
+                type="primary"
+                icon="Edit"
+                :disabled="row.status === 1"
+                @click="handleUpdate(row)"
+                >修改
               </el-button>
               <el-button
-                  v-if="auth.hasPermi('basic:project:project:remove')"
-                  link
-                  type="danger"
-                  icon="Delete"
-                  :disabled="row.status === 1"
-                  @click="handleDelete(row)"
-              >删除</el-button
+                v-if="auth.hasPermi('basic:project:project:remove')"
+                link
+                type="danger"
+                icon="Delete"
+                :disabled="row.status === 1"
+                @click="handleDelete(row)"
+                >删除</el-button
               >
             </div>
-
           </el-popover>
         </template>
       </qt-table>
@@ -412,7 +411,7 @@ const tableStore = reactive({
   },
   columns: [
     { type: "selection", width: 55 },
-    { label: "编号", prop: "id", width: 80, align: "center", sortable: true },
+    { label: "编号", prop: "id", width: 60, align: "center", sortable: true },
     {
       label: "项目名称",
       prop: "name",
@@ -434,7 +433,8 @@ const tableStore = reactive({
       width: 240,
       align: "left",
       showOverflowTooltip: { effect: "light" },
-      headerTooltip: '命名空间用于唯一标识本体的术语来源，遵循 W3C 标准。例如：https://example.com',
+      headerTooltip:
+        "命名空间用于唯一标识本体的术语来源，遵循 W3C 标准。例如：https://example.com",
       showHeaderTooltip: true,
     },
     {

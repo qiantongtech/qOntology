@@ -89,7 +89,10 @@
           />
         </template>
         <template #acceptStatus="{ row }">
-          <dict-tag :options="om_accept_status" :value="row.acceptStatus || '0'" />
+          <dict-tag
+            :options="om_accept_status"
+            :value="row.acceptStatus || '0'"
+          />
         </template>
         <template #adoptStatus="{ row }">
           <dict-tag :options="om_ai_adopt_status" :value="row.adoptStatus" />
@@ -100,7 +103,7 @@
             type="primary"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >
+          >
             <template #icon>
               <svg-icon icon-class="adopt" />
             </template>
@@ -115,37 +118,39 @@
           >
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              link
-              type="primary"
-              icon="View"
-              @click="openDetail(row)"
-              >详情</el-button
-            >
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.adoptStatus === 1"
-              @click="edit(row)"
-              >修改</el-button
-            >
-            <el-button
-              link
-              type="danger"
-              icon="Delete"
-              :loading="deleteLoading[row.id]"
-              :disabled="deleting"
-              @click="remove(row)"
-              >删除</el-button
-            >
+            <div class="task-action-list">
+              <el-button
+                link
+                type="primary"
+                icon="View"
+                @click="openDetail(row)"
+                >详情</el-button
+              >
+              <el-button
+                link
+                type="primary"
+                icon="Edit"
+                :disabled="row.adoptStatus === 1"
+                @click="edit(row)"
+                >修改</el-button
+              >
+              <el-button
+                link
+                type="danger"
+                icon="Delete"
+                :loading="deleteLoading[row.id]"
+                :disabled="deleting"
+                @click="remove(row)"
+                >删除</el-button
+              >
+            </div>
           </el-popover>
         </template>
       </qt-table>
@@ -180,21 +185,28 @@
           class="row-full"
           tip="填写本次建模需要回答的具体业务问题，建议使用清晰、可验证的问句。"
         >
-          <el-input v-model="form.question" placeholder="请输入目标问题，例如：哪些采购订单尚未完成入库？" :maxlength="256" />
+          <el-input
+            v-model="form.question"
+            placeholder="请输入目标问题，例如：哪些采购订单尚未完成入库？"
+            :maxlength="256"
+          />
         </qt-form-item>
-        <qt-form-item
-          label="问题来源"
-          prop="questionSource"
-          class="row-full"
-        >
-          <el-input v-model="form.questionSource" placeholder="请输入问题来源，例如：采购管理部门提出" :maxlength="256" />
+        <qt-form-item label="问题来源" prop="questionSource" class="row-full">
+          <el-input
+            v-model="form.questionSource"
+            placeholder="请输入问题来源，例如：采购管理部门提出"
+            :maxlength="256"
+          />
         </qt-form-item>
-        <qt-form-item
-          label="优先级"
-          prop="priority"
-          class="row-full"
-        >
-          <el-radio-group v-model="form.priority"><el-radio v-for="dict in om_target_priority" :key="dict.value" :value="Number(dict.value)">{{ dict.label }}</el-radio></el-radio-group>
+        <qt-form-item label="优先级" prop="priority" class="row-full">
+          <el-radio-group v-model="form.priority"
+            ><el-radio
+              v-for="dict in om_target_priority"
+              :key="dict.value"
+              :value="Number(dict.value)"
+              >{{ dict.label }}</el-radio
+            ></el-radio-group
+          >
         </qt-form-item>
         <qt-form-item
           label="业务场景"
@@ -211,11 +223,7 @@
             show-word-limit
           />
         </qt-form-item>
-        <qt-form-item
-          label="验收标准"
-          prop="acceptCriterion"
-          class="row-full"
-        >
+        <qt-form-item label="验收标准" prop="acceptCriterion" class="row-full">
           <el-input
             v-model="form.acceptCriterion"
             class="target-textarea"
@@ -261,15 +269,30 @@
             :options="om_accept_status"
             :value="detail.acceptStatus || '0'"
           />
-          <div v-else class="form-readonly" :class="{ textarea: field.textarea }">
+          <div
+            v-else
+            class="form-readonly"
+            :class="{ textarea: field.textarea }"
+          >
             <template v-if="field.prop === 'createBy'">
               {{ detail.createBy || "-" }}
             </template>
             <template v-else-if="field.prop === 'contact'">
-              {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
+              {{
+                detail.creatorId != null &&
+                creatorPhones[String(detail.creatorId)]
+                  ? creatorPhones[String(detail.creatorId)]
+                  : "-"
+              }}
             </template>
-            <template v-else-if="field.prop === 'createTime'">{{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}</template>
-            <template v-else>{{ detail[field.prop] === "" || detail[field.prop] == null ? "-" : detail[field.prop] }}</template>
+            <template v-else-if="field.prop === 'createTime'">{{
+              proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+            }}</template>
+            <template v-else>{{
+              detail[field.prop] === "" || detail[field.prop] == null
+                ? "-"
+                : detail[field.prop]
+            }}</template>
           </div>
         </el-form-item>
       </el-form>
@@ -364,7 +387,11 @@ const searchStore = reactive({
   items: [
     { label: "目标问题", prop: "question", component: { is: "input" } },
     { label: "问题来源", prop: "questionSource", component: { is: "input" } },
-    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
   ],
 });
 
@@ -394,8 +421,8 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       fixed: "left",
       sortable: "custom",

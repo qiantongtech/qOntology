@@ -14,7 +14,6 @@
         WHERE relation.task_id = #{taskId}
           AND relation.del_flag = 0
         ORDER BY relation.id
-        LIMIT 500
     </select>
 
     <!-- 查询指定起止对象之间的候选关系名称。 -->

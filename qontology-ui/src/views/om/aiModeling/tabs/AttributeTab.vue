@@ -66,7 +66,10 @@
           objectName(row.objectCandidateId)
         }}</template>
         <template #dataType="{ row }">
-          <dict-tag :options="om_attribute_data_type" :value="row.typeCategory" />
+          <dict-tag
+            :options="om_attribute_data_type"
+            :value="row.typeCategory"
+          />
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -88,7 +91,7 @@
             type="primary"
             :disabled="row.adoptStatus === 1"
             @click="adoptOne(row)"
-            >
+          >
             <template #icon>
               <svg-icon icon-class="adopt" />
             </template>
@@ -103,37 +106,39 @@
           >
           <el-popover
             placement="bottom"
-            :width="107"
+            :width="150"
             popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              link
-              type="primary"
-              icon="View"
-              @click="showDetail(row)"
-              >详情</el-button
-            >
-            <el-button
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.adoptStatus === 1"
-              @click="edit(row)"
-              >修改</el-button
-            >
-            <el-button
-              link
-              type="danger"
-              icon="Delete"
-              :loading="deleteLoading[row.id]"
-              :disabled="deleting"
-              @click="remove(row)"
-              >删除</el-button
-            >
+            <div class="task-action-list">
+              <el-button
+                link
+                type="primary"
+                icon="View"
+                @click="showDetail(row)"
+                >详情</el-button
+              >
+              <el-button
+                link
+                type="primary"
+                icon="Edit"
+                :disabled="row.adoptStatus === 1"
+                @click="edit(row)"
+                >修改</el-button
+              >
+              <el-button
+                link
+                type="danger"
+                icon="Delete"
+                :loading="deleteLoading[row.id]"
+                :disabled="deleting"
+                @click="remove(row)"
+                >删除</el-button
+              >
+            </div>
           </el-popover>
         </template>
       </qt-table>
@@ -152,10 +157,10 @@
       @closed="formRef?.clearValidate()"
     >
       <guide-tip-panel
-          type="hint"
-          class="mb15"
-          allow-wrap
-          title="维护对象类型的属性定义，统一属性名称、代码与取值规则，为后续关系建模和数据映射提供一致的字段依据。"
+        type="hint"
+        class="mb15"
+        allow-wrap
+        title="维护对象类型的属性定义，统一属性名称、代码与取值规则，为后续关系建模和数据映射提供一致的字段依据。"
       />
       <el-form
         ref="formRef"
@@ -207,7 +212,10 @@
         </el-form-item>
         <div class="h2-title">数据定义</div>
         <el-form-item label="数据类型" prop="typeCategory">
-          <el-radio-group v-model="form.typeCategory" @change="changeTypeCategory">
+          <el-radio-group
+            v-model="form.typeCategory"
+            @change="changeTypeCategory"
+          >
             <el-radio
               v-for="option in dataTypeOptions"
               :key="option.value"
@@ -337,17 +345,27 @@
         </el-form-item>
         <el-form-item label="联系方式">
           <div class="form-readonly">
-            {{ (detail.creatorId != null && creatorPhones[String(detail.creatorId)]) ? creatorPhones[String(detail.creatorId)] : "-" }}
+            {{
+              detail.creatorId != null &&
+              creatorPhones[String(detail.creatorId)]
+                ? creatorPhones[String(detail.creatorId)]
+                : "-"
+            }}
           </div>
         </el-form-item>
         <el-form-item label="创建时间">
           <div class="form-readonly">
-            {{ proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+            {{
+              proxy.parseTime(detail.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+            }}
           </div>
         </el-form-item>
         <div class="h2-title">数据定义</div>
         <el-form-item label="数据类型">
-          <dict-tag :options="om_attribute_data_type" :value="detail.typeCategory" />
+          <dict-tag
+            :options="om_attribute_data_type"
+            :value="detail.typeCategory"
+          />
         </el-form-item>
         <el-form-item label="类型配置">
           <div class="form-readonly">
@@ -446,7 +464,11 @@ const {
 const searchStore = reactive({
   items: [
     { label: "属性名称", prop: "name", component: { is: "input" } },
-    { label: "采纳状态", prop: "adoptStatus", component: { is: "select", options: om_ai_adopt_status } },
+    {
+      label: "采纳状态",
+      prop: "adoptStatus",
+      component: { is: "select", options: om_ai_adopt_status },
+    },
   ],
 });
 
@@ -479,8 +501,8 @@ const tableStore = reactive({
       label: "编号",
       prop: "id",
       slot: "text",
-      width: 80,
-      minWidth: 80,
+      width: 60,
+      minWidth: 60,
       align: "center",
       fixed: "left",
       sortable: "custom",
@@ -741,11 +763,11 @@ function alignBusinessSource() {
   const matched = businessTypes.value.some(
     (item) =>
       String(item.id) === String(current.businessTypeId) &&
-      item.businessTypeSource === (current.businessTypeSource || "GLOBAL"),
+      item.businessTypeSource === (current.businessTypeSource || "GLOBAL")
   );
   if (matched) return;
   const fallback = businessTypes.value.find(
-    (item) => String(item.id) === String(current.businessTypeId),
+    (item) => String(item.id) === String(current.businessTypeId)
   );
   if (fallback) current.businessTypeSource = fallback.businessTypeSource;
 }

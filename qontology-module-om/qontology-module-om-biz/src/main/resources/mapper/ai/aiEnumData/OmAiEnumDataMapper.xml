@@ -6,7 +6,8 @@
     <select id="selectCandidateIndex" resultType="java.util.LinkedHashMap">
         SELECT enum_type.enum_type AS enumType,
                enum_data.enum_label AS enumLabel,
-               enum_data.enum_value AS enumValue
+               enum_data.enum_value AS enumValue,
+               enum_data.description
         FROM om_ai_enum_data enum_data
                  INNER JOIN om_ai_enum_type enum_type ON enum_type.id = enum_data.enum_type_id
         WHERE enum_type.task_id = #{taskId}

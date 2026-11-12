@@ -309,7 +309,12 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     /** 删除任务记录。 */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int delete(Collection<Long> ids) {
+        ids.forEach(id -> {
+            clearTaskResults(id);
+            fileMapper.delete(new QueryWrapper<OmAiFileDO>().eq("task_id", id));
+        });
         return taskMapper.deleteBatchIds(ids);
     }
 
@@ -356,6 +361,32 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
             task.setFinishedTime(new Date());
             taskMapper.updateById(task);
             throw new ServiceException("后台解析任务提交失败，请稍后重试");
+        }
+    }
+
+    @Override
+    public synchronized void resume(Long id) {
+        OmAiTaskDO task = getRequiredTask(id);
+        if (OmAiTaskStatusEnum.SUCCESS.getCode().equals(task.getStatus())) {
+            throw new ServiceException("任务已完成，无需断点续跑");
+        }
+        if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus()) && asyncProcessor.isRunning(id)) {
+            throw new ServiceException("任务正在解析");
+        }
+        if (!asyncProcessor.reserve(id)) {
+            throw new ServiceException("任务正在解析");
+        }
+        task.setStatus(OmAiTaskStatusEnum.RUNNING.getCode());
+        task.setFinishedTime(null);
+        task.setFailureReason(null);
+        taskMapper.updateById(task);
+        taskMapper.update(null, new UpdateWrapper<OmAiTaskDO>().eq("id", id)
+                .set("finished_time", null).set("failure_reason", null));
+        try {
+            taskExecutor.execute(() -> asyncProcessor.resume(id));
+        } catch (RuntimeException exception) {
+            asyncProcessor.release(id);
+            throw new ServiceException("断点续跑任务提交失败，请稍后重试");
         }
     }
 
@@ -560,6 +591,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         request.setVersionId(task.getVersionId());
         request.setEnumName(stringValue(row, "enum_name"));
         request.setEnumType(stringValue(row, "enum_type"));
+        request.setDescription(stringValue(row, "description"));
         request.setStatus(Optional.ofNullable(stringValue(row, "status")).orElse("0"));
         request.setRemark(stringValue(row, "remark"));
         Long formalTypeId = enumTypeService.createOmEnumType(request);
@@ -573,6 +605,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
             childRequest.setEnumLabel(stringValue(child, "enum_label"));
             childRequest.setEnumValue(stringValue(child, "enum_value"));
             childRequest.setEnumType(stringValue(row, "enum_type"));
+            childRequest.setDescription(stringValue(child, "description"));
             childRequest.setStatus(Optional.ofNullable(stringValue(child, "status")).orElse("0"));
             childRequest.setRemark(stringValue(child, "remark"));
             Long formalChildId = enumDataService.createOmEnumData(childRequest);
@@ -679,8 +712,9 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         request.setDescription(stringValue(row, "description"));
         request.setStartTypeId(startTypeId);
         request.setEndTypeId(endTypeId);
-        request.setReversibleFlag(integerValue(row, "reversible_flag"));
-        request.setReverseName(stringValue(row, "reverse_name"));
+        Integer reversibleFlag = Integer.valueOf(1).equals(integerValue(row, "reversible_flag")) ? 1 : 0;
+        request.setReversibleFlag(reversibleFlag);
+        request.setReverseName(reversibleFlag == 1 ? stringValue(row, "reverse_name") : null);
         request.setTargetIds(targetIds);
         return relationService.createOmObjectTypeRelation(request);
     }
