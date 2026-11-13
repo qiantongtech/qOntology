@@ -59,10 +59,10 @@
               ref="formRef"
               :model="form"
               :rules="rules"
-              label-width="120px"
+              label-width="140px"
               class="base-form"
             >
-              <qt-form-item label="任务名称" prop="taskName">
+              <qt-form-item label="任务名称" prop="taskName" class="row-full">
                 <el-input
                   v-model="form.taskName"
                   placeholder="请输入任务名称"
@@ -260,10 +260,14 @@
 
         <div class="button-style">
           <template v-if="activeStep === 0">
-            <el-button type="primary" @click="goList">返回列表</el-button>
-            <el-button :loading="submitting" @click="saveAndContinue"
-              >下一步</el-button
+            <el-button @click="goList">返回列表</el-button>
+            <el-button
+              type="primary"
+              :loading="submitting"
+              @click="saveAndContinue"
             >
+              下一步
+            </el-button>
           </template>
           <template v-else-if="activeStep === 1">
             <el-button
@@ -583,9 +587,7 @@ function handleTerminalTaskState() {
   stopAnalysisStream();
   if (task.value.status === 3 && !failureNotified.value) {
     failureNotified.value = true;
-    proxy.$modal.msgError(
-      task.value.failureReason || "AI解析失败，任务已终止"
-    );
+    proxy.$modal.msgError(task.value.failureReason || "AI解析失败，任务已终止");
   }
 }
 
@@ -834,18 +836,20 @@ onMounted(async () => {
   }
 }
 .pagecont-top {
-  position: relative;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  /* 底部操作按钮固定在预留区域内，内容区不会伸到按钮下方 */
-  padding-bottom: 68px;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--qt-radius-small);
+  background: var(--qt-surface-background);
 }
 .infotop {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 .main {
   display: flex;
@@ -877,8 +881,13 @@ onMounted(async () => {
   content: "";
 }
 .base-form {
-  max-width: 1200px;
-  margin: 0;
+  width: 100%;
+}
+.base-form :deep(.el-input),
+.base-form :deep(.el-select),
+.base-form :deep(.el-textarea),
+.base-form :deep(.upload-file) {
+  width: 100%;
 }
 /* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
 .base-form :deep(.el-form-item.has-tip) {
@@ -1108,15 +1117,11 @@ onMounted(async () => {
   border: 1px solid #d9e5ff;
   background: #f5f8ff;
 }
-/* 底部操作区固定在预留区域内，与内容区分离，避免遮住解析过程与审核列表。 */
 .button-style {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 10;
-  padding: 0px 35px 16px 0;
-  background: #fff;
+  flex: 0 0 auto;
+  padding: 15px 35px 15px 0;
+  border-top: 1px solid var(--qt-border-color-light);
+  background: var(--qt-surface-background);
   text-align: right;
 }
 @media (max-width: 1200px) {
@@ -1135,6 +1140,10 @@ onMounted(async () => {
  */
 
 .ai-modeling-page {
+  display: flex;
+  height: calc(100vh - 84px);
+  overflow: hidden;
+  flex-direction: column;
   background-color: var(--qt-page-background);
 }
 .ai-modeling-page :deep(.el-button .svg-icon) {

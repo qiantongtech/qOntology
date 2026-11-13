@@ -22,12 +22,13 @@
     ref="formRef"
     :model="localForm"
     :rules="rules"
-    label-width="170px"
+    label-width="140px"
+    class="struct-basic-form"
     :disabled="disabled"
   >
     <div class="h2-titles mb15">基础信息</div>
     <el-row :gutter="20">
-      <el-col :span="11">
+      <el-col :span="12">
         <el-form-item label="项目" prop="projectId">
           <el-select
             v-model="localForm.projectId"
@@ -43,7 +44,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="11">
+      <el-col :span="12">
         <el-form-item label="项目版本" prop="projectVersionId">
           <el-select
             v-model="localForm.projectVersionId"
@@ -59,7 +60,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="11">
+      <el-col :span="12">
         <qt-form-item label="责任人" prop="responsibleUserId" class="row-full">
           <el-select
             v-model="localForm.responsibleUserId"
@@ -77,7 +78,7 @@
           </el-select>
         </qt-form-item>
       </el-col>
-      <el-col :span="11">
+      <el-col :span="12">
         <qt-form-item label="联系电话" class="row-full">
           <el-input
             :model-value="localForm.responsiblePhone"
@@ -88,12 +89,12 @@
       </el-col>
     </el-row>
     <el-row :gutter="20">
-      <el-col :span="11">
+      <el-col :span="12">
         <el-form-item label="任务名称" prop="name">
           <el-input v-model="localForm.name" placeholder="请输入任务名称" />
         </el-form-item>
       </el-col>
-      <el-col :span="11">
+      <el-col :span="12">
         <el-form-item label="数据源" prop="dataSourceId">
           <div class="data-source-wrap">
             <el-select
@@ -125,7 +126,7 @@
       </el-col>
     </el-row>
     <el-row :gutter="20">
-      <el-col :span="11">
+      <el-col :span="12">
         <el-form-item label="更新类型" prop="updateType">
           <el-radio-group v-model="localForm.updateType">
             <el-radio
@@ -138,7 +139,7 @@
           </el-radio-group>
         </el-form-item>
       </el-col>
-      <el-col :span="11">
+      <el-col :span="12">
         <el-form-item label="更新频率" prop="updateFrequency">
           <div class="data-source-wrap">
             <el-input
@@ -154,7 +155,7 @@
       </el-col>
     </el-row>
     <el-row :gutter="20">
-      <el-col :span="22">
+      <el-col :span="24">
         <el-form-item label="描述" prop="description">
           <el-input
             type="textarea"
@@ -285,6 +286,16 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+.struct-basic-form {
+  width: 100%;
+
+  :deep(.el-input),
+  :deep(.el-select),
+  :deep(.el-textarea) {
+    width: 100%;
+  }
+}
+
 .success-icon,
 .error-icon {
   width: 18px;
