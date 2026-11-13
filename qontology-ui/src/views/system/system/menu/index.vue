@@ -51,7 +51,7 @@
         </el-button>
       </template>
       <qt-table v-bind="tableStore" ref="tableRef">
-        <template #text="{ row, column_data }">{{ row[column_data.prop] }}</template>
+        <template #text="{ row, column_data }">{{ row[column_data.prop] === '' ? '-' : row[column_data.prop] }}</template>
         <template #icon="{ row }">
           <svg-icon v-if="row.icon" :icon-class="row.icon" />
         </template>

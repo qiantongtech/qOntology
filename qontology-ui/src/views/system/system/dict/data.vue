@@ -96,7 +96,7 @@
           ref="tableRef"
         >
           <template #text="{ row, column_data }">{{
-            row[column_data.prop]
+            row[column_data.prop] === '' ? '-' : row[column_data.prop]
           }}</template>
           <template #dictLabel="{ row }">
             <span
