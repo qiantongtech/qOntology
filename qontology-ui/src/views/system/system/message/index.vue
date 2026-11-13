@@ -17,296 +17,316 @@
 -->
 
 <template>
-    <div class="app-container">
-        <div class="pagecont-top" v-show="showSearch">
-            <el-form
-                class="btn-style"
-                :model="queryParams"
-                ref="queryRef"
-                :inline="true"
-                label-width="68px"
-            >
-                <el-form-item label="消息类型" prop="category">
-                    <el-select
-                        v-model="queryParams.category"
-                        placeholder="消息类型"
-                        clearable
-                        class="el-form-input-width"
-                    >
-                        <el-option
-                            v-for="dict in message_category"
-                            :key="dict.value"
-                            :label="dict.label"
-                            :value="dict.value"
-                        />
-                    </el-select>
-                </el-form-item>
+  <div class="app-container" ref="app-container">
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <template #search>
+        <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef" />
+      </template>
 
-                <el-form-item label="创建时间">
-                    <el-date-picker
-                        class="el-form-input-width"
-                        v-model="queryParams.dateRange"
-                        value-format="YYYY-MM-DD"
-                        type="daterange"
-                        range-separator="-"
-                        start-placeholder="开始日期"
-                        end-placeholder="结束日期"
-                    ></el-date-picker>
-                </el-form-item>
-                <el-form-item>
-                    <el-button
-                        plain
-                        type="primary"
-                        @click="handleQuery"
-                        @mousedown="(e) => e.preventDefault()"
-                    >
-                        <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
-                    </el-button>
-                    <el-button @click="resetQuery" @mousedown="(e) => e.preventDefault()">
-                        <i class="iconfont-mini icon-a-shuaxinxianxing mr5"></i>重置
-                    </el-button>
-                </el-form-item>
-            </el-form>
+      <template #actions-data>
+        <el-button plain @click="readAllMsg">
+          <i class="iconfont-mini icon-a-zu22378 mr5"></i>全部设为已读
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <template #hasRead="{ row }">
+          <el-tag :type="row.hasRead ? 'success' : 'danger'">
+            {{ row.hasRead ? '已读' : '未读' }}
+          </el-tag>
+        </template>
+
+        <template #handle="{ row }">
+          <el-button
+            link
+            type="primary"
+            icon="View"
+            @click="handleView(row)"
+          >
+            详情
+          </el-button>
+          <el-button
+            link
+            type="danger"
+            icon="Delete"
+            @click="deleteMsg(row.id)"
+          >
+            删除
+          </el-button>
+        </template>
+      </qt-table>
+    </qt-wrap>
+
+    <el-dialog
+      title="消息详情"
+      v-model="openView"
+      width="800px"
+      draggable
+      destroy-on-close
+      class="msg-dialog"
+    >
+      <el-form label-width="100px">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="消息标题：">
+              <div class="form-value-ifon">
+                {{ viewData.title }}
+              </div>
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="12">
+            <el-form-item label="类型：">
+              <div class="form-value-ifon">
+                <dict-tag :options="message_category" :value="viewData.category" />
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="是否已读：">
+              <div class="form-value-ifon">
+                <el-tag :type="viewData.hasRead ? 'success' : 'danger'">
+                  {{ viewData.hasRead ? '已读' : '未读' }}
+                </el-tag>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="消息内容：">
+              <div class="form-value-ifon">
+                {{ viewData.content }}
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="创建时间：">
+              <div class="form-value-ifon">
+                {{ viewData.createTime }}
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="openView = false">关 闭</el-button>
         </div>
-        <div class="pagecont-bottom">
-            <div class="justify-between mb15">
-                <el-row :gutter="10" class="btn-style">
-                    <el-col :span="1.5">
-                        <el-button @click="readAllMsg" plain>
-                            <i class="iconfont-mini icon-a-zu22378 mr5"></i>全部设为已读
-                        </el-button>
-                    </el-col>
-                </el-row>
-                <right-toolbar
-                    v-model:showSearch="showSearch"
-                    @queryTable="getList"
-                ></right-toolbar>
-            </div>
-
-            <el-table stripe v-loading="loading" :data="msgList">
-                <el-table-column label="消息标题" align="center" key="title" prop="title" />
-                <el-table-column label="消息类型" align="center" key="category">
-                    <template #default="scope">
-                        <dict-tag :options="message_category" :value="scope.row.category" />
-                    </template>
-                </el-table-column>
-                <el-table-column label="是否已读" align="center" key="hasRead">
-                    <template #default="scope">
-                        <el-tag :type="scope.row.hasRead ? 'success' : 'danger'">
-                            {{ scope.row.hasRead ? '已读' : '未读' }}
-                        </el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column label="消息内容" align="center" key="content" prop="content" />
-
-                <el-table-column
-                    label="创建时间"
-                    align="center"
-                    key="createTime"
-                    prop="createTime"
-                />
-
-                <el-table-column
-                    label="操作"
-                    align="center"
-                    class-name="small-padding fixed-width"
-                    fixed="right"
-                    width="240"
-                >
-                    <template #default="scope">
-                        <el-button link type="primary" icon="View" @click="handleView(scope.row)">
-                            详情
-                        </el-button>
-                        <el-button
-                            link
-                            type="danger"
-                            icon="Delete"
-                            @click="deleteMsg(scope.row.id)"
-                        >
-                            删除
-                        </el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
-            <pagination
-                v-show="total > 0"
-                :total="total"
-                v-model:page="queryParams.pageNum"
-                v-model:limit="queryParams.pageSize"
-                @pagination="getList"
-            />
-        </div>
-
-        <el-dialog
-            title="消息详情"
-            v-model="openView"
-            width="800px"
-            draggable
-            destroy-on-close
-            class="msg-dialog"
-        >
-            <el-form label-width="100px">
-                <el-row :gutter="20">
-                    <el-col :span="12">
-                        <el-form-item label="消息标题：">
-                            <div class="form-value-ifon">
-                                {{ viewData.title }}
-                            </div>
-                        </el-form-item>
-                    </el-col>
-
-                    <el-col :span="12">
-                        <el-form-item label="类型：">
-                            <div class="form-value-ifon">
-                                <dict-tag :options="message_category" :value="viewData.category" />
-                            </div>
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                        <el-form-item label="是否已读：">
-                            <div class="form-value-ifon">
-                                <el-tag :type="viewData.hasRead ? 'success' : 'danger'">
-                                    {{ viewData.hasRead ? '已读' : '未读' }}
-                                </el-tag>
-                            </div>
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                        <el-form-item label="消息内容：">
-                            <div class="form-value-ifon">
-                                {{ viewData.content }}
-                            </div>
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="24">
-                        <el-form-item label="创建时间：">
-                            <div class="form-value-ifon">
-                                {{ viewData.createTime }}
-                            </div>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-            </el-form>
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button @click="openView = false">关 闭</el-button>
-                </div>
-            </template>
-        </el-dialog>
-    </div>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup name="Message">
-    import { getCurrentInstance, ref } from 'vue';
-    import useUserStore from '@/store/system/user';
-    import {
-        listMessage,
-        delMessage,
-        read,
-        readAll,
-        updateMessage
-    } from '@/api/system/system/message/message';
+import { getCurrentInstance, reactive, ref } from 'vue';
 
-    const openView = ref(false);
-    const viewData = ref({});
-    const userStore = useUserStore();
-    const queryParams = ref({
-        dateRange: [],
-        pageNum: 1,
-        pageSize: 10,
-        receiverId: userStore.userId
-    });
-    const total = ref(0);
+import useUserStore from '@/store/system/user';
+import {
+  listMessage,
+  delMessage,
+  read,
+  readAll,
+  updateMessage
+} from '@/api/system/system/message/message';
 
-    const loading = ref(false);
-    const showSearch = ref(true);
-    const msgList = ref([]);
-    const { proxy } = getCurrentInstance();
-    const { message_category } = proxy.useDict('message_category');
+const { proxy } = getCurrentInstance();
+const { message_category } = proxy.useDict('message_category');
+const userStore = useUserStore();
 
-    const handleQuery = () => {
-        console.log(queryParams.value);
-        getList();
-    };
+const openView = ref(false);
+const viewData = ref({});
 
-    const resetQuery = () => {
-        queryParams.value = {};
-    };
+/**
+ * 表格实例
+ *
+ * getList()      刷新当前页
+ * resetQuery()   回第一页并重新查询
+ * updateRow()    更新表格中的某一行
+ */
+const tableRef = ref(null);
 
-    const handleView = (e) => {
-        e.hasRead = '1';
-        e.delFlag = 1;
-        updateMessage(e);
-        msgList.value = msgList.value.map((item) => {
-            if (e.id == item.id) {
-                return { ...item, hasRead: '1' }; // 创建一个新对象，修改 hasRead
-            }
-            return item; // 保持其他项不变
-        });
-        openView.value = true;
-        viewData.value = e;
-    };
+/**
+ * 查询参数
+ *
+ * receiverId 固定为当前用户；dateRange 为日期范围控件的临时字段
+ */
+const tableParams = reactive({
+  category: undefined,
+  receiverId: userStore.userId,
+  dateRange: []
+});
 
-    const startTime = ref(null);
-    const endTime = ref(null);
-    const getList = () => {
-        const reqData = {
-            category: queryParams.value.category,
-            receiverId: userStore.userId,
-            pageNum: queryParams.value.pageNum,
-            pageSize: queryParams.value.pageSize
-        };
-        if (queryParams.value.dateRange && queryParams.value.dateRange.length > 0) {
-            ((reqData.startTime = queryParams.value.dateRange[0]),
-                (reqData.endTime = queryParams.value.dateRange[1]));
-        }
-        listMessage(reqData).then((response) => {
-            msgList.value = response.data.rows;
-            total.value = response.data.total;
-        });
-    };
-    getList();
-
-    /** 全部已读 */
-    function readAllMsg() {
-        ElMessageBox.confirm('确定全部设为已读吗？')
-            .then(() => {
-                return readAll();
-            })
-            .then((res) => {
-                console.log('------设置为已读----', res);
-                getList();
-                ElMessage.success('操作成功');
-            })
-            .catch(() => {});
+/**
+ * 查询栏配置
+ */
+const searchStore = reactive({
+  items: [
+    {
+      label: '消息类型',
+      prop: 'category',
+      component: {
+        is: 'select',
+        options: message_category,
+        placeholder: '消息类型',
+        clearable: true
+      }
+    },
+    {
+      label: '创建时间',
+      prop: 'dateRange',
+      component: {
+        is: 'date-picker',
+        type: 'daterange',
+        valueFormat: 'YYYY-MM-DD',
+        rangeSeparator: '-',
+        startPlaceholder: '开始日期',
+        endPlaceholder: '结束日期',
+        clearable: true
+      }
     }
-    /** 删除 */
-    function deleteMsg(id) {
-        ElMessageBox.confirm('确定删除改条消息吗？')
-            .then(() => {
-                return delMessage(id);
-            })
-            .then(() => {
-                getList();
-                ElMessage.success('操作成功');
-            })
-            .catch(() => {});
-    }
+  ]
+});
 
-    // /**
-    //  * 修改状态为已读
-    //  * @param id
-    //  */
-    // function updateMsg(row) {
-    //     row.hasRead = '1'
-    //     updateMessage(row);
-    // }
+/**
+ * QtTable 统一配置
+ */
+const tableStore = reactive({
+  config: {
+    // 启用表头排序，首次请求默认按创建时间倒序
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: 'id',
+      defaultSort: { prop: 'createTime', order: 'descending' }
+    }
+  },
+  columns: [
+    {
+      label: '消息标题',
+      prop: 'title',
+      align: 'center'
+    },
+    {
+      label: '消息类型',
+      prop: 'category',
+      align: 'center',
+      dict: 'message_category'
+    },
+    {
+      label: '是否已读',
+      prop: 'hasRead',
+      align: 'center',
+      slot: 'hasRead'
+    },
+    {
+      label: '消息内容',
+      prop: 'content',
+      align: 'center'
+    },
+    {
+      label: '创建时间',
+      prop: 'createTime',
+      align: 'center',
+      date: '{y}-{m}-{d} {h}:{i}:{s}',
+      sortable: true
+    },
+    {
+      label: '操作',
+      align: 'center',
+      fixed: 'right',
+      width: 240,
+      minWidth: 240,
+      slot: 'handle'
+    }
+  ],
+  func: requestTableData,
+  params: tableParams,
+  events: {}
+});
+
+/**
+ * QtTable 数据请求适配器
+ *
+ * 后端消息分页接口按顶层 startTime / endTime 过滤创建时间，
+ * 因此 dateRange 拆分为该两个字段后再请求，不原样传给后端。
+ *
+ * @param {Object} params 查询条件 + pageNum + pageSize
+ * @returns {Promise<{ data: { rows: Array, total: number } }>}
+ */
+async function requestTableData(params) {
+  const { dateRange, ...requestParams } = params;
+
+  if (dateRange && dateRange.length > 0) {
+    requestParams.startTime = dateRange[0];
+    requestParams.endTime = dateRange[1];
+  }
+
+  const response = await listMessage(requestParams);
+
+  return {
+    data: {
+      rows: response.rows ?? response.data?.rows ?? [],
+      total: response.total ?? response.data?.total ?? 0
+    }
+  };
+}
+
+/**
+ * 刷新表格当前页，操作成功后调用
+ */
+function getList() {
+  tableRef.value?.getList();
+}
+
+/**
+ * 查看消息详情，并将该条消息标记为已读
+ *
+ * @param {Object} row 行数据
+ */
+function handleView(row) {
+  const payload = { ...row, hasRead: '1', delFlag: 1 };
+  updateMessage(payload);
+  tableRef.value?.updateRow(row.id, { hasRead: '1' });
+  openView.value = true;
+  viewData.value = payload;
+}
+
+/**
+ * 全部设为已读
+ */
+function readAllMsg() {
+  ElMessageBox.confirm('确定全部设为已读吗？')
+    .then(() => {
+      return readAll();
+    })
+    .then(() => {
+      getList();
+      ElMessage.success('操作成功');
+    })
+    .catch(() => {});
+}
+
+/**
+ * 删除单条消息
+ *
+ * @param {number|string} id 消息 ID
+ */
+function deleteMsg(id) {
+  ElMessageBox.confirm('确定删除改条消息吗？')
+    .then(() => {
+      return delMessage(id);
+    })
+    .then(() => {
+      getList();
+      ElMessage.success('操作成功');
+    })
+    .catch(() => {});
+}
 </script>
 
-<style lang="scss">
-    .msg-dialog {
-        .el-dialog__body {
-            height: 300px !important;
-        }
-    }
+<style scoped lang="scss">
+.msg-dialog {
+  :deep(.el-dialog__body) {
+    height: 300px !important;
+  }
+}
 </style>

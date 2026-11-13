@@ -111,7 +111,12 @@
                         <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
                     </template>
                 </el-table-column>
-                <el-table-column label="创建时间" align="center" prop="createTime" width="160">
+                <el-table-column
+                    label="创建时间"
+                    align="center"
+                    prop="createTime"
+                    width="160"
+                >
                     <template #default="scope">
                         <span>{{ parseTime(scope.row.createTime) }}</span>
                     </template>
@@ -157,7 +162,7 @@
             </el-table>
         </div>
 
-        <!-- 添加或修改部门对话框 -->
+        <!-- 新增或修改部门对话框 -->
         <el-dialog
             :title="title"
             v-model="open"
@@ -166,7 +171,12 @@
             draggable
             destroy-on-close
         >
-            <el-form ref="deptRef" :model="form" :rules="rules" label-width="80px">
+            <el-form
+                ref="deptRef"
+                :model="form"
+                :rules="rules"
+                label-width="80px"
+            >
                 <el-row :gutter="20">
                     <el-col :span="24" v-if="form.parentId !== 0">
                         <el-form-item label="上级部门" prop="parentId">
@@ -192,7 +202,7 @@
                     <el-col :span="12">
                         <el-form-item label="显示排序" prop="orderNum">
                             <el-input-number
-                                style="width: 100%"
+                                class="input-number-full"
                                 v-model="form.orderNum"
                                 controls-position="right"
                                 :min="0"
@@ -348,7 +358,7 @@
             form.value.parentId = row.deptId;
         }
         open.value = true;
-        title.value = '添加部门';
+        title.value = '新增部门';
     }
 
     /** 展开/折叠操作 */
@@ -410,3 +420,9 @@
 
     getList();
 </script>
+
+<style scoped lang="scss">
+.input-number-full {
+  width: 100%;
+}
+</style>

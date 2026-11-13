@@ -17,7 +17,12 @@
 -->
 
 <template>
-    <el-form ref="pwdRef" :model="user" :rules="rules" label-width="80px">
+    <el-form
+        ref="pwdRef"
+        :model="user"
+        :rules="rules"
+        label-width="80px"
+    >
         <el-form-item label="旧密码" prop="oldPassword">
             <el-input
                 v-model="user.oldPassword"
@@ -65,10 +70,10 @@
 
     // 密码强度检测的正则表达式
     const passwordStrengthRegex = {
-        minLength: /^.{8,}$/, // 最小 8 位
-        upperCase: /[A-Z]/, // 至少一个大写字母
-        lowerCase: /[a-z]/, // 至少一个小写字母
-        number: /\d/, // 至少一个数字
+        minLength: /^.{8,}$/,  // 最小 8 位
+        upperCase: /[A-Z]/,  // 至少一个大写字母
+        lowerCase: /[a-z]/,  // 至少一个小写字母
+        number: /\d/,  // 至少一个数字
         specialChar: /[!@#$%^&*(),.?":{}|<>]/ // 至少一个特殊字符
     };
 
@@ -125,10 +130,10 @@
                     const strengthMessage = checkPasswordStrength(value);
                     if (strengthMessage) {
                         passwordStrengthMessage = strengthMessage;
-                        callback(new Error(strengthMessage)); // 报告错误
+                        callback(new Error(strengthMessage));  // 报告错误
                     } else {
-                        passwordStrengthMessage = ''; // 清除密码强度提示
-                        callback(); // 密码强度符合要求
+                        passwordStrengthMessage = '';  // 清除密码强度提示
+                        callback();  // 密码强度符合要求
                     }
                 },
                 trigger: 'blur'
@@ -157,7 +162,7 @@
     }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
     .password-strength-message {
         color: red;
         font-size: 12px;

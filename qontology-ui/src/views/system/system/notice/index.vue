@@ -18,213 +18,77 @@
 
 <template>
   <div class="app-container" ref="app-container">
-    <div class="pagecont-top" v-show="showSearch">
-      <el-form
-        class="btn-style"
-        :model="queryParams"
-        ref="queryRef"
-        :inline="true"
-        label-width="68px"
-      >
-        <el-form-item label="公告标题" prop="noticeTitle">
-          <el-input
-            v-model="queryParams.noticeTitle"
-            placeholder="请输入公告标题"
-            clearable
-            class="el-form-input-width"
-            @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="操作人员" prop="createBy">
-          <el-input
-            v-model="queryParams.createBy"
-            placeholder="请输入操作人员"
-            clearable
-            class="el-form-input-width"
-            @keyup.enter="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="公告类型" prop="noticeType">
-          <el-select
-            v-model="queryParams.noticeType"
-            placeholder="请选择公告类型"
-            clearable
-            class="el-form-input-width"
-          >
-            <el-option
-              v-for="dict in sys_notice_type"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <!-- 查询条件区域 -->
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+        />
+      </template>
+
+      <!-- 表格上方左侧按钮区 -->
+      <template #actions-data>
+        <el-button
+          type="primary"
+          plain
+          @click="handleAdd"
+          v-hasPermi="['system:notice:add']"
+        >
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <!-- <el-button
+          type="primary"
+          plain
+          :disabled="single"
+          @click="handleUpdate"
+          v-hasPermi="['system:notice:edit']"
+        >
+          <i class="iconfont-mini icon-a-xiugaixianxing mr5"></i>修改
+        </el-button> -->
+        <el-button
+          type="danger"
+          plain
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['system:notice:remove']"
+        >
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <template #handle="{ row }">
           <el-button
-            plain
+            link
             type="primary"
-            @click="handleQuery"
-            @mousedown="(e) => e.preventDefault()"
+            @click="handleUpdate(row)"
+            v-hasPermi="['system:notice:edit']"
           >
-            <i class="iconfont-mini icon-a-zu22377 mr5"></i>查询
+            <i class="iconfont-mini icon-a-xiugaixianxing"></i>修改
           </el-button>
-          <el-button @click="resetQuery" @mousedown="(e) => e.preventDefault()">
-            <i class="iconfont-mini icon-a-zu22378 mr5"></i>重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-    <div class="pagecont-bottom">
-      <div class="justify-between mb15">
-        <el-row :gutter="10" class="btn-style">
-          <el-col :span="1.5">
-            <el-button
-              type="primary"
-              plain
-              @click="handleAdd"
-              v-hasPermi="['system:notice:add']"
-            >
-              <i class="iconfont-mini icon-xinzeng"></i>
-              新增</el-button
-            >
-          </el-col>
-          <!-- <el-col :span="1.5">
-            <el-button
-              type="primary"
-              plain
-              :disabled="single"
-              @click="handleUpdate"
-              v-hasPermi="['system:notice:edit']"
-            >
-              <i class="iconfont-mini icon-a-xiugaixianxing"></i>
-              修改</el-button
-            >
-          </el-col> -->
-          <el-col :span="1.5">
-            <el-button
-              type="danger"
-              plain
-              :disabled="multiple"
-              @click="handleDelete"
-              v-hasPermi="['system:notice:remove']"
-              icon="Delete"
-            >
-              删除</el-button
-            >
-          </el-col>
-        </el-row>
-        <right-toolbar
-          v-model:showSearch="showSearch"
-          @queryTable="getList"
-        ></right-toolbar>
-      </div>
-
-      <el-table
-        stripe
-        height="60vh"
-        ref="logininforRef"
-        v-loading="loading"
-        :data="noticeList"
-        @selection-change="handleSelectionChange"
-        :default-sort="defaultSort"
-        @sort-change="handleSortChange"
-      >
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column
-          label="编号"
-          align="center"
-          prop="noticeId"
-          width="100"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-        />
-        <el-table-column
-          label="公告标题"
-          align="left"
-          prop="noticeTitle"
-          width="250"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        />
-        <el-table-column label="公告类型" align="center" prop="noticeType">
-          <template #default="scope">
-            <dict-tag
-              :options="sys_notice_type"
-              :value="scope.row.noticeType"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" align="center" prop="status">
-          <template #default="scope">
-            <dict-tag :options="sys_notice_status" :value="scope.row.status" />
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="创建人"
-          align="center"
-          prop="createBy"
-          :show-overflow-tooltip="{ effect: 'light' }"
-        />
-        <el-table-column
-          label="创建时间"
-          align="center"
-          prop="createTime"
-          sortable="custom"
-          :sort-orders="['descending', 'ascending']"
-          width="180"
-        >
-          <template #default="scope">
-            <span>{{
-              parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}")
-            }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="操作"
-          align="center"
-          class-name="small-padding fixed-width"
-          fixed="right"
-          width="240"
-        >
-          <template #default="scope">
-            <el-button
-              link
-              type="primary"
-              @click="handleUpdate(scope.row)"
-              v-hasPermi="['system:notice:edit']"
-            >
-              <i class="iconfont-mini icon-a-xiugaixianxing"></i>
-              修改</el-button
-            >
-            <el-button
-              link
-              type="danger"
-              @click="handleDelete(scope.row)"
-              v-hasPermi="['system:notice:remove']"
-              icon="Delete"
-            >
-              删除</el-button
-            >
-            <el-button
-              link
-              type="primary"
-              @click="handleView(scope.row)"
-              v-hasPermi="['system:notice:query']"
-              icon="view"
-            >
-              详情</el-button
-            >
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <pagination
-        v-show="total > 0"
-        :total="total"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        @pagination="getList"
-      />
-    </div>
+          <el-button
+            link
+            type="danger"
+            @click="handleDelete(row)"
+            v-hasPermi="['system:notice:remove']"
+            icon="Delete"
+          >
+            删除</el-button
+          >
+          <el-button
+            link
+            type="primary"
+            @click="handleView(row)"
+            v-hasPermi="['system:notice:query']"
+            icon="view"
+          >
+            详情</el-button
+          >
+        </template>
+      </qt-table>
+    </qt-wrap>
 
     <!-- 添加或修改公告对话框 -->
     <el-dialog
@@ -235,7 +99,12 @@
       draggable
       destroy-on-close
     >
-      <el-form ref="noticeRef" :model="form" :rules="rules" label-width="80px">
+      <el-form
+        ref="noticeRef"
+        :model="form"
+        :rules="rules"
+        label-width="80px"
+      >
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="公告标题" prop="noticeTitle">
@@ -292,118 +161,257 @@ import {
   getNotice,
   delNotice,
   addNotice,
-  updateNotice,
+  updateNotice
 } from "@/api/system/system/notice.js";
 
+// 当前组件实例，用于字典、弹窗提示、日期参数处理等全局方法
 const { proxy } = getCurrentInstance();
+
+// 字典：sys_notice_status 公告状态、sys_notice_type 公告类型
 const { sys_notice_status, sys_notice_type } = proxy.useDict(
   "sys_notice_status",
   "sys_notice_type"
 );
 
-const noticeList = ref([]);
+/**
+ * 表格实例
+ *
+ * getList()    刷新当前页
+ * resetQuery() 回第一页并重新查询
+ */
+const tableRef = ref(null);
+
+/**
+ * 查询参数
+ *
+ * QtSearchBar 负责修改条件，QtTable 负责补充分页参数
+ */
+const tableParams = reactive({
+  noticeTitle: undefined,
+  createBy: undefined,
+  noticeType: undefined
+});
+
+/**
+ * 查询栏配置，prop 与 tableParams 字段一一对应
+ */
+const searchStore = reactive({
+  items: [
+    {
+      label: "公告标题",
+      prop: "noticeTitle",
+      component: {
+        is: "input"
+      }
+    },
+    {
+      label: "操作人员",
+      prop: "createBy",
+      component: {
+        is: "input"
+      }
+    },
+    {
+      label: "公告类型",
+      prop: "noticeType",
+      component: {
+        is: "select",
+        options: sys_notice_type
+      }
+    }
+  ]
+});
+
+/**
+ * QtTable 统一配置
+ */
+const tableStore = reactive({
+  config: {
+    // 启用表头排序，首次请求默认按创建时间倒序
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "noticeId",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange
+    }
+  },
+  columns: [
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      align: "center"
+    },
+    {
+      label: "编号",
+      prop: "noticeId",
+      width: 100,
+      minWidth: 100,
+      align: "center",
+      sortable: true,
+      sortOrders: ["descending", "ascending"]
+    },
+    {
+      label: "公告标题",
+      prop: "noticeTitle",
+      width: 250,
+      minWidth: 250,
+      align: "left",
+      showOverflowTooltip: {
+        effect: "light"
+      }
+    },
+    {
+      label: "公告类型",
+      prop: "noticeType",
+      align: "center",
+      dict: "sys_notice_type"
+    },
+    {
+      label: "状态",
+      prop: "status",
+      align: "center",
+      dict: "sys_notice_status"
+    },
+    {
+      label: "创建人",
+      prop: "createBy",
+      align: "center",
+      showOverflowTooltip: {
+        effect: "light"
+      }
+    },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      width: 180,
+      minWidth: 180,
+      align: "center",
+      date: true,
+      sortable: true,
+      sortOrders: ["descending", "ascending"]
+    },
+    {
+      label: "操作",
+      fixed: "right",
+      width: 240,
+      minWidth: 240,
+      align: "center",
+      slot: "handle"
+    }
+  ],
+  func: requestTableData,
+  params: tableParams,
+  events: {}
+});
+
+/**
+ * QtTable 数据请求适配器
+ *
+ * @param {Object} params 查询条件 + pageNum + pageSize + 排序参数
+ * @returns {Promise<{ data: { rows: Array, total: number } }>}
+ */
+async function requestTableData(params) {
+  // dateRange 是前端临时字段，不能直接传给后端
+  const {
+    dateRange,
+    ...requestParams
+  } = params;
+
+  const response = await listNotice(
+    proxy.addDateRange(requestParams, dateRange)
+  );
+
+  return {
+    data: {
+      rows: response.rows ?? [],
+      total: response.total ?? 0
+    }
+  };
+}
+
+/**
+ * 刷新表格当前页，新增/修改/删除成功后调用
+ */
+function getList() {
+  tableRef.value?.getList();
+}
+
 const open = ref(false);
-const loading = ref(true);
-const showSearch = ref(true);
 const ids = ref([]);
+
+// true 表示未选择或选择了多条，不能执行单条修改
 const single = ref(true);
+
+// true 表示没有选择数据，不能执行批量删除
 const multiple = ref(true);
-const total = ref(0);
 const title = ref("");
-const defaultSort = ref({ prop: "loginTime", order: "descending" });
 
 const data = reactive({
   form: {},
-  queryParams: {
-    pageNum: 1,
-    pageSize: 10,
-    noticeTitle: undefined,
-    createBy: undefined,
-    status: undefined,
-    orderByColumn: "createTime",
-    isAsc: "descending",
-  },
   rules: {
     noticeTitle: [
-      { required: true, message: "公告标题不能为空", trigger: "blur" },
+      { required: true, message: "公告标题不能为空", trigger: "blur" }
     ],
     noticeType: [
-      { required: true, message: "公告类型不能为空", trigger: "change" },
-    ],
-  },
+      { required: true, message: "公告类型不能为空", trigger: "change" }
+    ]
+  }
 });
 
-const { queryParams, form, rules } = toRefs(data);
+const { form, rules } = toRefs(data);
 
-/** 查询公告列表 */
-function getList() {
-  loading.value = true;
-  listNotice(queryParams.value).then((response) => {
-    noticeList.value = response.rows;
-    total.value = response.total;
-    loading.value = false;
-  });
+/**
+ * 表格多选事件
+ *
+ * @param {Array} selection 当前选中行
+ */
+function handleSelectionChange(selection) {
+  ids.value = selection.map((item) => item.noticeId);
+  single.value = selection.length !== 1;
+  multiple.value = !selection.length;
 }
 
-/** 取消按钮 */
+/**
+ * 取消按钮
+ */
 function cancel() {
   open.value = false;
   reset();
 }
 
-/** 表单重置 */
+/**
+ * 表单重置
+ */
 function reset() {
   form.value = {
     noticeId: undefined,
     noticeTitle: undefined,
     noticeType: undefined,
     noticeContent: undefined,
-    status: "0",
+    status: "0"
   };
   proxy.resetForm("noticeRef");
 }
 
-/** 搜索按钮操作 */
-function handleQuery() {
-  queryParams.value.pageNum = 1;
-  getList();
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  proxy.resetForm("queryRef");
-  handleQuery();
-  proxy.$refs["logininforRef"].sort(
-    defaultSort.value.prop,
-    defaultSort.value.order
-  );
-}
-
-/** 多选框选中数据 */
-function handleSelectionChange(selection) {
-  ids.value = selection.map((item) => item.noticeId);
-  single.value = selection.length != 1;
-  multiple.value = !selection.length;
-}
-
-/** 排序触发事件 */
-function handleSortChange(column, prop, order) {
-  queryParams.value.orderByColumn = column.prop;
-  queryParams.value.isAsc = column.order;
-  getList();
-}
-
-/** 新增按钮操作 */
+/**
+ * 新增按钮操作
+ */
 function handleAdd() {
   reset();
   open.value = true;
   title.value = "新增公告";
 }
 
-/**修改按钮操作 */
+/**
+ * 修改按钮操作
+ *
+ * @param {Object} [row] 行数据；顶部按钮触发时取多选框第一条
+ */
 function handleUpdate(row) {
   reset();
-  const noticeId = row.noticeId || ids.value;
+  const noticeId = row?.noticeId ?? ids.value[0];
   getNotice(noticeId).then((response) => {
     form.value = response.data;
     open.value = true;
@@ -411,7 +419,9 @@ function handleUpdate(row) {
   });
 }
 
-/** 提交按钮 */
+/**
+ * 提交按钮
+ */
 function submitForm() {
   proxy.$refs["noticeRef"].validate((valid) => {
     if (valid) {
@@ -432,11 +442,15 @@ function submitForm() {
   });
 }
 
-/** 删除按钮操作 */
+/**
+ * 删除按钮操作
+ *
+ * @param {Object} [row] 行数据；无值时为批量删除
+ */
 function handleDelete(row) {
-  const noticeIds = row.noticeId || ids.value;
+  const noticeIds = row?.noticeId ?? ids.value;
   proxy.$modal
-    .confirm('是否确认删除公告编号为"' + noticeIds + '"的数据项？')
+    .confirm("是否确认删除公告编号为\"" + noticeIds + "\"的数据项？")
     .then(function () {
       return delNotice(noticeIds);
     })
@@ -447,12 +461,15 @@ function handleDelete(row) {
     .catch(() => {});
 }
 
+/**
+ * 详情按钮操作，跳转公告详情页
+ *
+ * @param {Object} row 行数据
+ */
 function handleView(row) {
   proxy.$router.push({
     path: "/system/notice/detail",
-    query: { id: row.noticeId },
+    query: { id: row.noticeId }
   });
 }
-
-getList();
 </script>

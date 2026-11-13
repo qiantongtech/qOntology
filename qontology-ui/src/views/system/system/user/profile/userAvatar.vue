@@ -98,14 +98,14 @@
 
     //图片裁剪数据
     const options = reactive({
-        img: userStore.avatar, // 裁剪图片的地址
-        autoCrop: true, // 是否默认生成截图框
-        autoCropWidth: 200, // 默认生成截图框宽度
-        autoCropHeight: 200, // 默认生成截图框高度
-        fixedBox: true, // 固定截图框大小 不允许改变
-        outputType: 'png', // 默认生成截图为PNG格式
-        filename: 'avatar', // 文件名称
-        previews: {} //预览数据
+        img: userStore.avatar,  // 裁剪图片的地址
+        autoCrop: true,  // 是否默认生成截图框
+        autoCropWidth: 200,  // 默认生成截图框宽度
+        autoCropHeight: 200,  // 默认生成截图框高度
+        fixedBox: true,  // 固定截图框大小 不允许改变
+        outputType: 'png',  // 默认生成截图为PNG格式
+        filename: 'avatar',  // 文件名称
+        previews: {}  // 预览数据
     });
 
     /** 编辑头像 */
@@ -192,7 +192,7 @@
         right: 0;
         top: 0;
         bottom: 0;
-        color: #eee;
+        color: var(--qt-text-inverse);
         background: rgba(0, 0, 0, 0.5);
         font-size: 24px;
         font-style: normal;

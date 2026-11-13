@@ -105,7 +105,12 @@
                     :show-overflow-tooltip="true"
                     width="160"
                 ></el-table-column>
-                <el-table-column prop="icon" label="图标" align="center" width="100">
+                <el-table-column
+                    prop="icon"
+                    label="图标"
+                    align="center"
+                    width="100"
+                >
                     <template #default="scope">
                         <svg-icon :icon-class="scope.row.icon" />
                     </template>
@@ -136,12 +141,22 @@
                         <span>{{ scope.row.component || '-' }}</span>
                     </template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态" width="80" align="center">
+                <el-table-column
+                    prop="status"
+                    label="状态"
+                    width="80"
+                    align="center"
+                >
                     <template #default="scope">
                         <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
                     </template>
                 </el-table-column>
-                <el-table-column label="创建时间" align="center" width="160" prop="createTime">
+                <el-table-column
+                    label="创建时间"
+                    align="center"
+                    width="160"
+                    prop="createTime"
+                >
                     <template #default="scope">
                         <span>{{ parseTime(scope.row.createTime) }}</span>
                     </template>
@@ -186,7 +201,7 @@
             </el-table>
         </div>
 
-        <!-- 添加或修改菜单对话框 -->
+        <!-- 新增或修改菜单对话框 -->
         <el-dialog
             :title="title"
             v-model="open"
@@ -195,7 +210,12 @@
             draggable
             destroy-on-close
         >
-            <el-form ref="menuRef" :model="form" :rules="rules" label-width="100px">
+            <el-form
+                ref="menuRef"
+                :model="form"
+                :rules="rules"
+                label-width="100px"
+            >
                 <el-row :gutter="20">
                     <el-col :span="24">
                         <el-form-item label="上级菜单">
@@ -236,12 +256,9 @@
                                             <svg-icon
                                                 v-if="form.icon"
                                                 :icon-class="form.icon"
-                                                class="el-input__icon"
-                                                style="height: 32px; width: 16px"
+                                                class="el-input__icon icon-prefix"
                                             />
-                                            <el-icon v-else style="height: 32px; width: 16px"
-                                                ><search
-                                            /></el-icon>
+                                            <el-icon v-else class="icon-prefix"><search /></el-icon>
                                         </template>
                                     </el-input>
                                 </template>
@@ -256,7 +273,7 @@
                     <el-col :span="12">
                         <el-form-item label="显示排序" prop="orderNum">
                             <el-input-number
-                                style="width: 100%"
+                                class="input-number-full"
                                 v-model="form.orderNum"
                                 controls-position="right"
                                 :min="0"
@@ -276,7 +293,7 @@
                                         content="默认不填则和路由地址相同：如地址为：`user`，则名称为`User`（注意：因为router会删除名称相同路由，为避免名字的冲突，特殊情况下请自定义，保证唯一性）"
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     路由名称
                                 </span>
@@ -292,7 +309,7 @@
                                         content="访问的路由地址，如：`user`，如外网地址需内链访问则以`http(s)://`开头"
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     路由地址
                                 </span>
@@ -308,7 +325,7 @@
                                         content="选择是外链则路由地址需要以`http(s)://`开头"
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     是否外链
                                 </span>
@@ -328,7 +345,7 @@
                                         content="访问的组件路径，如：`system/user/index`，默认在`views`目录下"
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     组件路径
                                 </span>
@@ -349,7 +366,7 @@
                                         content="控制器中定义的权限字符，如：@PreAuthorize(`@ss.hasPermi('system:user:list')`)"
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     权限字符
                                 </span>
@@ -369,7 +386,7 @@
                                         content='访问路由的默认传递参数，如：`{"id": 1, "name": "ry"}`'
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     路由参数
                                 </span>
@@ -384,7 +401,7 @@
                                         content="选择是则会被`keep-alive`缓存，需要匹配组件的`name`和地址保持一致"
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     是否缓存
                                 </span>
@@ -403,7 +420,7 @@
                                         content="选择隐藏则路由将不会出现在侧边栏，但仍然可以访问"
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     显示状态
                                 </span>
@@ -426,7 +443,7 @@
                                         content="选择停用则路由将不会出现在侧边栏，也不能被访问"
                                         placement="top"
                                     >
-                                        <el-icon style="color: #909399"><InfoFilled /></el-icon>
+                                        <el-icon class="info-icon"><InfoFilled /></el-icon>
                                     </el-tooltip>
                                     菜单状态
                                 </span>
@@ -562,7 +579,7 @@
             form.value.parentId = 0;
         }
         open.value = true;
-        title.value = '添加菜单';
+        title.value = '新增菜单';
     }
 
     /** 展开/折叠操作 */
@@ -622,3 +639,18 @@
 
     getList();
 </script>
+
+<style scoped lang="scss">
+.icon-prefix {
+  height: 32px;
+  width: 16px;
+}
+
+.input-number-full {
+  width: 100%;
+}
+
+.info-icon {
+  color: var(--qt-text-secondary);
+}
+</style>
