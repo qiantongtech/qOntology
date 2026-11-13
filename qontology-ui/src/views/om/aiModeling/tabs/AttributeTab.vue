@@ -147,7 +147,7 @@
     <!-- 修改属性对话框 -->
     <el-dialog
       v-model="open"
-      title="修改属性"
+      title="修改对象类型属性"
       width="800px"
       :append-to="pageRef"
       :close-on-click-modal="false"
@@ -465,6 +465,11 @@ const searchStore = reactive({
   items: [
     { label: "属性名称", prop: "name", component: { is: "input" } },
     {
+      label: "数据类型",
+      prop: "typeCategory",
+      component: { is: "select", options: om_attribute_data_type },
+    },
+    {
       label: "采纳状态",
       prop: "adoptStatus",
       component: { is: "select", options: om_ai_adopt_status },
@@ -479,7 +484,7 @@ const wrapConfig = {
 
 // 表格配置：分页、排序、loading 与空数据图统一交给 QtTable。
 const tableStore = reactive({
-  params: { name: null, adoptStatus: null },
+  params: { name: null, typeCategory: null, adoptStatus: null },
   config: {
     sort: true,
     table: {

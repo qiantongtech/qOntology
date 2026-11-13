@@ -48,4 +48,7 @@ public class OmObjectTypeAttributePageReqVO extends PageParam {
     @Schema(description = "名称")
     @Size(max = 128, message = "属性名称长度不能超过128个字符")
     private String name;
+
+    @Schema(description = "数据类型分类：1 基础数据类型，2 业务数据类型")
+    private Integer typeCategory;
 }

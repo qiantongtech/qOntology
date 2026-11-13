@@ -414,16 +414,16 @@ const tableStore = reactive({
     },
     { label: "发布状态", slot: "taskStatus", width: 90 },
     {
-      label: "发布人",
-      width: 120,
-      align: "left",
-      slot: "publishBy",
-    },
-    {
       label: "负责人",
       width: 120,
       slot: "responsibleUser",
       align: "left",
+    },
+    {
+      label: "发布人",
+      width: 120,
+      align: "left",
+      slot: "publishBy",
     },
     {
       label: "发布时间",
@@ -433,6 +433,7 @@ const tableStore = reactive({
       sortable: "custom",
       sortableKey: "publish_time",
     },
+
     {
       label: "创建时间",
       prop: "createTime",

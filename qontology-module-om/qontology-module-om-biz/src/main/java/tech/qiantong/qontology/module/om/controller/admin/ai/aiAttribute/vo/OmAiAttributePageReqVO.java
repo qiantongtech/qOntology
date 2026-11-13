@@ -37,6 +37,8 @@ public class OmAiAttributePageReqVO extends PageParam {
     private Long taskId;
     @Schema(description = "属性名称")
     private String name;
+    @Schema(description = "数据类型分类：1 基础数据类型，2 业务数据类型")
+    private Integer typeCategory;
     @Schema(description = "采纳状态：0待采纳 1已采纳 2采纳失败")
     private Integer adoptStatus;
 }

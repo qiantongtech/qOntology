@@ -59,7 +59,7 @@
               ref="formRef"
               :model="form"
               :rules="rules"
-              label-width="140px"
+              label-width="170px"
               class="base-form"
             >
               <qt-form-item label="任务名称" prop="taskName" class="row-full">

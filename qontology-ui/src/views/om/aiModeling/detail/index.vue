@@ -46,15 +46,12 @@
         </el-button>
       </template>
       <template #documents>
-        <div v-if="files.length" class="document-list">
-          <div
-            v-for="file in files"
-            :key="file.id || file.fileName"
-            class="document-name"
-            :title="file.fileName"
-          >
-            {{ file.fileName || "-" }}
-          </div>
+        <div
+          v-if="files.length"
+          class="document-names"
+          :title="documentNames"
+        >
+          {{ documentNames }}
         </div>
         <span v-else>-</span>
       </template>
@@ -106,6 +103,9 @@ const { om_ai_task_status } = proxy.useDict("om_ai_task_status");
 const task = ref({});
 const files = ref([]);
 const activeTab = ref("timeline");
+const documentNames = computed(() =>
+  files.value.map((file) => file.fileName).filter(Boolean).join("，") || "-"
+);
 
 /** 详情页签与系统正式菜单字段保持一致。 */
 const tabs = [
@@ -187,20 +187,14 @@ onUnmounted(() => clearInterval(refreshTimer));
 </script>
 
 <style scoped lang="scss">
-/* 文档名称在信息单元格内多行堆叠，长文件名自动换行；顶部信息表其余样式由 DetailInfo 组件统一提供。 */
-.document-list {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 4px;
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-
-.document-name {
+/* 文档名称使用逗号连接并保持单行，超出单元格后省略，悬浮显示完整内容。 */
+.document-names {
+  display: block;
   width: 100%;
-  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   line-height: 22px;
 }
 /* 顶部主操作与返回图标匹配视觉尺寸；列表操作继续沿用紧凑图标尺寸。

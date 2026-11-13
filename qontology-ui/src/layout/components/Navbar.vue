@@ -343,7 +343,7 @@
       <div class="about-content-wrapper">
         <img
           src="@/assets/system/images/login/logo.png"
-          alt="qData Logo"
+          alt="qOntology Logo"
           class="logo"
         />
         <div class="about-title">

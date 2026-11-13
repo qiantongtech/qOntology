@@ -22,7 +22,7 @@
     ref="formRef"
     :model="localForm"
     :rules="rules"
-    label-width="140px"
+    label-width="170px"
     class="struct-basic-form"
     :disabled="disabled"
   >

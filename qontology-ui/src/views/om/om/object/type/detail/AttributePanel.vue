@@ -496,6 +496,7 @@ const dialogTitle = ref("新增属性");
 
 const query = reactive({
   name: "",
+  typeCategory: "",
   pageNum: 1,
   pageSize: 10,
   orderByColumn: "createTime",
@@ -503,6 +504,8 @@ const query = reactive({
 });
 
 const appliedName = ref("");
+
+const appliedTypeCategory = ref("");
 
 const { om_attribute_data_type, basic_data_type } = proxy.useDict(
   "om_attribute_data_type",
@@ -603,9 +606,14 @@ const columns = reactive([
   },
 ]);
 
-const searchItems = [
+const searchItems = computed(() => [
   { label: "属性名称", prop: "name", component: { is: "input" } },
-];
+  {
+    label: "数据类型",
+    prop: "typeCategory",
+    component: { is: "select", options: om_attribute_data_type.value },
+  },
+]);
 
 // 列表请求仍由本组件管理，qt-table 只负责读取已加载的数据。
 const listActions = { getList };
@@ -994,6 +1002,8 @@ async function getList() {
 
       name: appliedName.value,
 
+      typeCategory: appliedTypeCategory.value || undefined,
+
       pageNum: query.pageNum,
 
       pageSize: query.pageSize,
@@ -1029,6 +1039,8 @@ async function getList() {
 
 function handleQuery() {
   appliedName.value = (query.name || "").trim();
+
+  appliedTypeCategory.value = query.typeCategory || "";
 
   query.pageNum = 1;
 
@@ -1245,7 +1257,11 @@ watch(
 
     query.name = "";
 
+    query.typeCategory = "";
+
     appliedName.value = "";
+
+    appliedTypeCategory.value = "";
 
     query.pageNum = 1;
 

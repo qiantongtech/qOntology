@@ -41,7 +41,8 @@ public interface OmObjectTypeAttributeMapper extends BaseMapperX<OmObjectTypeAtt
         LambdaQueryWrapperX<OmObjectTypeAttributeDO> query = new LambdaQueryWrapperX<OmObjectTypeAttributeDO>()
             .eq(OmObjectTypeAttributeDO::getWorkspaceId, request.getWorkspaceId())
             .eq(OmObjectTypeAttributeDO::getObjectTypeId, request.getObjectTypeId())
-            .likeIfPresent(OmObjectTypeAttributeDO::getName, request.getName());
+            .likeIfPresent(OmObjectTypeAttributeDO::getName, request.getName())
+            .eqIfPresent(OmObjectTypeAttributeDO::getTypeCategory, request.getTypeCategory());
         boolean ascending = !"desc".equalsIgnoreCase(request.getIsAsc());
         // 仅允许按编号或创建时间排序；同一创建时间以编号保证分页顺序稳定
         if ("createTime".equals(request.getOrderByColumn()) || "create_time".equals(request.getOrderByColumn())) {

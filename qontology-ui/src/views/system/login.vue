@@ -575,7 +575,7 @@ function goKtPage() {
     justify-content: space-between;
 
     .logo {
-      // 与 qData 登录页统一显示高度，宽度按各自 Logo 的原始比例自适应。
+      // 登录页统一显示高度，宽度按各自 Logo 的原始比例自适应。
       height: 33px;
       flex-shrink: 0;
       margin-left: 20%;

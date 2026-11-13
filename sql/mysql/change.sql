@@ -27,3 +27,5 @@ UPDATE `system_menu` SET `icon` = 'extraction-log' WHERE `icon` = '抽取日志'
 UPDATE `system_menu` SET `icon` = 'structured-extraction' WHERE `icon` = '结构化抽取';
 UPDATE `system_menu` SET `icon` = 'quality-center' WHERE `icon` = '质量中心';
 UPDATE `system_menu` SET `icon` = 'ai-assisted-modeling' WHERE `icon` = 'AI辅助建模';
+
+UPDATE `system_dict_data` SET `dict_sort` = 0, `dict_label` = '禁用', `dict_value` = '0', `dict_type` = 'project_status', `css_class` = NULL, `list_class` = 'danger', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-12 15:11:21', `update_by` = '吴同', `update_time` = '2026-11-13 15:37:52', `remark` = NULL WHERE `dict_code` = 58;

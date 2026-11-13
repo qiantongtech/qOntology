@@ -250,17 +250,17 @@
     const startTime = ref(null);
     const endTime = ref(null);
     const getList = () => {
-        const reqData = {
+        const reqOntology = {
             category: queryParams.value.category,
             receiverId: userStore.userId,
             pageNum: queryParams.value.pageNum,
             pageSize: queryParams.value.pageSize
         };
         if (queryParams.value.dateRange && queryParams.value.dateRange.length > 0) {
-            ((reqData.startTime = queryParams.value.dateRange[0]),
-                (reqData.endTime = queryParams.value.dateRange[1]));
+            ((reqOntology.startTime = queryParams.value.dateRange[0]),
+                (reqOntology.endTime = queryParams.value.dateRange[1]));
         }
-        listMessage(reqData).then((response) => {
+        listMessage(reqOntology).then((response) => {
             msgList.value = response.data.rows;
             total.value = response.data.total;
         });
