@@ -17,7 +17,7 @@
 -->
 
 <template>
-    <div class="dataBody">
+    <div class="content-body">
         <el-row class="form-container" :gutter="20">
             <!-- Logo 上传 -->
             <el-col :span="24">
@@ -132,7 +132,7 @@
             </el-col>
 
             <!--            {{contentDetail}}-->
-            <div style="margin-top: 20px">
+            <div class="form-actions">
                 <!--                <el-button @click="update" v-show="status">修改</el-button>-->
                 <!--                <el-button @click="confirm" v-show="!status">保存</el-button>-->
                 <el-button type="primary" @click="confirm">保存</el-button>
@@ -141,7 +141,7 @@
     </div>
 </template>
 
-<script setup>
+<script setup name="Content">
     import { ref } from 'vue';
     import { getContent, listContent, updateContent } from '@/api/system/system/content';
     import ImageUpload from '@/components/ImageUpload/index.vue';
@@ -186,7 +186,7 @@
         try {
             contentDetail.value = {};
             // 调用你从 API 导入的 getContent 方法
-            const res = await getContent(1); // 假设请求的是 id 为 1 的数据
+            const res = await getContent(1);  // 假设请求的是 id 为 1 的数据
             if (res.code == 200) {
                 const data = res.data;
                 if (data.loginLogo) {
@@ -272,16 +272,20 @@
     };
 </script>
 
-<style scoped>
-    .dataBody {
+<style scoped lang="scss">
+    .content-body {
         min-height: calc(100vh - 115px);
         margin: 15px 25px;
+    }
+
+    .form-actions {
+        margin-top: 20px;
     }
 
     .form-container {
         padding: 20px;
         /*background-color: #f9f9f9;*/
-        background-color: #ffffff;
+        background-color: var(--qt-surface-background);
         border-radius: 2px;
         box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
     }
@@ -295,7 +299,7 @@
     .form-label {
         font-size: 14px;
         font-weight: 200;
-        color: #333;
+        color: var(--qt-text-primary);
         width: 120px; /* 标签的宽度 */
         margin-right: 10px; /* 标签和输入框之间的间距 */
         text-align: right; /* 标签文本右对齐 */
@@ -333,7 +337,7 @@
     }
 
     .el-button:hover {
-        background-color: #66b1ff;
+        background-color: var(--el-color-primary-light-3);
     }
 
     @media (max-width: 768px) {

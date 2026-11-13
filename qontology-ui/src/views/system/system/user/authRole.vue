@@ -17,140 +17,235 @@
 -->
 
 <template>
-    <div class="app-container" ref="app-container">
-        <div class="pagecont-top">
-            <h4 class="form-header h4">基本信息</h4>
-            <el-form class="btn-style" :model="form" label-width="80px">
-                <el-row>
-                    <el-col :span="8" :offset="2">
-                        <el-form-item label="用户昵称" prop="nickName">
-                            <el-input v-model="form.nickName" disabled />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="8" :offset="2">
-                        <el-form-item label="登录账号" prop="userName">
-                            <el-input v-model="form.userName" disabled />
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-            </el-form>
-        </div>
+  <div class="app-container" ref="app-container">
+    <!-- 复用详情页头部组件：编号徽标 + 昵称 + 状态字典，返回行为由本页接管，关闭后回到用户列表。 -->
+    <detail-info
+      v-if="form.userId != null"
+      :data="form"
+      :header="{
+        className: 'clearfixs',
+        idKey: 'userId',
+        nameKey: 'nickName',
+        statusKey: 'status',
+        statusOptions: sys_normal_disable,
+        routerBack: false,
+      }"
+      :items="detailItems"
+      mode="free"
+      @back="close"
+    >
+      <!-- 提交按钮置于头部返回按钮之后，与底部提交共用同一保存逻辑。 -->
+      <template #btn-right>
+        <el-button type="primary" @click="submitForm()" icon="Edit">
+          提交</el-button>
+      </template>
+    </detail-info>
 
-        <div class="pagecont-bottom">
-            <h4 class="form-header h4">角色信息</h4>
-            <el-table
-                stripe
-                height="500px"
-                v-loading="loading"
-                :row-key="getRowKey"
-                @row-click="clickRow"
-                ref="roleRef"
-                @selection-change="handleSelectionChange"
-                :data="roles.slice((pageNum - 1) * pageSize, pageNum * pageSize)"
-            >
-                <el-table-column label="序号" width="55" type="index" align="center">
-                    <template #default="scope">
-                        <span>{{ (pageNum - 1) * pageSize + scope.$index + 1 }}</span>
-                    </template>
-                </el-table-column>
-                <el-table-column
-                    type="selection"
-                    :reserve-selection="true"
-                    width="55"
-                ></el-table-column>
-                <el-table-column label="角色编号" align="center" prop="roleId" />
-                <el-table-column label="角色名称" align="center" prop="roleName" />
-                <el-table-column label="权限字符" align="center" prop="roleKey" />
-                <el-table-column label="创建时间" align="center" prop="createTime" width="180">
-                    <template #default="scope">
-                        <span>{{ parseTime(scope.row.createTime) }}</span>
-                    </template>
-                </el-table-column>
-            </el-table>
+    <div class="pagecont-bottom">
+      <el-tabs v-model="activeName">
+        <el-tab-pane label="角色信息" name="roleInfo">
+          <qt-table v-bind="tableStore" ref="tableRef">
+            <template #index="{ $index }">
+              <span>{{ (pagination.pageNum - 1) * pagination.pageSize + $index + 1 }}</span>
+            </template>
+          </qt-table>
+        </el-tab-pane>
+      </el-tabs>
+<!--      <h4 class="form-header h4">角色信息</h4>-->
+<!--      -->
 
-            <pagination
-                v-show="total > 0"
-                :total="total"
-                v-model:page="pageNum"
-                v-model:limit="pageSize"
-            />
-
-            <el-form label-width="100px">
-                <div style="text-align: center; margin-left: -120px; margin-top: 30px">
-                    <el-button type="primary" @click="submitForm()">提交</el-button>
-                    <el-button @click="close()">返回</el-button>
-                </div>
-            </el-form>
-        </div>
+<!--      <div class="auth-role-footer">-->
+<!--        <el-button type="primary" @click="submitForm()">提交</el-button>-->
+<!--      </div>-->
     </div>
+  </div>
 </template>
 
 <script setup name="AuthRole">
-    import { getAuthRole, updateAuthRole } from '@/api/system/system/user.js';
+import { getAuthRole, updateAuthRole } from '@/api/system/system/user.js';
 
-    const route = useRoute();
-    const { proxy } = getCurrentInstance();
+const route = useRoute();
+const { proxy } = getCurrentInstance();
+const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 
-    const loading = ref(true);
-    const total = ref(0);
-    const pageNum = ref(1);
-    const pageSize = ref(10);
-    const roleIds = ref([]);
-    const roles = ref([]);
-    const form = ref({
-        nickName: undefined,
-        userName: undefined,
-        userId: undefined
+const roleIds = ref([]);
+const form = ref({
+  nickName: undefined,
+  userName: undefined,
+  userId: undefined
+});
+const activeName = ref('roleInfo');
+
+
+// 自由布局声明用户专属字段，与项目详情页一致，避免组件默认追加无关审计项。
+const detailItems = [
+  { label: "登录账号", key: "userName", span: 8 },
+  { label: "手机号码", key: "phonenumber", span: 8 },
+  { label: "邮箱", key: "email", span: 8 },
+  { label: "所属部门", key: "dept.deptName", span: 8 ,className: "mt2"},
+  { label: "创建时间", key: "createTime", type: "time", span: 8,className: "mt2" }
+];
+
+/**
+ * 表格实例
+ *
+ * getList()    刷新当前页
+ * resetQuery() 回第一页并重新查询
+ */
+const tableRef = ref(null);
+
+const userId = route.params && route.params.userId;
+
+// 角色数据一次性全量返回，翻页时复用缓存，与原实现一致不重复请求
+let rolesCache = null;
+
+// 已分配角色回显只在首次加载后执行一次，避免翻页覆盖用户新勾选
+let selectionRestored = false;
+
+/**
+ * 前端分页参数，用于序号列的全局行号计算
+ */
+const pagination = reactive({
+  pageNum: 1,
+  pageSize: 10
+});
+
+/**
+ * QtTable 统一配置
+ *
+ * autoPagination 为前端分页：一次取回全部角色，由组件按页切片展示
+ */
+const tableStore = reactive({
+  config: {
+    sort: false,
+    autoPagination: true,
+    table: {
+      stripe: true,
+      height: '500px',
+      rowKey: 'roleId',
+      onRowClick: clickRow,
+      onSelectionChange: handleSelectionChange
+    }
+  },
+  columns: [
+    {
+      type: 'selection',
+      width: 55,
+      minWidth: 55,
+      align: 'center',
+      reserveSelection: true
+    },
+    { label: '序号', width: 55, minWidth: 55, align: 'center', slot: 'index' },
+    { label: '编号', prop: 'roleId', align: 'center' },
+    { label: '角色名称', prop: 'roleName', align: 'center' },
+    { label: '权限字符', prop: 'roleKey', align: 'center' },
+    {
+      label: '创建时间',
+      prop: 'createTime',
+      align: 'center',
+      width: 180,
+      minWidth: 180,
+      date: true
+    }
+  ],
+  func: requestTableData,
+  params: {},
+  events: {
+    onDataLoaded: handleDataLoaded,
+    onPageCurrentChange: handlePageChange,
+    onPageSizeChange: handlePageChange
+  }
+});
+
+/**
+ * QtTable 数据请求适配器
+ *
+ * 接口一次返回用户与该用户全部角色，基本信息在此一并回填
+ * @returns {Promise<{ data: { rows: Array, total: number } }>}
+ */
+async function requestTableData() {
+  if (!userId) {
+    return { data: { rows: [], total: 0 } };
+  }
+  if (!rolesCache) {
+    const response = await getAuthRole(userId);
+    form.value = response.user;
+    rolesCache = response.roles ?? [];
+  }
+
+  return {
+    data: {
+      rows: rolesCache,
+      total: rolesCache.length
+    }
+  };
+}
+
+/**
+ * 列表加载完成后回显已分配角色（flag 为 true 的行选中）
+ * @param {Array} data 当前全量行数据
+ */
+function handleDataLoaded(data) {
+  if (selectionRestored) return;
+  selectionRestored = true;
+  nextTick(() => {
+    data.forEach((row) => {
+      if (row.flag) {
+        tableRef.value?.elTableRef?.toggleRowSelection(row, true);
+      }
     });
+  });
+}
 
-    /** 单击选中行数据 */
-    function clickRow(row) {
-        proxy.$refs['roleRef'].toggleRowSelection(row);
-    }
+/**
+ * 分页变化回调：记录当前页码与每页条数供序号列计算
+ * @param {Object} params 含 pageNum、pageSize 的分页参数
+ */
+function handlePageChange(params) {
+  pagination.pageNum = params.pageNum;
+  pagination.pageSize = params.pageSize;
+}
 
-    /** 多选框选中数据 */
-    function handleSelectionChange(selection) {
-        roleIds.value = selection.map((item) => item.roleId);
-    }
+/**
+ * 单击选中行数据
+ * @param {Object} row 行数据
+ */
+function clickRow(row) {
+  tableRef.value?.elTableRef?.toggleRowSelection(row);
+}
 
-    /** 保存选中的数据编号 */
-    function getRowKey(row) {
-        return row.roleId;
-    }
+/**
+ * 多选框选中数据
+ * @param {Array} selection 当前选中行
+ */
+function handleSelectionChange(selection) {
+  roleIds.value = selection.map((item) => item.roleId);
+}
 
-    /** 关闭按钮 */
-    function close() {
-        const obj = { path: '/system/user' };
-        proxy.$tab.closeOpenPage(obj);
-    }
+/**
+ * 关闭当前页签，返回固定的用户列表入口（头部返回按钮与提交成功后共用）。
+ */
+function close() {
+  const obj = { path: '/system/user' };
+  proxy.$tab.closeOpenPage(obj);
+}
 
-    /** 提交按钮 */
-    function submitForm() {
-        const userId = form.value.userId;
-        const rIds = roleIds.value.join(',');
-        updateAuthRole({ userId: userId, roleIds: rIds }).then((response) => {
-            proxy.$modal.msgSuccess('授权成功');
-            close();
-        });
-    }
-
-    (() => {
-        const userId = route.params && route.params.userId;
-        if (userId) {
-            loading.value = true;
-            getAuthRole(userId).then((response) => {
-                form.value = response.user;
-                roles.value = response.roles;
-                total.value = roles.value.length;
-                nextTick(() => {
-                    roles.value.forEach((row) => {
-                        if (row.flag) {
-                            proxy.$refs['roleRef'].toggleRowSelection(row);
-                        }
-                    });
-                });
-                loading.value = false;
-            });
-        }
-    })();
+/**
+ * 提交按钮：保存分配的角色
+ */
+function submitForm() {
+  const rIds = roleIds.value.join(',');
+  updateAuthRole({ userId: form.value.userId, roleIds: rIds }).then(() => {
+    proxy.$modal.msgSuccess('授权成功');
+    close();
+  });
+}
 </script>
+
+<style scoped lang="scss">
+// 提交按钮保持居中展示
+.auth-role-footer {
+  margin-top: 15px;
+  text-align: center;
+}
+</style>

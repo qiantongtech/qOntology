@@ -94,10 +94,10 @@
 </template>
 
 <script setup name="Profile">
+    import { getUserProfile } from '@/api/system/system/user.js';
     import userAvatar from './userAvatar.vue';
     import userInfo from './userInfo.vue';
     import resetPwd from './resetPwd.vue';
-    import { getUserProfile } from '@/api/system/system/user.js';
 
     const activeTab = ref('userinfo');
     const state = reactive({
@@ -116,9 +116,10 @@
 
     getUser();
 </script>
+
 <style scoped lang="scss">
     .label-text {
-        color: #888888;
+        color: var(--qt-text-secondary);
         position: absolute;
         right: 10px;
     }

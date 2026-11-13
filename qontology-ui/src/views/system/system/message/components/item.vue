@@ -33,15 +33,15 @@
     const { proxy } = getCurrentInstance();
 
     import { ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue';
-    import WebSocketService from '@/api/system/system/message/websocketService'; // 导入服务
-    import { getToken } from '../../../../../utils/auth'; // 引入token获取工具
+    import WebSocketService from '@/api/system/system/message/websocketService';  // 导入服务
+    import { getToken } from '@/utils/auth';  // 引入token获取工具
 
     // 获取当前用户的 token
     const userId = ref('test11111111111');
     const token = ref(getToken());
     let message = ref('');
 
-    const webSocketService = ref(null); // WebSocket 服务实例
+    const webSocketService = ref(null);  // WebSocket 服务实例
 
     // 获取父组件传递的用户ID
     const props = defineProps({
@@ -58,7 +58,7 @@
             title: '您有一条新消息',
             time: 'test'
         }
-    ]); // 用于保存接收到的站内信
+    ]);  // 用于保存接收到的站内信
 
     // 初始化 WebSocket
     const initWebSocket = () => {
@@ -129,7 +129,7 @@
         width: 100%;
         padding: 10px 16px;
         margin-bottom: 10px;
-        background: #f9f9f9;
+        background: var(--el-fill-color-lighter);
         border-radius: 4px;
     }
 

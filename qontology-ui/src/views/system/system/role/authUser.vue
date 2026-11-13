@@ -17,215 +17,295 @@
 -->
 
 <template>
-    <div class="app-container" ref="app-container">
-        <div class="pagecont-top" v-show="showSearch">
-            <el-form
-                class="btn-style"
-                :model="queryParams"
-                ref="queryRef"
-                v-show="showSearch"
-                :inline="true"
-            >
-                <el-form-item label="用户名称" prop="userName">
-                    <el-input
-                        v-model="queryParams.userName"
-                        placeholder="请输入用户名称"
-                        clearable
-                        @keyup.enter="handleQuery"
-                    />
-                </el-form-item>
-                <el-form-item label="手机号码" prop="phonenumber">
-                    <el-input
-                        v-model="queryParams.phonenumber"
-                        placeholder="请输入手机号码"
-                        clearable
-                        @keyup.enter="handleQuery"
-                    />
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" icon="Search" @click="handleQuery">查询</el-button>
-                    <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-                </el-form-item>
-            </el-form>
-        </div>
+  <div class="app-container" ref="app-container">
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <!-- 查询条件区域 -->
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
+        />
+      </template>
 
-        <div class="pagecont-bottom">
-            <div class="justify-between mb15">
-                <el-row :gutter="10" class="btn-style">
-                    <el-col :span="1.5">
-                        <el-button
-                            type="primary"
-                            plain
-                            icon="Plus"
-                            @click="openSelectUser"
-                            v-hasPermi="['system:role:add']"
-                            >添加用户</el-button
-                        >
-                    </el-col>
-                    <el-col :span="1.5">
-                        <el-button
-                            type="danger"
-                            plain
-                            icon="CircleClose"
-                            :disabled="multiple"
-                            @click="cancelAuthUserAll"
-                            v-hasPermi="['system:role:remove']"
-                            >批量取消授权</el-button
-                        >
-                    </el-col>
-                    <el-col :span="1.5">
-                        <el-button type="warning" plain icon="Close" @click="handleClose"
-                            >关闭</el-button
-                        >
-                    </el-col>
-                </el-row>
-                <right-toolbar
-                    v-model:showSearch="showSearch"
-                    @queryTable="getList"
-                ></right-toolbar>
-            </div>
+      <!-- 表格上方左侧按钮区 -->
+      <template #actions-data>
+        <el-button
+          type="primary"
+          plain
+          @click="openSelectUser"
+          v-hasPermi="['system:role:add']"
+        >
+          <i class="iconfont-mini icon-xinzeng mr5"></i>添加用户
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          :disabled="multiple"
+          @click="cancelAuthUserAll"
+          v-hasPermi="['system:role:remove']"
+        >
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量取消授权
+        </el-button>
+        <el-button
+          type="warning"
+          plain
+          icon="Close"
+          @click="handleClose"
+        >
+          关闭
+        </el-button>
+      </template>
 
-            <el-table
-                stripe
-                v-loading="loading"
-                :data="userList"
-                @selection-change="handleSelectionChange"
-            >
-                <el-table-column type="selection" width="55" align="center" />
-                <el-table-column label="用户名称" prop="userName" :show-overflow-tooltip="true" />
-                <el-table-column label="用户昵称" prop="nickName" :show-overflow-tooltip="true" />
-                <el-table-column label="邮箱" prop="email" :show-overflow-tooltip="true" />
-                <el-table-column label="手机" prop="phonenumber" :show-overflow-tooltip="true" />
-                <el-table-column label="状态" align="center" prop="status">
-                    <template #default="scope">
-                        <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
-                    </template>
-                </el-table-column>
-                <el-table-column label="创建时间" align="center" prop="createTime" width="180">
-                    <template #default="scope">
-                        <span>{{ parseTime(scope.row.createTime) }}</span>
-                    </template>
-                </el-table-column>
-                <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-                    <template #default="scope">
-                        <el-button
-                            link
-                            type="primary"
-                            icon="CircleClose"
-                            @click="cancelAuthUser(scope.row)"
-                            v-hasPermi="['system:role:remove']"
-                            >取消授权</el-button
-                        >
-                    </template>
-                </el-table-column>
-            </el-table>
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            active-value="0"
+            inactive-value="1"
+            @change="handleStatusChange(row)"
+          />
+        </template>
+        <template #handle="{ row }">
+          <el-button
+            link
+            type="primary"
+            @click="cancelAuthUser(row)"
+            v-hasPermi="['system:role:remove']"
+            >取消授权</el-button
+          >
+        </template>
+      </qt-table>
+    </qt-wrap>
 
-            <pagination
-                :total="total"
-                v-model:page="queryParams.pageNum"
-                v-model:limit="queryParams.pageSize"
-                @pagination="getList"
-            />
-        </div>
-        <select-user ref="selectRef" :roleId="queryParams.roleId" @ok="handleQuery" />
-    </div>
+    <!-- 新增授权弹窗：确认后回第一页重新查询已分配用户 -->
+    <select-user ref="selectRef" :roleId="tableParams.roleId" @ok="handleSelectOk" />
+  </div>
 </template>
 
 <script setup name="AuthUser">
-    import selectUser from './selectUser.vue';
-    import {
-        allocatedUserList,
-        authUserCancel,
-        authUserCancelAll
-    } from '@/api/system/system/role.js';
+import {
+  allocatedUserList,
+  authUserCancel,
+  authUserCancelAll
+} from '@/api/system/system/role.js';
+import { changeUserStatus } from '@/api/system/system/user.js';
+import selectUser from './selectUser.vue';
 
-    const route = useRoute();
-    const { proxy } = getCurrentInstance();
-    const { sys_normal_disable } = proxy.useDict('sys_normal_disable');
+const route = useRoute();
+const { proxy } = getCurrentInstance();
 
-    const userList = ref([]);
-    const loading = ref(true);
-    const showSearch = ref(true);
-    const multiple = ref(true);
-    const total = ref(0);
-    const userIds = ref([]);
+const multiple = ref(true);
+const userIds = ref([]);
 
-    const queryParams = reactive({
-        pageNum: 1,
-        pageSize: 10,
-        roleId: route.params.roleId,
-        userName: undefined,
-        phonenumber: undefined
+/**
+ * 表格实例
+ *
+ * getList()    刷新当前页
+ * resetQuery() 回第一页并重新查询
+ */
+const tableRef = ref(null);
+
+/**
+ * 查询参数
+ *
+ * roleId 来自路由，固定查询该角色已分配用户
+ */
+const tableParams = reactive({
+  roleId: route.params.roleId,
+  userName: undefined,
+  phonenumber: undefined
+});
+
+/**
+ * 查询栏配置
+ */
+const searchStore = reactive({
+  items: [
+    {
+      label: '用户名称',
+      prop: 'userName',
+      component: { is: 'input', clearable: true }
+    },
+    {
+      label: '手机号码',
+      prop: 'phonenumber',
+      component: { is: 'input', clearable: true }
+    }
+  ]
+});
+
+/**
+ * QtTable 统一配置
+ */
+const tableStore = reactive({
+  config: {
+    // 启用表头排序，首次请求默认按创建时间倒序
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: 'userId',
+      defaultSort: { prop: 'createTime', order: 'descending' },
+      onSelectionChange: handleSelectionChange
+    }
+  },
+  columns: [
+    { type: 'selection', width: 55, minWidth: 55, align: 'center' },
+    {
+      label: '用户名称',
+      prop: 'userName',
+      align: 'left',
+      showOverflowTooltip: { effect: 'light' }
+    },
+    {
+      label: '用户昵称',
+      prop: 'nickName',
+      align: 'left',
+      showOverflowTooltip: { effect: 'light' }
+    },
+    {
+      label: '邮箱',
+      prop: 'email',
+      align: 'left',
+      showOverflowTooltip: { effect: 'light' }
+    },
+    {
+      label: '手机',
+      prop: 'phonenumber',
+      align: 'left',
+      showOverflowTooltip: { effect: 'light' }
+    },
+    { label: '状态', prop: 'status', slot: 'status', width: 80, minWidth: 80, align: 'center' },
+    {
+      label: '创建时间',
+      prop: 'createTime',
+      align: 'center',
+      width: 180,
+      minWidth: 180,
+      date: true,
+      sortable: true
+    },
+    {
+      label: '操作',
+      align: 'center',
+      fixed: 'right',
+      width: 100,
+      minWidth: 100,
+      slot: 'handle'
+    }
+  ],
+  func: requestTableData,
+  params: tableParams,
+  events: {}
+});
+
+/**
+ * QtTable 数据请求适配器
+ *
+ * @param {Object} params 查询条件 + pageNum + pageSize
+ * @returns {Promise<{ data: { rows: Array, total: number } }>}
+ */
+async function requestTableData(params) {
+  const response = await allocatedUserList(params);
+
+  return {
+    data: {
+      rows: response.rows ?? [],
+      total: response.total ?? 0
+    }
+  };
+}
+
+/**
+ * 刷新表格当前页，取消授权成功后调用
+ */
+function getList() {
+  tableRef.value?.getList();
+}
+
+/**
+ * 返回按钮：关闭当前页并回到角色列表
+ */
+function handleClose() {
+  const obj = { path: '/system/role' };
+  proxy.$tab.closeOpenPage(obj);
+}
+
+/**
+ * 多选框选中数据
+ * @param {Array} selection 当前选中行
+ */
+function handleSelectionChange(selection) {
+  userIds.value = selection.map((item) => item.userId);
+  multiple.value = !selection.length;
+}
+
+/**
+ * 打开授权用户表弹窗
+ */
+function openSelectUser() {
+  proxy.$refs['selectRef'].show();
+}
+
+/**
+ * 新增授权成功回调：回第一页重新查询
+ */
+function handleSelectOk() {
+  tableRef.value?.resetQuery();
+}
+
+/**
+ * 用户状态修改
+ * @param {Object} row 行数据
+ */
+function handleStatusChange(row) {
+  let text = row.status === '0' ? '启用' : '停用';
+  proxy.$modal
+    .confirm('确认要"' + text + '""' + row.userName + '"用户吗?')
+    .then(function () {
+      return changeUserStatus(row.userId, row.status);
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess(text + '成功');
+    })
+    .catch(function () {
+      row.status = row.status === '0' ? '1' : '0';
     });
+}
 
-    /** 查询授权用户列表 */
-    function getList() {
-        loading.value = true;
-        allocatedUserList(queryParams).then((response) => {
-            userList.value = response.rows;
-            total.value = response.total;
-            loading.value = false;
-        });
-    }
+/**
+ * 取消授权按钮操作
+ * @param {Object} row 行数据
+ */
+function cancelAuthUser(row) {
+  proxy.$modal
+    .confirm('确认要取消该用户"' + row.userName + '"角色吗？')
+    .then(function () {
+      return authUserCancel({ userId: row.userId, roleId: tableParams.roleId });
+    })
+    .then(() => {
+      getList();
+      proxy.$modal.msgSuccess('取消授权成功');
+    })
+    .catch(() => {});
+}
 
-    /** 返回按钮 */
-    function handleClose() {
-        const obj = { path: '/system/role' };
-        proxy.$tab.closeOpenPage(obj);
-    }
-
-    /** 搜索按钮操作 */
-    function handleQuery() {
-        queryParams.pageNum = 1;
-        getList();
-    }
-
-    /** 重置按钮操作 */
-    function resetQuery() {
-        proxy.resetForm('queryRef');
-        handleQuery();
-    }
-
-    /** 多选框选中数据 */
-    function handleSelectionChange(selection) {
-        userIds.value = selection.map((item) => item.userId);
-        multiple.value = !selection.length;
-    }
-
-    /** 打开授权用户表弹窗 */
-    function openSelectUser() {
-        proxy.$refs['selectRef'].show();
-    }
-
-    /** 取消授权按钮操作 */
-    function cancelAuthUser(row) {
-        proxy.$modal
-            .confirm('确认要取消该用户"' + row.userName + '"角色吗？')
-            .then(function () {
-                return authUserCancel({ userId: row.userId, roleId: queryParams.roleId });
-            })
-            .then(() => {
-                getList();
-                proxy.$modal.msgSuccess('取消授权成功');
-            })
-            .catch(() => {});
-    }
-
-    /** 批量取消授权按钮操作 */
-    function cancelAuthUserAll(row) {
-        const roleId = queryParams.roleId;
-        const uIds = userIds.value.join(',');
-        proxy.$modal
-            .confirm('是否取消选中用户授权数据项?')
-            .then(function () {
-                return authUserCancelAll({ roleId: roleId, userIds: uIds });
-            })
-            .then(() => {
-                getList();
-                proxy.$modal.msgSuccess('取消授权成功');
-            })
-            .catch(() => {});
-    }
-
-    getList();
+/**
+ * 批量取消授权按钮操作
+ */
+function cancelAuthUserAll() {
+  const roleId = tableParams.roleId;
+  const uIds = userIds.value.join(',');
+  proxy.$modal
+    .confirm('是否取消选中用户授权数据项?')
+    .then(function () {
+      return authUserCancelAll({ roleId: roleId, userIds: uIds });
+    })
+    .then(() => {
+      getList();
+      proxy.$modal.msgSuccess('取消授权成功');
+    })
+    .catch(() => {});
+}
 </script>

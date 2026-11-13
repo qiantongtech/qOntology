@@ -83,7 +83,7 @@ function loadNotice(noticeId) {
   margin: 15px;
   padding: 20px 0;
   scroll-behavior: smooth;
-  background-color: #ffffff;
+  background-color: var(--qt-surface-background);
 }
 
 .header-line {
@@ -98,7 +98,7 @@ function loadNotice(noticeId) {
   display: inline-block;
   width: 100%;
   margin: 10px 0;
-  color: #333333;
+  color: var(--qt-text-primary);
   font-size: 28px;
   font-weight: bold;
   text-align: center;
@@ -108,7 +108,7 @@ function loadNotice(noticeId) {
 .time {
   width: 100%;
   margin: 10px 0;
-  color: #999999;
+  color: var(--qt-text-secondary);
   font-size: 14px;
   text-align: center;
 }
@@ -122,7 +122,7 @@ function loadNotice(noticeId) {
   margin: 0 auto;
   padding: 0 10px;
   overflow-wrap: break-word;
-  color: #333333;
+  color: var(--qt-text-primary);
   font-size: 14px;
   line-height: 1.8;
 
@@ -179,8 +179,8 @@ function loadNotice(noticeId) {
   :deep(pre) {
     padding: 12px;
     overflow-x: auto;
-    color: #f8f8f2;
-    background: #23241f;
+    color: var(--qt-text-inverse);
+    background: var(--qt-text-primary);
     border-radius: 2px;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -197,8 +197,8 @@ function loadNotice(noticeId) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #909399;
-  background: #ffffff;
+  color: var(--qt-text-secondary);
+  background: var(--qt-surface-background);
 
   img {
     width: 300px;

@@ -74,8 +74,8 @@
           </div>
         </template>
         <template #createTime="{ row }">{{
-          proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
-        }}</template>
+        parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-"
+          }}</template>
         <template #action="{ row }">
           <el-button
             link
@@ -216,7 +216,7 @@ const { om_accept_status, om_target_priority } = proxy.useDict(
 );
 const route = useRoute();
 const router = useRouter();
-
+import {parseTime} from "@/utils/anivia";
 const tableRef = ref();
 const { creatorPhones } = useCreatorPhones();
 const versionId = ref(route.params.versionId || null);

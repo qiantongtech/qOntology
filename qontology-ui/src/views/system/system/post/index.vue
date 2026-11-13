@@ -17,388 +17,564 @@
 -->
 
 <template>
-    <div class="app-container" ref="app-container">
-        <div class="pagecont-top" v-show="showSearch">
-            <el-form
-                class="btn-style"
-                :model="queryParams"
-                ref="queryRef"
-                :inline="true"
-                label-width="68px"
-            >
-                <el-form-item label="岗位编码" prop="postCode">
-                    <el-input
-                        v-model="queryParams.postCode"
-                        placeholder="请输入岗位编码"
-                        clearable
-                        class="el-form-input-width"
-                        @keyup.enter="handleQuery"
-                    />
-                </el-form-item>
-                <el-form-item label="岗位名称" prop="postName">
-                    <el-input
-                        v-model="queryParams.postName"
-                        placeholder="请输入岗位名称"
-                        clearable
-                        class="el-form-input-width"
-                        @keyup.enter="handleQuery"
-                    />
-                </el-form-item>
-                <el-form-item label="状态" prop="status">
-                    <el-select
-                        v-model="queryParams.status"
-                        placeholder="岗位状态"
-                        clearable
-                        class="el-form-input-width"
-                    >
-                        <el-option
-                            v-for="dict in sys_normal_disable"
-                            :key="dict.value"
-                            :label="dict.label"
-                            :value="dict.value"
-                        />
-                    </el-select>
-                </el-form-item>
-                <el-form-item>
-                    <el-button
-                        type="primary"
-                        @click="handleQuery"
-                        @mousedown="(e) => e.preventDefault()"
-                    >
-                        <i class="iconfont-mini icon-a-chaxunxianxing mr5"></i>查询
-                    </el-button>
-                    <el-button @click="resetQuery" @mousedown="(e) => e.preventDefault()">
-                        <i class="iconfont-mini icon-a-shuaxinxianxing mr5"></i>重置
-                    </el-button>
-                </el-form-item>
-            </el-form>
-        </div>
-        <div class="pagecont-bottom">
-            <div class="justify-between mb15">
-                <el-row :gutter="10" class="btn-style">
-                    <el-col :span="1.5">
-                        <el-button
-                            type="primary"
-                            plain
-                            @click="handleAdd"
-                            v-hasPermi="['system:post:add']"
-                        >
-                            <i class="iconfont-mini icon-xinzeng"></i>
-                            新增</el-button
-                        >
-                    </el-col>
-                    <el-col :span="1.5">
-                        <el-button
-                            type="primary"
-                            plain
-                            :disabled="single"
-                            @click="handleUpdate"
-                            v-hasPermi="['system:post:edit']"
-                        >
-                            <i class="iconfont-mini icon-a-xiugaixianxing"></i>
-                            修改</el-button
-                        >
-                    </el-col>
-                    <el-col :span="1.5">
-                        <el-button
-                            type="danger"
-                            plain
-                            :disabled="multiple"
-                            @click="handleDelete"
-                            v-hasPermi="['system:post:remove']"
-                        >
-                            <i class="iconfont-mini icon-a-shanchuxianxing"></i>
-                            删除</el-button
-                        >
-                    </el-col>
-                    <el-col :span="1.5">
-                        <el-button
-                            type="warning"
-                            plain
-                            @click="handleExport"
-                            v-hasPermi="['system:post:export']"
-                        >
-                            <i class="iconfont-mini icon-daochu"></i>
-                            导出</el-button
-                        >
-                    </el-col>
-                </el-row>
-                <right-toolbar
-                    v-model:showSearch="showSearch"
-                    @queryTable="getList"
-                ></right-toolbar>
-            </div>
+  <div class="app-container" ref="app-container">
+    <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
+      <!-- 查询条件区域 -->
+      <template #search>
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
+        />
+      </template>
 
-            <el-table
-                stripe
-                v-loading="loading"
-                :data="postList"
-                @selection-change="handleSelectionChange"
-            >
-                <el-table-column type="selection" width="55" align="center" />
-                <el-table-column label="岗位编号" align="center" prop="postId" />
-                <el-table-column label="岗位编码" align="center" prop="postCode" />
-                <el-table-column label="岗位名称" align="center" prop="postName" />
-                <el-table-column label="岗位排序" align="center" prop="postSort" />
-                <el-table-column label="状态" align="center" prop="status">
-                    <template #default="scope">
-                        <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
-                    </template>
-                </el-table-column>
-                <el-table-column label="创建时间" align="center" prop="createTime" width="180">
-                    <template #default="scope">
-                        <span>{{ parseTime(scope.row.createTime) }}</span>
-                    </template>
-                </el-table-column>
-                <el-table-column
-                    label="操作"
-                    align="center"
-                    class-name="small-padding fixed-width"
-                    fixed="right"
-                    width="240"
-                >
-                    <template #default="scope">
-                        <el-button
-                            link
-                            type="primary"
-                            @click="handleUpdate(scope.row)"
-                            v-hasPermi="['system:post:edit']"
-                        >
-                            <i class="iconfont-mini icon-a-xiugaixianxing"></i>
-                            修改</el-button
-                        >
-                        <el-button
-                            link
-                            type="danger"
-                            @click="handleDelete(scope.row)"
-                            v-hasPermi="['system:post:remove']"
-                        >
-                            <i class="iconfont-mini icon-a-shanchuxianxing"></i>
-                            删除</el-button
-                        >
-                    </template>
-                </el-table-column>
-            </el-table>
-
-            <pagination
-                v-show="total > 0"
-                :total="total"
-                v-model:page="queryParams.pageNum"
-                v-model:limit="queryParams.pageSize"
-                @pagination="getList"
-            />
-        </div>
-
-        <!-- 添加或修改岗位对话框 -->
-        <el-dialog
-            :title="title"
-            v-model="open"
-            width="800px"
-            :append-to="$refs['app-container']"
-            draggable
-            destroy-on-close
+      <!-- 表格上方左侧按钮区 -->
+      <template #actions-data>
+        <el-button
+          type="primary"
+          plain
+          @click="handleAdd"
+          v-hasPermi="['system:post:add']"
         >
-            <el-form ref="postRef" :model="form" :rules="rules" label-width="80px">
-                <el-row :gutter="20">
-                    <el-col :span="12">
-                        <el-form-item label="岗位名称" prop="postName">
-                            <el-input v-model="form.postName" placeholder="请输入岗位名称" />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                        <el-form-item label="岗位编码" prop="postCode">
-                            <el-input v-model="form.postCode" placeholder="请输入编码名称" />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                        <el-form-item label="岗位顺序" prop="postSort">
-                            <el-input-number
-                                style="width: 100%"
-                                v-model="form.postSort"
-                                controls-position="right"
-                                :min="0"
-                            />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                        <el-form-item label="岗位状态" prop="status">
-                            <el-radio-group v-model="form.status">
-                                <el-radio
-                                    v-for="dict in sys_normal_disable"
-                                    :key="dict.value"
-                                    :value="dict.value"
-                                    >{{ dict.label }}</el-radio
-                                >
-                            </el-radio-group>
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="24">
-                        <el-form-item label="备注" prop="remark">
-                            <el-input
-                                v-model="form.remark"
-                                type="textarea"
-                                placeholder="请输入内容"
-                            />
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-            </el-form>
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button @click="cancel">取 消</el-button>
-                    <el-button type="primary" @click="submitForm">确 定</el-button>
-                </div>
-            </template>
-        </el-dialog>
-    </div>
+          <i class="iconfont-mini icon-xinzeng mr5"></i>新增
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['system:post:remove']"
+        >
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
+        </el-button>
+        <el-button
+          type="warning"
+          plain
+          @click="handleExport"
+          v-hasPermi="['system:post:export']"
+        >
+          <i class="iconfont-mini icon-daochu mr5"></i>导出
+        </el-button>
+      </template>
+
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            active-value="0"
+            inactive-value="1"
+            @change="handleStatusChange(row)"
+          />
+        </template>
+        <template #handle="{ row }">
+          <el-button
+            v-hasPermi="['system:post:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情
+          </el-button>
+          <el-button
+            link
+            type="primary"
+            @click="handleUpdate(row)"
+            v-hasPermi="['system:post:edit']"
+          >
+            <i class="iconfont-mini icon-a-xiugaixianxing"></i>修改
+          </el-button>
+          <el-button
+            link
+            type="danger"
+            :disabled="row.status === '0'"
+            @click="handleDelete(row)"
+            v-hasPermi="['system:post:remove']"
+          >
+            <i class="iconfont-mini icon-a-shanchuxianxing"></i>删除
+          </el-button>
+        </template>
+      </qt-table>
+    </qt-wrap>
+
+    <!-- 新增或修改岗位对话框 -->
+    <el-dialog
+      :title="title"
+      v-model="open"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+      destroy-on-close
+    >
+      <el-form
+        ref="postRef"
+        :model="form"
+        :rules="rules"
+        label-width="80px"
+      >
+        <qt-form-item label="岗位名称" prop="postName">
+          <el-input v-model="form.postName" placeholder="请输入岗位名称" />
+        </qt-form-item>
+        <qt-form-item label="岗位代号" prop="postCode">
+          <el-input v-model="form.postCode" placeholder="请输入岗位代号" />
+        </qt-form-item>
+        <qt-form-item label="岗位顺序" prop="postSort">
+          <el-input-number
+            class="post-sort-input"
+            v-model="form.postSort"
+            controls-position="right"
+            :min="0"
+          />
+        </qt-form-item>
+        <qt-form-item label="岗位状态" prop="status">
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in sys_normal_disable"
+              :key="dict.value"
+              :value="dict.value"
+              >{{ dict.label }}</el-radio
+            >
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark">
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            placeholder="请输入备注"
+            maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 岗位详情对话框 -->
+    <el-dialog
+      :title="title"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          {{ title }}
+        </span>
+      </template>
+      <el-form
+        ref="postDetailRef"
+        :model="form"
+        label-width="80px"
+        class="column-form"
+      >
+        <qt-form-item label="岗位名称" prop="postName">
+          <div class="form-readonly">{{ form.postName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="岗位代号" prop="postCode">
+          <div class="form-readonly">{{ form.postCode || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="岗位顺序" prop="postSort">
+          <div class="form-readonly">{{ form.postSort ?? "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="岗位状态" prop="status">
+          <dict-tag
+            :options="sys_normal_disable"
+            :value="form.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark" class="row-full">
+          <div class="form-readonly textarea">{{ form.remark || "-" }}</div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancel">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup name="Post">
-    import { listPost, addPost, delPost, getPost, updatePost } from '@/api/system/system/post.js';
+import {
+  listPost,
+  addPost,
+  delPost,
+  getPost,
+  updatePost
+} from "@/api/system/system/post.js";
 
-    const { proxy } = getCurrentInstance();
-    const { sys_normal_disable } = proxy.useDict('sys_normal_disable');
+// 当前组件实例，用于字典、弹窗提示、日期参数处理、文件下载等全局方法
+const { proxy } = getCurrentInstance();
 
-    const postList = ref([]);
-    const open = ref(false);
-    const loading = ref(true);
-    const showSearch = ref(true);
-    const ids = ref([]);
-    const single = ref(true);
-    const multiple = ref(true);
-    const total = ref(0);
-    const title = ref('');
+// 字典：sys_normal_disable 用于岗位状态
+const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 
-    const data = reactive({
-        form: {},
-        queryParams: {
-            pageNum: 1,
-            pageSize: 10,
-            postCode: undefined,
-            postName: undefined,
-            status: undefined
-        },
-        rules: {
-            postName: [{ required: true, message: '岗位名称不能为空', trigger: 'blur' }],
-            postCode: [{ required: true, message: '岗位编码不能为空', trigger: 'blur' }],
-            postSort: [{ required: true, message: '岗位顺序不能为空', trigger: 'blur' }]
-        }
-    });
+/**
+ * 表格实例
+ *
+ * getList()    刷新当前页
+ * resetQuery() 回第一页并重新查询
+ */
+const tableRef = ref(null);
 
-    const { queryParams, form, rules } = toRefs(data);
+/**
+ * 查询参数
+ *
+ * QtSearchBar 负责修改条件，QtTable 负责补充分页参数
+ */
+const tableParams = reactive({
+  postCode: undefined,
+  postName: undefined,
+  status: undefined
+});
 
-    /** 查询岗位列表 */
-    function getList() {
-        loading.value = true;
-        listPost(queryParams.value).then((response) => {
-            postList.value = response.rows;
-            total.value = response.total;
-            loading.value = false;
+/**
+ * 查询栏配置，prop 与 tableParams 字段一一对应
+ */
+const searchStore = reactive({
+  items: [
+    {
+      label: "岗位代号",
+      prop: "postCode",
+      component: {
+        is: "input"
+      }
+    },
+    {
+      label: "岗位名称",
+      prop: "postName",
+      component: {
+        is: "input"
+      }
+    },
+    {
+      label: "状态",
+      prop: "status",
+      component: {
+        is: "select",
+        options: sys_normal_disable
+      }
+    }
+  ]
+});
+
+/**
+ * QtTable 统一配置
+ */
+const tableStore = reactive({
+  config: {
+    // 启用表头排序，首次请求默认按创建时间倒序
+    sort: true,
+    table: {
+      stripe: true,
+      rowKey: "postId",
+      defaultSort: { prop: "createTime", order: "descending" },
+      onSelectionChange: handleSelectionChange
+    }
+  },
+  columns: [
+    {
+      type: "selection",
+      width: 55,
+      minWidth: 55,
+      align: "center"
+    },
+    {
+      label: "编号",
+      prop: "postId",
+      align: "center",
+      width: 80, minWidth: 80,
+      sortable: true
+    },
+    {
+      label: "岗位名称",
+      prop: "postName",
+      align: "left",
+      showOverflowTooltip: {
+        effect: "light"
+      }
+    },
+    {
+      label: "岗位代号",
+      prop: "postCode",
+      align: "left",
+      showOverflowTooltip: {
+        effect: "light"
+      }
+    },
+    {
+      label: "岗位排序",
+      prop: "postSort",
+      align: "left",
+      hide: true
+    },
+    { label: "状态", prop: "status", slot: "status", width: 80, minWidth: 80, align: "center" },
+    {
+      label: "创建时间",
+      prop: "createTime",
+      width: 180,
+      minWidth: 180,
+      align: "center",
+      date: true,
+      sortable: true
+    },
+    {
+      label: "操作",
+      fixed: "right",
+      width: 240,
+      minWidth: 240,
+      align: "center",
+      slot: "handle"
+    }
+  ],
+  func: requestTableData,
+  params: tableParams,
+  events: {}
+});
+
+/**
+ * QtTable 数据请求适配器
+ *
+ * @param {Object} params 查询条件 + pageNum + pageSize
+ * @returns {Promise<{ data: { rows: Array, total: number } }>}
+ */
+async function requestTableData(params) {
+  // dateRange 是前端临时字段，不能直接传给后端
+  const {
+    dateRange,
+    ...requestParams
+  } = params;
+
+  const response = await listPost(
+    proxy.addDateRange(requestParams, dateRange)
+  );
+
+  return {
+    data: {
+      rows: response.rows ?? [],
+      total: response.total ?? 0
+    }
+  };
+}
+
+/**
+ * 刷新表格当前页，新增/修改/删除成功后调用
+ */
+function getList() {
+  tableRef.value?.getList();
+}
+
+const open = ref(false);
+const openDetail = ref(false);
+const ids = ref([]);
+const selectedRows = ref([]);
+
+// true 表示未选择或选择了多条，不能执行单条修改
+const single = ref(true);
+
+// true 表示没有选择数据，不能执行批量删除
+const multiple = ref(true);
+const title = ref("");
+
+const data = reactive({
+  form: {},
+  rules: {
+    postName: [{ required: true, message: "岗位名称不能为空", trigger: "blur" }],
+    postCode: [{ required: true, message: "岗位代号不能为空", trigger: "blur" }],
+    postSort: [{ required: true, message: "岗位顺序不能为空", trigger: "blur" }]
+  }
+});
+
+const { form, rules } = toRefs(data);
+
+/**
+ * 表格多选事件
+ *
+ * @param {Array} selection 当前选中行
+ */
+function handleSelectionChange(selection) {
+  ids.value = selection.map((item) => item.postId);
+  selectedRows.value = selection;
+  single.value = selection.length !== 1;
+  multiple.value = !selection.length;
+}
+
+/**
+ * 取消按钮
+ */
+function cancel() {
+  open.value = false;
+  openDetail.value = false;
+  reset();
+}
+
+/**
+ * 表单重置
+ */
+function reset() {
+  form.value = {
+    postId: undefined,
+    postCode: undefined,
+    postName: undefined,
+    postSort: 0,
+    status: "0",
+    remark: undefined
+  };
+  proxy.resetForm("postRef");
+}
+
+/**
+ * 新增按钮操作
+ */
+function handleAdd() {
+  reset();
+  open.value = true;
+  title.value = "新增岗位";
+}
+
+/**
+ * 修改按钮操作
+ *
+ * @param {Object} [row] 行数据；顶部按钮触发时取多选框第一条
+ */
+function handleUpdate(row) {
+  reset();
+  const postId = row?.postId ?? ids.value[0];
+  getPost(postId).then((response) => {
+    form.value = response.data;
+    open.value = true;
+    title.value = "修改岗位";
+  });
+}
+
+/**
+ * 详情按钮操作：复用 getPost 回显岗位只读信息
+ * @param {Object} [row] 行数据；无值时取多选框第一条
+ */
+function handleDetail(row) {
+  reset();
+  const postId = row?.postId ?? ids.value[0];
+  getPost(postId).then((response) => {
+    form.value = response.data;
+    openDetail.value = true;
+    title.value = "岗位详情";
+  });
+}
+
+/**
+ * 提交按钮
+ */
+function submitForm() {
+  proxy.$refs["postRef"].validate((valid) => {
+    if (valid) {
+      if (form.value.postId != undefined) {
+        updatePost(form.value).then((response) => {
+          proxy.$modal.msgSuccess("修改成功");
+          open.value = false;
+          getList();
         });
+      } else {
+        addPost(form.value).then((response) => {
+          proxy.$modal.msgSuccess("新增成功");
+          open.value = false;
+          getList();
+        });
+      }
     }
+  });
+}
 
-    /** 取消按钮 */
-    function cancel() {
-        open.value = false;
-        reset();
-    }
-
-    /** 表单重置 */
-    function reset() {
-        form.value = {
-            postId: undefined,
-            postCode: undefined,
-            postName: undefined,
-            postSort: 0,
-            status: '0',
-            remark: undefined
-        };
-        proxy.resetForm('postRef');
-    }
-
-    /** 搜索按钮操作 */
-    function handleQuery() {
-        queryParams.value.pageNum = 1;
+/**
+ * 删除按钮操作
+ *
+ * @param {Object} [row] 行数据；无值时为批量删除
+ */
+function handleDelete(row) {
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.postId 区分）
+  if (row?.postId != null) {
+    const postIds = row.postId;
+    proxy.$modal
+      .confirm("是否确认删除编号为\"" + postIds + "\"的数据项？")
+      .then(function () {
+        return delPost(postIds);
+      })
+      .then(() => {
         getList();
-    }
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
 
-    /** 重置按钮操作 */
-    function resetQuery() {
-        proxy.resetForm('queryRef');
-        handleQuery();
-    }
+  // 批量删除：根据状态（'0'=启用不可删除，'1'=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === "1");
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.postId);
+  proxy.$modal
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
+    .then(function () {
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delPost(deletableIds);
+    })
+    .then(() => {
+      getList();
+      proxy.$modal.msgSuccess("删除成功");
+    })
+    .catch(() => {});
+}
 
-    /** 多选框选中数据 */
-    function handleSelectionChange(selection) {
-        ids.value = selection.map((item) => item.postId);
-        single.value = selection.length != 1;
-        multiple.value = !selection.length;
-    }
+/**
+ * 岗位状态修改
+ *
+ * @param {Object} row 行数据
+ */
+function handleStatusChange(row) {
+  let text = row.status === "0" ? "启用" : "停用";
+  proxy.$modal
+    .confirm("确认要\"" + text + "\"\"" + row.postName + "\"岗位吗?")
+    .then(function () {
+      return updatePost(row);
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess(text + "成功");
+    })
+    .catch(function () {
+      row.status = row.status === "0" ? "1" : "0";
+    });
+}
 
-    /** 新增按钮操作 */
-    function handleAdd() {
-        reset();
-        open.value = true;
-        title.value = '添加岗位';
-    }
-
-    /** 修改按钮操作 */
-    function handleUpdate(row) {
-        reset();
-        const postId = row.postId || ids.value;
-        getPost(postId).then((response) => {
-            form.value = response.data;
-            open.value = true;
-            title.value = '修改岗位';
-        });
-    }
-
-    /** 提交按钮 */
-    function submitForm() {
-        proxy.$refs['postRef'].validate((valid) => {
-            if (valid) {
-                if (form.value.postId != undefined) {
-                    updatePost(form.value).then((response) => {
-                        proxy.$modal.msgSuccess('修改成功');
-                        open.value = false;
-                        getList();
-                    });
-                } else {
-                    addPost(form.value).then((response) => {
-                        proxy.$modal.msgSuccess('新增成功');
-                        open.value = false;
-                        getList();
-                    });
-                }
-            }
-        });
-    }
-
-    /** 删除按钮操作 */
-    function handleDelete(row) {
-        const postIds = row.postId || ids.value;
-        proxy.$modal
-            .confirm('是否确认删除岗位编号为"' + postIds + '"的数据项？')
-            .then(function () {
-                return delPost(postIds);
-            })
-            .then(() => {
-                getList();
-                proxy.$modal.msgSuccess('删除成功');
-            })
-            .catch(() => {});
-    }
-
-    /** 导出按钮操作 */
-    function handleExport() {
-        proxy.download(
-            'system/post/export',
-            {
-                ...queryParams.value
-            },
-            `post_${new Date().getTime()}.xlsx`
-        );
-    }
-
-    getList();
+/**
+ * 导出按钮操作，使用当前查询条件
+ */
+function handleExport() {
+  proxy.download(
+    "system/post/export",
+    {
+      ...tableParams
+    },
+    `post_${new Date().getTime()}.xlsx`
+  );
+}
 </script>
+
+<style scoped lang="scss">
+// 岗位顺序输入框占满表单项宽度
+.post-sort-input {
+  width: 100%;
+}
+</style>
