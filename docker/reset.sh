@@ -30,6 +30,11 @@ docker stop qontology-qontology-api-1
 echo "   → 停止 neo4j 服务..."
 docker stop qontology-neo4j-1
 
+
+# 停止 Nginx
+echo "   → 停止 nginx服务..."
+docker stop qontology-nginx-1
+
 # ==================================================================
 # 阶段 B: 重置 MySQL 数据
 # ==================================================================
