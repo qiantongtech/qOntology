@@ -20,7 +20,12 @@
   <div class="app-container" ref="app-container">
     <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
       <template #search>
-        <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef" />
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
+        />
       </template>
 
       <template #actions-data>
@@ -60,52 +65,39 @@
     <el-dialog
       title="消息详情"
       v-model="openView"
-      width="800px"
+      width="900px"
       draggable
       destroy-on-close
       class="msg-dialog"
     >
       <el-form label-width="100px">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="消息标题：">
-              <div class="form-value-ifon">
-                {{ viewData.title }}
-              </div>
-            </el-form-item>
-          </el-col>
-
-          <el-col :span="12">
-            <el-form-item label="类型：">
-              <div class="form-value-ifon">
-                <dict-tag :options="message_category" :value="viewData.category" />
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="是否已读：">
-              <div class="form-value-ifon">
-                <el-tag :type="viewData.hasRead ? 'success' : 'danger'">
-                  {{ viewData.hasRead ? '已读' : '未读' }}
-                </el-tag>
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="消息内容：">
-              <div class="form-value-ifon">
-                {{ viewData.content }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="创建时间：">
-              <div class="form-value-ifon">
-                {{ viewData.createTime }}
-              </div>
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <el-form-item label="消息标题：">
+          <div class="form-value-ifon">
+            {{ viewData.title }}
+          </div>
+        </el-form-item>
+        <el-form-item label="类型：">
+          <div class="form-value-ifon">
+            <dict-tag :options="message_category" :value="viewData.category" />
+          </div>
+        </el-form-item>
+        <el-form-item label="是否已读：">
+          <div class="form-value-ifon">
+            <el-tag :type="viewData.hasRead ? 'success' : 'danger'">
+              {{ viewData.hasRead ? '已读' : '未读' }}
+            </el-tag>
+          </div>
+        </el-form-item>
+        <el-form-item label="消息内容：">
+          <div class="form-value-ifon">
+            {{ viewData.content }}
+          </div>
+        </el-form-item>
+        <el-form-item label="创建时间：">
+          <div class="form-value-ifon">
+            {{ viewData.createTime }}
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -212,21 +204,21 @@ const tableStore = reactive({
       dict: 'message_category'
     },
     {
+      label: '消息内容',
+      prop: 'content',
+      align: 'center'
+    },
+    {
       label: '是否已读',
       prop: 'hasRead',
       align: 'center',
       slot: 'hasRead'
     },
     {
-      label: '消息内容',
-      prop: 'content',
-      align: 'center'
-    },
-    {
       label: '创建时间',
       prop: 'createTime',
       align: 'center',
-      date: '{y}-{m}-{d} {h}:{i}:{s}',
+      date: true,
       sortable: true
     },
     {
@@ -326,7 +318,7 @@ function deleteMsg(id) {
 <style scoped lang="scss">
 .msg-dialog {
   :deep(.el-dialog__body) {
-    height: 300px !important;
+    min-height: 300px !important;
   }
 }
 </style>

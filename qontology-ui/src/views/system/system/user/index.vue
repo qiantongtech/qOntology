@@ -30,7 +30,6 @@
       />
 
       <el-main>
-        <div>
           <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
             <template #search>
               <qt-search-bar
@@ -40,7 +39,6 @@
                 @reset="handleResetQuery"
               />
             </template>
-
             <template #actions-data>
               <el-button
                 type="primary"
@@ -51,22 +49,13 @@
                 <i class="iconfont-mini icon-xinzeng mr5"></i>新增
               </el-button>
               <el-button
-                type="primary"
-                plain
-                :disabled="single"
-                @click="handleUpdate"
-                v-hasPermi="['system:user:edit']"
-              >
-                <i class="iconfont-mini icon-a-xiugaixianxing mr5"></i>修改
-              </el-button>
-              <el-button
                 type="danger"
                 plain
                 :disabled="multiple"
                 @click="handleDelete"
                 v-hasPermi="['system:user:remove']"
               >
-                <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+                <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
               </el-button>
               <el-button
                 type="info"
@@ -85,7 +74,6 @@
                 <i class="iconfont-mini icon-daochu mr5"></i>导出
               </el-button>
             </template>
-
             <qt-table v-bind="tableStore" ref="tableRef">
               <!-- 部门名称为嵌套字段，QtTable 的 prop 不支持点号路径，改用插槽渲染 -->
               <template #deptName="{ row }">
@@ -121,6 +109,7 @@
                 <el-popover
                   placement="bottom"
                   :width="150"
+                  popper-class="handle-popover"
                   trigger="click"
                   v-if="row.userId !== 1"
                 >
@@ -149,7 +138,6 @@
               </template>
             </qt-table>
           </qt-wrap>
-        </div>
       </el-main>
     </el-container>
 
@@ -157,7 +145,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="58vh"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -170,16 +158,16 @@
       >
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="用户昵称" prop="nickName">
+            <qt-form-item label="用户昵称" prop="nickName">
               <el-input
                 v-model="form.nickName"
                 placeholder="请输入用户昵称"
                 maxlength="30"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="归属部门" prop="deptId">
+            <qt-form-item label="归属部门" prop="deptId">
               <el-tree-select
                 v-model="form.deptId"
                 :data="deptOptions"
@@ -188,32 +176,32 @@
                 placeholder="请选择归属部门"
                 check-strictly
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="手机号码" prop="phonenumber">
+            <qt-form-item label="手机号码" prop="phonenumber">
               <el-input
                 v-model="form.phonenumber"
                 placeholder="请输入手机号码"
                 maxlength="11"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="邮箱" prop="email">
+            <qt-form-item label="邮箱" prop="email">
               <el-input
                 v-model="form.email"
                 placeholder="请输入邮箱"
                 maxlength="50"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item
+            <qt-form-item
               v-if="form.userId == undefined"
               label="用户名称"
               prop="userName"
@@ -223,10 +211,10 @@
                 placeholder="请输入用户名称"
                 maxlength="30"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item
+            <qt-form-item
               v-if="form.userId == undefined"
               label="用户密码"
               prop="password"
@@ -238,12 +226,12 @@
                 maxlength="20"
                 show-password
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="用户性别">
+            <qt-form-item label="用户性别">
               <el-select v-model="form.sex" placeholder="请选择">
                 <el-option
                   v-for="dict in sys_user_sex"
@@ -252,10 +240,10 @@
                   :value="dict.value"
                 ></el-option>
               </el-select>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="状态">
+            <qt-form-item label="状态">
               <el-radio-group v-model="form.status">
                 <el-radio
                   v-for="dict in sys_normal_disable"
@@ -265,12 +253,12 @@
                   {{ dict.label }}
                 </el-radio>
               </el-radio-group>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="岗位">
+            <qt-form-item label="岗位">
               <el-select
                 v-model="form.postIds"
                 multiple
@@ -285,10 +273,10 @@
                   :disabled="item.status == 1"
                 ></el-option>
               </el-select>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="角色">
+            <qt-form-item label="角色">
               <el-select
                 v-model="form.roleIds"
                 multiple
@@ -303,18 +291,20 @@
                   :disabled="item.status == 1"
                 ></el-option>
               </el-select>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="24">
-            <el-form-item label="备注">
+            <qt-form-item label="备注">
               <el-input
                 v-model="form.remark"
                 type="textarea"
                 placeholder="请输入内容"
+                maxlength="256个字符"
+                show-word-limit
               ></el-input>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
       </el-form>
@@ -482,18 +472,18 @@ const tableStore = reactive({
     }
   },
   columns: [
-    { type: "selection", width: 50, minWidth: 50, align: "center" },
+    { type: "selection", width: 50, minWidth: 50, align: "left" },
     { label: "编号", prop: "userId", width: 80, minWidth: 80, align: "center", sortable: true },
     {
       label: "用户名称",
       prop: "userName",
-      align: "center",
+      align: "left",
       showOverflowTooltip: { effect: "light" }
     },
     {
       label: "用户昵称",
       prop: "nickName",
-      align: "center",
+      align: "left",
       showOverflowTooltip: { effect: "light" }
     },
     {
@@ -501,7 +491,7 @@ const tableStore = reactive({
       prop: "dept",
       slot: "deptName",
       minWidth: 120,
-      align: "center",
+      align: "left",
       showOverflowTooltip: { effect: "light" }
     },
     {
@@ -933,7 +923,8 @@ getDeptTree();
 
 <style scoped lang="scss">
 .el-main {
-  padding: 2px 0px;
+  min-width: 0;
+  padding: 2px 0;
 }
 
 // 下载模板链接的辅助样式，替代原内联 style

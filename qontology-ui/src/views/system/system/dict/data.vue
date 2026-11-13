@@ -24,6 +24,7 @@
           :items="searchStore.items"
           :params="tableStore.params"
           :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
           @reset="handleSearchReset"
         />
       </template>
@@ -88,6 +89,14 @@
             >{{ row.dictLabel }}</el-tag
           >
         </template>
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            active-value="0"
+            inactive-value="1"
+            @change="handleStatusChange(row)"
+          />
+        </template>
         <template #handle="{ row }">
           <el-button
             link
@@ -113,7 +122,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -124,71 +133,55 @@
         :rules="rules"
         label-width="80px"
       >
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="字典类型">
-              <el-input v-model="form.dictType" :disabled="true" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="数据标签" prop="dictLabel">
-              <el-input v-model="form.dictLabel" placeholder="请输入数据标签" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="数据键值" prop="dictValue">
-              <el-input v-model="form.dictValue" placeholder="请输入数据键值" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="样式属性" prop="cssClass">
-              <el-input v-model="form.cssClass" placeholder="请输入样式属性" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="显示排序" prop="dictSort">
-              <el-input-number
-                class="dict-sort-input"
-                v-model="form.dictSort"
-                controls-position="right"
-                :min="0"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="回显样式" prop="listClass">
-              <el-select v-model="form.listClass">
-                <el-option
-                  v-for="item in listClassOptions"
-                  :key="item.value"
-                  :label="item.label + '(' + item.value + ')'"
-                  :value="item.value"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态" prop="status">
-              <el-radio-group v-model="form.status">
-                <el-radio
-                  v-for="dict in sys_normal_disable"
-                  :key="dict.value"
-                  :value="dict.value"
-                  >{{ dict.label }}</el-radio
-                >
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="form.remark"
-                type="textarea"
-                placeholder="请输入内容"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <qt-form-item label="字典类型">
+          <el-input v-model="form.dictType" :disabled="true" />
+        </qt-form-item>
+        <qt-form-item label="数据标签" prop="dictLabel">
+          <el-input v-model="form.dictLabel" placeholder="请输入数据标签" />
+        </qt-form-item>
+        <qt-form-item label="数据键值" prop="dictValue">
+          <el-input v-model="form.dictValue" placeholder="请输入数据键值" />
+        </qt-form-item>
+        <qt-form-item label="样式属性" prop="cssClass">
+          <el-input v-model="form.cssClass" placeholder="请输入样式属性" />
+        </qt-form-item>
+        <qt-form-item label="显示排序" prop="dictSort">
+          <el-input-number
+            class="dict-sort-input"
+            v-model="form.dictSort"
+            controls-position="right"
+            :min="0"
+          />
+        </qt-form-item>
+        <qt-form-item label="回显样式" prop="listClass">
+          <el-select v-model="form.listClass">
+            <el-option
+              v-for="item in listClassOptions"
+              :key="item.value"
+              :label="item.label + '(' + item.value + ')'"
+              :value="item.value"
+            ></el-option>
+          </el-select>
+        </qt-form-item>
+        <qt-form-item label="状态" prop="status">
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in sys_normal_disable"
+              :key="dict.value"
+              :value="dict.value"
+              >{{ dict.label }}</el-radio
+            >
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark">
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            placeholder="请输入内容"
+            maxlength="256"
+            show-word-limit
+          ></el-input>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -297,7 +290,7 @@ const tableStore = reactive({
   },
   columns: [
     { type: "selection", width: 55, minWidth: 55, align: "center" },
-    { label: "字典编码", prop: "dictCode", align: "center", sortable: true },
+    { label: "编号", prop: "dictCode", align: "center", sortable: true },
     {
       label: "字典标签",
       prop: "dictLabel",
@@ -305,17 +298,13 @@ const tableStore = reactive({
       slot: "dictLabel"
     },
     { label: "字典键值", prop: "dictValue", align: "center" },
-    { label: "字典排序", prop: "dictSort", align: "center" },
-    {
-      label: "状态",
-      prop: "status",
-      align: "center",
-      dict: "sys_normal_disable"
-    },
+    { label: "字典排序", prop: "dictSort", align: "center", hide: true },
+    { label: "状态", prop: "status", slot: "status", width: 80, minWidth: 80, align: "center" },
     {
       label: "备注",
       prop: "remark",
       align: "center",
+      hide: true,
       showOverflowTooltip: { effect: "light" }
     },
     {
@@ -510,7 +499,7 @@ function submitForm() {
 function handleDelete(row) {
   const dictCodes = row.dictCode || ids.value;
   proxy.$modal
-    .confirm("是否确认删除字典编码为\"" + dictCodes + "\"的数据项？")
+    .confirm("是否确认删除编号为\"" + dictCodes + "\"的数据项？")
     .then(function () {
       return delData(dictCodes);
     })
@@ -520,6 +509,26 @@ function handleDelete(row) {
       useDictStore().removeDict(tableParams.dictType);
     })
     .catch(() => {});
+}
+
+/**
+ * 字典数据状态修改
+ *
+ * @param {Object} row 行数据
+ */
+function handleStatusChange(row) {
+  let text = row.status === "0" ? "启用" : "停用";
+  proxy.$modal
+    .confirm("确认要\"" + text + "\"\"" + row.dictLabel + "\"字典数据吗?")
+    .then(function () {
+      return updateData(row);
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess(text + "成功");
+    })
+    .catch(function () {
+      row.status = row.status === "0" ? "1" : "0";
+    });
 }
 
 /**

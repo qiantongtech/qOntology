@@ -21,7 +21,7 @@
   <el-dialog
     title="选择用户"
     v-model="visible"
-    width="800px"
+    width="900px"
     top="5vh"
     append-to-body
   >

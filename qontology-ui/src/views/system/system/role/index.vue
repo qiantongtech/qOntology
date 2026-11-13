@@ -40,22 +40,13 @@
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
         <el-button
-          type="primary"
-          plain
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:role:edit']"
-        >
-          <i class="iconfont-mini icon-a-xiugaixianxing mr5"></i>修改
-        </el-button>
-        <el-button
           type="danger"
           plain
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['system:role:remove']"
         >
-          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
         </el-button>
         <el-button
           type="warning"
@@ -102,14 +93,14 @@
             v-if="row.roleId !== 1 && hasPermi(['system:role:edit'])"
             placement="bottom"
             :width="150"
+            popper-class="handle-popover"
             trigger="click"
           >
             <template #reference>
-              <el-button link type="primary" icon="More">更多</el-button>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <div class="task-action-list role-more-actions">
+            <div class="task-action-list">
               <el-button
-                class="data-scope-btn"
                 link
                 type="primary"
                 @click="handleDataScope(row)"
@@ -137,7 +128,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -146,56 +137,34 @@
         ref="roleRef"
         :model="form"
         :rules="rules"
-        label-width="100px"
+        label-width="90px"
+        class="column-form"
       >
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="角色名称" prop="roleName">
-              <el-input v-model="form.roleName" placeholder="请输入角色名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item prop="roleKey">
-              <template #label>
-                <span>
-                  <el-tooltip
-                    content="控制器中定义的权限字符，如：@PreAuthorize(`@ss.hasRole('admin')`)"
-                    placement="top"
-                  >
-                    <el-icon class="label-info-icon"><InfoFilled /></el-icon>
-                  </el-tooltip>
-                  权限字符
-                </span>
-              </template>
-              <el-input v-model="form.roleKey" placeholder="请输入权限字符" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="角色顺序" prop="roleSort">
-              <el-input-number
-                class="role-sort-input"
-                v-model="form.roleSort"
-                controls-position="right"
-                :min="0"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
-                <el-radio
-                  v-for="dict in sys_normal_disable"
-                  :key="dict.value"
-                  :value="dict.value"
-                  >{{ dict.label }}</el-radio
-                >
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="菜单权限">
+        <qt-form-item label="角色名称" class="row-full" prop="roleName">
+          <el-input v-model="form.roleName" placeholder="请输入角色名称" />
+        </qt-form-item>
+        <qt-form-item label="权限字符" prop="roleKey" class="row-full" tip="控制器中定义的权限字符，如：@PreAuthorize(`@ss.hasRole('admin')`)">
+          <el-input v-model="form.roleKey" placeholder="请输入权限字符" />
+        </qt-form-item>
+        <qt-form-item label="角色顺序" class="row-full" prop="roleSort">
+          <el-input-number
+            class="role-sort-input"
+            v-model="form.roleSort"
+            controls-position="right"
+            :min="0"
+          />
+        </qt-form-item>
+        <qt-form-item label="状态" class="row-full">
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in sys_normal_disable"
+              :key="dict.value"
+              :value="dict.value"
+              >{{ dict.label }}</el-radio
+            >
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item label="菜单权限" class="row-full">
           <el-checkbox
             v-model="menuExpand"
             @change="handleCheckedTreeExpand($event, 'menu')"
@@ -221,14 +190,16 @@
             empty-text="加载中，请稍候"
             :props="{ label: 'label', children: 'children' }"
           ></el-tree>
-        </el-form-item>
-        <el-form-item label="备注">
+        </qt-form-item>
+        <qt-form-item label="备注" class="row-full">
           <el-input
             v-model="form.remark"
             type="textarea"
             placeholder="请输入内容"
+            maxlength="256个字符"
+            show-word-limit
           ></el-input>
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -246,13 +217,13 @@
       append-to-body
     >
       <el-form :model="form" label-width="80px">
-        <el-form-item label="角色名称">
+        <qt-form-item label="角色名称">
           <el-input v-model="form.roleName" :disabled="true" />
-        </el-form-item>
-        <el-form-item label="权限字符">
+        </qt-form-item>
+        <qt-form-item label="权限字符">
           <el-input v-model="form.roleKey" :disabled="true" />
-        </el-form-item>
-        <el-form-item label="权限范围">
+        </qt-form-item>
+        <qt-form-item label="权限范围">
           <el-select v-model="form.dataScope" @change="dataScopeSelectChange">
             <el-option
               v-for="item in dataScopeOptions"
@@ -261,8 +232,8 @@
               :value="item.value"
             ></el-option>
           </el-select>
-        </el-form-item>
-        <el-form-item label="数据权限" v-show="form.dataScope == 2">
+        </qt-form-item>
+        <qt-form-item label="数据权限" v-show="form.dataScope == 2">
           <el-checkbox
             v-model="deptExpand"
             @change="handleCheckedTreeExpand($event, 'dept')"
@@ -289,7 +260,7 @@
             empty-text="加载中，请稍候"
             :props="{ label: 'label', children: 'children' }"
           ></el-tree>
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -431,7 +402,7 @@ const tableStore = reactive({
       align: 'center',
       showOverflowTooltip: { effect: 'light' }
     },
-    { label: '显示顺序', prop: 'roleSort', align: 'center' },
+    { label: '显示顺序', prop: 'roleSort', align: 'center', hide: true },
     { label: '状态', prop: 'status', align: 'center', slot: 'status' },
     {
       label: '创建时间',
@@ -852,14 +823,6 @@ function hasPermi(permission) {
 </script>
 
 <style scoped lang="scss">
-// 更多操作弹层保持原有宽度与按钮内边距
-.role-more-actions {
-  width: 90px;
-}
-.data-scope-btn {
-  padding-left: 14px;
-}
-
 // 角色顺序输入框占满表单项宽度
 .role-sort-input {
   width: 100%;

@@ -25,6 +25,7 @@
           :items="searchStore.items"
           :params="tableStore.params"
           :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
         />
       </template>
 
@@ -39,22 +40,13 @@
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
         <el-button
-          type="primary"
-          plain
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:config:edit']"
-        >
-          <i class="iconfont-mini icon-a-xiugaixianxing mr5"></i>修改
-        </el-button>
-        <el-button
           type="danger"
           plain
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['system:config:remove']"
         >
-          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
         </el-button>
         <el-button
           type="warning"
@@ -105,7 +97,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -116,44 +108,34 @@
         :rules="rules"
         label-width="80px"
       >
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="参数名称" prop="configName">
-              <el-input v-model="form.configName" placeholder="请输入参数名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="参数键名" prop="configKey">
-              <el-input v-model="form.configKey" placeholder="请输入参数键名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="参数键值" prop="configValue">
-              <el-input v-model="form.configValue" placeholder="请输入参数键值" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="系统内置" prop="configType">
-              <el-radio-group v-model="form.configType">
-                <el-radio
-                  v-for="dict in sys_yes_no"
-                  :key="dict.value"
-                  :value="dict.value"
-                  >{{ dict.label }}</el-radio
-                >
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="form.remark"
-                type="textarea"
-                placeholder="请输入内容"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <qt-form-item label="参数名称" prop="configName">
+          <el-input v-model="form.configName" placeholder="请输入参数名称" />
+        </qt-form-item>
+        <qt-form-item label="参数键名" prop="configKey">
+          <el-input v-model="form.configKey" placeholder="请输入参数键名" />
+        </qt-form-item>
+        <qt-form-item label="参数键值" prop="configValue">
+          <el-input v-model="form.configValue" placeholder="请输入参数键值" />
+        </qt-form-item>
+        <qt-form-item label="系统内置" prop="configType">
+          <el-radio-group v-model="form.configType">
+            <el-radio
+              v-for="dict in sys_yes_no"
+              :key="dict.value"
+              :value="dict.value"
+              >{{ dict.label }}</el-radio
+            >
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark">
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            placeholder="请输入内容"
+            maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -276,7 +258,7 @@ const tableStore = reactive({
     {
       label: "参数名称",
       prop: "configName",
-      align: "center",
+      align: "left",
       showOverflowTooltip: {
         effect: "light"
       }
@@ -284,7 +266,7 @@ const tableStore = reactive({
     {
       label: "参数键名",
       prop: "configKey",
-      align: "center",
+      align: "left",
       showOverflowTooltip: {
         effect: "light"
       }
@@ -292,7 +274,7 @@ const tableStore = reactive({
     {
       label: "参数键值",
       prop: "configValue",
-      align: "center",
+      align: "left",
       showOverflowTooltip: {
         effect: "light"
       },
@@ -308,6 +290,7 @@ const tableStore = reactive({
       label: "备注",
       prop: "remark",
       align: "center",
+      hide: true,
       showOverflowTooltip: {
         effect: "light"
       }

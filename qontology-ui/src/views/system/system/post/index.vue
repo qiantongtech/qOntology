@@ -25,6 +25,7 @@
           :items="searchStore.items"
           :params="tableStore.params"
           :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
         />
       </template>
 
@@ -39,22 +40,13 @@
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
         <el-button
-          type="primary"
-          plain
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:post:edit']"
-        >
-          <i class="iconfont-mini icon-a-xiugaixianxing mr5"></i>修改
-        </el-button>
-        <el-button
           type="danger"
           plain
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['system:post:remove']"
         >
-          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
         </el-button>
         <el-button
           type="warning"
@@ -67,6 +59,14 @@
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            active-value="0"
+            inactive-value="1"
+            @change="handleStatusChange(row)"
+          />
+        </template>
         <template #handle="{ row }">
           <el-button
             link
@@ -92,7 +92,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -103,49 +103,39 @@
         :rules="rules"
         label-width="80px"
       >
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="岗位名称" prop="postName">
-              <el-input v-model="form.postName" placeholder="请输入岗位名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="岗位编码" prop="postCode">
-              <el-input v-model="form.postCode" placeholder="请输入编码名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="岗位顺序" prop="postSort">
-              <el-input-number
-                class="post-sort-input"
-                v-model="form.postSort"
-                controls-position="right"
-                :min="0"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="岗位状态" prop="status">
-              <el-radio-group v-model="form.status">
-                <el-radio
-                  v-for="dict in sys_normal_disable"
-                  :key="dict.value"
-                  :value="dict.value"
-                  >{{ dict.label }}</el-radio
-                >
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="form.remark"
-                type="textarea"
-                placeholder="请输入内容"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <qt-form-item label="岗位名称" prop="postName">
+          <el-input v-model="form.postName" placeholder="请输入岗位名称" />
+        </qt-form-item>
+        <qt-form-item label="岗位代号" prop="postCode">
+          <el-input v-model="form.postCode" placeholder="请输入岗位代号" />
+        </qt-form-item>
+        <qt-form-item label="岗位顺序" prop="postSort">
+          <el-input-number
+            class="post-sort-input"
+            v-model="form.postSort"
+            controls-position="right"
+            :min="0"
+          />
+        </qt-form-item>
+        <qt-form-item label="岗位状态" prop="status">
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in sys_normal_disable"
+              :key="dict.value"
+              :value="dict.value"
+              >{{ dict.label }}</el-radio
+            >
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark">
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            placeholder="请输入备注"
+            maxlength="256"
+            show-word-limit
+          />
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -197,7 +187,7 @@ const tableParams = reactive({
 const searchStore = reactive({
   items: [
     {
-      label: "岗位编码",
+      label: "岗位代号",
       prop: "postCode",
       component: {
         is: "input"
@@ -250,17 +240,17 @@ const tableStore = reactive({
       sortable: true
     },
     {
-      label: "岗位编码",
-      prop: "postCode",
-      align: "center",
+      label: "岗位名称",
+      prop: "postName",
+      align: "left",
       showOverflowTooltip: {
         effect: "light"
       }
     },
     {
-      label: "岗位名称",
-      prop: "postName",
-      align: "center",
+      label: "岗位代号",
+      prop: "postCode",
+      align: "left",
       showOverflowTooltip: {
         effect: "light"
       }
@@ -268,14 +258,10 @@ const tableStore = reactive({
     {
       label: "岗位排序",
       prop: "postSort",
-      align: "center"
+      align: "left",
+      hide: true
     },
-    {
-      label: "状态",
-      prop: "status",
-      align: "center",
-      dict: "sys_normal_disable"
-    },
+    { label: "状态", prop: "status", slot: "status", width: 80, minWidth: 80, align: "center" },
     {
       label: "创建时间",
       prop: "createTime",
@@ -345,7 +331,7 @@ const data = reactive({
   form: {},
   rules: {
     postName: [{ required: true, message: "岗位名称不能为空", trigger: "blur" }],
-    postCode: [{ required: true, message: "岗位编码不能为空", trigger: "blur" }],
+    postCode: [{ required: true, message: "岗位代号不能为空", trigger: "blur" }],
     postSort: [{ required: true, message: "岗位顺序不能为空", trigger: "blur" }]
   }
 });
@@ -450,6 +436,26 @@ function handleDelete(row) {
       proxy.$modal.msgSuccess("删除成功");
     })
     .catch(() => {});
+}
+
+/**
+ * 岗位状态修改
+ *
+ * @param {Object} row 行数据
+ */
+function handleStatusChange(row) {
+  let text = row.status === "0" ? "启用" : "停用";
+  proxy.$modal
+    .confirm("确认要\"" + text + "\"\"" + row.postName + "\"岗位吗?")
+    .then(function () {
+      return updatePost(row);
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess(text + "成功");
+    })
+    .catch(function () {
+      row.status = row.status === "0" ? "1" : "0";
+    });
 }
 
 /**

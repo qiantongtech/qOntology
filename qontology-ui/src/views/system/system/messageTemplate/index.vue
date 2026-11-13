@@ -20,7 +20,12 @@
   <div class="app-container" ref="app-container">
     <qt-wrap :columns="tableStore.columns" :table-ref="tableRef">
       <template #search>
-        <qt-search-bar :items="searchStore.items" :params="tableStore.params" :table-ref="tableRef" />
+        <qt-search-bar
+          :items="searchStore.items"
+          :params="tableStore.params"
+          :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
+        />
       </template>
 
       <template #actions-data>
@@ -74,7 +79,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -85,61 +90,47 @@
         :rules="rules"
         label-width="80px"
       >
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="消息标题" prop="title">
-              <el-input v-model="form.title" placeholder="请输入消息标题" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="消息类别" prop="category">
-              <el-select v-model="form.category" placeholder="请选择">
-                <el-option
-                  v-for="dict in message_category"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="parseInt(dict.value)"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="消息等级" prop="level">
-              <el-select v-model="form.msgLevel" placeholder="请选择">
-                <el-option
-                  v-for="dict in message_level"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="parseInt(dict.value)"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="消息模板" prop="content">
-              <el-input
-                v-model="form.content"
-                type="textarea"
-                placeholder="请输入内容"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="form.remark"
-                type="textarea"
-                placeholder="请输入内容"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <el-form-item label="消息标题" prop="title">
+          <el-input v-model="form.title" placeholder="请输入消息标题" />
+        </el-form-item>
+        <el-form-item label="消息类别" prop="category">
+          <el-select v-model="form.category" placeholder="请选择">
+            <el-option
+              v-for="dict in message_category"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="消息等级" prop="level">
+          <el-select v-model="form.msgLevel" placeholder="请选择">
+            <el-option
+              v-for="dict in message_level"
+              :key="dict.value"
+              :label="dict.label"
+              :value="parseInt(dict.value)"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="消息模板" prop="content">
+          <el-input
+            v-model="form.content"
+            type="textarea"
+            placeholder="请输入内容"
+            maxlength="256"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            placeholder="请输入内容"
+            maxlength="256"
+            show-word-limit
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -238,7 +229,7 @@ const tableStore = reactive({
   },
   columns: [
     {
-      label: '模版ID',
+      label: '编号',
       prop: 'id',
       align: 'center',
       sortable: true
@@ -280,13 +271,14 @@ const tableStore = reactive({
       align: 'center',
       width: 180,
       minWidth: 180,
-      date: '{y}-{m}-{d}',
+      date: true,
       sortable: true
     },
     {
       label: '备注',
       prop: 'remark',
-      align: 'center'
+      align: 'center',
+      hide: true
     },
     {
       label: '操作',

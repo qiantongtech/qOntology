@@ -25,6 +25,7 @@
           :items="searchStore.items"
           :params="tableStore.params"
           :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
         />
       </template>
 
@@ -59,6 +60,14 @@
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            active-value="0"
+            inactive-value="1"
+            @change="handleStatusChange(row)"
+          />
+        </template>
         <template #handle="{ row }">
           <el-button
             link
@@ -94,7 +103,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -107,15 +116,15 @@
       >
         <el-row :gutter="20">
           <el-col :span="24">
-            <el-form-item label="公告标题" prop="noticeTitle">
+            <qt-form-item label="公告标题" prop="noticeTitle">
               <el-input
                 v-model="form.noticeTitle"
                 placeholder="请输入公告标题"
               />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="公告类型" prop="noticeType">
+            <qt-form-item label="公告类型" prop="noticeType">
               <el-select v-model="form.noticeType" placeholder="请选择公告类型">
                 <el-option
                   v-for="dict in sys_notice_type"
@@ -124,10 +133,10 @@
                   :value="dict.value"
                 ></el-option>
               </el-select>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="状态">
+            <qt-form-item label="状态">
               <el-radio-group v-model="form.status">
                 <el-radio
                   v-for="dict in sys_notice_status"
@@ -136,12 +145,12 @@
                   >{{ dict.label }}</el-radio
                 >
               </el-radio-group>
-            </el-form-item>
+            </qt-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="内容">
+            <qt-form-item label="内容">
               <editor v-model="form.noticeContent" :min-height="192" />
-            </el-form-item>
+            </qt-form-item>
           </el-col>
         </el-row>
       </el-form>
@@ -268,12 +277,7 @@ const tableStore = reactive({
       align: "center",
       dict: "sys_notice_type"
     },
-    {
-      label: "状态",
-      prop: "status",
-      align: "center",
-      dict: "sys_notice_status"
-    },
+    { label: "状态", prop: "status", slot: "status", width: 80, minWidth: 80, align: "center" },
     {
       label: "创建人",
       prop: "createBy",
@@ -459,6 +463,26 @@ function handleDelete(row) {
       proxy.$modal.msgSuccess("删除成功");
     })
     .catch(() => {});
+}
+
+/**
+ * 公告状态修改
+ *
+ * @param {Object} row 行数据
+ */
+function handleStatusChange(row) {
+  let text = row.status === "0" ? "正常" : "关闭";
+  proxy.$modal
+    .confirm("确认要\"" + text + "\"\"" + row.noticeTitle + "\"公告吗?")
+    .then(function () {
+      return updateNotice(row);
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess(text + "成功");
+    })
+    .catch(function () {
+      row.status = row.status === "0" ? "1" : "0";
+    });
 }
 
 /**

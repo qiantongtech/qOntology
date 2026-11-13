@@ -25,6 +25,7 @@
           :items="searchStore.items"
           :params="tableStore.params"
           :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
         />
       </template>
 
@@ -223,12 +224,6 @@ const tableStore = reactive({
       }
     },
     {
-      label: "登录状态",
-      prop: "status",
-      align: "center",
-      dict: "sys_common_status"
-    },
-    {
       label: "描述",
       prop: "msg",
       align: "center",
@@ -237,12 +232,19 @@ const tableStore = reactive({
       }
     },
     {
+      label: "登录状态",
+      prop: "status",
+      align: "center",
+      dict: "sys_common_status",
+      sortable: true
+    },
+    {
       label: "访问时间",
       prop: "loginTime",
-      width: 180,
-      minWidth: 180,
+      width: 160,
+      minWidth: 160,
       align: "center",
-      date: "{y}-{m}-{d} {h}:{i}:{s}",
+      date: true,
       sortable: true,
       sortOrders: ["descending", "ascending"]
     }

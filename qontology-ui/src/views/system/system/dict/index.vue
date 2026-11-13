@@ -24,6 +24,7 @@
           :items="searchStore.items"
           :params="tableStore.params"
           :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
         />
       </template>
 
@@ -37,22 +38,13 @@
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
         <el-button
-          type="primary"
-          plain
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:dict:edit']"
-        >
-          <i class="iconfont-mini icon-a-xiugaixianxing mr5"></i>修改
-        </el-button>
-        <el-button
           type="danger"
           plain
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['system:dict:remove']"
         >
-          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
         </el-button>
         <el-button
           type="warning"
@@ -89,6 +81,14 @@
             <span>{{ row.dictType }}</span>
           </router-link>
         </template>
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            active-value="0"
+            inactive-value="1"
+            @change="handleStatusChange(row)"
+          />
+        </template>
         <template #handle="{ row }">
           <el-button
             link
@@ -117,7 +117,7 @@
     <el-dialog
       :title="title"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -128,39 +128,31 @@
         :rules="rules"
         label-width="80px"
       >
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="字典名称" prop="dictName">
-              <el-input v-model="form.dictName" placeholder="请输入字典名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="字典类型" prop="dictType">
-              <el-input v-model="form.dictType" placeholder="请输入字典类型" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态" prop="status">
-              <el-radio-group v-model="form.status">
-                <el-radio
-                  v-for="dict in sys_normal_disable"
-                  :key="dict.value"
-                  :value="dict.value"
-                  >{{ dict.label }}</el-radio
-                >
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="form.remark"
-                type="textarea"
-                placeholder="请输入内容"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <qt-form-item label="字典名称" prop="dictName">
+          <el-input v-model="form.dictName" placeholder="请输入字典名称" />
+        </qt-form-item>
+        <qt-form-item label="字典类型" prop="dictType">
+          <el-input v-model="form.dictType" placeholder="请输入字典类型" />
+        </qt-form-item>
+        <qt-form-item label="状态" prop="status">
+          <el-radio-group v-model="form.status">
+            <el-radio
+              v-for="dict in sys_normal_disable"
+              :key="dict.value"
+              :value="dict.value"
+              >{{ dict.label }}</el-radio
+            >
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark">
+          <el-input
+            v-model="form.remark"
+            type="textarea"
+            placeholder="请输入内容"
+            maxlength="256"
+            show-word-limit
+          ></el-input>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -270,26 +262,22 @@ const tableStore = reactive({
     {
       label: "字典名称",
       prop: "dictName",
-      align: "center",
+      align: "left",
       showOverflowTooltip: { effect: "light" }
     },
     {
       label: "字典类型",
       prop: "dictType",
-      align: "center",
+      align: "left",
       slot: "dictType",
       showOverflowTooltip: { effect: "light" }
     },
-    {
-      label: "状态",
-      prop: "status",
-      align: "center",
-      dict: "sys_normal_disable"
-    },
+    { label: "状态", prop: "status", slot: "status", width: 80, minWidth: 80, align: "center" },
     {
       label: "备注",
       prop: "remark",
       align: "center",
+      hide: true,
       showOverflowTooltip: { effect: "light" }
     },
     {
@@ -450,6 +438,26 @@ function handleDelete(row) {
       proxy.$modal.msgSuccess("删除成功");
     })
     .catch(() => {});
+}
+
+/**
+ * 字典类型状态修改
+ *
+ * @param {Object} row 行数据
+ */
+function handleStatusChange(row) {
+  let text = row.status === "0" ? "启用" : "停用";
+  proxy.$modal
+    .confirm("确认要\"" + text + "\"\"" + row.dictName + "\"字典类型吗?")
+    .then(function () {
+      return updateType(row);
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess(text + "成功");
+    })
+    .catch(function () {
+      row.status = row.status === "0" ? "1" : "0";
+    });
 }
 
 /**

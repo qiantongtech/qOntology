@@ -25,6 +25,7 @@
           :items="searchStore.items"
           :params="tableStore.params"
           :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
         />
       </template>
 
@@ -67,11 +68,11 @@
           <el-button
             link
             type="primary"
+            icon="view"
             @click="handleView(row)"
             v-hasPermi="['monitor:operlog:query']"
+            >详情</el-button
           >
-            <i class="iconfont-mini icon-a-yincangxianxing"></i>详细
-          </el-button>
         </template>
       </qt-table>
     </qt-wrap>
@@ -80,7 +81,7 @@
     <el-dialog
       title="操作日志详细"
       v-model="open"
-      width="800px"
+      width="900px"
       :append-to="$refs['app-container']"
       draggable
       destroy-on-close
@@ -149,7 +150,9 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="操作时间">
-              <div class="form-value-ifon">{{ parseTime(form.operTime) }}</div>
+              <div class="form-value-ifon">
+                {{ parseTime(form.operTime, '{y}-{m}-{d} {h}:{i}') }}
+              </div>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -332,22 +335,6 @@ const tableStore = reactive({
       }
     },
     {
-      label: "操作状态",
-      prop: "status",
-      align: "center",
-      dict: "sys_common_status"
-    },
-    {
-      label: "操作日期",
-      prop: "operTime",
-      width: 180,
-      minWidth: 180,
-      align: "center",
-      date: "{y}-{m}-{d} {h}:{i}:{s}",
-      sortable: true,
-      sortOrders: ["descending", "ascending"]
-    },
-    {
       label: "消耗时间",
       prop: "costTime",
       width: 110,
@@ -361,10 +348,27 @@ const tableStore = reactive({
       slot: "costTime"
     },
     {
+      label: "操作状态",
+      prop: "status",
+      align: "center",
+      dict: "sys_common_status",
+      sortable: true
+    },
+    {
+      label: "操作时间",
+      prop: "operTime",
+      width: 160,
+      minWidth: 160,
+      align: "center",
+      date: true,
+      sortable: true,
+      sortOrders: ["descending", "ascending"]
+    },
+    {
       label: "操作",
       fixed: "right",
-      width: 240,
-      minWidth: 240,
+      width: 100,
+      minWidth: 100,
       align: "center",
       slot: "handle"
     }

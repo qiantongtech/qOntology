@@ -18,39 +18,44 @@
 
 <template>
   <div class="app-container" ref="app-container">
-    <div class="pagecont-top">
-      <h4 class="form-header h4">基本信息</h4>
-      <el-form class="btn-style" :model="form" label-width="80px">
-        <el-row>
-          <el-col :span="8" :offset="2">
-            <el-form-item label="用户昵称" prop="nickName">
-              <el-input v-model="form.nickName" disabled />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8" :offset="2">
-            <el-form-item label="登录账号" prop="userName">
-              <el-input v-model="form.userName" disabled />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </div>
+    <!-- 复用详情页头部组件：编号徽标 + 昵称 + 状态字典，返回行为由本页接管，关闭后回到用户列表。 -->
+    <detail-info
+      v-if="form.userId != null"
+      :data="form"
+      :header="{
+        className: 'clearfixs',
+        idKey: 'userId',
+        nameKey: 'nickName',
+        statusKey: 'status',
+        statusOptions: sys_normal_disable,
+        routerBack: false,
+      }"
+      :items="detailItems"
+      mode="free"
+      @back="close"
+    >
+      <!-- 提交按钮置于头部返回按钮之后，与底部提交共用同一保存逻辑。 -->
+      <template #btn-right>
+        <el-button type="primary" plain @click="submitForm()">提交</el-button>
+      </template>
+    </detail-info>
 
     <div class="pagecont-bottom">
-      <h4 class="form-header h4">角色信息</h4>
-      <qt-table v-bind="tableStore" ref="tableRef">
-        <!-- 序号按前端分页后的全局行号展示，与原实现一致 -->
-        <template #index="{ $index }">
-          <span>{{ (pagination.pageNum - 1) * pagination.pageSize + $index + 1 }}</span>
-        </template>
-      </qt-table>
+      <el-tabs v-model="activeName">
+        <el-tab-pane label="角色信息" name="roleInfo">
+          <qt-table v-bind="tableStore" ref="tableRef">
+            <template #index="{ $index }">
+              <span>{{ (pagination.pageNum - 1) * pagination.pageSize + $index + 1 }}</span>
+            </template>
+          </qt-table>
+        </el-tab-pane>
+      </el-tabs>
+<!--      <h4 class="form-header h4">角色信息</h4>-->
+<!--      -->
 
-      <el-form label-width="100px">
-        <div class="auth-role-footer">
-          <el-button type="primary" @click="submitForm()">提交</el-button>
-          <el-button @click="close()">返回</el-button>
-        </div>
-      </el-form>
+<!--      <div class="auth-role-footer">-->
+<!--        <el-button type="primary" @click="submitForm()">提交</el-button>-->
+<!--      </div>-->
     </div>
   </div>
 </template>
@@ -60,6 +65,7 @@ import { getAuthRole, updateAuthRole } from '@/api/system/system/user.js';
 
 const route = useRoute();
 const { proxy } = getCurrentInstance();
+const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 
 const roleIds = ref([]);
 const form = ref({
@@ -67,6 +73,17 @@ const form = ref({
   userName: undefined,
   userId: undefined
 });
+const activeName = ref('roleInfo');
+
+
+// 自由布局声明用户专属字段，与项目详情页一致，避免组件默认追加无关审计项。
+const detailItems = [
+  { label: "登录账号", key: "userName", span: 8 },
+  { label: "手机号码", key: "phonenumber", span: 8 },
+  { label: "邮箱", key: "email", span: 8 },
+  { label: "所属部门", key: "dept.deptName", span: 8 ,className: "mt2"},
+  { label: "创建时间", key: "createTime", type: "time", span: 8,className: "mt2" }
+];
 
 /**
  * 表格实例
@@ -118,7 +135,7 @@ const tableStore = reactive({
       reserveSelection: true
     },
     { label: '序号', width: 55, minWidth: 55, align: 'center', slot: 'index' },
-    { label: '角色编号', prop: 'roleId', align: 'center' },
+    { label: '编号', prop: 'roleId', align: 'center' },
     { label: '角色名称', prop: 'roleName', align: 'center' },
     { label: '权限字符', prop: 'roleKey', align: 'center' },
     {
@@ -205,7 +222,7 @@ function handleSelectionChange(selection) {
 }
 
 /**
- * 关闭按钮：返回用户列表页
+ * 关闭当前页签，返回固定的用户列表入口（头部返回按钮与提交成功后共用）。
  */
 function close() {
   const obj = { path: '/system/user' };
@@ -225,10 +242,9 @@ function submitForm() {
 </script>
 
 <style scoped lang="scss">
-// 提交与返回按钮保持原有居中布局
+// 提交按钮保持居中展示
 .auth-role-footer {
+  margin-top: 15px;
   text-align: center;
-  margin-left: -120px;
-  margin-top: 30px;
 }
 </style>

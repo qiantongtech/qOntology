@@ -25,6 +25,7 @@
           :items="searchStore.items"
           :params="tableStore.params"
           :table-ref="tableRef"
+          :config="{ collapsedCount: 4 }"
         />
       </template>
 
@@ -58,6 +59,14 @@
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
+        <template #status="{ row }">
+          <el-switch
+            v-model="row.status"
+            active-value="0"
+            inactive-value="1"
+            @change="handleStatusChange(row)"
+          />
+        </template>
         <template #handle="{ row }">
           <el-button
             link
@@ -81,6 +90,7 @@ import {
   authUserCancel,
   authUserCancelAll
 } from '@/api/system/system/role.js';
+import { changeUserStatus } from '@/api/system/system/user.js';
 import selectUser from './selectUser.vue';
 
 const route = useRoute();
@@ -166,7 +176,7 @@ const tableStore = reactive({
       align: 'left',
       showOverflowTooltip: { effect: 'light' }
     },
-    { label: '状态', prop: 'status', align: 'center', dict: 'sys_normal_disable' },
+    { label: '状态', prop: 'status', slot: 'status', width: 80, minWidth: 80, align: 'center' },
     {
       label: '创建时间',
       prop: 'createTime',
@@ -243,6 +253,25 @@ function openSelectUser() {
  */
 function handleSelectOk() {
   tableRef.value?.resetQuery();
+}
+
+/**
+ * 用户状态修改
+ * @param {Object} row 行数据
+ */
+function handleStatusChange(row) {
+  let text = row.status === '0' ? '启用' : '停用';
+  proxy.$modal
+    .confirm('确认要"' + text + '""' + row.userName + '"用户吗?')
+    .then(function () {
+      return changeUserStatus(row.userId, row.status);
+    })
+    .then(() => {
+      proxy.$modal.msgSuccess(text + '成功');
+    })
+    .catch(function () {
+      row.status = row.status === '0' ? '1' : '0';
+    });
 }
 
 /**
