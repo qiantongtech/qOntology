@@ -74,6 +74,14 @@
 
         <template #handle="{ row }">
           <el-button
+            v-hasPermi="['system:config:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情
+          </el-button>
+          <el-button
             link
             type="primary"
             @click="handleUpdate(row)"
@@ -131,8 +139,8 @@
           <el-input
             v-model="form.remark"
             type="textarea"
-            placeholder="请输入内容"
-            maxlength="256"
+            placeholder="请输入备注"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>
@@ -141,6 +149,52 @@
         <div class="dialog-footer">
           <el-button @click="cancel">取 消</el-button>
           <el-button type="primary" @click="submitForm">确 定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 参数配置详情对话框 -->
+    <el-dialog
+      :title="title"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          {{ title }}
+        </span>
+      </template>
+      <el-form
+        ref="configDetailRef"
+        :model="form"
+        label-width="80px"
+        class="column-form"
+      >
+        <qt-form-item label="参数名称" prop="configName">
+          <div class="form-readonly">{{ form.configName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="参数键名" prop="configKey">
+          <div class="form-readonly">{{ form.configKey || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="参数键值" prop="configValue">
+          <div class="form-readonly">{{ form.configValue || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="系统内置" prop="configType">
+          <dict-tag
+            :options="sys_yes_no"
+            :value="form.configType"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark" class="row-full">
+          <div class="form-readonly textarea">{{ form.remark || "-" }}</div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancel">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -352,7 +406,9 @@ function getList() {
 }
 
 const open = ref(false);
+const openDetail = ref(false);
 const ids = ref([]);
+const selectedRows = ref([]);
 
 // true 表示未选择或选择了多条，不能执行单条修改
 const single = ref(true);
@@ -379,6 +435,7 @@ const { form, rules } = toRefs(data);
  */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.configId);
+  selectedRows.value = selection;
   single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
@@ -388,6 +445,7 @@ function handleSelectionChange(selection) {
  */
 function cancel() {
   open.value = false;
+  openDetail.value = false;
   reset();
 }
 
@@ -431,6 +489,20 @@ function handleUpdate(row) {
 }
 
 /**
+ * 详情按钮操作：复用 getConfig 回显参数配置只读信息
+ * @param {Object} [row] 行数据；无值时取多选框第一条
+ */
+function handleDetail(row) {
+  reset();
+  const configId = row?.configId ?? ids.value[0];
+  getConfig(configId).then((response) => {
+    form.value = response.data;
+    openDetail.value = true;
+    title.value = "参数详情";
+  });
+}
+
+/**
  * 提交按钮
  */
 function submitForm() {
@@ -459,11 +531,38 @@ function submitForm() {
  * @param {Object} [row] 行数据；无值时为批量删除
  */
 function handleDelete(row) {
-  const configIds = row?.configId ?? ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.configId 区分）
+  if (row?.configId != null) {
+    const configIds = row.configId;
+    proxy.$modal
+      .confirm("是否确认删除编号为\"" + configIds + "\"的数据项？")
+      .then(function () {
+        return delConfig(configIds);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：参数配置无状态字段，所选数据均可删除
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows;
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.configId);
   proxy.$modal
-    .confirm("是否确认删除编号为\"" + configIds + "\"的数据项？")
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delConfig(configIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delConfig(deletableIds);
     })
     .then(() => {
       getList();

@@ -69,6 +69,14 @@
         </template>
         <template #handle="{ row }">
           <el-button
+            v-hasPermi="['system:post:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情
+          </el-button>
+          <el-button
             link
             type="primary"
             @click="handleUpdate(row)"
@@ -79,6 +87,7 @@
           <el-button
             link
             type="danger"
+            :disabled="row.status === '0'"
             @click="handleDelete(row)"
             v-hasPermi="['system:post:remove']"
           >
@@ -141,6 +150,52 @@
         <div class="dialog-footer">
           <el-button @click="cancel">取 消</el-button>
           <el-button type="primary" @click="submitForm">确 定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 岗位详情对话框 -->
+    <el-dialog
+      :title="title"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          {{ title }}
+        </span>
+      </template>
+      <el-form
+        ref="postDetailRef"
+        :model="form"
+        label-width="80px"
+        class="column-form"
+      >
+        <qt-form-item label="岗位名称" prop="postName">
+          <div class="form-readonly">{{ form.postName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="岗位代号" prop="postCode">
+          <div class="form-readonly">{{ form.postCode || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="岗位顺序" prop="postSort">
+          <div class="form-readonly">{{ form.postSort ?? "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="岗位状态" prop="status">
+          <dict-tag
+            :options="sys_normal_disable"
+            :value="form.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark" class="row-full">
+          <div class="form-readonly textarea">{{ form.remark || "-" }}</div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancel">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -318,7 +373,9 @@ function getList() {
 }
 
 const open = ref(false);
+const openDetail = ref(false);
 const ids = ref([]);
+const selectedRows = ref([]);
 
 // true 表示未选择或选择了多条，不能执行单条修改
 const single = ref(true);
@@ -345,6 +402,7 @@ const { form, rules } = toRefs(data);
  */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.postId);
+  selectedRows.value = selection;
   single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
@@ -354,6 +412,7 @@ function handleSelectionChange(selection) {
  */
 function cancel() {
   open.value = false;
+  openDetail.value = false;
   reset();
 }
 
@@ -397,6 +456,20 @@ function handleUpdate(row) {
 }
 
 /**
+ * 详情按钮操作：复用 getPost 回显岗位只读信息
+ * @param {Object} [row] 行数据；无值时取多选框第一条
+ */
+function handleDetail(row) {
+  reset();
+  const postId = row?.postId ?? ids.value[0];
+  getPost(postId).then((response) => {
+    form.value = response.data;
+    openDetail.value = true;
+    title.value = "岗位详情";
+  });
+}
+
+/**
  * 提交按钮
  */
 function submitForm() {
@@ -425,11 +498,38 @@ function submitForm() {
  * @param {Object} [row] 行数据；无值时为批量删除
  */
 function handleDelete(row) {
-  const postIds = row?.postId ?? ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.postId 区分）
+  if (row?.postId != null) {
+    const postIds = row.postId;
+    proxy.$modal
+      .confirm("是否确认删除编号为\"" + postIds + "\"的数据项？")
+      .then(function () {
+        return delPost(postIds);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（'0'=启用不可删除，'1'=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === "1");
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.postId);
   proxy.$modal
-    .confirm("是否确认删除编号为\"" + postIds + "\"的数据项？")
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delPost(postIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delPost(deletableIds);
     })
     .then(() => {
       getList();

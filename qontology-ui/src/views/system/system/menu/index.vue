@@ -65,26 +65,46 @@
         </template>
         <template #handle="{ row }">
           <el-button
-            v-hasPermi="['system:menu:edit']"
+              v-hasPermi="['system:menu:add']"
+              link
+              type="primary"
+              icon="Plus"
+              @click="handleAdd(row)"
+          >新增子级</el-button>
+          <el-button
+            v-hasPermi="['system:menu:query']"
             link
             type="primary"
-            icon="Edit"
-            @click="handleUpdate(row)"
-          >修改</el-button>
-          <el-button
-            v-hasPermi="['system:menu:add']"
-            link
-            type="primary"
-            icon="Plus"
-            @click="handleAdd(row)"
-          >新增</el-button>
-          <el-button
-            v-hasPermi="['system:menu:remove']"
-            link
-            type="danger"
-            icon="Delete"
-            @click="handleDelete(row)"
-          >删除</el-button>
+            icon="View"
+            @click="handleDetail(row)"
+          >详情</el-button>
+          <el-popover
+            placement="bottom"
+            :width="100"
+            popper-class="handle-popover"
+            trigger="click"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
+            <div class="task-action-list">
+              <el-button
+                  v-hasPermi="['system:menu:edit']"
+                  link
+                  type="primary"
+                  icon="Edit"
+                  @click="handleUpdate(row)"
+              >修改</el-button>
+              <el-button
+                  v-hasPermi="['system:menu:remove']"
+                  link
+                  type="danger"
+                  icon="Delete"
+                  :disabled="row.status === '0'"
+                  @click="handleDelete(row)"
+              >删除</el-button>
+            </div>
+          </el-popover>
         </template>
         <template #empty>
           <div class="emptyBg">
@@ -97,27 +117,119 @@
 
     <!-- 新增、修改共用独立弹窗组件，保存成功后刷新当前菜单树。 -->
     <MenuFormDialog ref="menuDialogRef" @success="getList" />
+
+    <!-- 菜单详情对话框：字段显隐条件与新增表单一致，按菜单类型展示。 -->
+    <el-dialog
+      title="菜单详情"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">菜单详情</span>
+      </template>
+      <el-form :model="detailForm" label-width="100px" class="column-form">
+        <qt-form-item label="上级菜单">
+          <div class="form-readonly">{{ parentMenuName }}</div>
+        </qt-form-item>
+        <qt-form-item label="菜单类型">
+          <div class="form-readonly">{{ menuTypeLabels[detailForm.menuType] || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType !== 'F'" label="菜单图标">
+          <div class="form-readonly">
+            <svg-icon v-if="detailForm.icon" :icon-class="detailForm.icon" />
+            {{ detailForm.icon || "-" }}
+          </div>
+        </qt-form-item>
+        <qt-form-item label="显示排序">
+          <div class="form-readonly">{{ detailForm.orderNum ?? "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="菜单名称">
+          <div class="form-readonly">{{ detailForm.menuName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType === 'C'" label="路由名称">
+          <div class="form-readonly">{{ detailForm.routeName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType !== 'F'" label="路由地址">
+          <div class="form-readonly">{{ detailForm.path || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType !== 'F'" label="是否外链">
+          <div class="form-readonly">{{ detailForm.isFrame === "0" ? "是" : "否" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType === 'C'" label="组件路径">
+          <div class="form-readonly">{{ detailForm.component || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType !== 'M'" label="权限字符">
+          <div class="form-readonly">{{ detailForm.perms || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType === 'C'" label="路由参数">
+          <div class="form-readonly">{{ detailForm.query || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType === 'C'" label="是否缓存">
+          <div class="form-readonly">{{ detailForm.isCache === "0" ? "缓存" : "不缓存" }}</div>
+        </qt-form-item>
+        <qt-form-item v-if="detailForm.menuType !== 'F'" label="显示状态">
+          <dict-tag
+            :options="sys_show_hide"
+            :value="detailForm.visible"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="菜单状态">
+          <dict-tag
+            :options="sys_normal_disable"
+            :value="detailForm.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="创建时间">
+          <div class="form-readonly">
+            {{ parseTime(detailForm.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelDetail">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="Menu">
 import { computed, getCurrentInstance, onMounted, reactive, ref } from "vue";
 
-import { delMenu, listMenu, updateMenu } from "@/api/system/system/menu.js";
+import { delMenu, getMenu, listMenu, updateMenu } from "@/api/system/system/menu.js";
 
 import MenuFormDialog from "./components/menuFormDialog.vue";
 
 const { proxy } = getCurrentInstance();
 
-// 字典：sys_normal_disable 用于菜单正常/停用状态展示
-const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
+// 字典：sys_normal_disable 用于菜单正常/停用状态展示；sys_show_hide 用于详情显示状态展示
+const { sys_show_hide, sys_normal_disable } = proxy.useDict("sys_show_hide", "sys_normal_disable");
+
+// 菜单类型编码与新增表单的单选文案一致
+const menuTypeLabels = { M: "目录", C: "菜单", F: "按钮" };
 
 const menuList = ref([]);
+const menuFlatList = ref([]);
 const menuOptions = ref([]);
 const menuDialogRef = ref();
 const isExpandAll = ref(true);
 const defaultSort = { prop: 'orderNum', order: 'ascending' };
 const tableRef = ref();
+const openDetail = ref(false);
+const detailForm = ref({});
+
+/** 详情中的上级菜单名称：0 为主类目，其余按 menuId 从完整菜单列表回查。 */
+const parentMenuName = computed(() => {
+  const parentId = detailForm.value.parentId;
+  if (parentId === 0) return "主类目";
+  const parent = menuFlatList.value.find((item) => item.menuId === parentId);
+  return parent?.menuName || "-";
+});
 
 let appliedMenuName = '';
 let appliedStatus;
@@ -135,7 +247,6 @@ const tableStore = reactive({
       defaultSort
     }
   },
-  // 业务字段依次为菜单名称、图标、路由地址、权限标识、组件路径、创建时间、状态、排序，操作固定在末尾。
   columns: [
     {
       label: '菜单名称',
@@ -149,9 +260,9 @@ const tableStore = reactive({
     { label: '路由地址', prop: 'path', slot: 'text', minWidth: 150, align: 'left', showOverflowTooltip: { effect: 'light' } },
     { label: '权限标识', prop: 'perms', slot: 'text', minWidth: 160, align: 'left', showOverflowTooltip: { effect: 'light' } },
     { label: '组件路径', prop: 'component', slot: 'text', minWidth: 180, align: 'left', showOverflowTooltip: { effect: 'light' } },
-    { label: '创建时间', prop: 'createTime', width: 160, minWidth: 160, align: 'center', date: true },
     { label: '状态', prop: 'status', slot: 'status', width: 80, minWidth: 80, align: 'center' },
     { label: '排序', prop: 'orderNum', slot: 'text', width: 150, minWidth: 150, align: 'center', sortable: true },
+    { label: '创建时间', prop: 'createTime', width: 160, minWidth: 160, align: 'center', date: true, sortable: true },
     { label: '操作', slot: 'handle', width: 240, minWidth: 240, align: 'center', fixed: 'right' }
   ],
   func: listMenu,
@@ -205,10 +316,11 @@ function getList() {
   loadMenuOptions();
 }
 
-/** 上级菜单选项始终加载完整菜单树，避免当前筛选导致可选父级缺失。 */
+/** 上级菜单选项始终加载完整菜单树，避免当前筛选导致可选父级缺失；保留平铺副本用于详情回查上级名称。 */
 async function loadMenuOptions() {
   const response = await listMenu();
   const rows = response.data || [];
+  menuFlatList.value = rows;
   menuOptions.value = [{ menuId: 0, menuName: '主类目', children: proxy.handleTree(rows, 'menuId') }];
 }
 
@@ -226,6 +338,20 @@ async function handleAdd(row) {
 async function handleUpdate(row) {
   await loadMenuOptions();
   menuDialogRef.value.openDialog({ title: '修改菜单', menuId: row.menuId, menuOptions: menuOptions.value });
+}
+
+/** 详情按钮操作：请求最新菜单数据后打开只读详情弹窗。 */
+function handleDetail(row) {
+  getMenu(row.menuId).then((response) => {
+    detailForm.value = response.data || {};
+    openDetail.value = true;
+  });
+}
+
+/** 关闭详情弹窗并清空详情数据。 */
+function cancelDetail() {
+  openDetail.value = false;
+  detailForm.value = {};
 }
 
 /** 删除菜单，二次确认后调用接口并刷新菜单树。 */

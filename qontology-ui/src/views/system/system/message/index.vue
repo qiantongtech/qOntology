@@ -62,42 +62,46 @@
       </qt-table>
     </qt-wrap>
 
+    <!-- 消息详情对话框 -->
     <el-dialog
       title="消息详情"
       v-model="openView"
       width="900px"
+      :append-to="$refs['app-container']"
       draggable
       destroy-on-close
-      class="msg-dialog"
     >
-      <el-form label-width="100px">
-        <el-form-item label="消息标题：">
-          <div class="form-value-ifon">
-            {{ viewData.title }}
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          消息详情
+        </span>
+      </template>
+      <el-form :model="viewData" label-width="100px" class="column-form">
+        <qt-form-item label="消息标题">
+          <div class="form-readonly">{{ viewData.title || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="消息类型">
+          <dict-tag
+            :options="message_category"
+            :value="viewData.category"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="消息内容" class="row-full">
+          <div class="form-readonly textarea">
+            {{ viewData.content || "-" }}
           </div>
-        </el-form-item>
-        <el-form-item label="类型：">
-          <div class="form-value-ifon">
-            <dict-tag :options="message_category" :value="viewData.category" />
+        </qt-form-item>
+        <qt-form-item label="是否已读">
+          <el-tag :type="viewData.hasRead ? 'success' : 'danger'" class="con-value access-tag">
+            {{ viewData.hasRead ? "已读" : "未读" }}
+          </el-tag>
+        </qt-form-item>
+        <qt-form-item label="创建时间">
+          <div class="form-readonly">
+            {{ parseTime(viewData.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
           </div>
-        </el-form-item>
-        <el-form-item label="是否已读：">
-          <div class="form-value-ifon">
-            <el-tag :type="viewData.hasRead ? 'success' : 'danger'">
-              {{ viewData.hasRead ? '已读' : '未读' }}
-            </el-tag>
-          </div>
-        </el-form-item>
-        <el-form-item label="消息内容：">
-          <div class="form-value-ifon">
-            {{ viewData.content }}
-          </div>
-        </el-form-item>
-        <el-form-item label="创建时间：">
-          <div class="form-value-ifon">
-            {{ viewData.createTime }}
-          </div>
-        </el-form-item>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -316,9 +320,5 @@ function deleteMsg(id) {
 </script>
 
 <style scoped lang="scss">
-.msg-dialog {
-  :deep(.el-dialog__body) {
-    min-height: 300px !important;
-  }
-}
+/* 详情弹窗复用全局 column-form、form-readonly 样式，无需本地覆盖。 */
 </style>

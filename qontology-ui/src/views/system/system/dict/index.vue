@@ -90,25 +90,46 @@
           />
         </template>
         <template #handle="{ row }">
+          <el-button link type="primary" icon="Download" @click="handleEnum(row)">
+            下载
+          </el-button>
           <el-button
+            v-hasPermi="['system:dict:query']"
             link
             type="primary"
-            @click="handleUpdate(row)"
-            v-hasPermi="['system:dict:edit']"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情</el-button
           >
-            <i class="iconfont-mini icon-a-xiugaixianxing mr5"></i>修改
-          </el-button>
-          <el-button
-            link
-            type="danger"
-            @click="handleDelete(row)"
-            v-hasPermi="['system:dict:remove']"
+          <el-popover
+            placement="bottom"
+            :width="100"
+            popper-class="handle-popover"
+            trigger="click"
           >
-            <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
-          </el-button>
-          <el-button link type="primary" @click="handleEnum(row)">
-            <i class="iconfont-mini icon-daoru mr5"></i>下载
-          </el-button>
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
+            <div class="task-action-list">
+              <el-button
+                  v-hasPermi="['system:dict:edit']"
+                  link
+                  type="primary"
+                  icon="Edit"
+                  @click="handleUpdate(row)"
+              >修改
+              </el-button>
+              <el-button
+                  v-hasPermi="['system:dict:remove']"
+                  link
+                  type="danger"
+                  icon="Delete"
+                  :disabled="row.status === '0'"
+                  @click="handleDelete(row)"
+              >删除</el-button
+              >
+            </div>
+          </el-popover>
         </template>
       </qt-table>
     </qt-wrap>
@@ -148,8 +169,8 @@
           <el-input
             v-model="form.remark"
             type="textarea"
-            placeholder="请输入内容"
-            maxlength="256"
+            placeholder="请输入备注"
+            maxlength="256个字符"
             show-word-limit
           ></el-input>
         </qt-form-item>
@@ -158,6 +179,51 @@
         <div class="dialog-footer">
           <el-button @click="cancel">取 消</el-button>
           <el-button type="primary" @click="submitForm">确 定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 字典类型详情对话框 -->
+    <el-dialog
+      title="字典类型详情"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          字典类型详情
+        </span>
+      </template>
+      <el-form :model="detailForm" label-width="80px" class="column-form">
+        <qt-form-item label="字典名称">
+          <div class="form-readonly">{{ detailForm.dictName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="字典类型">
+          <div class="form-readonly">{{ detailForm.dictType || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="状态">
+          <dict-tag
+            :options="sys_normal_disable"
+            :value="detailForm.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="备注" class="row-full">
+          <div class="form-readonly textarea">
+            {{ detailForm.remark || "-" }}
+          </div>
+        </qt-form-item>
+        <qt-form-item label="创建时间">
+          <div class="form-readonly">
+            {{ parseTime(detailForm.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelDetail">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -189,11 +255,14 @@ const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 const tableRef = ref(null);
 
 const open = ref(false);
+const openDetail = ref(false);
 const ids = ref([]);
+const selectedRows = ref([]);
 const single = ref(true);
 const multiple = ref(true);
 const title = ref("");
 const dictTypes = ref([]);
+const detailForm = ref({});
 
 /**
  * 查询参数
@@ -378,6 +447,7 @@ function handleAdd() {
  */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.dictId);
+  selectedRows.value = selection;
   single.value = selection.length != 1;
   multiple.value = !selection.length;
   dictTypes.value = selection.map((item) => item.dictType);
@@ -396,6 +466,26 @@ function handleUpdate(row) {
     open.value = true;
     title.value = "修改字典类型";
   });
+}
+
+/**
+ * 详情按钮操作：请求最新字典类型数据后打开只读详情弹窗
+ *
+ * @param {Object} row 当前行数据，至少包含 dictId
+ */
+function handleDetail(row) {
+  getType(row.dictId).then((response) => {
+    detailForm.value = response.data || {};
+    openDetail.value = true;
+  });
+}
+
+/**
+ * 关闭详情弹窗并清空详情数据
+ */
+function cancelDetail() {
+  openDetail.value = false;
+  detailForm.value = {};
 }
 
 /**
@@ -427,11 +517,38 @@ function submitForm() {
  * @param {Object} [row] 行数据；无值时为批量删除
  */
 function handleDelete(row) {
-  const dictIds = row.dictId || ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.dictId 区分）
+  if (row?.dictId != null) {
+    const dictIds = row.dictId;
+    proxy.$modal
+      .confirm("是否确认删除编号为\"" + dictIds + "\"的数据项？")
+      .then(function () {
+        return delType(dictIds);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（'0'=启用不可删除，'1'=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === "1");
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.dictId);
   proxy.$modal
-    .confirm("是否确认删除编号为\"" + dictIds + "\"的数据项？")
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delType(dictIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delType(deletableIds);
     })
     .then(() => {
       getList();

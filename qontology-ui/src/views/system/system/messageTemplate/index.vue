@@ -38,6 +38,16 @@
         >
           <i class="iconfont-mini icon-xinzeng mr5"></i>新增
         </el-button>
+        <el-button
+          type="danger"
+          plain
+          :disabled="multiple"
+          @click="handleDelete"
+          v-hasPermi="['system:messageTemplate:remove']"
+          @mousedown="(e) => e.preventDefault()"
+        >
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
+        </el-button>
       </template>
 
       <qt-table v-bind="tableStore" ref="tableRef">
@@ -47,23 +57,29 @@
 
         <template #handle="{ row }">
           <el-button
+            v-hasPermi="['system:messageTemplate:query']"
             link
             type="primary"
-            @click="handleUpdate(row)"
-            v-hasPermi="['system:messageTemplate:edit']"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情</el-button
           >
-            <i class="iconfont-mini icon-a-xiugaixianxing"></i>
-            修改
-          </el-button>
           <el-button
+            v-hasPermi="['system:messageTemplate:edit']"
+            link
+            type="primary"
+            icon="Edit"
+            @click="handleUpdate(row)"
+            >修改</el-button
+          >
+          <el-button
+            v-hasPermi="['system:messageTemplate:remove']"
             link
             type="danger"
+            icon="Delete"
             @click="handleDelete(row)"
-            v-hasPermi="['system:messageTemplate:remove']"
+            >删除</el-button
           >
-            <i class="iconfont-mini icon-a-shanchuxianxing"></i>
-            删除
-          </el-button>
         </template>
 
         <template #empty>
@@ -139,6 +155,60 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 消息模板详情对话框 -->
+    <el-dialog
+      title="消息模板详情"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          消息模板详情
+        </span>
+      </template>
+      <el-form :model="detailForm" label-width="80px" class="column-form">
+        <qt-form-item label="消息标题">
+          <div class="form-readonly">{{ detailForm.title || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="消息类别">
+          <dict-tag
+            :options="message_category"
+            :value="detailForm.category"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="消息等级">
+          <dict-tag
+            :options="message_level"
+            :value="detailForm.msgLevel"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="消息模板" class="row-full">
+          <div class="form-readonly textarea">
+            {{ detailForm.content || "-" }}
+          </div>
+        </qt-form-item>
+        <qt-form-item label="备注" class="row-full">
+          <div class="form-readonly textarea">
+            {{ detailForm.remark || "-" }}
+          </div>
+        </qt-form-item>
+        <qt-form-item label="创建时间">
+          <div class="form-readonly">
+            {{ parseTime(detailForm.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelDetail">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -163,7 +233,10 @@ const { message_category, message_level } = proxy.useDict('message_category', 'm
 const tableRef = ref(null);
 
 const open = ref(false);
+const openDetail = ref(false);
+const detailForm = ref({});
 const ids = ref([]);
+const selectedRows = ref([]);
 const single = ref(true);
 const multiple = ref(true);
 const title = ref('');
@@ -224,10 +297,17 @@ const tableStore = reactive({
     table: {
       stripe: true,
       rowKey: 'id',
-      defaultSort: { prop: 'createTime', order: 'descending' }
+      defaultSort: { prop: 'createTime', order: 'descending' },
+      onSelectionChange: handleSelectionChange
     }
   },
   columns: [
+    {
+      type: 'selection',
+      width: 55,
+      minWidth: 55,
+      align: 'center'
+    },
     {
       label: '编号',
       prop: 'id',
@@ -379,6 +459,26 @@ function handleUpdate(row) {
   });
 }
 
+/**
+ * 详情按钮操作：请求最新消息模板数据后打开只读详情弹窗
+ *
+ * @param {Object} row 当前行数据，至少包含 id
+ */
+function handleDetail(row) {
+  getMessageTemplate(row.id).then((response) => {
+    detailForm.value = response.data || {};
+    openDetail.value = true;
+  });
+}
+
+/**
+ * 关闭详情弹窗并清空详情数据
+ */
+function cancelDetail() {
+  openDetail.value = false;
+  detailForm.value = {};
+}
+
 /** 提交按钮 */
 function submitForm() {
   proxy.$refs['messageTemplateRef'].validate((valid) => {
@@ -401,16 +501,55 @@ function submitForm() {
 }
 
 /**
+ * 多选框选中数据
+ *
+ * @param {Array} selection 当前选中行
+ */
+function handleSelectionChange(selection) {
+  ids.value = selection.map((item) => item.id);
+  selectedRows.value = selection;
+  single.value = selection.length !== 1;
+  multiple.value = !selection.length;
+}
+
+/**
  * 删除按钮操作
  *
  * @param {Object} [row] 行数据；无值时为批量删除
  */
 function handleDelete(row) {
-  const deleteIds = row?.id || ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.id 区分）
+  if (row?.id != null) {
+    const deleteIds = row.id;
+    proxy.$modal
+      .confirm('是否确认删除消息模板编号为"' + deleteIds + '"的数据项？')
+      .then(function () {
+        return delMessageTemplate(deleteIds);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess('删除成功');
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：消息模板无状态字段，所选数据均可删除
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows;
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.id);
   proxy.$modal
-    .confirm('是否确认删除消息模板编号为"' + deleteIds + '"的数据项？')
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delMessageTemplate(deleteIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning('无可删除的数据');
+        return;
+      }
+      return delMessageTemplate(deletableIds);
     })
     .then(() => {
       getList();

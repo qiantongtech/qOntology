@@ -65,38 +65,109 @@
               type="primary"
               icon="Plus"
               @click="handleAdd(row)"
-          >新增
+          >新增子级
           </el-button>
           <el-button
-              v-hasPermi="['system:dept:edit']"
+              v-hasPermi="['system:dept:query']"
               link
               type="primary"
-              icon="Edit"
-              @click="handleUpdate(row)"
-          >修改
+              icon="View"
+              @click="handleDetail(row)"
+          >详情
           </el-button>
-          <!-- 公司顶级部门不允许删除，沿用原页面按 parentId 隐藏入口的逻辑。 -->
-          <el-button
-              v-if="row.parentId != 0"
-              v-hasPermi="['system:dept:remove']"
-              link
-              type="danger"
-              icon="Delete"
-              @click="handleDelete(row)"
-          >删除
-          </el-button>
+          <el-popover
+              placement="bottom"
+              :width="100"
+              popper-class="handle-popover"
+              trigger="click"
+          >
+            <template #reference>
+              <el-button link type="primary" icon="ArrowDown">更多</el-button>
+            </template>
+            <div class="task-action-list">
+              <el-button
+                  v-hasPermi="['system:dept:edit']"
+                  link
+                  type="primary"
+                  icon="Edit"
+                  @click="handleUpdate(row)"
+              >修改
+              </el-button>
+              <el-button
+                  v-if="row.parentId != 0"
+                  v-hasPermi="['system:dept:remove']"
+                  link
+                  type="danger"
+                  icon="Delete"
+                  :disabled="row.status === '0'"
+                  @click="handleDelete(row)"
+              >删除
+              </el-button>
+            </div>
+          </el-popover>
         </template>
       </qt-table>
     </qt-wrap>
 
     <!-- 新增、修改共用独立组件，保存成功后刷新当前部门树。 -->
     <DeptFormDialog ref="deptDialogRef" @success="getList"/>
+
+    <!-- 部门详情对话框 -->
+    <el-dialog
+        title="部门详情"
+        v-model="openDetail"
+        width="900px"
+        :append-to="$refs['app-container']"
+        draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">部门详情</span>
+      </template>
+      <el-form :model="detailForm" label-width="110px" class="column-form">
+        <!-- 与新增表单一致：公司顶级部门无上级，不展示上级部门。 -->
+        <qt-form-item v-if="detailForm.parentId !== 0" label="上级部门" class="row-full">
+          <div class="form-readonly">{{ parentDeptName }}</div>
+        </qt-form-item>
+        <qt-form-item label="部门名称">
+          <div class="form-readonly">{{ detailForm.deptName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="显示排序">
+          <div class="form-readonly">{{ detailForm.orderNum ?? "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="负责人">
+          <div class="form-readonly">{{ detailForm.leader || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="联系电话">
+          <div class="form-readonly">{{ detailForm.phone || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="邮箱">
+          <div class="form-readonly">{{ detailForm.email || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="部门状态">
+          <dict-tag
+              :options="sys_normal_disable"
+              :value="detailForm.status"
+              class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="创建时间">
+          <div class="form-readonly">
+            {{ parseTime(detailForm.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancelDetail">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="SystemDept">
 import {computed, getCurrentInstance, onMounted, reactive, ref} from "vue";
-import {delDept, listDept, listDeptExcludeChild, updateDept} from "@/api/system/system/dept.js";
+import {delDept, getDept, listDept, listDeptExcludeChild, updateDept} from "@/api/system/system/dept.js";
 
 import DeptFormDialog from "./components/deptFormDialog.vue";
 
@@ -104,10 +175,19 @@ const {proxy} = getCurrentInstance();
 const {sys_normal_disable} = proxy.useDict("sys_normal_disable");
 
 const deptList = ref([]);
+const deptFlatList = ref([]);
 const deptOptions = ref([]);
 const deptDialogRef = ref();
 const isExpandAll = ref(true);
 const tableRef = ref();
+const openDetail = ref(false);
+const detailForm = ref({});
+
+/** 详情中的上级部门名称：接口不返回父级名称，按 parentId 从平铺部门列表回查。 */
+const parentDeptName = computed(() => {
+  const parent = deptFlatList.value.find((item) => item.deptId === detailForm.value.parentId);
+  return parent?.deptName || "-";
+});
 
 let appliedName = '';
 let appliedStatus;
@@ -174,8 +254,9 @@ function formatListParams(params) {
   };
 }
 
-/** 平铺部门列表转换为父子树结构，供表格树形展示。 */
+/** 平铺部门列表转换为父子树结构，供表格树形展示；保留平铺副本用于详情回查上级名称。 */
 function formatListData(rows) {
+  deptFlatList.value = rows;
   deptList.value = proxy.handleTree(rows, 'deptId');
   return deptList.value;
 }
@@ -213,6 +294,20 @@ async function handleAdd(row) {
 async function handleUpdate(row) {
   await loadDeptExcludeOptions(row.deptId);
   deptDialogRef.value.openDialog({title: '修改部门', deptId: row.deptId, deptOptions: deptOptions.value});
+}
+
+/** 详情按钮操作：请求最新部门数据后打开只读详情弹窗。 */
+function handleDetail(row) {
+  getDept(row.deptId).then((response) => {
+    detailForm.value = response.data || {};
+    openDetail.value = true;
+  });
+}
+
+/** 关闭详情弹窗并清空详情数据。 */
+function cancelDetail() {
+  openDetail.value = false;
+  detailForm.value = {};
 }
 
 /** 删除按钮操作 */

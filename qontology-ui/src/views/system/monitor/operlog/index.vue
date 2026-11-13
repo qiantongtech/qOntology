@@ -38,7 +38,7 @@
           @click="handleDelete"
           v-hasPermi="['monitor:operlog:remove']"
         >
-          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
         </el-button>
         <el-button
           type="danger"
@@ -68,8 +68,8 @@
           <el-button
             link
             type="primary"
-            icon="view"
-            @click="handleView(row)"
+            icon="View"
+            @click="handleDetail(row)"
             v-hasPermi="['monitor:operlog:query']"
             >详情</el-button
           >
@@ -77,94 +77,89 @@
       </qt-table>
     </qt-wrap>
 
-    <!-- 操作日志详细 -->
+    <!-- 操作日志详情对话框 -->
     <el-dialog
-      title="操作日志详细"
-      v-model="open"
+      :title="title"
+      v-model="openDetail"
       width="900px"
       :append-to="$refs['app-container']"
       draggable
-      destroy-on-close
     >
-      <el-form :model="form" label-width="80px">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="操作模块">
-              <div class="form-value-ifon">
-                {{ form.title }} / {{ typeFormat(form) }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="登录信息">
-              <div class="form-value-ifon">
-                {{ form.operName }} / {{ form.operIp }} / {{ form.operLocation }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="请求地址">
-              <div class="form-value-ifon">
-                {{ form.operUrl }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="请求方式">
-              <div class="form-value-ifon">
-                {{ form.requestMethod }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="操作方法">
-              <div class="form-value-ifon">
-                {{ form.method }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="请求参数">
-              <div class="form-value-ifon">
-                {{ form.operParam }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="返回参数">
-              <div class="form-value-ifon">
-                {{ form.jsonResult }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="操作状态">
-              <div class="form-value-ifon" v-if="form.status === 0">正常</div>
-              <div class="form-value-ifon" v-else-if="form.status === 1">失败</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="消耗时间">
-              <div class="form-value-ifon">{{ form.costTime }}毫秒</div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="操作时间">
-              <div class="form-value-ifon">
-                {{ parseTime(form.operTime, '{y}-{m}-{d} {h}:{i}') }}
-              </div>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="异常信息" v-if="form.status === 1">
-              <div class="form-value-ifon">{{ form.errorMsg }}</div>
-            </el-form-item>
-          </el-col>
-        </el-row>
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          {{ title }}
+        </span>
+      </template>
+      <el-form
+        ref="operlogDetailRef"
+        :model="form"
+        label-width="80px"
+        class="column-form"
+      >
+        <qt-form-item label="系统模块" prop="title">
+          <div class="form-readonly">{{ form.title || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="操作类型" prop="businessType">
+          <dict-tag
+            :options="sys_oper_type"
+            :value="form.businessType"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="操作人员" prop="operName">
+          <div class="form-readonly">{{ form.operName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="操作地址" prop="operIp">
+          <div class="form-readonly">{{ form.operIp || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="操作地点" prop="operLocation">
+          <div class="form-readonly">{{ form.operLocation || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="请求方式" prop="requestMethod">
+          <div class="form-readonly">{{ form.requestMethod || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="请求地址" prop="operUrl">
+          <div class="form-readonly">{{ form.operUrl || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="消耗时间" prop="costTime">
+          <div class="form-readonly">
+            {{ form.costTime != null ? form.costTime + "毫秒" : "-" }}
+          </div>
+        </qt-form-item>
+        <qt-form-item label="操作状态" prop="status">
+          <dict-tag
+            :options="sys_common_status"
+            :value="form.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="操作时间" prop="operTime">
+          <div class="form-readonly">
+            {{ parseTime(form.operTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
+        </qt-form-item>
+        <!-- 类名、请求参数与返回结果为长文本，使用 textarea 修饰类整行展示。 -->
+        <qt-form-item label="操作方法" prop="method" class="row-full">
+          <div class="form-readonly textarea">{{ form.method || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="请求参数" prop="operParam" class="row-full">
+          <div class="form-readonly textarea">{{ form.operParam || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="返回参数" prop="jsonResult" class="row-full">
+          <div class="form-readonly textarea">{{ form.jsonResult || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item
+          v-if="form.status === 1"
+          label="异常信息"
+          prop="errorMsg"
+          class="row-full"
+        >
+          <div class="form-readonly textarea">{{ form.errorMsg || "-" }}</div>
+        </qt-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="open = false">关 闭</el-button>
+          <el-button @click="cancel">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -411,9 +406,10 @@ function getList() {
   tableRef.value?.getList();
 }
 
-const open = ref(false);
+const openDetail = ref(false);
 const form = ref({});
 const ids = ref([]);
+const title = ref("");
 
 // true 表示没有选择数据，不能执行批量删除
 const multiple = ref(true);
@@ -429,23 +425,22 @@ function handleSelectionChange(selection) {
 }
 
 /**
- * 操作日志类型字典翻译
- *
- * @param {Object} row 日志行数据
- * @returns {string} 操作类型字典标签
- */
-function typeFormat(row) {
-  return proxy.selectDictLabel(sys_oper_type.value, row.businessType);
-}
-
-/**
- * 详细按钮操作，打开操作日志弹窗
+ * 详情按钮操作，使用行数据打开操作日志详情弹窗
  *
  * @param {Object} row 行数据
  */
-function handleView(row) {
-  open.value = true;
+function handleDetail(row) {
   form.value = row;
+  title.value = "操作日志详细";
+  openDetail.value = true;
+}
+
+/**
+ * 关闭详情弹窗并清空已展示的日志数据
+ */
+function cancel() {
+  openDetail.value = false;
+  form.value = {};
 }
 
 /**
@@ -502,10 +497,5 @@ function handleExport() {
 </script>
 
 <style scoped lang="scss">
-.form-value-ifon {
-  width: 100%;
-  border: 1px solid #c0c4cc;
-  padding: 0px 10px;
-  min-height: 34px;
-}
+/* 详情弹窗复用全局 column-form / form-readonly 样式，无页面级私有样式。 */
 </style>

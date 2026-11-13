@@ -89,6 +89,14 @@
               </template>
               <template #handle="{ row }">
                 <el-button
+                  v-hasPermi="['system:user:query']"
+                  link
+                  type="primary"
+                  icon="View"
+                  @click="handleDetail(row)"
+                  >详情
+                </el-button>
+                <el-button
                   link
                   type="primary"
                   @click="handleUpdate(row)"
@@ -96,15 +104,6 @@
                   v-if="row.userId !== 1"
                 >
                   <i class="iconfont-mini icon-a-xiugaixianxing"></i>修改
-                </el-button>
-                <el-button
-                  link
-                  type="danger"
-                  @click="handleDelete(row)"
-                  v-hasPermi="['system:user:remove']"
-                  v-if="row.userId !== 1"
-                >
-                  <i class="iconfont-mini icon-a-shanchuxianxing"></i>删除
                 </el-button>
                 <el-popover
                   placement="bottom"
@@ -132,6 +131,16 @@
                       v-hasPermi="['system:user:edit']"
                     >
                       <i class="iconfont-mini icon-a-yonghuzhanghaoxianxing"></i>分配角色
+                    </el-button>
+                    <el-button
+                        link
+                        type="danger"
+                        :disabled="row.status === '0'"
+                        @click="handleDelete(row)"
+                        v-hasPermi="['system:user:remove']"
+                        v-if="row.userId !== 1"
+                    >
+                      <i class="iconfont-mini icon-a-shanchuxianxing"></i>删除
                     </el-button>
                   </div>
                 </el-popover>
@@ -316,6 +325,75 @@
       </template>
     </el-dialog>
 
+    <!-- 用户详情对话框 -->
+    <el-dialog
+      :title="title"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          {{ title }}
+        </span>
+      </template>
+      <el-form
+        ref="userDetailRef"
+        :model="form"
+        label-width="110px"
+        class="column-form"
+      >
+        <qt-form-item label="用户名称" prop="userName">
+          <div class="form-readonly">{{ form.userName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="用户昵称" prop="nickName">
+          <div class="form-readonly">{{ form.nickName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="归属部门" prop="deptId">
+          <div class="form-readonly">{{ form.dept?.deptName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="手机号码" prop="phonenumber">
+          <div class="form-readonly">{{ form.phonenumber || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="邮箱" prop="email">
+          <div class="form-readonly">{{ form.email || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="用户性别" prop="sex">
+          <dict-tag
+            :options="sys_user_sex"
+            :value="form.sex"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="状态" prop="status">
+          <dict-tag
+            :options="sys_normal_disable"
+            :value="form.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="岗位" prop="postIds">
+          <div class="form-readonly">
+            {{ formatAssignedNames(postOptions, form.postIds, "postId", "postName") }}
+          </div>
+        </qt-form-item>
+        <qt-form-item label="角色" prop="roleIds">
+          <div class="form-readonly">
+            {{ formatAssignedNames(roleOptions, form.roleIds, "roleId", "roleName") }}
+          </div>
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark" class="row-full">
+          <div class="form-readonly textarea">{{ form.remark || "-" }}</div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancel">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
     <!-- 用户导入对话框 -->
     <el-dialog
       :title="upload.title"
@@ -401,7 +479,9 @@ const deptTreeRef = ref(null);
 const tableRef = ref(null);
 
 const open = ref(false);
+const openDetail = ref(false);
 const ids = ref([]);
+const selectedRows = ref([]);
 const single = ref(true);
 const multiple = ref(true);
 const title = ref("");
@@ -472,7 +552,7 @@ const tableStore = reactive({
     }
   },
   columns: [
-    { type: "selection", width: 50, minWidth: 50, align: "left" },
+    { type: "selection", width: 50, minWidth: 50, align: "center" },
     { label: "编号", prop: "userId", width: 80, minWidth: 80, align: "center", sortable: true },
     {
       label: "用户名称",
@@ -514,8 +594,8 @@ const tableStore = reactive({
     {
       label: "操作",
       fixed: "right",
-      width: 240,
-      minWidth: 240,
+      width: 280,
+      minWidth: 280,
       align: "center",
       slot: "handle"
     }
@@ -674,11 +754,38 @@ function handleResetQuery() {
  * @param {Object} [row] 行数据；无值时为批量删除
  */
 function handleDelete(row) {
-  const userIds = row.userId || ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.userId 区分）
+  if (row?.userId != null) {
+    const userIds = row.userId;
+    proxy.$modal
+      .confirm("是否确认删除用户编号为\"" + userIds + "\"的数据项？")
+      .then(function () {
+        return delUser(userIds);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（'0'=启用不可删除，'1'=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === "1");
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.userId);
   proxy.$modal
-    .confirm("是否确认删除用户编号为\"" + userIds + "\"的数据项？")
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delUser(userIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delUser(deletableIds);
     })
     .then(() => {
       getList();
@@ -783,6 +890,7 @@ function handleResetPwd(row) {
  */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.userId);
+  selectedRows.value = selection;
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
@@ -859,7 +967,42 @@ function reset() {
  */
 function cancel() {
   open.value = false;
+  openDetail.value = false;
   reset();
+}
+
+/**
+ * 详情按钮操作：复用 getUser 回显用户、岗位和角色信息
+ * @param {Object} [row] 行数据；无值时取多选框第一条
+ */
+function handleDetail(row) {
+  reset();
+  const userId = row?.userId || ids.value;
+  getUser(userId).then((response) => {
+    form.value = response.data;
+    postOptions.value = response.posts;
+    roleOptions.value = response.roles;
+    form.value.postIds = response.postIds;
+    form.value.roleIds = response.roleIds;
+    openDetail.value = true;
+    title.value = "用户详情";
+  });
+}
+
+/**
+ * 拼接详情中已选岗位或角色的名称
+ * @param {Array} options 岗位/角色选项列表
+ * @param {Array} selectedIds 已选中的 ID 列表
+ * @param {String} valueKey 选项 ID 字段名
+ * @param {String} labelKey 选项名称字段名
+ * @returns {String} 顿号拼接的名称，无选中时返回占位符
+ */
+function formatAssignedNames(options, selectedIds, valueKey, labelKey) {
+  if (!Array.isArray(selectedIds) || !selectedIds.length) return "-";
+  const names = (options || [])
+    .filter((item) => selectedIds.includes(item[valueKey]))
+    .map((item) => item[labelKey]);
+  return names.length ? names.join("、") : "-";
 }
 
 /**

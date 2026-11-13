@@ -38,7 +38,7 @@
           @click="handleDelete"
           v-hasPermi="['monitor:logininfor:remove']"
         >
-          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
         </el-button>
         <el-button
           type="danger"
@@ -67,8 +67,77 @@
         </el-button>
       </template>
 
-      <qt-table v-bind="tableStore" ref="tableRef" />
+      <qt-table v-bind="tableStore" ref="tableRef">
+        <template #handle="{ row }">
+          <el-button
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            v-hasPermi="['monitor:logininfor:query']"
+            >详情</el-button
+          >
+        </template>
+      </qt-table>
     </qt-wrap>
+
+    <!-- 登录日志详情对话框 -->
+    <el-dialog
+      :title="title"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          {{ title }}
+        </span>
+      </template>
+      <el-form
+        ref="logininforDetailRef"
+        :model="form"
+        label-width="110px"
+        class="column-form"
+      >
+        <qt-form-item label="登录账号" prop="userName" class="row-full">
+          <div class="form-readonly">{{ form.userName || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="登录IP地址" prop="ipaddr" class="row-full">
+          <div class="form-readonly">{{ form.ipaddr || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="登录地点" prop="loginLocation" class="row-full">
+          <div class="form-readonly">{{ form.loginLocation || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="浏览器" prop="browser" class="row-full">
+          <div class="form-readonly">{{ form.browser || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="操作系统" prop="os" class="row-full">
+          <div class="form-readonly">{{ form.os || "-" }}</div>
+        </qt-form-item>
+        <qt-form-item label="登录状态" prop="status" class="row-full">
+          <dict-tag
+            :options="sys_common_status"
+            :value="form.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <qt-form-item label="登录时间" prop="loginTime" class="row-full">
+          <div class="form-readonly">
+            {{ parseTime(form.loginTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+          </div>
+        </qt-form-item>
+        <!-- 提示信息可能较长，与基准描述字段一致使用 textarea 修饰类整行展示。 -->
+        <qt-form-item label="提示信息" prop="msg" class="row-full">
+          <div class="form-readonly textarea">{{ form.msg || "-" }}</div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancel">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -247,6 +316,14 @@ const tableStore = reactive({
       date: true,
       sortable: true,
       sortOrders: ["descending", "ascending"]
+    },
+    {
+      label: "操作",
+      fixed: "right",
+      width: 100,
+      minWidth: 100,
+      align: "center",
+      slot: "handle"
     }
   ],
   func: requestTableData,
@@ -308,6 +385,29 @@ function handleSelectionChange(selection) {
   multiple.value = !selection.length;
   single.value = selection.length !== 1;
   selectName.value = selection.map((item) => item.userName);
+}
+
+const openDetail = ref(false);
+const form = ref({});
+const title = ref("");
+
+/**
+ * 详情按钮操作，使用行数据打开登录日志详情弹窗
+ *
+ * @param {Object} row 行数据
+ */
+function handleDetail(row) {
+  form.value = row;
+  title.value = "登录日志详细";
+  openDetail.value = true;
+}
+
+/**
+ * 关闭详情弹窗并清空已展示的日志数据
+ */
+function cancel() {
+  openDetail.value = false;
+  form.value = {};
 }
 
 /**
@@ -378,3 +478,7 @@ function handleExport() {
   );
 }
 </script>
+
+<style scoped lang="scss">
+/* 详情弹窗复用全局 column-form / form-readonly 样式，无页面级私有样式。 */
+</style>

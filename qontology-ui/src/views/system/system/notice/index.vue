@@ -55,7 +55,7 @@
           @click="handleDelete"
           v-hasPermi="['system:notice:remove']"
         >
-          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>删除
+          <i class="iconfont-mini icon-a-shanchuxianxing mr5"></i>批量删除
         </el-button>
       </template>
 
@@ -70,6 +70,14 @@
         </template>
         <template #handle="{ row }">
           <el-button
+              link
+              type="primary"
+              @click="handleView(row)"
+              v-hasPermi="['system:notice:query']"
+              icon="view"
+          >详情
+          </el-button>
+          <el-button
             link
             type="primary"
             @click="handleUpdate(row)"
@@ -80,21 +88,14 @@
           <el-button
             link
             type="danger"
+            :disabled="row.status === '0'"
             @click="handleDelete(row)"
             v-hasPermi="['system:notice:remove']"
             icon="Delete"
           >
             删除</el-button
           >
-          <el-button
-            link
-            type="primary"
-            @click="handleView(row)"
-            v-hasPermi="['system:notice:query']"
-            icon="view"
-          >
-            详情</el-button
-          >
+
         </template>
       </qt-table>
     </qt-wrap>
@@ -344,6 +345,7 @@ function getList() {
 
 const open = ref(false);
 const ids = ref([]);
+const selectedRows = ref([]);
 
 // true 表示未选择或选择了多条，不能执行单条修改
 const single = ref(true);
@@ -373,6 +375,7 @@ const { form, rules } = toRefs(data);
  */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.noticeId);
+  selectedRows.value = selection;
   single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
@@ -452,11 +455,38 @@ function submitForm() {
  * @param {Object} [row] 行数据；无值时为批量删除
  */
 function handleDelete(row) {
-  const noticeIds = row?.noticeId ?? ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.noticeId 区分）
+  if (row?.noticeId != null) {
+    const noticeIds = row.noticeId;
+    proxy.$modal
+      .confirm("是否确认删除公告编号为\"" + noticeIds + "\"的数据项？")
+      .then(function () {
+        return delNotice(noticeIds);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess("删除成功");
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（'0'=启用不可删除，'1'=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === "1");
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.noticeId);
   proxy.$modal
-    .confirm("是否确认删除公告编号为\"" + noticeIds + "\"的数据项？")
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delNotice(noticeIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning("无可删除的数据");
+        return;
+      }
+      return delNotice(deletableIds);
     })
     .then(() => {
       getList();

@@ -36,7 +36,8 @@
     >
       <!-- 提交按钮置于头部返回按钮之后，与底部提交共用同一保存逻辑。 -->
       <template #btn-right>
-        <el-button type="primary" plain @click="submitForm()">提交</el-button>
+        <el-button type="primary" @click="submitForm()" icon="Edit">
+          提交</el-button>
       </template>
     </detail-info>
 

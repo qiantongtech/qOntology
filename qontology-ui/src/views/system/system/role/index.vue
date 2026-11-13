@@ -70,6 +70,14 @@
         </template>
         <template #handle="{ row }">
           <el-button
+            v-hasPermi="['system:role:query']"
+            link
+            type="primary"
+            icon="View"
+            @click="handleDetail(row)"
+            >详情
+          </el-button>
+          <el-button
             v-if="row.roleId !== 1"
             link
             type="primary"
@@ -80,9 +88,10 @@
             修改</el-button
           >
           <el-button
-            v-if="row.roleId !== 1 && row.roleId !== 3"
+            v-if="row.roleId !== 1"
             link
             type="danger"
+            :disabled="row.status === '0'"
             @click="handleDelete(row)"
             v-hasPermi="['system:role:remove']"
           >
@@ -195,7 +204,7 @@
           <el-input
             v-model="form.remark"
             type="textarea"
-            placeholder="请输入内容"
+            placeholder="请输入备注"
             maxlength="256个字符"
             show-word-limit
           ></el-input>
@@ -205,6 +214,66 @@
         <div class="dialog-footer">
           <el-button @click="cancel">取 消</el-button>
           <el-button type="primary" @click="submitForm">确 定</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 角色详情对话框 -->
+    <el-dialog
+      :title="title"
+      v-model="openDetail"
+      width="900px"
+      :append-to="$refs['app-container']"
+      draggable
+    >
+      <template #header>
+        <span role="heading" aria-level="2" class="el-dialog__title">
+          {{ title }}
+        </span>
+      </template>
+      <el-form
+        ref="roleDetailRef"
+        :model="form"
+        label-width="90px"
+        class="column-form"
+      >
+        <qt-form-item label="角色名称" prop="roleName">
+          <div class="form-readonly">{{ form.roleName || '-' }}</div>
+        </qt-form-item>
+        <qt-form-item label="权限字符" prop="roleKey">
+          <div class="form-readonly">{{ form.roleKey || '-' }}</div>
+        </qt-form-item>
+        <qt-form-item label="角色顺序" prop="roleSort">
+          <div class="form-readonly">{{ form.roleSort ?? '-' }}</div>
+        </qt-form-item>
+        <qt-form-item label="状态" prop="status">
+          <dict-tag
+            :options="sys_normal_disable"
+            :value="form.status"
+            class="con-value access-tag"
+          />
+        </qt-form-item>
+        <!-- 菜单权限沿用编辑弹窗的树结构，节点全部禁用仅作只读展示 -->
+        <qt-form-item label="菜单权限" class="row-full">
+          <el-tree
+            class="tree-border"
+            :data="menuOptions"
+            show-checkbox
+            check-strictly
+            default-expand-all
+            node-key="id"
+            ref="detailMenuRef"
+            :props="{ label: 'label', children: 'children', disabled: () => true }"
+            empty-text="加载中，请稍候"
+          ></el-tree>
+        </qt-form-item>
+        <qt-form-item label="备注" prop="remark" class="row-full">
+          <div class="form-readonly textarea">{{ form.remark || '-' }}</div>
+        </qt-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="cancel">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -294,7 +363,9 @@ const { proxy } = getCurrentInstance();
 const { sys_normal_disable } = proxy.useDict('sys_normal_disable');
 
 const open = ref(false);
+const openDetail = ref(false);
 const ids = ref([]);
+const selectedRows = ref([]);
 const single = ref(true);
 const multiple = ref(true);
 const title = ref('');
@@ -307,6 +378,7 @@ const deptOptions = ref([]);
 const openDataScope = ref(false);
 const menuRef = ref(null);
 const deptRef = ref(null);
+const detailMenuRef = ref(null);
 
 /** 数据范围选项*/
 const dataScopeOptions = ref([
@@ -417,8 +489,8 @@ const tableStore = reactive({
       label: '操作',
       align: 'center',
       fixed: 'right',
-      width: 240,
-      minWidth: 240,
+      width: 280,
+      minWidth: 280,
       slot: 'handle'
     }
   ],
@@ -471,11 +543,38 @@ function getList() {
  * @param {Object} [row] 行数据；无值时为批量删除
  */
 function handleDelete(row) {
-  const roleIds = row?.roleId || ids.value;
+  // 单个删除：保持原逻辑不变（批量按钮点击会传 MouseEvent，用 row?.roleId 区分）
+  if (row?.roleId != null) {
+    const roleIds = row.roleId;
+    proxy.$modal
+      .confirm('是否确认删除编号为"' + roleIds + '"的数据项?')
+      .then(function () {
+        return delRole(roleIds);
+      })
+      .then(() => {
+        getList();
+        proxy.$modal.msgSuccess('删除成功');
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // 批量删除：根据状态（'0'=启用不可删除，'1'=禁用可删除）判断
+  const rows = selectedRows.value;
+  if (!rows.length) return;
+  const deletableRows = rows.filter((item) => item.status === '1');
+  const undeletableCount = rows.length - deletableRows.length;
+  const deletableIds = deletableRows.map((item) => item.roleId);
   proxy.$modal
-    .confirm('是否确认删除编号为"' + roleIds + '"的数据项?')
+    .confirm(
+      `可删除${deletableRows.length}个，不可删除${undeletableCount}个，是否删除可删除部分？`
+    )
     .then(function () {
-      return delRole(roleIds);
+      if (!deletableIds.length) {
+        proxy.$modal.msgWarning('无可删除的数据');
+        return;
+      }
+      return delRole(deletableIds);
     })
     .then(() => {
       getList();
@@ -502,6 +601,7 @@ function handleExport() {
  */
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.roleId);
+  selectedRows.value = selection;
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
@@ -747,7 +847,29 @@ function submitForm() {
  */
 function cancel() {
   open.value = false;
+  openDetail.value = false;
   reset();
+}
+
+/**
+ * 详情角色：复用 getRole 和角色菜单树回显只读信息
+ * @param {Object} [row] 行数据；无值时取多选框第一条
+ */
+function handleDetail(row) {
+  reset();
+  const roleId = row?.roleId || ids.value;
+  getRole(roleId).then((response) => {
+    form.value = response.data;
+    form.value.roleSort = Number(form.value.roleSort);
+    openDetail.value = true;
+    title.value = '角色详情';
+  });
+  const roleMenu = getRoleMenuTreeselect(roleId);
+  roleMenu.then((res) => {
+    nextTick(() => {
+      detailMenuRef.value?.setCheckedKeys(res.checkedKeys);
+    });
+  });
 }
 
 /**
