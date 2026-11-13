@@ -1378,6 +1378,7 @@ CREATE TABLE `om_ai_enum_data`  (
                                     `enum_sort` bigint NULL DEFAULT 0 COMMENT '枚举排序',
                                     `enum_label` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '枚举标签',
                                     `enum_value` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '枚举值',
+                                    `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述',
                                     `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '0' COMMENT '状态',
                                     `adopt_status` tinyint NOT NULL DEFAULT 0 COMMENT '采纳状态：0待采纳 1已采纳 2采纳失败',
                                     `adopted_id` bigint NULL DEFAULT NULL COMMENT '已采纳正式数据ID',
@@ -1398,12 +1399,12 @@ CREATE TABLE `om_ai_enum_data`  (
 -- ----------------------------
 -- Records of om_ai_enum_data
 -- ----------------------------
-INSERT INTO `om_ai_enum_data` VALUES (1, 1, 1, 0, '草稿', '草稿', '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
-INSERT INTO `om_ai_enum_data` VALUES (2, 1, 1, 1, '已提交', '已提交', '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
-INSERT INTO `om_ai_enum_data` VALUES (3, 1, 1, 2, '已审批', '已审批', '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
-INSERT INTO `om_ai_enum_data` VALUES (4, 1, 1, 3, '已取消', '已取消', '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
-INSERT INTO `om_ai_enum_data` VALUES (5, 1, 2, 0, '物料供应商', '物料供应商', '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
-INSERT INTO `om_ai_enum_data` VALUES (6, 1, 2, 1, '服务供应商', '服务供应商', '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (1, 1, 1, 0, '草稿', '草稿', NULL, '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (2, 1, 1, 1, '已提交', '已提交', NULL, '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (3, 1, 1, 2, '已审批', '已审批', NULL, '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (4, 1, 1, 3, '已取消', '已取消', NULL, '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (5, 1, 2, 0, '物料供应商', '物料供应商', NULL, '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_data` VALUES (6, 1, 2, 1, '服务供应商', '服务供应商', NULL, '0', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
 
 -- ----------------------------
 -- Table structure for om_ai_enum_type
@@ -1414,6 +1415,7 @@ CREATE TABLE `om_ai_enum_type`  (
                                     `task_id` bigint NOT NULL COMMENT 'AI建模任务ID',
                                     `enum_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '枚举名称',
                                     `enum_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '枚举类型编码',
+                                    `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述',
                                     `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '0' COMMENT '状态',
                                     `adopt_status` tinyint NOT NULL DEFAULT 0 COMMENT '采纳状态：0待采纳 1已采纳 2采纳失败',
                                     `adopted_id` bigint NULL DEFAULT NULL COMMENT '已采纳正式数据ID',
@@ -1434,8 +1436,8 @@ CREATE TABLE `om_ai_enum_type`  (
 -- ----------------------------
 -- Records of om_ai_enum_type
 -- ----------------------------
-INSERT INTO `om_ai_enum_type` VALUES (1, 1, '订单状态', 'order_status', '0', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
-INSERT INTO `om_ai_enum_type` VALUES (2, 1, '供应商分类', 'supplier_category', '0', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_type` VALUES (1, 1, '订单状态', 'order_status', NULL, '0', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
+INSERT INTO `om_ai_enum_type` VALUES (2, 1, '供应商分类', 'supplier_category', NULL, '0', 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:25:44', NULL, NULL, '2026-10-31 20:25:44', NULL);
 
 -- ----------------------------
 -- Table structure for om_ai_evidence
@@ -1633,10 +1635,10 @@ CREATE TABLE `om_ai_relation`  (
 -- ----------------------------
 -- Records of om_ai_relation
 -- ----------------------------
-INSERT INTO `om_ai_relation` VALUES (1, 1, '指定供应商', '采购订单必须关联承接的供应商', 1, 2, 0, '承接订单', 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
-INSERT INTO `om_ai_relation` VALUES (2, 1, '包含明细', '一张采购订单包含多条采购明细记录', 1, 4, 0, '归属订单', 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
-INSERT INTO `om_ai_relation` VALUES (3, 1, '提供物料', '供应商向企业供应具体物料', 2, 3, 0, '由供应商提供', 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
-INSERT INTO `om_ai_relation` VALUES (4, 1, '对应物料', '采购明细记录具体采购的物料种类', 4, 3, 0, '被明细记录', 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-10-31 20:29:49', NULL);
+INSERT INTO `om_ai_relation` VALUES (1, 1, '指定供应商', '采购订单必须关联承接的供应商', 1, 2, 0, NULL, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-11-13 18:45:47', NULL);
+INSERT INTO `om_ai_relation` VALUES (2, 1, '包含明细', '一张采购订单包含多条采购明细记录', 1, 4, 0, NULL, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-11-13 18:45:47', NULL);
+INSERT INTO `om_ai_relation` VALUES (3, 1, '提供物料', '供应商向企业供应具体物料', 2, 3, 0, NULL, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-11-13 18:45:47', NULL);
+INSERT INTO `om_ai_relation` VALUES (4, 1, '对应物料', '采购明细记录具体采购的物料种类', 4, 3, 0, NULL, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:29:49', NULL, NULL, '2026-11-13 18:45:47', NULL);
 
 -- ----------------------------
 -- Table structure for om_ai_relation_target

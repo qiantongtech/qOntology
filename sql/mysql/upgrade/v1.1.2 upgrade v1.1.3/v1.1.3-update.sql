@@ -1,0 +1,42 @@
+
+/*
+ * Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+ *
+ * qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+ * You may use qOntology for commercial purposes, but you may not remove, hide,
+ * modify, or replace the qOntology logo, copyright notices, license notices,
+ * or attribution information without a separate commercial license.
+ *
+ * White-label use, OEM distribution, rebranding, or presenting qOntology as
+ * another product requires separate commercial authorization from
+ * Jiangsu Qiantong Technology Co., Ltd.
+ *
+ * Business License: https://community.qontology.ai/business/policy.html
+ * See the LICENSE file in the project root for full license information.
+ */
+UPDATE `om_ai_relation` SET `reverse_name` = NULL WHERE `reversible_flag` IS NULL OR `reversible_flag` <> 1;
+UPDATE `system_menu` SET `icon` = 'system-center' WHERE `icon` = '系统中心';
+UPDATE `system_menu` SET `icon` = 'model-market' WHERE `icon` = '模型市场';
+UPDATE `system_menu` SET `icon` = 'ontology-modeling' WHERE `icon` = '本体建模';
+UPDATE `system_menu` SET `icon` = 'basic-management' WHERE `icon` = '基础管理';
+UPDATE `system_menu` SET `icon` = 'project-management' WHERE `icon` = '项目管理';
+UPDATE `system_menu` SET `icon` = 'semantic-asset' WHERE `icon` = '语义资产';
+UPDATE `system_menu` SET `icon` = 'sub-ontology-modeling' WHERE `icon` = '二级本体建模';
+UPDATE `system_menu` SET `icon` = 'modeling-goal' WHERE `icon` = '建模目标';
+UPDATE `system_menu` SET `icon` = 'data-type' WHERE `icon` = '数据类型';
+UPDATE `system_menu` SET `icon` = 'enumeration-management' WHERE `icon` = '枚举管理';
+UPDATE `system_menu` SET `icon` = 'data-source' WHERE `icon` = '数据源';
+UPDATE `system_menu` SET `icon` = 'file-category' WHERE `icon` = '文件分类';
+UPDATE `system_menu` SET `icon` = 'file-management' WHERE `icon` = '文件管理';
+UPDATE `system_menu` SET `icon` = 'ontology-application' WHERE `icon` = '本体应用';
+UPDATE `system_menu` SET `icon` = 'knowledge-graph' WHERE `icon` = '知识图谱';
+UPDATE `system_menu` SET `icon` = 'project-overview' WHERE `icon` = '项目概览';
+UPDATE `system_menu` SET `icon` = 'constraint-rule' WHERE `icon` = '约束规则';
+UPDATE `system_menu` SET `icon` = 'unstructured-extraction' WHERE `icon` = '非结构化抽取';
+UPDATE `system_menu` SET `icon` = 'extraction-log' WHERE `icon` = '抽取日志';
+UPDATE `system_menu` SET `icon` = 'structured-extraction' WHERE `icon` = '结构化抽取';
+UPDATE `system_menu` SET `icon` = 'quality-center' WHERE `icon` = '质量中心';
+UPDATE `system_menu` SET `icon` = 'ai-assisted-modeling' WHERE `icon` = 'AI辅助建模';
+UPDATE `system_dict_data` SET `dict_sort` = 0, `dict_label` = '禁用', `dict_value` = '0', `dict_type` = 'project_status', `css_class` = NULL, `list_class` = 'danger', `is_default` = 'N', `status` = '0', `create_by` = '吴同', `create_time` = '2026-10-12 15:11:21', `update_by` = '吴同', `update_time` = '2026-11-13 15:37:52', `remark` = NULL WHERE `dict_code` = 58;
