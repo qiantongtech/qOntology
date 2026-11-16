@@ -229,9 +229,15 @@ watch(
 );
 
 // 本地草稿变化时通过标准 update 事件同步父组件。
-watch(localForm, (value) => emit("update:formData", { ...value }), {
-  deep: true,
-});
+// 必须同步 flush：el-select 先 update:modelValue 再触发 change，
+// 父组件在 change 里会同步修改 form（如清空 projectVersionId），
+// 若异步回传，props 深度监听会先于回传执行，用父组件旧对象覆盖
+// localForm，导致刚点选的值被回滚（第一次点不中、第二次才生效）。
+watch(
+  localForm,
+  (value) => emit("update:formData", { ...value }),
+  { deep: true, flush: "sync" }
+);
 onMounted(async () => {
   await loadUserOptions();
 });

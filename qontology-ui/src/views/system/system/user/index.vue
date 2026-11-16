@@ -309,7 +309,7 @@
               <el-input
                 v-model="form.remark"
                 type="textarea"
-                placeholder="请输入内容"
+                placeholder="请输入备注"
                 maxlength="256个字符"
                 show-word-limit
               ></el-input>

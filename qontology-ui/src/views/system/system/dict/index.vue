@@ -197,13 +197,13 @@
         </span>
       </template>
       <el-form :model="detailForm" label-width="80px" class="column-form">
-        <qt-form-item label="字典名称">
+        <qt-form-item label="字典名称" class="row-full">
           <div class="form-readonly">{{ detailForm.dictName || "-" }}</div>
         </qt-form-item>
-        <qt-form-item label="字典类型">
+        <qt-form-item label="字典类型" class="row-full">
           <div class="form-readonly">{{ detailForm.dictType || "-" }}</div>
         </qt-form-item>
-        <qt-form-item label="状态">
+        <qt-form-item label="状态" class="row-full">
           <dict-tag
             :options="sys_normal_disable"
             :value="detailForm.status"
