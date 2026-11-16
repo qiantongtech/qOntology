@@ -87,17 +87,6 @@
             <i class="iconfont-mini icon-a-xiugaixianxing"></i>
             修改</el-button
           >
-          <el-button
-            v-if="row.roleId !== 1"
-            link
-            type="danger"
-            :disabled="row.status === '0'"
-            @click="handleDelete(row)"
-            v-hasPermi="['system:role:remove']"
-          >
-            <i class="iconfont-mini icon-a-shanchuxianxing"></i>
-            删除</el-button
-          >
           <el-popover
             v-if="row.roleId !== 1 && hasPermi(['system:role:edit'])"
             placement="bottom"
@@ -126,6 +115,17 @@
               >
                 <i class="iconfont-mini icon-a-yonghuzhanghaoxianxing"></i
                 >分配用户</el-button
+              >
+              <el-button
+                  v-if="row.roleId !== 1"
+                  link
+                  type="danger"
+                  :disabled="row.status === '0'"
+                  @click="handleDelete(row)"
+                  v-hasPermi="['system:role:remove']"
+              >
+                <i class="iconfont-mini icon-a-shanchuxianxing"></i>
+                删除</el-button
               >
             </div>
           </el-popover>

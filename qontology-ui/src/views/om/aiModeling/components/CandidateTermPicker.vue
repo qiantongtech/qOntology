@@ -27,15 +27,15 @@
   >
     <el-form
       class="btn-style"
-      :model="query"
+      :model="tableParams"
       :inline="true"
       @submit.prevent="search"
     >
-      <el-form-item label="标准名称"
+      <el-form-item label="术语名称"
         ><el-input
-          v-model="query.stdName"
+          v-model="tableParams.stdName"
           class="el-form-input-width"
-          placeholder="请输入标准名称"
+          placeholder="请输入术语名称"
           clearable
           @keyup.enter="search"
       /></el-form-item>
@@ -47,55 +47,12 @@
         ></el-form-item
       >
     </el-form>
-    <el-table
-      ref="tableRef"
-      v-loading="loading"
-      :data="rows"
-      row-key="id"
-      highlight-current-row
-      stripe
-      @current-change="selected = $event"
-      @row-click="selectRow"
-    >
-      <el-table-column
-        prop="id"
-        label="编号"
-        width="60"
-        align="center"
-        sortable
-        :sort-method="(a, b) => Number(a.id) - Number(b.id)"
-      />
-      <el-table-column label="术语信息" min-width="300" align="left">
-        <template #default="{ row }"><TermInfoCell :row="row" /></template>
-      </el-table-column>
-      <el-table-column
-        v-for="field in fields"
-        :key="field.prop"
-        :prop="field.prop"
-        :label="field.label"
-        :min-width="field.width"
-        align="left"
-        :show-overflow-tooltip="{ effect: 'light' }"
-      >
-        <template #default="{ row }">{{ row[field.prop] || "-" }}</template>
-      </el-table-column>
-      <template #empty
-        ><div class="emptyBg">
-          <img
-            src="@/assets/common/images/empty-state/noData.png"
-            alt="暂无记录"
-          />
-          <p>暂无记录</p>
-        </div></template
-      >
-    </el-table>
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      v-model:page="query.pageNum"
-      v-model:limit="query.pageSize"
-      @pagination="load"
-    />
+    <qt-table v-bind="tableStore" ref="tableRef">
+      <template #termInfo="{ row }"><TermInfoCell :row="row" /></template>
+      <template #text="{ row, column_data }">{{
+        row[column_data.prop] === "" ? "-" : row[column_data.prop]
+      }}</template>
+    </qt-table>
     <template #footer
       ><div class="dialog-footer">
         <el-button size="mini" @click="visible = false">取 消</el-button
@@ -122,52 +79,105 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue", "confirm"]);
 const visible = ref(false),
   loading = ref(false),
-  rows = ref([]),
-  total = ref(0),
   selected = ref(),
   tableRef = ref();
-const query = reactive({ pageNum: 1, pageSize: 10, stdName: "" });
 // 展示字段与对象类型页「从术语表中选择」弹窗保持一致：编号 + 术语信息（标准名/英文名/描述）+ 以下列，无末尾状态列。
 const fields = [
   { prop: "alias", label: "术语别名", width: 160 },
   { prop: "abbr", label: "业务缩写", width: 120 },
   { prop: "source", label: "来源", width: 180 },
 ];
-watch(
-  () => props.modelValue,
-  (value) => {
-    visible.value = value;
-    if (value) {
-      query.pageNum = 1;
-      load();
-    }
-  }
-);
-watch(visible, (value) => emit("update:modelValue", value));
-async function load() {
+// 查询条件：术语名称直接作为 qt-table 的 params 透传给取数方法
+const tableParams = reactive({ stdName: "" });
+
+/**
+ * QtTable 取数适配器
+ *
+ * 弹窗 destroy-on-close，每次打开时 qt-table 重新挂载并自动请求第一页。
+ * @param {Object} params 查询条件 + pageNum + pageSize
+ * @returns {Promise<{ data: { rows: Array, total: number } }>}
+ */
+async function requestTableData(params) {
   loading.value = true;
   try {
     const response = await listCandidates("term", {
       taskId: props.taskId,
-      ...query,
+      ...params,
     });
-    rows.value = response.data?.rows || [];
-    total.value = Number(response.data?.total || 0);
-    selected.value = undefined;
+    return {
+      data: {
+        rows: response.data?.rows || [],
+        total: Number(response.data?.total || 0),
+      },
+    };
   } finally {
     loading.value = false;
   }
 }
+
+/**
+ * QtTable 统一配置（写法参考 views/basic/project/index.vue）
+ */
+const tableStore = reactive({
+  config: {
+    table: {
+      stripe: true,
+      rowKey: "id",
+      highlightCurrentRow: true,
+      onCurrentChange: handleCurrentChange,
+      onRowClick: selectRow,
+    },
+  },
+  columns: [
+    {
+      label: "编号",
+      prop: "id",
+      width: 60,
+      align: "center",
+      sortable: true,
+      sortMethod: (a, b) => Number(a.id) - Number(b.id),
+    },
+    { label: "术语信息", minWidth: 300, align: "left", slot: "termInfo" },
+    ...fields.map((field) => ({
+      label: field.label,
+      prop: field.prop,
+      minWidth: field.width,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+      slot: "text",
+    })),
+  ],
+  func: requestTableData,
+  params: tableParams,
+  events: {
+    // 数据重新加载后清空当前选中行，与原 load() 行为一致
+    onDataLoaded: () => {
+      selected.value = undefined;
+    },
+  },
+});
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    visible.value = value;
+  }
+);
+watch(visible, (value) => emit("update:modelValue", value));
+/** 查询：回到第一页并重新加载 */
 function search() {
-  query.pageNum = 1;
-  return load();
+  return tableRef.value?.resetQuery();
 }
 function reset() {
-  query.stdName = "";
+  tableParams.stdName = "";
   return search();
 }
+/** 单选高亮：点击行时同步 el-table 的当前行 */
+function handleCurrentChange(row) {
+  selected.value = row;
+}
 function selectRow(row) {
-  tableRef.value?.setCurrentRow(row);
+  tableRef.value?.elTableRef?.setCurrentRow(row);
 }
 function confirm() {
   emit("confirm", selected.value);

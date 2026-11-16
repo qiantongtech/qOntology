@@ -18,9 +18,11 @@
 
 <template>
     <el-aside
+        ref="asideRef"
         :style="{
             width: `${leftWidth}px`,
             marginLeft: leftWidth == 0 ? '-15px' : '0px',
+            marginTop: qtTreeOffsetTop,
             '--qt-wrap-height': qtWrapheight
         }"
         class="left-pane"
@@ -162,7 +164,7 @@
     </el-aside>
 
     <!-- 拖拽栏 -->
-    <div class="resize-bar" @mousedown="startResize">
+    <div class="resize-bar" :style="{ marginTop: qtTreeOffsetTop }" @mousedown="startResize">
         <div class="resize-handle-sx">
             <el-icon v-if="leftWidth == 0" @click.stop="toggleCollapse" class="collapse-icon">
                 <ArrowRight />
@@ -357,12 +359,31 @@
         }
     });
 
-    // 高度监听逻辑
+    // 高度监听逻辑：在同一个 el-container 内查找右侧 .qt-wrap，
+    // 顶边按 el-main 的 padding-top 偏移下移，高度取 qt-wrap 实际高度，
+    // 保证左右两侧卡片顶边、底边同时对齐。
+    const asideRef = ref(null);
+    const qtTreeOffsetTop = ref('0px');
+    const getQtWrapTarget = () => {
+        const aside = asideRef.value?.$el;
+        const container = aside?.parentElement;
+        return {
+            aside,
+            container,
+            wrap: container ? container.querySelector('.qt-wrap') : null
+        };
+    };
+
     const getQtWrapHeight = () => {
-        const element = document.querySelector('.qt-wrap');
-        if (element) {
-            qtWrapheight.value = element.offsetHeight + 'px';
+        const { wrap, container } = getQtWrapTarget();
+        if (wrap && container) {
+            const wrapRect = wrap.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const offset = Math.max(Math.round(wrapRect.top - containerRect.top), 0);
+            qtTreeOffsetTop.value = offset + 'px';
+            qtWrapheight.value = Math.max(Math.round(wrapRect.height), 0) + 'px';
         } else {
+            qtTreeOffsetTop.value = '0px';
             qtWrapheight.value = '86vh';
         }
     };
@@ -370,12 +391,12 @@
     onMounted(() => {
         getQtWrapHeight();
 
-        const targetElement = document.querySelector('.qt-wrap');
-        if (targetElement) {
+        const { wrap } = getQtWrapTarget();
+        if (wrap) {
             resizeObserver = new ResizeObserver(() => {
                 getQtWrapHeight();
             });
-            resizeObserver.observe(targetElement);
+            resizeObserver.observe(wrap);
         }
 
         window.addEventListener('resize', getQtWrapHeight);
@@ -383,11 +404,8 @@
 
     onUnmounted(() => {
         if (resizeObserver) {
-            const targetElement = document.querySelector('.qt-wrap');
-            if (targetElement) {
-                resizeObserver.unobserve(targetElement);
-            }
             resizeObserver.disconnect();
+            resizeObserver = null;
         }
         window.removeEventListener('resize', getQtWrapHeight);
     });
@@ -575,6 +593,9 @@ $spacing-xs: 2px;
   padding: 0;
   margin-bottom: 0px;
   height: var(--qt-wrap-height);
+  // 与右侧 .qt-wrap--content.full 卡片阴影保持一致
+  border-radius: 2px;
+  box-shadow: 0 5px 8px rgba(128, 145, 165, 0.1);
 }
 
 // 保留类名以兼容可能的外部样式覆盖，但外观与 .left-pane 保持一致

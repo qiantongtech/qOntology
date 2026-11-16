@@ -100,24 +100,24 @@
             <template #reference>
               <el-button link type="primary" icon="ArrowDown">更多</el-button>
             </template>
-            <el-button
-              v-if="auth.hasPermi('om:aiModeling:edit')"
-              link
-              type="primary"
-              icon="Edit"
-              :disabled="row.status === 1"
-              @click="openEditDialog(row)"
-              >修改</el-button
-            >
-            <el-button
-              v-if="auth.hasPermi('om:aiModeling:remove')"
-              link
-              type="danger"
-              icon="Delete"
-              :disabled="row.status === 1 || deleting"
-              @click="removeTasks(row)"
-              >删除</el-button
-            >
+            <div class="task-action-list">
+              <el-button
+                  v-if="auth.hasPermi('om:aiModeling:edit')"
+                  link
+                  type="primary"
+                  icon="Edit"
+                  :disabled="row.status === 1"
+                  @click="openEditDialog(row)"
+              >修改</el-button>
+              <el-button
+                  v-if="auth.hasPermi('om:aiModeling:remove')"
+                  link
+                  type="danger"
+                  icon="Delete"
+                  :disabled="row.status === 1 || deleting"
+                  @click="removeTasks(row)"
+              >删除</el-button>
+            </div>
           </el-popover>
         </template>
       </qt-table>

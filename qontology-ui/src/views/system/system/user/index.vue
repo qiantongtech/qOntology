@@ -20,7 +20,7 @@
   <div class="app-container" ref="app-container">
     <el-container>
       <!-- 左侧部门筛选树；节点点击后把 deptId 写入查询参数并从第一页刷新列表 -->
-      <DeptTree
+      <QtTree
         ref="deptTreeRef"
         :dept-options="treeDeptOptions"
         :left-width="leftWidth"
@@ -448,7 +448,7 @@
 
 <script setup name="User">
 import { getToken } from "@/utils/auth.js";
-import DeptTree from "@/components/DeptTree";
+import QtTree from "@/components/QtTree";
 import {
   changeUserStatus,
   listUser,
@@ -486,7 +486,7 @@ const single = ref(true);
 const multiple = ref(true);
 const title = ref("");
 const deptOptions = ref(undefined);   // 用于表单的 el-tree-select
-const treeDeptOptions = ref(undefined);   // 用于 DeptTree 组件
+const treeDeptOptions = ref(undefined);   // 用于 QtTree 组件
 const initPassword = ref(undefined);
 const postOptions = ref([]);
 const roleOptions = ref([]);
@@ -720,7 +720,7 @@ function getDeptTree() {
     // 保存原始数据用于表单的 el-tree-select（使用 label 字段）
     deptOptions.value = response.data;
 
-    // 将 label 字段转换为 name 字段，适配 DeptTree 组件
+    // 将 label 字段转换为 name 字段，适配 QtTree 组件
     const transformData = (items) => {
       return items.map((item) => ({
         ...item,
@@ -1090,11 +1090,29 @@ getDeptTree();
     width: 100%;
     height: 25px;
   }
+}
 
-  .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
-    background-color: var(--el-color-primary-light-9) !important;
-    border-right: 2px solid var(--el-color-primary);
-    color: var(--el-color-primary);
-  }
+// 左侧部门树样式与 file/manager 页分类树保持一致：
+// 更紧凑的行高、18px 图标、图标与文字零间距；
+// 选中态沿用 QtTree 组件内置样式（浅灰蓝背景），不再覆盖。
+:deep(.dept-tree .el-tree-node__content) {
+  height: 26px !important;
+}
+
+:deep(.dept-tree .custom-tree-node) {
+  padding-left: 0;
+}
+
+:deep(.dept-tree .treelabel) {
+  margin-left: 0;
+}
+
+:deep(.dept-tree .iconimg),
+:deep(.dept-tree .zjiconimg) {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin: 0 6px 0 0;
 }
 </style>

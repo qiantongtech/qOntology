@@ -23,7 +23,7 @@
       <GuideTip tip-id="basic/file/manager.list" />
     </div>
     <el-container>
-      <DeptTree
+      <QtTree
         ref="deptTreeRef"
         :dept-options="categoryOptions"
         :default-expand-level="2"
@@ -180,7 +180,7 @@ import {
   listModelDataFile,
   getFileTypes,
 } from "@/api/basic/file/basicFile.js";
-import DeptTree from "@/components/DeptTree";
+import QtTree from "@/components/QtTree";
 import FileFormDialog from "./components/fileFormDialog.vue";
 import FileDetailDialog from "./components/fileDetailDialog.vue";
 import { formatSize } from "@/utils/index";

@@ -106,7 +106,7 @@
           >
           <el-popover
             placement="bottom"
-            :width="150"
+            :width="100"
             popper-class="handle-popover"
             trigger="click"
           >

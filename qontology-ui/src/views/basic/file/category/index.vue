@@ -131,7 +131,7 @@ const {proxy} = getCurrentInstance();
 const categoryList = ref([]);
 const categoryOptions = ref([]);
 const categoryDialogRef = ref();
-const isExpandAll = ref(true);
+const isExpandAll = ref(false);
 const defaultSort = {prop: 'orderNum', order: 'ascending'};
 const tableRef = ref();
 const {creatorPhones} = useCreatorPhones();
@@ -149,7 +149,7 @@ const tableStore = reactive({
       rowKey: 'id',
       height: '60vh',
       stripe: true,
-      defaultExpandAll: true,
+      defaultExpandAll: false,
       treeProps: {children: 'children', hasChildren: 'hasChildren'},
       defaultSort
     }

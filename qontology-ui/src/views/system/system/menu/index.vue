@@ -217,7 +217,7 @@ const menuList = ref([]);
 const menuFlatList = ref([]);
 const menuOptions = ref([]);
 const menuDialogRef = ref();
-const isExpandAll = ref(true);
+const isExpandAll = ref(false);
 const defaultSort = { prop: 'orderNum', order: 'ascending' };
 const tableRef = ref();
 const openDetail = ref(false);
@@ -242,7 +242,7 @@ const tableStore = reactive({
     table: {
       rowKey: 'menuId',
       stripe: true,
-      defaultExpandAll: true,
+      defaultExpandAll: false,
       treeProps: { children: 'children' },
       defaultSort
     }

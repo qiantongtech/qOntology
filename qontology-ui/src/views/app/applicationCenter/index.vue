@@ -256,7 +256,7 @@ const applications = [
     name: "知识图谱",
     type: "analysis",
     status: "1",
-    route: "/app/graph",
+    route: "/app/graph/general",
     image: graphImage,
     tags: ["知识图谱", "关系探索"],
     ontology: "实例对象与关系网络",

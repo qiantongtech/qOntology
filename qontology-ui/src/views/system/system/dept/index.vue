@@ -178,7 +178,7 @@ const deptList = ref([]);
 const deptFlatList = ref([]);
 const deptOptions = ref([]);
 const deptDialogRef = ref();
-const isExpandAll = ref(true);
+const isExpandAll = ref(false);
 const tableRef = ref();
 const openDetail = ref(false);
 const detailForm = ref({});
@@ -200,7 +200,7 @@ const tableStore = reactive({
     table: {
       rowKey: 'deptId',
       stripe: true,
-      defaultExpandAll: true,
+      defaultExpandAll: false,
       treeProps: {children: 'children'}
     }
   },
