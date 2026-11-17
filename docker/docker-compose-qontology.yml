@@ -36,10 +36,19 @@ services:
       - ./qOntology/server/upload:/usr/app/jar/upload
       - ./qOntology/server/application-prod.yml:/usr/app/jar/application-prod.yml
       - ./qOntology/server/application.yml:/usr/app/jar/application.yml
+    healthcheck:
+      # 应用镜像包含 bash；端口开始接受连接后才允许 Nginx 启动。
+      test: ["CMD", "bash", "-c", ": </dev/tcp/127.0.0.1/8097"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
     depends_on:
       redis:
         condition: service_healthy
       mysql57:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
     networks:
       - qontology_net

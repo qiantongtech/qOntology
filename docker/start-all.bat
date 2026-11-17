@@ -39,6 +39,10 @@ REM Prepare only the missing images required by the deployment profile.
 call :pull_images
 if errorlevel 1 goto :failed
 
+REM 首次启动时从完整 neo4j.dump 初始化数据库；已有数据库不会重复导入。
+call :init_neo4j_dump
+if errorlevel 1 goto :failed
+
 REM Start the complete qOntology application stack.
 echo [信息] 正在启动 qOntology 全部服务...
 docker compose --env-file "%QONTOLOGY_ENV%" -p "%QONTOLOGY_PROJECT%" -f "%QONTOLOGY_COMPOSE%" --profile "%QONTOLOGY_MODE%" up -d --pull never --wait --wait-timeout 1200
@@ -46,6 +50,10 @@ if errorlevel 1 (
 echo [错误] qOntology 全部服务启动失败。
     goto :failed
 )
+
+REM 启动完成后检查实际节点数，避免残留空目录导致错误跳过 dump 导入。
+call :verify_neo4j_data
+if errorlevel 1 goto :failed
 
 REM Report container status and print the configured web address.
 docker compose --env-file "%QONTOLOGY_ENV%" -p "%QONTOLOGY_PROJECT%" -f "%QONTOLOGY_COMPOSE%" --profile "%QONTOLOGY_MODE%" ps
@@ -106,6 +114,7 @@ for %%F in (
     "qOntology\mysql\conf.d\my.cnf"
     "qOntology\mysql\init\init-system.sql"
     "qOntology\mysql\init\init-show.sql"
+    "qOntology\neo4j\neo4j.dump"
 ) do if not exist "%%~F" (
     echo [错误] 缺少 %%~F，部署包不完整。
     exit /b 1
@@ -118,6 +127,65 @@ echo [错误] Compose 配置校验失败，建议使用 Docker Compose 2.20.2 �
     exit /b 1
 )
 
+exit /b 0
+
+:init_neo4j_dump
+REM databases\neo4j 不存在时才执行首次导入；空库情况由 verify_neo4j_data 处理。
+if exist "qOntology\neo4j\data\databases\neo4j" exit /b 0
+echo [信息] 检测到首次启动，正在导入 neo4j.dump...
+if not exist "qOntology\neo4j\data" mkdir "qOntology\neo4j\data"
+set "QONTOLOGY_NEO4J_IMAGE="
+set "QONTOLOGY_HUB_VALUE="
+REM 从 .env 读取镜像仓库地址，避免写死私有仓库前缀。
+for /f "tokens=1,* delims==" %%A in ('findstr /B /L "QONTOLOGY_HUB=" "%QONTOLOGY_ENV%"') do set "QONTOLOGY_HUB_VALUE=%%B"
+if defined QONTOLOGY_HUB_VALUE set "QONTOLOGY_NEO4J_IMAGE=%QONTOLOGY_HUB_VALUE%/neo4j:4.4.40"
+if not defined QONTOLOGY_NEO4J_IMAGE (
+    echo [错误] 无法从 %QONTOLOGY_ENV% 读取 QONTOLOGY_HUB。
+    exit /b 1
+)
+REM 直接以 Neo4j 用户执行 neo4j-admin，生成的数据目录权限可被正式容器使用。
+docker run --rm --user 7474:7474 -v "%CD%\qOntology\neo4j\data:/data" -v "%CD%\qOntology\neo4j\neo4j.dump:/dump/neo4j.dump:ro" --entrypoint neo4j-admin "%QONTOLOGY_NEO4J_IMAGE%" load --database=neo4j --from=/dump/neo4j.dump --force
+if errorlevel 1 (
+    echo [错误] Neo4j dump 导入失败，未启动服务。
+    exit /b 1
+)
+echo [成功] Neo4j dump 初始化完成。
+exit /b 0
+
+:verify_neo4j_data
+REM 查询节点数；大于 0 表示 dump 数据已经正确加载。
+set "QONTOLOGY_NEO4J_NODE_COUNT="
+for /f "usebackq skip=1 delims=" %%N in (`docker exec %QONTOLOGY_PROJECT%-neo4j-1 cypher-shell -u neo4j -p InC3tmU4bijT4vkl "MATCH (n) RETURN count(n)" 2^>nul`) do set "QONTOLOGY_NEO4J_NODE_COUNT=%%N"
+if not defined QONTOLOGY_NEO4J_NODE_COUNT (
+    echo [错误] 无法读取 Neo4j 节点数量。
+    exit /b 1
+)
+if not "%QONTOLOGY_NEO4J_NODE_COUNT%"=="0" (
+    echo [信息] Neo4j 数据校验通过：%QONTOLOGY_NEO4J_NODE_COUNT% 个节点。
+    exit /b 0
+)
+
+echo [警告] 检测到 Neo4j 数据目录存在但节点数为 0，正在自动重新导入 dump...
+REM 停止依赖 Neo4j 的服务，再将空库目录移动为带时间戳的备份。
+docker stop %QONTOLOGY_PROJECT%-nginx-1 %QONTOLOGY_PROJECT%-qontology-api-1 %QONTOLOGY_PROJECT%-neo4j-1 >nul
+powershell -NoProfile -Command "$data = Join-Path (Get-Location) 'qOntology\neo4j\data'; $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'; if (Test-Path -LiteralPath $data) { Move-Item -LiteralPath $data -Destination ($data + '-empty-backup-' + $stamp) }; New-Item -ItemType Directory -Path $data | Out-Null"
+if errorlevel 1 (
+    echo [错误] 备份空 Neo4j 数据目录失败。
+    exit /b 1
+)
+call :init_neo4j_dump
+if errorlevel 1 exit /b 1
+docker compose --env-file "%QONTOLOGY_ENV%" -p "%QONTOLOGY_PROJECT%" -f "%QONTOLOGY_COMPOSE%" --profile "%QONTOLOGY_MODE%" up -d --pull never --wait --wait-timeout 1200
+if errorlevel 1 exit /b 1
+set "QONTOLOGY_NEO4J_NODE_COUNT="
+REM 重启后再次校验，仍为 0 时明确失败，不允许带着空库继续运行。
+for /f "usebackq skip=1 delims=" %%N in (`docker exec %QONTOLOGY_PROJECT%-neo4j-1 cypher-shell -u neo4j -p InC3tmU4bijT4vkl "MATCH (n) RETURN count(n)" 2^>nul`) do set "QONTOLOGY_NEO4J_NODE_COUNT=%%N"
+if not defined QONTOLOGY_NEO4J_NODE_COUNT exit /b 1
+if "%QONTOLOGY_NEO4J_NODE_COUNT%"=="0" (
+    echo [错误] 重新导入后 Neo4j 仍然没有节点。
+    exit /b 1
+)
+echo [成功] Neo4j dump 已重新导入：%QONTOLOGY_NEO4J_NODE_COUNT% 个节点。
 exit /b 0
 
 REM Check Docker resource allocations against the all-services recommendations.
@@ -162,6 +230,7 @@ exit /b 0
 
 REM Reuse local images and pull only missing references, including latest tags.
 :pull_images
+REM Compose 输出本次部署使用的全部镜像，逐个检查并仅拉取缺失项。
 for /f "usebackq delims=" %%I in (`docker compose --env-file "%QONTOLOGY_ENV%" -p "%QONTOLOGY_PROJECT%" -f "%QONTOLOGY_COMPOSE%" --profile "%QONTOLOGY_MODE%" config --images`) do (
     call :pull_image "%%I"
     if errorlevel 1 exit /b 1
@@ -169,6 +238,7 @@ for /f "usebackq delims=" %%I in (`docker compose --env-file "%QONTOLOGY_ENV%" -
 exit /b 0
 
 :pull_image
+REM 单个镜像最多重试三次，已有本地镜像时直接复用。
 set "QONTOLOGY_IMAGE=%~1"
 docker image inspect "%QONTOLOGY_IMAGE%" >nul 2>&1
 if not errorlevel 1 (

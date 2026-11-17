@@ -2,12 +2,14 @@
 # qOntology Docker 管理脚本，兼容 Linux/macOS 的 POSIX sh。
 set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+# Compose 项目名默认使用 qontology，可通过环境变量覆盖。
 PROJECT_NAME=${QONTOLOGY_PROJECT_NAME:-qontology}
 OFFLINE=0
 FORCE=0
 COMPOSE_KIND=plugin
 fail() { printf '错误：%s\n' "$*" >&2; exit 1; }
 warn() { printf '警告：%s\n' "$*" >&2; }
+# 打印脚本支持的管理命令和选项。
 usage() {
     cat <<'HELP'
 用法：sh qontology.sh <命令> [选项]
@@ -25,9 +27,11 @@ HELP
 version_ge() {
     awk -v a="$1" -v b="$2" 'BEGIN {split(a,x,".");split(b,y,".");for(i=1;i<=3;i++){if(x[i]+0>y[i]+0)exit 0;if(x[i]+0<y[i]+0)exit 1}exit 0}'
 }
+# 同时兼容 Docker Compose v2 插件和旧版 docker-compose 命令。
 compose() {
     if [ "$COMPOSE_KIND" = plugin ]; then docker compose "$@"; else docker-compose "$@"; fi
 }
+# 所有 Compose 操作统一使用脚本目录、.env、项目名和 all profile。
 stack() {
     compose --project-directory "$SCRIPT_DIR" --env-file "$SCRIPT_DIR/.env" -p "$PROJECT_NAME" -f "$SCRIPT_DIR/docker-compose.yml" --profile all "$@"
 }
@@ -36,6 +40,7 @@ config_value() {
     stack config --environment | awk -v key="$1" 'index($0,key "=")==1 {print substr($0,length(key)+2);exit}'
 }
 require_file() { [ -f "$SCRIPT_DIR/$1" ] || fail "部署包缺少文件：$1"; }
+# 检查 Docker、Compose 版本、运行模式及部署配置。
 init() {
     case "$PROJECT_NAME" in ''|[!a-z0-9]*|*[!a-z0-9_-]*) fail '项目名必须以小写字母或数字开头，仅可包含小写字母、数字、下划线、连字符。';; esac
     command -v docker >/dev/null 2>&1 || fail '未安装 Docker，请安装 Docker Engine 或 Docker Desktop。'
@@ -56,12 +61,14 @@ init() {
     db=$(config_value DB_TYPE)
     [ "${db:-mysql}" = mysql ] || fail '该部署仅支持 MySQL，不支持 DB_TYPE 切换。'
 }
+# 检查所有运行时必须挂载的配置、SQL、前端文件和 Neo4j dump。
 check_package() {
-    for file in qOntology/nginx/dist/index.html qOntology/nginx/nginx.conf qOntology/nginx/sites/qontology.conf qOntology/server/application.yml qOntology/server/application-prod.yml qOntology/mysql/conf.d/my.cnf qOntology/mysql/init/init-system.sql qOntology/mysql/init/init-show.sql; do
+    for file in qOntology/nginx/dist/index.html qOntology/nginx/nginx.conf qOntology/nginx/sites/qontology.conf qOntology/server/application.yml qOntology/server/application-prod.yml qOntology/mysql/conf.d/my.cnf qOntology/mysql/init/init-system.sql qOntology/mysql/init/init-show.sql qOntology/neo4j/neo4j.dump; do
         require_file "$file"
     done
     printf '部署文件检查通过。\n'
 }
+# 检查 Docker CPU、内存、磁盘空间和 CPU 架构。
 check_resources() {
     cpu=$(docker info --format '{{.NCPU}}')
     memory=$(docker info --format '{{.MemTotal}}')
@@ -74,6 +81,7 @@ check_resources() {
     arch=$(docker info --format '{{.Architecture}}')
     case "$arch" in arm64|aarch64) warn '当前为 ARM：默认 MySQL 5.7 使用 linux/amd64，需要模拟支持；拉取成功并不代表可以运行。';; esac
 }
+# 检查宿主机端口是否已经被其他项目或进程占用。
 host_listening() {
     if command -v lsof >/dev/null 2>&1; then lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1
     elif command -v ss >/dev/null 2>&1; then ss -ltn | awk -v p=":$1" '$4 ~ p"$" {found=1} END {exit !found}'
@@ -93,6 +101,7 @@ check_ports() {
     printf '端口检查通过。\n'
 }
 preflight() { check_package; check_resources; check_ports; }
+# 离线模式检查本地镜像；在线检查远程仓库是否可以访问。
 check_images() {
     missing=0
     images=$(stack config --images | sort -u)
@@ -126,19 +135,71 @@ prepare_online_images() {
         done
     done
 }
+# 仅在 Neo4j 数据库目录不存在时，从完整 dump 执行首次初始化。
+init_neo4j_dump() {
+    dump_dir="$SCRIPT_DIR/qOntology/neo4j"
+    data_dir="$dump_dir/data"
+    dump_file="$dump_dir/neo4j.dump"
+    [ -d "$data_dir/databases/neo4j" ] && return
+    [ -f "$dump_file" ] || fail '首次初始化缺少 qOntology/neo4j/neo4j.dump。'
+
+    neo4j_image=$(stack config --images | awk '/neo4j:4[.]4[.]40$/ {print; exit}')
+    [ -n "$neo4j_image" ] || fail '无法从 Compose 配置解析 Neo4j 镜像。'
+    mkdir -p "$data_dir"
+    printf '\n检测到 neo4j.dump，正在初始化 Neo4j 数据...\n'
+    # 禁止 Git Bash 转换容器内路径，Linux/macOS 下这些环境变量不会影响执行。
+    MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user 7474:7474 \
+        -v "$data_dir:/data" \
+        -v "$dump_file:/dump/neo4j.dump:ro" \
+        --entrypoint neo4j-admin "$neo4j_image" \
+        load --database=neo4j --from=/dump/neo4j.dump --force \
+        || fail 'Neo4j dump 导入失败，未启动服务。'
+    printf 'Neo4j dump 初始化完成。\n\n'
+}
+# 查询运行中 Neo4j 的节点数，用于识别残留空库。
+neo4j_node_count() {
+    stack exec -T neo4j cypher-shell -u neo4j -p InC3tmU4bijT4vkl \
+        'MATCH (n) RETURN count(n)' 2>/dev/null | awk 'NR==2 {gsub(/[^0-9]/, "", $0); print; exit}'
+}
+# 若数据库目录存在但节点数为 0，则备份空库并重新导入 dump。
+verify_neo4j_data() {
+    node_count=$(neo4j_node_count)
+    [ -n "$node_count" ] || fail '无法读取 Neo4j 节点数量。'
+    if [ "$node_count" -gt 0 ]; then
+        printf 'Neo4j 数据校验通过：%s 个节点。\n' "$node_count"
+        return
+    fi
+
+    warn '检测到 Neo4j 数据目录存在但节点数为 0，正在自动重新导入 dump。'
+    stack stop nginx qontology-api neo4j
+    data_dir="$SCRIPT_DIR/qOntology/neo4j/data"
+    backup_dir="$SCRIPT_DIR/qOntology/neo4j/data-empty-backup-$(date +%Y%m%d-%H%M%S)"
+    [ ! -e "$data_dir" ] || mv "$data_dir" "$backup_dir"
+    mkdir -p "$data_dir"
+    init_neo4j_dump
+    stack up -d --pull never --wait --wait-timeout 800
+    node_count=$(neo4j_node_count)
+    [ -n "$node_count" ] && [ "$node_count" -gt 0 ] \
+        || fail '重新导入后 Neo4j 仍然没有节点。'
+    printf 'Neo4j dump 已重新导入：%s 个节点；原空库备份：%s\n' "$node_count" "$backup_dir"
+}
+# 完整启动流程：预检、准备镜像、初始化数据、等待健康检查。
 start() {
     preflight
     if [ "$OFFLINE" -eq 1 ]; then check_images
     else prepare_online_images
     fi
+    init_neo4j_dump
     # 即使在线也禁止 up 隐式拉取，确保所有镜像在创建容器前已准备好。
-    if ! stack up -d --pull never --wait --wait-timeout 600; then
+    if ! stack up -d --pull never --wait --wait-timeout 800; then
         stack ps -a
-        fail '服务未在 600 秒内就绪，请运行 logs 检查；容器和数据已保留。'
+        fail '服务未在 800 秒内就绪，请运行 logs 检查；容器和数据已保留。'
     fi
+    verify_neo4j_data
     port=$(config_value EXPOSE_NGINX_PORT)
     printf '容器启动检查通过，访问：http://localhost:%s\n使用 status 查看状态，logs 查看日志。\n' "${port:-80}"
 }
+# 解析命令行并分发 start/status/logs/restart/uninstall 等操作。
 main() {
     action=${1:-help}; [ $# -eq 0 ] || shift
     case "$action" in help|-h|--help) [ $# -eq 0 ] || fail 'help 不接受参数。'; usage; return;;
@@ -155,7 +216,13 @@ main() {
         status) stack ps -a;;
         logs) stack logs --tail 200;;
         stop) stack stop;;
-        restart) preflight; stack restart; printf '已执行重启，请使用 status 和 logs 检查应用状态。\n';;
+        restart)
+            preflight
+            init_neo4j_dump
+            stack stop
+            stack up -d --pull never --wait --wait-timeout 800
+            verify_neo4j_data
+            printf '已按健康检查依赖顺序重启，请使用 status 和 logs 检查应用状态。\n';;
         uninstall)
             warn '将删除该项目全部容器和网络；保留数据卷及绑定目录，请先备份数据库。'
             printf '请输入 DELETE QONTOLOGY 确认：'

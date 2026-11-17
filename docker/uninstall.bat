@@ -75,15 +75,18 @@ docker compose --env-file "%QONTOLOGY_ENV%" -p "%QONTOLOGY_PROJECT%" -f "docker-
 if errorlevel 1 goto :failed
 
 REM Remove labeled resources left behind by interrupted or partial Compose operations.
+REM 清理因异常中断而未被 compose down 删除的同项目残留资源。
 for /f "usebackq delims=" %%I in (`docker ps -aq --filter "label=com.docker.compose.project=%QONTOLOGY_PROJECT%" 2^>nul`) do docker rm -f "%%I" >nul 2>&1
 for /f "usebackq delims=" %%I in (`docker volume ls -q --filter "label=com.docker.compose.project=%QONTOLOGY_PROJECT%" 2^>nul`) do docker volume rm "%%I" >nul 2>&1
 for /f "usebackq delims=" %%I in (`docker network ls -q --filter "label=com.docker.compose.project=%QONTOLOGY_PROJECT%" 2^>nul`) do docker network rm "%%I" >nul 2>&1
 
 REM Remove referenced images only when Docker reports that no other container uses them.
+REM 若镜像仍被其他容器使用，docker image rm 会失败并自动保留该镜像。
 echo [信息] 正在删除未被其他容器使用的相关镜像...
 for /f "usebackq delims=" %%I in (`docker compose --env-file "%QONTOLOGY_ENV%" -p "%QONTOLOGY_PROJECT%" -f "docker-compose.yml" --profile "*" config --images 2^>nul`) do docker image rm "%%I" >nul 2>&1
 
 REM Delete generated logs and runtime data while retaining deployment configuration.
+REM 这里只删除运行时目录，neo4j.dump、SQL、YAML 和脚本都会保留。
 echo [信息] 正在删除运行数据目录...
 for %%D in (
     "qOntology\nginx\logs"
@@ -94,6 +97,11 @@ for %%D in (
     "qOntology\kkfileview\files"
     "qOntology\kkfileview\logs"
 ) do if exist "%%~D" (
+    rmdir /s /q "%%~D"
+    if errorlevel 1 goto :failed
+)
+REM 删除 start-all.bat 或 reset.sh 为故障恢复生成的 Neo4j 数据备份目录。
+for /d %%D in ("qOntology\neo4j\data-*-backup-*") do if exist "%%~D" (
     rmdir /s /q "%%~D"
     if errorlevel 1 goto :failed
 )

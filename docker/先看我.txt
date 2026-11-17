@@ -6,8 +6,8 @@
 2、进入docker目录
 
 3、启动项目
-执行 sh qontology.sh
-Windows 请双击 start-all.bat 启动，uninstall.bat 完整卸载
+执行 sh qontology.sh start 启动项目；
+Windows 请双击 start-all.bat 启动，uninstall.bat 完整卸载；
 
 4、地址：localhost:8897
 初始账号密码：qOntology/qOntology123

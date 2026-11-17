@@ -22,6 +22,72 @@ CREATE DATABASE IF NOT EXISTS qontology
     DEFAULT COLLATE utf8mb4_unicode_ci;
 USE qontology;
 
+
+-- ----------------------------
+-- Table structure for ai_api_key
+-- ----------------------------
+DROP TABLE IF EXISTS `ai_api_key`;
+CREATE TABLE `ai_api_key`  (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+                               `workspace_id` bigint NOT NULL COMMENT '工作区id',
+                               `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '名称',
+                               `api_key` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '秘钥',
+                               `platform` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '平台',
+                               `url` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'API地址',
+                               `platform_tag` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '平台标签',
+                               `description` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述',
+                               `deploy_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '部署方式',
+                               `status` tinyint UNSIGNED NULL DEFAULT NULL COMMENT '状态',
+                               `valid_flag` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否有效;0：无效，1：有效',
+                               `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标志;1：已删除，0：未删除',
+                               `create_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '创建人',
+                               `creator_id` bigint NULL DEFAULT NULL COMMENT '创建人id',
+                               `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `update_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '更新人',
+                               `updater_id` bigint NULL DEFAULT NULL COMMENT '更新人id',
+                               `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+                               `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+                               PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'API秘钥' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of ai_api_key
+-- ----------------------------
+INSERT INTO `ai_api_key` VALUES (1, 1001, '通义千问', NULL, 'TongYi', NULL, '1,2,3,4,5,6', '通义千问提供的模型。', '2', 0, 1, 0, '吴同', 2, '2026-04-29 09:27:03', '吴同', NULL, '2026-05-07 15:36:00', NULL);
+INSERT INTO `ai_api_key` VALUES (2, 1001, 'DeepSeek', NULL, 'DeepSeek', NULL, '1,2,3', '深度求索提供的模型，例如 deepseek-chat、deepseek-coder 。', '2', 0, 1, 1, '吴同', 2, '2026-04-29 09:27:03', '吴同', NULL, '2026-04-29 10:28:58', NULL);
+INSERT INTO `ai_api_key` VALUES (3, 1001, 'Ollama', NULL, 'Ollama', NULL, '1,2,3', 'ollama', '1', 0, 1, 1, '吴同', 2, '2026-04-29 09:27:03', '吴同', NULL, '2026-04-29 10:29:04', NULL);
+INSERT INTO `ai_api_key` VALUES (4, 1001, 'OpenAI', 'ldfef#01', 'OpenAI', 'http://192.144.173.87:7001', '1,2,3,4,5,6', '符合 openai 规范的模型', '1', 2, 1, 1, '吴同', 2, '2026-04-21 13:57:13', '吴同', NULL, '2026-04-21 16:33:47', NULL);
+
+-- ----------------------------
+-- Table structure for ai_model
+-- ----------------------------
+DROP TABLE IF EXISTS `ai_model`;
+CREATE TABLE `ai_model`  (
+                             `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+                             `workspace_id` bigint NOT NULL COMMENT '工作区id',
+                             `key_id` bigint NULL DEFAULT NULL COMMENT '秘钥id',
+                             `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '模型名称',
+                             `model` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '模型标志',
+                             `platform` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '平台',
+                             `type` tinyint UNSIGNED NULL DEFAULT NULL COMMENT '类型',
+                             `sort` int NULL DEFAULT NULL COMMENT '排序值',
+                             `status` tinyint UNSIGNED NULL DEFAULT NULL COMMENT '状态',
+                             `valid_flag` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否有效;0：无效，1：有效',
+                             `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标志;1：已删除，0：未删除',
+                             `create_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '创建人',
+                             `creator_id` bigint NULL DEFAULT NULL COMMENT '创建人id',
+                             `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                             `update_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '更新人',
+                             `updater_id` bigint NULL DEFAULT NULL COMMENT '更新人id',
+                             `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+                             `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+                             PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'AI 模型' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of ai_model
+-- ----------------------------
+
 -- ----------------------------
 -- Table structure for gen_table
 -- ----------------------------

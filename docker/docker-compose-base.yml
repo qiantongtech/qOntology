@@ -42,6 +42,9 @@ services:
     restart: always
     profiles: ["all", "base"]
     env_file: .env
+    depends_on:
+      qontology-api:
+        condition: service_healthy
     ports:
       - '${EXPOSE_NGINX_PORT:-80}:${NGINX_PORT:-80}'
     networks:
