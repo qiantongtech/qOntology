@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -119,6 +122,27 @@ public class OmAiDocumentParser {
 
     public ParseResult parseWithMedia(String fileName, byte[] content) throws IOException {
         return parseWithMedia(new StoredMultipartFile(fileName, content));
+    }
+
+    /** 本地持久化文件使用流读取，避免解析前整份复制到内存。 */
+    public ParseResult parseWithMedia(String fileName, Path path) throws IOException {
+        return parseWithMedia(new PathMultipartFile(fileName, path));
+    }
+
+    private record PathMultipartFile(String originalFilename, Path path) implements MultipartFile {
+        @Override public String getName() { return "file"; }
+        @Override public String getOriginalFilename() { return originalFilename; }
+        @Override public String getContentType() { return null; }
+        @Override public boolean isEmpty() { return getSize() == 0; }
+        @Override public long getSize() {
+            try { return Files.size(path); }
+            catch (IOException exception) { throw new IllegalStateException("文件大小读取失败", exception); }
+        }
+        @Override public byte[] getBytes() throws IOException { return Files.readAllBytes(path); }
+        @Override public java.io.InputStream getInputStream() throws IOException { return Files.newInputStream(path); }
+        @Override public void transferTo(java.io.File dest) throws IOException {
+            Files.copy(path, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     /** 提供可重复读取的持久化文件适配器。 */
@@ -368,7 +392,8 @@ public class OmAiDocumentParser {
     private ParseResult parsePdf(MultipartFile file) throws IOException {
         List<Block> result = new ArrayList<>();
         List<MediaBlock> media = new ArrayList<>();
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
+        try (PDDocument document = file instanceof PathMultipartFile pathFile
+                ? Loader.loadPDF(pathFile.path().toFile()) : Loader.loadPDF(file.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             PDFRenderer renderer = new PDFRenderer(document);
             int blockNo = 1;

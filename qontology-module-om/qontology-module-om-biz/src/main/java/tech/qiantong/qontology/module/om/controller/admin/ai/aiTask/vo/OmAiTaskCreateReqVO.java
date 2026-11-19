@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -31,6 +32,10 @@ public class OmAiTaskCreateReqVO {
     @NotNull(message = "项目版本ID不能为空")
     @Positive(message = "项目版本ID必须为正整数")
     private Long versionId;
+
+    @Schema(description = "文件来源：UPLOAD 用户上传，SYSTEM 系统文件")
+    @Pattern(regexp = "UPLOAD|SYSTEM", message = "文件来源只能是 UPLOAD 或 SYSTEM")
+    private String fileSource;
 
     @Schema(description = "已通过统一文件服务上传的文件列表")
     @Valid

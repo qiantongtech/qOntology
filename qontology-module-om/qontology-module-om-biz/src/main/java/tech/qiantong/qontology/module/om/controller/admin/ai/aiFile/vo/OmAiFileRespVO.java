@@ -35,6 +35,8 @@ public class OmAiFileRespVO implements Serializable {
 
     @Schema(description = "任务ID")
     private Long taskId;
+    @Schema(description = "系统文件编号；上传文件为空")
+    private Long sourceFileId;
     @Schema(description = "文件名称")
     private String fileName;
     @Schema(description = "文件地址")

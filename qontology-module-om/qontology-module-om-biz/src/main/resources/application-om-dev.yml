@@ -1,0 +1,35 @@
+# Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
+#
+# This file is part of qOntology Ontology Engineering Platform (Open Source Edition).
+#
+# qOntology is licensed under Apache License 2.0 with additional qOntology terms.
+# You may use qOntology for commercial purposes, but you may not remove, hide,
+# modify, or replace the qOntology logo, copyright notices, license notices,
+# or attribution information without a separate commercial license.
+#
+# White-label use, OEM distribution, rebranding, or presenting qOntology as
+# another product requires separate commercial authorization from
+# Jiangsu Qiantong Technology Co., Ltd.
+#
+# Business License: https://community.qontology.ai/business/policy.html
+# See the LICENSE file in the project root for full license information.
+
+qontology:
+  ai-modeling:
+    # AI 模型配置记录 ID，对应模型管理中的主键。
+    model-key-id: 1
+    # AI 辅助建模使用的文本模型名称，必须属于上述模型配置。
+    model-name: qwen3.6-plus
+    # 单次模型请求允许的总输入字符预算，提示词、证据和前序候选共同占用。
+    input-max-chars: 24000
+    # 每个证据窗口允许的最大字符数；超大文档会按此预算自动分窗。
+    evidence-window-max-chars: 12000
+    # 单次请求的模型思考 token 上限；页面仍会流式展示可审计思考过程。
+    thinking-token-budget: 1800
+    # 单阶段累计保留的思考过程字符数，超过后仅保留最近内容。
+    reasoning-max-chars: 30000
+    # 单次流式调用的总保护时长；首包、空闲等超时由该值自动推导。
+    stream-timeout: 180s
+    # 单个排队任务允许占用的模型流线程上限；需覆盖超时请求退出、JSON补交和自动重试的短暂重叠。
+    stream-max-concurrency: 8
+

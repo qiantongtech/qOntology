@@ -8,10 +8,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.core.task.TaskExecutor;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tech.qiantong.qontology.common.exception.ServiceException;
@@ -56,6 +60,8 @@ import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiTask.OmAiTaskDO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiTerm.OmAiTermDO;
 import tech.qiantong.qontology.module.basic.dal.mapper.dataType.BasicDataTypeMapper;
 import tech.qiantong.qontology.module.basic.dal.mapper.enumeration.BasicEnumTypeMapper;
+import tech.qiantong.qontology.module.basic.api.dto.file.BasicFileRespDTO;
+import tech.qiantong.qontology.module.basic.api.service.file.IBasicFileApiService;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiAdoptLog.OmAiAdoptLogMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiAttribute.OmAiAttributeMapper;
 import tech.qiantong.qontology.module.om.dal.mapper.ai.aiAxiom.OmAiAxiomMapper;
@@ -106,6 +112,7 @@ import com.alibaba.fastjson2.JSONObject;
 
 /** AI 辅助建模任务、候选数据和采纳流程服务实现。 */
 @Service
+@Slf4j
 public class OmAiModelingServiceImpl implements IOmAiModelingService {
 
     @Resource
@@ -113,13 +120,18 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     @Resource
     private OmAiFileMapper fileMapper;
     @Resource
+    private IBasicFileApiService basicFileApiService;
+    @Resource
     private OmAiStageMapper stageMapper;
     @Resource
     private OmAiEvidenceMapper evidenceMapper;
     @Resource
     private OmAiModelingAsyncProcessor asyncProcessor;
-    @Resource(name = "threadPoolTaskExecutor")
-    private TaskExecutor taskExecutor;
+    @Resource
+    private OmAiModelingStreamPublisher streamPublisher;
+    @Resource(name = "aiModelingTaskExecutor")
+    private ThreadPoolTaskExecutor taskExecutor;
+    private boolean queueWorkerRunning;
     @Resource
     private OmAiTargetMapper aiTargetMapper;
     @Resource
@@ -190,13 +202,24 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     /** 查询指定版本的 AI 建模任务分页列表。 */
     @Override
     public PageResult<OmAiTaskDO> page(OmAiTaskPageReqVO request) {
-        return taskMapper.selectPage(request);
+        PageResult<OmAiTaskDO> result = taskMapper.selectPage(request);
+        result.getList().forEach(this::normalizeFailureReason);
+        return result;
     }
 
     /** 查询 AI 建模任务详情。 */
     @Override
     public OmAiTaskDO get(Long id) {
-        return getRequiredTask(id);
+        OmAiTaskDO task = getRequiredTask(id);
+        normalizeFailureReason(task);
+        return task;
+    }
+
+    /** 成功任务不存在失败原因；兼容清理历史版本曾写入该字段的质量警告。 */
+    private void normalizeFailureReason(OmAiTaskDO task) {
+        if (task != null && OmAiTaskStatusEnum.SUCCESS.getCode().equals(task.getStatus())) {
+            task.setFailureReason(null);
+        }
     }
 
     /** 第一步：创建任务并保存上传文件，不在当前请求中启动解析。 */
@@ -208,6 +231,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
                 .description(request.getDescription())
                 .workspaceId(workspaceId)
                 .versionId(request.getVersionId())
+                .fileSource(Optional.ofNullable(request.getFileSource()).orElse("UPLOAD"))
                 .status(OmAiTaskStatusEnum.WAITING.getCode())
                 .currentStage(null)
                 .candidateCount(0)
@@ -216,8 +240,11 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
                 .build();
         taskMapper.insert(task);
         try {
+            Map<Long, BasicFileRespDTO> systemFiles = resolveSystemFiles(request);
             for (OmAiUploadedFileReqVO file : request.getFiles()) {
-                saveSourceFile(task.getId(), file);
+                BasicFileRespDTO systemFile = file.getSourceFileId() == null
+                        ? null : systemFiles.get(file.getSourceFileId());
+                saveSourceFile(task.getId(), file, systemFile);
             }
         } catch (RuntimeException exception) {
             task.setStatus(OmAiTaskStatusEnum.FAILED.getCode());
@@ -239,41 +266,129 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
                 || OmAiTaskStatusEnum.FAILED.getCode().equals(task.getStatus())) {
             return;
         }
-        if (!asyncProcessor.reserve(id)) {
+        if (asyncProcessor.isRunning(id)) {
             return;
         }
-        task.setStatus(OmAiTaskStatusEnum.RUNNING.getCode());
-        task.setCurrentStage("FILE_PARSE");
-        task.setStartedTime(new Date());
+        if ("QUEUED".equals(task.getCurrentStage())) {
+            dispatchQueuedTasks();
+            return;
+        }
+        task.setStatus(OmAiTaskStatusEnum.WAITING.getCode());
+        task.setCurrentStage("QUEUED");
         task.setFailureReason(null);
         taskMapper.updateById(task);
+        streamPublisher.publishTask(task);
+        dispatchQueuedTasks();
+    }
+
+    /** 服务重启后接回已经排队的任务，只在启动时检查一次。 */
+    @EventListener(ApplicationReadyEvent.class)
+    public void dispatchQueuedTasksOnStartup() {
+        dispatchQueuedTasks();
+    }
+
+    /** 入队时启动一个消费线程，等待任务只保存在数据库。 */
+    public synchronized void dispatchQueuedTasks() {
+        if (queueWorkerRunning) return;
+        queueWorkerRunning = true;
         try {
-            taskExecutor.execute(() -> asyncProcessor.process(id));
+            taskExecutor.execute(this::drainQueuedTasks);
         } catch (RuntimeException exception) {
-            asyncProcessor.release(id);
-            task.setStatus(OmAiTaskStatusEnum.FAILED.getCode());
-            task.setFailureReason("后台解析任务提交失败：" + exception.getMessage());
-            task.setFinishedTime(new Date());
-            taskMapper.updateById(task);
-            throw exception;
+            queueWorkerRunning = false;
+            log.warn("启动 AI 建模队列消费线程失败，cause={}", exception.getMessage());
+        }
+    }
+
+    /** 同一个工作线程依次处理任务；单条失败后继续读取下一条。 */
+    private void drainQueuedTasks() {
+        try {
+            while (true) {
+                OmAiTaskDO task;
+                synchronized (this) {
+                    task = taskMapper.selectOne(new QueryWrapper<OmAiTaskDO>()
+                            .eq("status", OmAiTaskStatusEnum.WAITING.getCode())
+                            .eq("current_stage", "QUEUED")
+                            .eq("del_flag", 0)
+                            .orderByAsc("update_time", "id")
+                            .last("LIMIT 1"));
+                    if (task == null) {
+                        queueWorkerRunning = false;
+                        return;
+                    }
+                    if (!asyncProcessor.reserve(task.getId())) {
+                        throw new IllegalStateException("排队任务已被本进程领取：" + task.getId());
+                    }
+                }
+                try {
+                    asyncProcessor.runQueuedTask(task.getId());
+                } finally {
+                    asyncProcessor.release(task.getId());
+                }
+            }
+        } catch (Exception exception) {
+            synchronized (this) {
+                queueWorkerRunning = false;
+            }
+            log.error("AI 建模队列消费线程异常，等待新任务入队或服务重启后恢复", exception);
         }
     }
 
     /** 保存原始文件；结构化解析由异步处理器执行。 */
     private void saveSourceFile(Long taskId, OmAiUploadedFileReqVO file) {
-        if (file.getFileUrl().startsWith("http://") || file.getFileUrl().startsWith("https://")) {
+        saveSourceFile(taskId, file, null);
+    }
+
+    /** 系统文件使用后端按编号查询到的元数据，避免前端伪造或传入过期路径。 */
+    private void saveSourceFile(Long taskId, OmAiUploadedFileReqVO file, BasicFileRespDTO systemFile) {
+        String fileName = systemFile == null ? file.getFileName() : systemFile.getFileName();
+        String fileUrl = systemFile == null ? file.getFileUrl() : systemFile.getFilePath();
+        if (fileUrl == null || fileUrl.isBlank()) {
+            throw new ServiceException("系统文件存储地址为空，请重新上传或重新选择文件");
+        }
+        if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
             throw new ServiceException("文件地址必须使用系统文件服务返回的相对路径");
         }
-        String extension = Optional.ofNullable(file.getFileExt())
-                .filter(value -> !value.isBlank())
-                .orElseGet(() -> FilenameUtils.getExtension(file.getFileName()))
-                .toLowerCase();
+        String extension = systemFile == null
+                ? Optional.ofNullable(file.getFileExt())
+                        .filter(value -> !value.isBlank())
+                        .orElseGet(() -> FilenameUtils.getExtension(fileName)).toLowerCase()
+                : FilenameUtils.getExtension(fileName).toLowerCase();
         OmAiFileTypeEnum.fromExtension(extension);
         fileMapper.insert(OmAiFileDO.builder()
-                .taskId(taskId).fileName(file.getFileName()).fileUrl(file.getFileUrl())
+                .taskId(taskId)
+                .sourceFileId(systemFile == null ? null : systemFile.getId())
+                .fileName(fileName).fileUrl(fileUrl)
                 .fileExt(extension).fileSize(file.getFileSize()).contentHash(null)
                 .parseStatus(OmAiFileParseStatusEnum.WAITING.getCode())
                 .blockCount(0).delFlag(false).build());
+    }
+
+    /** 校验系统文件编号完整存在，并构建本次任务使用的权威文件元数据。 */
+    private Map<Long, BasicFileRespDTO> resolveSystemFiles(OmAiTaskCreateReqVO request) {
+        if (!"SYSTEM".equals(request.getFileSource())) {
+            return Map.of();
+        }
+        return resolveSystemFiles(request.getFiles());
+    }
+
+    private Map<Long, BasicFileRespDTO> resolveSystemFiles(List<OmAiUploadedFileReqVO> files) {
+        if (files.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> sourceIds = files.stream()
+                .map(OmAiUploadedFileReqVO::getSourceFileId)
+                .toList();
+        if (sourceIds.stream().anyMatch(Objects::isNull)
+                || sourceIds.stream().distinct().count() != sourceIds.size()) {
+            throw new ServiceException("系统文件编号不能为空且不能重复");
+        }
+        List<BasicFileRespDTO> resolvedFiles = basicFileApiService.getFileListByIds(sourceIds);
+        Map<Long, BasicFileRespDTO> result = resolvedFiles.stream().collect(
+                java.util.stream.Collectors.toMap(BasicFileRespDTO::getId, file -> file));
+        if (result.size() != sourceIds.size()) {
+            throw new ServiceException("部分系统文件已被删除或无权访问，请重新选择");
+        }
+        return result;
     }
 
     /** 文件修改只保存数据并清理旧解析结果，等待用户点击“重新解析”。 */
@@ -281,8 +396,9 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     @Transactional(rollbackFor = Exception.class)
     public synchronized void updateFiles(OmAiTaskFilesUpdateReqVO request) {
         OmAiTaskDO task = getRequiredTask(request.getTaskId());
-        if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus())) {
-            throw new ServiceException("任务正在解析，不能修改文件");
+        if (asyncProcessor.isRunning(task.getId()) || isQueued(task)
+                || OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus())) {
+            throw new ServiceException("任务已排队或正在解析，不能修改文件");
         }
         List<Long> retainedIds = Optional.ofNullable(request.getRetainedFileIds()).orElse(List.of());
         List<OmAiFileDO> existing = files(task.getId());
@@ -294,10 +410,32 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         if (retainedIds.isEmpty() && newFiles.isEmpty()) {
             throw new ServiceException("请至少保留一个文件");
         }
+        String fileSource = Optional.ofNullable(request.getFileSource()).orElse(task.getFileSource());
+        if (!"UPLOAD".equals(fileSource) && !"SYSTEM".equals(fileSource)) {
+            throw new ServiceException("文件来源只能是 UPLOAD 或 SYSTEM");
+        }
+        for (Long retainedId : retainedIds) {
+            OmAiFileDO retained = existing.stream()
+                    .filter(file -> file.getId().equals(retainedId)).findFirst().orElseThrow();
+            if ("SYSTEM".equals(fileSource) != (retained.getSourceFileId() != null)) {
+                throw new ServiceException("保留文件与所选文件来源不一致，请重新选择文件");
+            }
+        }
+        if ("UPLOAD".equals(fileSource)
+                && newFiles.stream().anyMatch(file -> file.getSourceFileId() != null)) {
+            throw new ServiceException("上传文件不能携带系统文件编号");
+        }
+        Map<Long, BasicFileRespDTO> systemFiles = "SYSTEM".equals(fileSource)
+                ? resolveSystemFiles(newFiles) : Map.of();
         existing.stream().filter(file -> !retainedIds.contains(file.getId()))
                 .forEach(file -> fileMapper.deleteById(file.getId()));
-        newFiles.forEach(file -> saveSourceFile(task.getId(), file));
+        newFiles.forEach(file -> {
+            BasicFileRespDTO systemFile = file.getSourceFileId() == null
+                    ? null : systemFiles.get(file.getSourceFileId());
+            saveSourceFile(task.getId(), file, systemFile);
+        });
         clearTaskResults(task.getId());
+        task.setFileSource(fileSource);
         task.setStatus(OmAiTaskStatusEnum.WAITING.getCode());
         task.setCurrentStage(null);
         task.setCandidateCount(0);
@@ -311,6 +449,11 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int delete(Collection<Long> ids) {
+        if (ids.stream().map(this::getRequiredTask).anyMatch(task ->
+                asyncProcessor.isRunning(task.getId()) || isQueued(task)
+                        || OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus()))) {
+            throw new ServiceException("存在已排队或正在解析的任务，不能删除");
+        }
         ids.forEach(id -> {
             clearTaskResults(id);
             fileMapper.delete(new QueryWrapper<OmAiFileDO>().eq("task_id", id));
@@ -322,8 +465,8 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
     @Override
     public synchronized void reparse(Long id) {
         OmAiTaskDO task = getRequiredTask(id);
-        if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus()) && asyncProcessor.isRunning(id)) {
-            throw new ServiceException("任务正在解析");
+        if (asyncProcessor.isRunning(id) || isQueued(task)) {
+            throw new ServiceException("任务已排队或正在解析");
         }
         if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus())) {
             task.setStatus(OmAiTaskStatusEnum.FAILED.getCode());
@@ -336,9 +479,8 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
             throw new ServiceException("任务没有原始文件，无法重新解析，请删除任务后重新上传文件");
         }
         clearTaskResults(id);
-        task.setStatus(OmAiTaskStatusEnum.RUNNING.getCode());
-        task.setCurrentStage("FILE_PARSE");
-        task.setStartedTime(new Date());
+        task.setStatus(OmAiTaskStatusEnum.WAITING.getCode());
+        task.setCurrentStage("QUEUED");
         task.setCandidateCount(0);
         task.setFinishedTime(null);
         task.setFailureReason(null);
@@ -348,20 +490,9 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
                 .eq("id", id)
                 .set("finished_time", null)
                 .set("failure_reason", null));
+        streamPublisher.publishTask(task);
         asyncProcessor.initializeStages(task);
-        if (!asyncProcessor.reserve(id)) {
-            throw new ServiceException("任务正在解析");
-        }
-        try {
-            taskExecutor.execute(() -> asyncProcessor.process(id));
-        } catch (RuntimeException exception) {
-            asyncProcessor.release(id);
-            task.setStatus(OmAiTaskStatusEnum.FAILED.getCode());
-            task.setFailureReason("后台解析任务提交失败：" + exception.getMessage());
-            task.setFinishedTime(new Date());
-            taskMapper.updateById(task);
-            throw new ServiceException("后台解析任务提交失败，请稍后重试");
-        }
+        dispatchQueuedTasks();
     }
 
     @Override
@@ -373,21 +504,27 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         if (OmAiTaskStatusEnum.RUNNING.getCode().equals(task.getStatus()) && asyncProcessor.isRunning(id)) {
             throw new ServiceException("任务正在解析");
         }
-        if (!asyncProcessor.reserve(id)) {
+        if (asyncProcessor.isRunning(id)) {
             throw new ServiceException("任务正在解析");
         }
-        task.setStatus(OmAiTaskStatusEnum.RUNNING.getCode());
+        if (isQueued(task)) {
+            dispatchQueuedTasks();
+            return;
+        }
+        task.setStatus(OmAiTaskStatusEnum.WAITING.getCode());
+        task.setCurrentStage("QUEUED");
         task.setFinishedTime(null);
         task.setFailureReason(null);
         taskMapper.updateById(task);
         taskMapper.update(null, new UpdateWrapper<OmAiTaskDO>().eq("id", id)
                 .set("finished_time", null).set("failure_reason", null));
-        try {
-            taskExecutor.execute(() -> asyncProcessor.resume(id));
-        } catch (RuntimeException exception) {
-            asyncProcessor.release(id);
-            throw new ServiceException("断点续跑任务提交失败，请稍后重试");
-        }
+        streamPublisher.publishTask(task);
+        dispatchQueuedTasks();
+    }
+
+    private boolean isQueued(OmAiTaskDO task) {
+        return OmAiTaskStatusEnum.WAITING.getCode().equals(task.getStatus())
+                && "QUEUED".equals(task.getCurrentStage());
     }
 
     /** 清除任务的候选数据、关联关系、证据关联、采纳日志和阶段记录。 */

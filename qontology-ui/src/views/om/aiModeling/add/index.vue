@@ -16,7 +16,7 @@
  See the LICENSE file in the project root for full license information.
 -->
 <template>
-  <div class="app-container ai-modeling-page wizard-page">
+  <div ref="appContainer" class="app-container ai-modeling-page wizard-page">
     <div class="custom-card">
       <div class="steps-inner">
         <ul class="zl-step">
@@ -79,7 +79,21 @@
                   show-word-limit
                 />
               </qt-form-item>
-              <qt-form-item label="上传文件" prop="filePaths">
+              <qt-form-item label="文件来源" prop="fileSource">
+                <el-radio-group
+                  v-model="form.fileSource"
+                  :disabled="submitting || isEditMode"
+                  @change="handleFileSourceChange"
+                >
+                  <el-radio value="UPLOAD">上传文件</el-radio>
+                  <el-radio value="SYSTEM">系统文件</el-radio>
+                </el-radio-group>
+              </qt-form-item>
+              <qt-form-item
+                v-if="form.fileSource === 'UPLOAD'"
+                label="上传文件"
+                prop="filePaths"
+              >
                 <FileUpload2
                   v-model="form.filePaths"
                   v-model:file-name="form.fileNames"
@@ -89,6 +103,38 @@
                   :disabled="submitting || isEditMode"
                   relative-url
                   @update:file-info-list="(files) => (form.files = files)"
+                />
+              </qt-form-item>
+              <qt-form-item v-else label="系统文件" prop="systemFiles">
+                <div class="system-file-picker">
+                  <el-button
+                    type="primary"
+                    plain
+                    :disabled="submitting || isEditMode"
+                    @click="openSystemFileSelector"
+                  >选择系统文件</el-button>
+                  <div v-if="form.systemFiles.length" class="selected-file-list">
+                    <div
+                      v-for="file in form.systemFiles"
+                      :key="file.id || file.fileUrl"
+                      class="selected-file-item"
+                    >
+                      <span :title="file.fileName">{{ file.fileName }}</span>
+                      <el-button
+                        v-if="!isEditMode"
+                        link
+                        type="danger"
+                        title="移除文件"
+                        @click="removeSystemFile(file)"
+                      >移除</el-button>
+                    </div>
+                  </div>
+                  <!-- <div v-else class="system-file-empty">请选择 1 至 5 个系统文件</div> -->
+                </div>
+                <SystemFileMultiple
+                  ref="systemFileSelectorRef"
+                  :append-to="appContainer"
+                  @confirm="handleSystemFilesSelected"
                 />
               </qt-form-item>
             </el-form>
@@ -251,7 +297,7 @@
             <div class="review-body">
               <component
                 :is="currentTab.component"
-                :key="currentTab.name"
+                :key="`${currentTab.name}-${reviewRefreshKey}`"
                 :task-id="taskId"
               />
             </div>
@@ -304,6 +350,7 @@ import { useRoute, useRouter } from "vue-router";
 import useTagsViewStore from "@/store/system/tagsView";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 import FileUpload2 from "@/components/FileUpload2";
+import SystemFileMultiple from "@/views/app/unstructTask/fileMultiple.vue";
 import TargetTab from "@/views/om/aiModeling/tabs/TargetTab.vue";
 import TermTab from "@/views/om/aiModeling/tabs/TermTab.vue";
 import EnumTab from "@/views/om/aiModeling/tabs/EnumTab.vue";
@@ -316,6 +363,7 @@ import {
   adoptAll,
   createAiTask,
   getAiFiles,
+  getAiStages,
   getAiTask,
   streamAiTaskAnalysis,
   updateAiTask,
@@ -335,12 +383,16 @@ const taskId = ref(null);
 const task = ref({});
 const stages = ref([]);
 const activeTab = ref("target");
+const reviewRefreshKey = ref(0);
 const expandedReasoning = ref([]);
 const reasoningContainers = new Map();
 let streamController = null;
 const durationTick = ref(0);
 let durationTimer = null;
 const failureNotified = ref(false);
+const streamReconnecting = ref(false);
+const systemFileSelectorRef = ref();
+const appContainer = ref();
 
 function startDurationTimer() {
   stopDurationTimer();
@@ -371,17 +423,103 @@ const aiFileTypes = [
 const form = reactive({
   taskName: "",
   description: "",
+  fileSource: "UPLOAD",
   filePaths: "",
   fileNames: [],
   files: [],
+  systemFiles: [],
 });
 const isEditMode = computed(() => Boolean(Number(route.query.id)));
 const rules = computed(() => ({
   taskName: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
   filePaths: [
-    { required: true, message: "上传文件不能为空", trigger: "change" },
+    {
+      required: form.fileSource === "UPLOAD",
+      message: "请至少上传一个文件",
+      trigger: "change",
+    },
+  ],
+  fileSource: [{ required: true, message: "请选择文件来源", trigger: "change" }],
+  systemFiles: [
+    {
+      type: "array",
+      required: form.fileSource === "SYSTEM",
+      min: 1,
+      message: "请至少选择一个系统文件",
+      trigger: "change",
+    },
   ],
 }));
+
+function handleFileSourceChange() {
+  proxy.$refs.formRef?.clearValidate(["filePaths", "systemFiles"]);
+}
+
+function openSystemFileSelector() {
+  systemFileSelectorRef.value?.open(form.systemFiles);
+}
+
+function fileExtension(file) {
+  const path = file.fileName || file.filePath || "";
+  return path.includes(".") ? path.split(".").pop().toLowerCase() : "";
+}
+
+function handleSystemFilesSelected(files) {
+  if (files.length > 5) {
+    proxy.$modal.msgWarning("最多只能选择 5 个系统文件");
+    return;
+  }
+  const unsupported = files.find(
+    (file) => !aiFileTypes.includes(fileExtension(file))
+  );
+  if (unsupported) {
+    proxy.$modal.msgWarning(
+      `文件“${unsupported.fileName}”的格式不支持，请重新选择`
+    );
+    return;
+  }
+  form.systemFiles = files.map((file) => ({
+    ...file,
+    fileUrl: file.filePath || file.fileUrl,
+    fileExt: file.fileExt || fileExtension(file),
+  }));
+  proxy.$refs.formRef?.validateField("systemFiles").catch(() => {});
+}
+
+function removeSystemFile(file) {
+  form.systemFiles = form.systemFiles.filter(
+    (item) => (item.id || item.fileUrl) !== (file.id || file.fileUrl)
+  );
+}
+
+function ensureInitialStage() {
+  if (stages.value.length) return;
+  stages.value = [
+    {
+      id: "initial-file-parse",
+      stageCode: "FILE_PARSE",
+      stageName: "文档结构化解析",
+      status: 0,
+      sequenceNo: 1,
+      summary: "任务已创建，正在等待文档解析开始",
+    },
+  ];
+}
+
+async function loadAnalysisSnapshot(id) {
+  ensureInitialStage();
+  try {
+    const [taskResponse, stageResponse] = await Promise.all([
+      getAiTask(id),
+      getAiStages(id),
+    ]);
+    task.value = taskResponse.data || task.value;
+    if (stageResponse.data?.length) stages.value = stageResponse.data;
+    handleTerminalTaskState();
+  } catch {
+    // SSE 会继续补齐快照；本地首阶段可避免接口抖动时页面空白。
+  }
+}
 
 const tabs = [
   { name: "target", label: "建模目标", component: TargetTab },
@@ -454,6 +592,8 @@ const analysisTitle = computed(() =>
       : "AI解析完成"
     : task.value.status === 3
     ? "AI解析失败"
+    : task.value.currentStage === "QUEUED"
+    ? "AI任务等待执行"
     : "AI正在解析文档..."
 );
 const analysisTip = computed(() => {
@@ -463,6 +603,10 @@ const analysisTip = computed(() => {
       : "解析结果已生成，请点击下一步进入人工审核与采纳。";
   if (task.value.status === 3)
     return task.value.failureReason || "解析失败，请返回列表后重新解析。";
+  if (streamReconnecting.value)
+    return "进度连接暂时中断，正在重新连接；后台解析任务仍在继续。";
+  if (task.value.currentStage === "QUEUED")
+    return "任务已进入建模队列，将按提交顺序自动执行；您可以留在当前页面等待，或返回列表让任务在后台排队。";
   return "解析可能耗时较长，您可以留在当前页面查看进度，或点击“后端运行”返回列表。";
 });
 
@@ -482,6 +626,7 @@ async function saveAndContinue() {
       proxy.$modal.msgSuccess("修改成功");
       activeStep.value = 1;
       submitting.value = false;
+      await loadAnalysisSnapshot(taskId.value);
       startAnalysisStream();
       return;
     }
@@ -489,10 +634,15 @@ async function saveAndContinue() {
       taskName: form.taskName,
       description: form.description || "",
       versionId: versionId.value,
-      files: form.files.map((file) => ({
+      fileSource: form.fileSource,
+      files: (form.fileSource === "SYSTEM"
+        ? form.systemFiles
+        : form.files
+      ).map((file) => ({
+        sourceFileId: form.fileSource === "SYSTEM" ? file.id : null,
         fileName: file.fileName || file.name,
-        fileUrl: file.fileUrl || file.url,
-        fileExt: file.fileExt,
+        fileUrl: file.fileUrl || file.filePath || file.url,
+        fileExt: file.fileExt || fileExtension(file),
         fileSize: file.fileSize || file.size || 0,
       })),
     });
@@ -500,6 +650,7 @@ async function saveAndContinue() {
     router.replace({ path: route.path, query: { taskId: taskId.value } });
     activeStep.value = 1;
     submitting.value = false;
+    await loadAnalysisSnapshot(taskId.value);
     startAnalysisStream();
   } finally {
     submitting.value = false;
@@ -514,14 +665,17 @@ async function startAnalysisStream() {
   if (!taskId.value) return;
   stopAnalysisStream();
   failureNotified.value = false;
-  streamController = new AbortController();
+  streamReconnecting.value = false;
+  const controller = new AbortController();
+  streamController = controller;
 
   try {
     await streamAiTaskAnalysis(
       taskId.value,
-      streamController,
+      controller,
       (message) => {
         if (!message.data) return;
+        streamReconnecting.value = false;
         const streamEvent = JSON.parse(message.data.replace(/^data:/, ""));
         handleStreamEvent({
           ...streamEvent,
@@ -529,9 +683,25 @@ async function startAnalysisStream() {
         });
       },
       (error) => {
-        throw error;
+        if (
+          controller.signal.aborted ||
+          error instanceof SyntaxError ||
+          /\b(400|401|403|404)\b/.test(error?.message || "")
+        ) {
+          throw error;
+        }
+        streamReconnecting.value = true;
+        return 3000;
       },
-      () => {}
+      () => {
+        if (
+          !controller.signal.aborted &&
+          task.value.status !== 2 &&
+          task.value.status !== 3
+        ) {
+          throw new Error("解析进度连接提前关闭");
+        }
+      }
     );
   } catch (error) {
     if (error?.name !== "AbortError") {
@@ -540,7 +710,8 @@ async function startAnalysisStream() {
       );
     }
   } finally {
-    streamController = null;
+    streamReconnecting.value = false;
+    if (streamController === controller) streamController = null;
   }
 }
 
@@ -602,10 +773,14 @@ function runInBackground() {
 }
 
 async function adoptEverything() {
+  await proxy.$modal.confirm(
+    "AI 抽取结果可能存在字段缺失或内容不完整。请先逐项核对并补全必填数据；任一候选数据不完整都可能导致采纳失败。是否确认采纳全部候选数据？"
+  );
   const result = await adoptAll(taskId.value);
   proxy.$modal.msgSuccess(
     `采纳完成：成功 ${result.data.success}，失败 ${result.data.failed}`
   );
+  reviewRefreshKey.value++;
 }
 
 async function goList() {
@@ -680,14 +855,23 @@ onMounted(async () => {
     ]);
     task.value = taskResponse.data || {};
     const files = fileResponse.data || [];
+    form.fileSource = task.value.fileSource || "UPLOAD";
     form.filePaths = files.map((file) => file.fileUrl).join(",");
     form.fileNames = files.map((file) => file.fileName);
     form.files = files.map((file) => ({
+      sourceFileId: file.sourceFileId,
       fileName: file.fileName,
       fileUrl: file.fileUrl,
       fileExt: file.fileExt,
       fileSize: file.fileSize,
     }));
+    form.systemFiles =
+      form.fileSource === "SYSTEM"
+        ? form.files.map((file) => ({
+            ...file,
+            id: file.sourceFileId,
+          }))
+        : [];
     form.taskName = task.value.taskName || "";
     form.description = task.value.description || "";
     return;
@@ -696,6 +880,7 @@ onMounted(async () => {
   if (!restoredTaskId) return;
   taskId.value = restoredTaskId;
   activeStep.value = 1;
+  await loadAnalysisSnapshot(restoredTaskId);
   startAnalysisStream();
 });
 </script>
@@ -773,18 +958,13 @@ onMounted(async () => {
         &:last-child {
           margin-left: -10px;
           z-index: 0;
-          clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-          &::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 20px;
-            height: 100%;
-            background: #fff;
-            clip-path: polygon(0 0, 100% 50%, 0 100%);
-            z-index: 2;
-          }
+          clip-path: polygon(
+            0 0,
+            100% 0,
+            100% 100%,
+            0 100%,
+            20px 50%
+          );
         }
         &.statusEnd {
           background: linear-gradient(270deg, #e9effe 0%, #5589fa 100%);
@@ -892,6 +1072,32 @@ onMounted(async () => {
 /* 对齐对象类型新增页的间隔：带描述提示的表单项底部留白，避免说明文字贴到下一字段。 */
 .base-form :deep(.el-form-item.has-tip) {
   margin-bottom: 25px;
+}
+.system-file-picker {
+  width: 100%;
+}
+.selected-file-list {
+  width: 100%;
+  margin-top: 10px;
+  border-top: 1px solid #ebeef5;
+}
+.selected-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  border-bottom: 1px solid #ebeef5;
+}
+.selected-file-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.system-file-empty {
+  margin-top: 8px;
+  color: #909399;
+  font-size: 13px;
 }
 .analysis-step {
   display: flex;

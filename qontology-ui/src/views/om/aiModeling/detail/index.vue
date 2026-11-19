@@ -69,7 +69,7 @@
       <component
         :is="currentTab.component"
         v-if="currentTab.component"
-        :key="currentTab.name"
+        :key="`${currentTab.name}-${reviewRefreshKey}`"
         :task-id="taskId"
       />
     </div>
@@ -103,6 +103,7 @@ const { om_ai_task_status } = proxy.useDict("om_ai_task_status");
 const task = ref({});
 const files = ref([]);
 const activeTab = ref("timeline");
+const reviewRefreshKey = ref(0);
 const documentNames = computed(() =>
   files.value.map((file) => file.fileName).filter(Boolean).join("，") || "-"
 );
@@ -165,11 +166,14 @@ function goBack() {
 /** 按依赖顺序采纳全部候选数据。 */
 async function adoptEverything() {
   try {
-    await proxy.$modal.confirm(`确认采纳全部候选数据吗？`);
+    await proxy.$modal.confirm(
+      "AI 抽取结果可能存在字段缺失或内容不完整。请先逐项核对并补全必填数据；任一候选数据不完整都可能导致采纳失败。是否确认采纳全部候选数据？"
+    );
     const result = await adoptAll(taskId);
     proxy.$modal.msgSuccess(
       `采纳完成：成功 ${result.data.success}，失败 ${result.data.failed}`
     );
+    reviewRefreshKey.value++;
   } catch (err) {
     // 用户点取消 或者 接口报错都会进这里
     // 如果需要区分【用户取消】和【接口异常】可以单独判断

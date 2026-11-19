@@ -78,16 +78,14 @@
             icon="Refresh"
             :disabled="row.status === 1 || reparsing"
             @click="reparseTask(row)"
-            >重新解析</el-button
-          >
+          >重新解析</el-button>
           <el-button
             v-hasPermi="['om:aiModeling:list']"
             link
             type="primary"
             icon="View"
             @click="openDetail(row)"
-            >详情</el-button
-          >
+          >详情</el-button>
           <el-popover
             v-if="
               auth.hasPermiOr(['om:aiModeling:edit', 'om:aiModeling:remove'])
@@ -161,20 +159,66 @@
             type="textarea"
             :rows="3"
             placeholder="请输入任务描述"
-            maxlength="500"
+            maxlength="256个字符"
             show-word-limit
           />
         </qt-form-item>
-        <qt-form-item label="上传文件" prop="filePaths">
+        <qt-form-item label="文件来源" prop="fileSource">
+          <el-radio-group
+            v-model="editForm.fileSource"
+            disabled
+            @change="handleEditFileSourceChange"
+          >
+            <el-radio value="UPLOAD">上传文件</el-radio>
+            <el-radio value="SYSTEM">系统文件</el-radio>
+          </el-radio-group>
+        </qt-form-item>
+        <qt-form-item
+          v-if="editForm.fileSource === 'UPLOAD'"
+          label="上传文件"
+          prop="filePaths"
+        >
           <FileUpload2
             v-model="editForm.filePaths"
             :file-name="editForm.fileNames"
             :limit="5"
             :file-size="5"
             :file-type="aiFileTypes"
-            :disabled="editSaving"
+            disabled
             relative-url
             @update:file-info-list="(files) => (editForm.files = files)"
+          />
+        </qt-form-item>
+        <qt-form-item v-else label="系统文件" prop="systemFiles">
+          <div class="system-file-picker">
+            <el-button
+              type="primary"
+              plain
+              disabled
+              @click="openEditSystemFileSelector"
+            >选择系统文件</el-button>
+            <div v-if="editForm.systemFiles.length" class="selected-file-list">
+              <div
+                v-for="file in editForm.systemFiles"
+                :key="file.id || file.fileUrl"
+                class="selected-file-item"
+              >
+                <span :title="file.fileName">{{ file.fileName }}</span>
+                <el-button
+                  link
+                  type="danger"
+                  disabled
+                  icon="Delete"
+                  title="移除文件"
+                  @click="removeEditSystemFile(file)"
+                ></el-button>
+              </div>
+            </div>
+          </div>
+          <SystemFileMultiple
+            ref="editSystemFileSelectorRef"
+            :append-to="$refs['app-container']"
+            @confirm="handleEditSystemFilesSelected"
           />
         </qt-form-item>
       </el-form>
@@ -194,6 +238,7 @@
 import { useRouter } from "vue-router";
 import { useOntologyVersion } from "@/views/om/useOntologyVersion";
 import FileUpload2 from "@/components/FileUpload2";
+import SystemFileMultiple from "@/views/app/unstructTask/fileMultiple.vue";
 import {
   deleteAiTask,
   getAiFiles,
@@ -375,22 +420,38 @@ const editOpen = ref(false);
 const editSaving = ref(false);
 const editLoading = ref(false);
 const editFormRef = ref();
+const editSystemFileSelectorRef = ref();
 const editForm = reactive({
   id: null,
   taskName: "",
   description: "",
+  fileSource: "UPLOAD",
   filePaths: "",
   fileNames: [],
   files: [],
+  systemFiles: [],
 });
-const editRules = {
+const editRules = computed(() => ({
   taskName: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
+  fileSource: [{ required: true, message: "请选择文件来源", trigger: "change" }],
   filePaths: [
-    { required: true, message: "上传文件不能为空", trigger: "change" },
+    {
+      required: editForm.fileSource === "UPLOAD",
+      message: "请至少上传一个文件",
+      trigger: "change",
+    },
   ],
-};
+  systemFiles: [{
+    type: "array",
+    required: editForm.fileSource === "SYSTEM",
+    min: 1,
+    message: "请至少选择一个系统文件",
+    trigger: "change",
+  }],
+}));
 let editOriginalFiles = [];
 let editOriginalBasicInfo = { taskName: "", description: "" };
+let editOriginalFileSource = "UPLOAD";
 
 /**
  * 拉取任务基础信息与已上传文件后打开修改弹窗。
@@ -408,6 +469,7 @@ async function openEditDialog(row) {
     ]);
     const task = taskResponse.data || {};
     const files = fileResponse.data || [];
+    editForm.fileSource = task.fileSource || "UPLOAD";
     editForm.taskName = task.taskName || "";
     editForm.description = task.description || "";
     editForm.filePaths = files.map((file) => file.fileUrl).join(",");
@@ -417,8 +479,20 @@ async function openEditDialog(row) {
       fileUrl: file.fileUrl,
       fileExt: file.fileExt,
       fileSize: file.fileSize,
+      sourceFileId: file.sourceFileId,
     }));
+    editForm.systemFiles = editForm.fileSource === "SYSTEM"
+      ? files.map((file) => ({
+          id: file.sourceFileId,
+          fileName: file.fileName,
+          filePath: file.fileUrl,
+          fileUrl: file.fileUrl,
+          fileExt: file.fileExt,
+          fileSize: file.fileSize,
+        }))
+      : [];
     editOriginalFiles = files.map((file) => ({ ...file }));
+    editOriginalFileSource = editForm.fileSource;
     editOriginalBasicInfo = {
       taskName: task.taskName || "",
       description: task.description || "",
@@ -426,6 +500,47 @@ async function openEditDialog(row) {
   } finally {
     editLoading.value = false;
   }
+}
+
+function handleEditFileSourceChange() {
+  editForm.filePaths = "";
+  editForm.fileNames = [];
+  editForm.files = [];
+  editForm.systemFiles = [];
+  editFormRef.value?.clearValidate(["filePaths", "systemFiles"]);
+}
+
+function openEditSystemFileSelector() {
+  editSystemFileSelectorRef.value?.open(editForm.systemFiles);
+}
+
+function handleEditSystemFilesSelected(files) {
+  if (files.length > 5) {
+    proxy.$modal.msgWarning("最多只能选择 5 个系统文件");
+    return;
+  }
+  const unsupported = files.find((file) => {
+    const path = file.fileName || file.filePath || "";
+    const extension = path.includes(".") ? path.split(".").pop().toLowerCase() : "";
+    return !aiFileTypes.includes(extension);
+  });
+  if (unsupported) {
+    proxy.$modal.msgWarning(`文件“${unsupported.fileName}”的格式不支持，请重新选择`);
+    return;
+  }
+  editForm.systemFiles = files.map((file) => ({
+    ...file,
+    sourceFileId: file.id,
+    fileUrl: file.filePath || file.fileUrl,
+    fileExt: file.fileExt || (file.fileName || "").split(".").pop().toLowerCase(),
+  }));
+  editFormRef.value?.validateField("systemFiles").catch(() => {});
+}
+
+function removeEditSystemFile(file) {
+  editForm.systemFiles = editForm.systemFiles.filter(
+    (item) => (item.id || item.fileUrl) !== (file.id || file.fileUrl)
+  );
 }
 
 /** 弹窗关闭后重置表单与校验提示。 */
@@ -449,19 +564,32 @@ async function submitEdit() {
   if (!valid || editSaving.value || !editOpen.value) return;
   editSaving.value = true;
   try {
-    const currentUrls = editForm.filePaths ? editForm.filePaths.split(",") : [];
-    const currentPersistedIds = editOriginalFiles
-      .filter((file) => currentUrls.includes(file.fileUrl))
-      .map((file) => file.id);
-    const originalUrls = editOriginalFiles.map((file) => file.fileUrl);
-    const newFiles = editForm.files.filter(
-      (file) => file.fileUrl && !originalUrls.includes(file.fileUrl)
+    const selectedFiles =
+      editForm.fileSource === "SYSTEM" ? editForm.systemFiles : editForm.files;
+    const currentUrls = editForm.fileSource === "SYSTEM"
+      ? selectedFiles.map((file) => file.fileUrl || file.filePath).filter(Boolean)
+      : editForm.filePaths ? editForm.filePaths.split(",") : [];
+    const currentPersistedIds =
+      editForm.fileSource === editOriginalFileSource
+        ? editOriginalFiles
+          .filter((file) => currentUrls.includes(file.fileUrl))
+          .map((file) => file.id)
+        : [];
+    const originalUrls =
+      editForm.fileSource === editOriginalFileSource
+        ? editOriginalFiles.map((file) => file.fileUrl)
+        : [];
+    const newFiles = selectedFiles.filter(
+      (file) =>
+        (file.fileUrl || file.filePath) &&
+        !originalUrls.includes(file.fileUrl || file.filePath)
     );
     const hasNewFiles = newFiles.length > 0;
     const hasRemovedFiles = editOriginalFiles.some(
       (file) => !currentUrls.includes(file.fileUrl)
     );
-    const fileChanged = hasNewFiles || hasRemovedFiles;
+    const fileChanged =
+      editForm.fileSource !== editOriginalFileSource || hasNewFiles || hasRemovedFiles;
     const basicInfoChanged =
       editForm.taskName !== editOriginalBasicInfo.taskName ||
       editForm.description !== editOriginalBasicInfo.description;
@@ -478,10 +606,15 @@ async function submitEdit() {
     if (fileChanged) {
       await updateAiTaskFiles({
         taskId: editForm.id,
+        fileSource: editForm.fileSource,
         retainedFileIds: currentPersistedIds,
         files: newFiles.map((file) => ({
+          sourceFileId:
+            editForm.fileSource === "SYSTEM"
+              ? file.sourceFileId || file.id
+              : null,
           fileName: file.fileName || file.name,
-          fileUrl: file.fileUrl || file.url,
+          fileUrl: file.fileUrl || file.filePath || file.url,
           fileExt: file.fileExt,
           fileSize: file.fileSize || file.size || 0,
         })),
@@ -565,11 +698,33 @@ async function reparseTask(row) {
     reparsing.value = false;
   }
 }
+
 </script>
 
 <style scoped lang="scss">
 /* 对齐对象类型新增页的间隔：修改弹窗中带描述提示的表单项底部留白。 */
 .ai-task-form :deep(.el-form-item.has-tip) {
   margin-bottom: 25px;
+}
+.system-file-picker {
+  width: 100%;
+}
+.selected-file-list {
+  width: 100%;
+  margin-top: 10px;
+  border-top: 1px solid #ebeef5;
+}
+.selected-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+  border-bottom: 1px solid #ebeef5;
+}
+.selected-file-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

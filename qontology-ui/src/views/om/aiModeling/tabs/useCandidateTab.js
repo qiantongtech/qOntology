@@ -63,15 +63,21 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
 
   function missingMessage(row) {
     const missing = validateAdopt(row).filter(Boolean)
-    return missing.length ? `“${missing.join('、')}”未填写，请先修改补充后再采纳` : ''
+    return missing.length
+      ? `当前候选缺少必填项“${missing.join('、')}”，直接采纳会失败。请先编辑并补全数据后再采纳。`
+      : ''
   }
 
   async function adoptOne(row) {
     const message = missingMessage(row)
     if (message) { proxy.$modal.msgWarning(message); return }
-    await adoptCandidate(type, row.id)
-    proxy.$modal.msgSuccess('采纳成功')
-    await refresh()
+    await proxy.$modal.confirm('AI 抽取结果可能存在字段缺失或内容不完整。请先核对并补全必填数据；数据不完整将导致采纳失败。是否确认采纳当前候选？')
+    try {
+      await adoptCandidate(type, row.id)
+      proxy.$modal.msgSuccess('采纳成功')
+    } finally {
+      await refresh()
+    }
   }
 
   async function adoptBatch() {
@@ -79,7 +85,7 @@ export function useCandidateTab(type, taskId, validateAdopt = () => [], options 
     if (!candidates.length) return
     const invalid = candidates.find(row => missingMessage(row))
     if (invalid) { proxy.$modal.msgWarning(missingMessage(invalid)); return }
-    await proxy.$modal.confirm(`是否确认采纳选中的 ${candidates.length} 条候选数据？`)
+    await proxy.$modal.confirm(`AI 抽取结果可能存在字段缺失或内容不完整。请先核对并补全必填数据；任一候选数据不完整都可能导致采纳失败。是否确认采纳选中的 ${candidates.length} 条候选数据？`)
     let success = 0
     let failed = 0
     const failureMessages = []

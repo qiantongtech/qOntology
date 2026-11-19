@@ -8,6 +8,9 @@ import lombok.Data;
 /** 统一文件服务上传成功后返回给 AI 建模业务的文件元数据。 */
 @Data
 public class OmAiUploadedFileReqVO {
+    @Schema(description = "系统文件编号；上传文件为空")
+    private Long sourceFileId;
+
     @Schema(description = "文件名称")
     @NotBlank(message = "文件名称不能为空")
     private String fileName;

@@ -76,6 +76,7 @@ spring:
       - "application-${spring.profiles.active}.yml"
       - "classpath:application-ai-${spring.profiles.active}.yml"
       - "classpath:application-file-${spring.profiles.active}.yml"
+      - "classpath:application-om-${spring.profiles.active}.yml"
       - "classpath:application-system-${spring.profiles.active}.yml"
       - "classpath:application-graphis-${spring.profiles.active}.yml"
   # 文件上传

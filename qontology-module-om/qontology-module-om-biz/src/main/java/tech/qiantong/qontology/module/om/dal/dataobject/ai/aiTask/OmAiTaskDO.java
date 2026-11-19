@@ -51,6 +51,8 @@ public class OmAiTaskDO extends BaseEntity {
     private Long workspaceId;
     /** 项目版本ID。 */
     private Long versionId;
+    /** 文件来源：UPLOAD 用户上传，SYSTEM 系统文件。 */
+    private String fileSource;
     /** 任务状态：0待执行 1解析中 2解析成功 3解析失败。 */
     private Integer status;
     /** 当前解析阶段。 */

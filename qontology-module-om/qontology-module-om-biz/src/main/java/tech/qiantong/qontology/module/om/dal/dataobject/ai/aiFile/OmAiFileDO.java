@@ -44,6 +44,8 @@ public class OmAiFileDO extends BaseEntity {
 
     /** 任务ID。 */
     private Long taskId;
+    /** 系统文件编号；用户上传文件为空。 */
+    private Long sourceFileId;
     /** 文件名称。 */
     private String fileName;
     /** 文件地址。 */

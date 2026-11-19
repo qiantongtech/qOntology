@@ -462,6 +462,13 @@ const tableStore = reactive({
       align: "center",
     },
     {
+      label: "采纳失败原因",
+      prop: "adoptMessage",
+      minWidth: 220,
+      align: "left",
+      showOverflowTooltip: { effect: "light" },
+    },
+    {
       label: "创建人",
       prop: "createBy",
       slot: "creator",

@@ -41,6 +41,8 @@ public class OmAiTaskRespVO implements Serializable {
     private Long workspaceId;
     @Schema(description = "项目版本ID")
     private Long versionId;
+    @Schema(description = "文件来源：UPLOAD 用户上传，SYSTEM 系统文件")
+    private String fileSource;
     @Schema(description = "任务状态：0待执行 1解析中 2解析成功 3解析失败")
     private Integer status;
     @Schema(description = "当前解析阶段")

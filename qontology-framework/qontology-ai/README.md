@@ -124,7 +124,7 @@ ai.config ───────→ 组装 provider 和 runtime
 ## 配置
 
 配置文件位于 `src/main/resources/application-ai-dev.yml`（开发环境）和
-`application-ai-prod.yml`（生产环境），由 `qontology-server` 的 `application.yml`
+`application-om-prod.yml`（生产环境），由 `qontology-server` 的 `application.yml`
 通过 `spring.config.import` 自动导入。
 
 默认使用 `PropertiesAiModelConfigProvider` 读取 YAML 中的命名配置。
@@ -329,7 +329,7 @@ AiProviderAdapter xxxProviderAdapter() {
 
 **方式 A：YAML 配置**（默认走 `PropertiesAiModelConfigProvider`）
 
-在 `application-ai-dev.yml` 的 `qontology.ai.models` 下加一个命名配置：
+在 `application-om-dev.yml` 的 `qontology.ai.models` 下加一个命名配置：
 
 ```yaml
 qontology:
