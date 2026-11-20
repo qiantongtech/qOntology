@@ -13,6 +13,21 @@ set -e  # 任意步骤失败时立即退出，避免只重置了一部分数据
 COMPOSE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 PROJECT_NAME=${QONTOLOGY_PROJECT_NAME:-qontology}
 COMPOSE_CMD="docker compose"
+NEO4J_CHOWN=1
+case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*)
+        QONTOLOGY_NEO4J_UID=7474
+        QONTOLOGY_NEO4J_GID=7474
+        NEO4J_CHOWN=0
+        ;;
+    *)
+        NEO4J_HOST_USER=${QONTOLOGY_NEO4J_HOST_USER:-qtt}
+        id "$NEO4J_HOST_USER" >/dev/null 2>&1 || { echo "❌ 宿主机用户不存在：$NEO4J_HOST_USER"; exit 1; }
+        QONTOLOGY_NEO4J_UID=$(id -u "$NEO4J_HOST_USER")
+        QONTOLOGY_NEO4J_GID=$(id -g "$NEO4J_HOST_USER")
+        ;;
+esac
+export QONTOLOGY_NEO4J_UID QONTOLOGY_NEO4J_GID
 
 cd "$COMPOSE_DIR"
 
@@ -76,9 +91,16 @@ NEO4J_DATA="$COMPOSE_DIR/qOntology/neo4j/data"
 NEO4J_DUMP="$COMPOSE_DIR/qOntology/neo4j/neo4j.dump"
 NEO4J_DIR="$COMPOSE_DIR/qOntology/neo4j"
 NEO4J_INIT_DIR="$COMPOSE_DIR/qOntology/neo4j-init"
+NEO4J_IMAGE=$(compose config --images | awk '/neo4j:4[.]4[.]40$/ {print; exit}')
+[ -n "$NEO4J_IMAGE" ] || { echo "❌ 无法解析 Neo4j 镜像"; exit 1; }
 
 # 按部署包初始目录重建：不保留备份，直接清空 neo4j 后复制 neo4j-init。
 echo "   → 清空现有 Neo4j 目录..."
+if [ "$NEO4J_CHOWN" -eq 1 ] && [ -d "$NEO4J_DIR" ]; then
+    MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user 0:0 \
+        -v "$NEO4J_DIR:/neo4j-host" --entrypoint chown "$NEO4J_IMAGE" \
+        -R "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" /neo4j-host
+fi
 rm -rf "$NEO4J_DIR"
 mkdir -p "$NEO4J_DIR"
 echo "   → 从 neo4j-init 恢复配置和 dump..."
@@ -86,16 +108,19 @@ cp -R "$NEO4J_INIT_DIR/." "$NEO4J_DIR/"
 
 # 数据以 neo4j.dump 为准：复制完成后清空 data，避免带入旧 system 库或事务日志。
 rm -rf "$NEO4J_DATA"
-mkdir -p "$NEO4J_DATA"
+mkdir -p "$NEO4J_DATA" "$NEO4J_DIR/logs"
 
-# 从 Compose 获取实际使用的 Neo4j 镜像，避免仓库地址或版本被写死。
-NEO4J_IMAGE=$(compose config --images | awk '/neo4j:4[.]4[.]40$/ {print; exit}')
-[ -n "$NEO4J_IMAGE" ] || { echo "❌ 无法解析 Neo4j 镜像"; exit 1; }
+if [ "$NEO4J_CHOWN" -eq 1 ]; then
+    # 新目录可能由 root 创建，导入前统一为 qtt 的 UID/GID。
+    MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user 0:0 \
+        -v "$NEO4J_DIR:/neo4j-host" --entrypoint chown "$NEO4J_IMAGE" \
+        -R "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" /neo4j-host
+fi
 
 echo "   → 正在导入 neo4j.dump..."
 # Git Bash 会自动转换 /data 等容器路径；关闭参数转换后原样传给 Docker。
 # 直接运行 neo4j-admin，并使用 Neo4j 用户写入数据。
-MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user 7474:7474 \
+MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" \
     -v "$NEO4J_DATA:/data" \
     -v "$NEO4J_DUMP:/dump/neo4j.dump:ro" \
     --entrypoint neo4j-admin "$NEO4J_IMAGE" \

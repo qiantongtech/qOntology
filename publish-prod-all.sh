@@ -5,8 +5,8 @@
 # docker中mysql相关的演示站数据重置sql脚本已更新
 # ./docker/qOntology/server/upload-init文件夹已更新
 
-# 遇到错误立即停止执行
-set -e
+# 遇到错误立即停止执行，包括上传管道中的失败
+set -eo pipefail
 
 # ==========================================
 # 1. 配置与变量定义
@@ -107,16 +107,28 @@ cp -r ./qontology-ui/dist ./docker/qOntology/nginx/
 # ==========================================
 echo "🚀 正在部署到远程服务器 $REMOTE_HOST..."
 
-ssh -t ${REMOTE_USER}@${REMOTE_HOST} "sudo rm -rf ${REMOTE_DIR}/docker"
-
 echo "📤 正在上传 docker 文件..."
-scp -r ./docker ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/
+# 保留服务器上的数据库、日志和上传文件；只更新部署文件及初始化资源。
+tar -C ./docker \
+    --exclude='./qOntology/neo4j/data' \
+    --exclude='./qOntology/neo4j/logs' \
+    --exclude='./qOntology/nginx/logs' \
+    --exclude='./qOntology/server/logs' \
+    --exclude='./qOntology/server/upload' \
+    --exclude='./qOntology/kkfileview/files' \
+    --exclude='./qOntology/kkfileview/logs' \
+    -cf - . | ssh "${REMOTE_USER}@${REMOTE_HOST}" \
+    "mkdir -p '${REMOTE_DIR}/docker' && tar --no-same-owner -C '${REMOTE_DIR}/docker' -xf -"
 
 echo "🐳 正在远程启动 Docker 服务..."
-ssh ${REMOTE_USER}@${REMOTE_HOST} << EOF
-    cd ${REMOTE_DIR}/docker
-    docker-compose -p qontology --profile all up -d
-    docker restart qontology-nginx-1
+ssh "${REMOTE_USER}@${REMOTE_HOST}" << EOF
+    set -e
+    cd '${REMOTE_DIR}/docker'
+    if [ ! -d qOntology/server/upload ]; then
+        mkdir -p qOntology/server/upload
+        cp -R qOntology/server/upload-init/. qOntology/server/upload/
+    fi
+    sh qontology.sh start
 EOF
 
 echo "🎉 部署全部完成！"

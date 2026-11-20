@@ -9,6 +9,13 @@ FORCE=0
 COMPOSE_KIND=plugin
 fail() { printf '错误：%s\n' "$*" >&2; exit 1; }
 warn() { printf '警告：%s\n' "$*" >&2; }
+set_neo4j_user() {
+    neo4j_host_user=${QONTOLOGY_NEO4J_HOST_USER:-qtt}
+    id "$neo4j_host_user" >/dev/null 2>&1 || fail "宿主机用户不存在：$neo4j_host_user"
+    QONTOLOGY_NEO4J_UID=$(id -u "$neo4j_host_user")
+    QONTOLOGY_NEO4J_GID=$(id -g "$neo4j_host_user")
+    export QONTOLOGY_NEO4J_UID QONTOLOGY_NEO4J_GID
+}
 # 打印脚本支持的管理命令和选项。
 usage() {
     cat <<'HELP'
@@ -22,6 +29,7 @@ Windows 请双击 start-all.bat 启动，uninstall.bat 完整卸载。
 --offline 仅使用本地镜像，启动时禁止拉取
 --force 仅放行 CPU/内存不足；不会跳过配置、端口、缺失文件检查
 可在任意目录执行；QONTOLOGY_PROJECT_NAME 可覆盖默认项目名 qontology。
+Linux 默认使用宿主机 qtt 用户运行 Neo4j；QONTOLOGY_NEO4J_HOST_USER 可覆盖用户名。
 HELP
 }
 version_ge() {
@@ -43,6 +51,7 @@ require_file() { [ -f "$SCRIPT_DIR/$1" ] || fail "部署包缺少文件：$1"; }
 # 检查 Docker、Compose 版本、运行模式及部署配置。
 init() {
     case "$PROJECT_NAME" in ''|[!a-z0-9]*|*[!a-z0-9_-]*) fail '项目名必须以小写字母或数字开头，仅可包含小写字母、数字、下划线、连字符。';; esac
+    set_neo4j_user
     command -v docker >/dev/null 2>&1 || fail '未安装 Docker，请安装 Docker Engine 或 Docker Desktop。'
     if docker compose version >/dev/null 2>&1; then COMPOSE_KIND=plugin
     elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_KIND=standalone
@@ -135,20 +144,50 @@ prepare_online_images() {
         done
     done
 }
+neo4j_directory_owner() {
+    stat -c '%u:%g' "$1" 2>/dev/null || stat -f '%u:%g' "$1"
+}
+# 仅在挂载目录属主不匹配时停服务并迁移旧数据，不删除数据库文件。
+ensure_neo4j_ownership() {
+    needs_chown=0
+    [ ! -L "$dump_dir" ] || fail "Neo4j 目录不能是符号链接：$dump_dir"
+    owner=$(neo4j_directory_owner "$dump_dir") || fail "无法读取目录属主：$dump_dir"
+    [ "$owner" = "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" ] || needs_chown=1
+    if [ -f "$dump_file" ]; then
+        owner=$(neo4j_directory_owner "$dump_file") || fail "无法读取文件属主：$dump_file"
+        [ "$owner" = "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" ] || needs_chown=1
+    fi
+    for dir in "$dump_dir/data" "$dump_dir/logs" "$dump_dir/conf"; do
+        [ ! -L "$dir" ] || fail "Neo4j 挂载目录不能是符号链接：$dir"
+        if [ ! -d "$dir" ]; then
+            mkdir -p "$dir"
+            needs_chown=1
+        else
+            owner=$(neo4j_directory_owner "$dir") || fail "无法读取目录属主：$dir"
+            [ "$owner" = "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" ] || needs_chown=1
+        fi
+    done
+    [ "$needs_chown" -eq 1 ] || return 0
+    printf '正在将 Neo4j 挂载目录迁移至 %s（%s:%s）...\n' "$neo4j_host_user" "$QONTOLOGY_NEO4J_UID" "$QONTOLOGY_NEO4J_GID"
+    stack stop nginx qontology-api neo4j
+    MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user 0:0 \
+        -v "$dump_dir:/neo4j-host" --entrypoint chown "$neo4j_image" \
+        -R "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" /neo4j-host \
+        || fail '无法迁移 Neo4j 目录属主，服务未启动。'
+}
 # 仅在 Neo4j 数据库目录不存在时，从完整 dump 执行首次初始化。
 init_neo4j_dump() {
     dump_dir="$SCRIPT_DIR/qOntology/neo4j"
     data_dir="$dump_dir/data"
     dump_file="$dump_dir/neo4j.dump"
-    [ -d "$data_dir/databases/neo4j" ] && return
-    [ -f "$dump_file" ] || fail '首次初始化缺少 qOntology/neo4j/neo4j.dump。'
-
     neo4j_image=$(stack config --images | awk '/neo4j:4[.]4[.]40$/ {print; exit}')
     [ -n "$neo4j_image" ] || fail '无法从 Compose 配置解析 Neo4j 镜像。'
-    mkdir -p "$data_dir"
+    ensure_neo4j_ownership
+    [ -d "$data_dir/databases/neo4j" ] && return
+    [ -f "$dump_file" ] || fail '首次初始化缺少 qOntology/neo4j/neo4j.dump。'
     printf '\n检测到 neo4j.dump，正在初始化 Neo4j 数据...\n'
     # 禁止 Git Bash 转换容器内路径，Linux/macOS 下这些环境变量不会影响执行。
-    MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user 7474:7474 \
+    MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" \
         -v "$data_dir:/data" \
         -v "$dump_file:/dump/neo4j.dump:ro" \
         --entrypoint neo4j-admin "$neo4j_image" \
