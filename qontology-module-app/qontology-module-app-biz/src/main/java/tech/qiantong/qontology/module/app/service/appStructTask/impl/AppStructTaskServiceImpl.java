@@ -55,6 +55,7 @@ import tech.qiantong.qontology.module.app.controller.admin.appSchemaMapping.vo.A
 import tech.qiantong.qontology.module.app.controller.admin.appStructTask.vo.AppStructTaskPageReqVO;
 import tech.qiantong.qontology.module.app.controller.admin.appStructTask.vo.AppStructTaskRespVO;
 import tech.qiantong.qontology.module.app.controller.admin.appStructTask.vo.AppStructTaskSaveReqVO;
+import tech.qiantong.qontology.module.app.controller.admin.appTaskLog.vo.AppTaskLogSaveReqVO;
 import tech.qiantong.qontology.module.app.dal.dataobject.appAttributeMapping.AppAttributeMappingDO;
 import tech.qiantong.qontology.module.app.dal.dataobject.appRelationMapping.AppRelationMappingDO;
 import tech.qiantong.qontology.module.app.dal.dataobject.appRelationMappingMiddle.AppRelationMappingMiddleDO;
@@ -242,6 +243,11 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
      * 统一的抽取任务执行方法
      */
     private void execStructTaskInternal(String taskId, boolean isIncrement) {
+        execStructTaskInternal(taskId, isIncrement, null);
+    }
+
+    /** 立即执行传入开始时间，以记录该入口的数据源连接失败。 */
+    private void execStructTaskInternal(String taskId, boolean isIncrement, Date immediateStartTime) {
         // 1. 初始化
         AppStructTaskDO task = appStructTaskMapper.selectById(Long.valueOf(taskId));
         if (task == null) throw new DataQueryException("抽取任务不存在");
@@ -255,16 +261,26 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
         Map<String, GraphEntity> existingMap = isIncrement ? loadExistingEntities(task) : new HashMap<>();
 
         // 2. 数据库连接
-        BasicDatasourceRespDTO datasource = basicDatasourceApiService.getDatasourceById(task.getDatasourceId());
-        if (datasource == null) throw new DataQueryException("未查到数据源信息");
+        BasicDatasourceRespDTO datasource;
+        DbQueryProperty dbQueryProperty;
+        DbQuery dbQuery;
+        try {
+            datasource = basicDatasourceApiService.getDatasourceById(task.getDatasourceId());
+            if (datasource == null) throw new DataQueryException("未查到数据源信息");
 
-        DbQueryProperty dbQueryProperty = new DbQueryProperty(
-                datasource.getDatasourceType(), datasource.getIp(),
-                datasource.getPort(), datasource.getDatasourceConfig());
-        DbQuery dbQuery = dataSourceFactory.createDbQuery(dbQueryProperty);
-        if (!dbQuery.valid()) {
-            dbQuery.close();
-            throw new DataQueryException("数据库连接失败");
+            dbQueryProperty = new DbQueryProperty(
+                    datasource.getDatasourceType(), datasource.getIp(),
+                    datasource.getPort(), datasource.getDatasourceConfig());
+            dbQuery = dataSourceFactory.createDbQuery(dbQueryProperty);
+            if (!dbQuery.valid()) {
+                dbQuery.close();
+                throw new DataQueryException("数据库连接失败");
+            }
+        } catch (RuntimeException exception) {
+            if (immediateStartTime != null) {
+                recordConnectionFailure(task, immediateStartTime, exception);
+            }
+            throw exception;
         }
 
         try {
@@ -1623,17 +1639,45 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
         appStructTaskMapper.updateById(appStructTaskDO);
         // ✅ 提交异步任务（不等待）
         CompletableFuture.runAsync(() -> {
+            Date startTime = new Date();
             // 判断是全量更新还是增量更新
             if (appStructTask.getUpdateType().equals(AppTaskUpdateType.FULLUPDATE.getValue())) {
-                this.execStructTask(String.valueOf(appStructTask.getTaskId()));
+                this.execStructTaskInternal(String.valueOf(appStructTask.getTaskId()), false, startTime);
             } else if (appStructTask.getUpdateType().equals(AppTaskUpdateType.INCREMENTUDATE.getValue())) {
-                this.execStructTaskIncrementUpdate(String.valueOf(appStructTask.getTaskId()));
+                this.execStructTaskInternal(String.valueOf(appStructTask.getTaskId()), true, startTime);
             } else {
                 throw new IllegalArgumentException("无效的更新类型");
             }
         });
-
     }
 
+    /** 记录立即执行的数据源连接失败，结束任务的执行中状态。 */
+    private void recordConnectionFailure(AppStructTaskDO task, Date startTime, RuntimeException exception) {
+        Date endTime = new Date();
+        String reason = StringUtils.defaultIfBlank(exception.getMessage(), exception.getClass().getSimpleName());
+        log.error("结构化抽取数据源连接失败，任务 ID：{}", task.getId(), exception);
+        try {
+            AppTaskLogSaveReqVO failureLog = new AppTaskLogSaveReqVO();
+            failureLog.setWorkspaceId(task.getWorkspaceId());
+            failureLog.setTaskId(task.getId());
+            failureLog.setTaskName(task.getName());
+            failureLog.setTaskType(AppTaskTypeEnum.STRUCTURED.getValue());
+            failureLog.setStatus(AppLogStatusEnum.FAIL.getValue());
+            failureLog.setStartTime(startTime);
+            failureLog.setEndTime(endTime);
+            failureLog.setErrorMsg(StringUtils.substring(reason, 0, 2000));
+            failureLog.setCreateBy(task.getCreateBy());
+            failureLog.setCreatorId(task.getCreatorId());
+            Long logId = appTaskLogService.createAppTaskLog(failureLog);
+            appTaskLogService.recordStep(logId, "数据源连接失败（数据源 ID：" + task.getDatasourceId() + "）：" + reason);
+        } finally {
+            AppStructTaskDO failure = new AppStructTaskDO();
+            failure.setId(task.getId());
+            failure.setStatus(AppTaskStatus.ERROR.getValue());
+            failure.setLastExecuteTime(endTime);
+            failure.setExecuteDuration((int) ((endTime.getTime() - startTime.getTime()) / 1000));
+            appStructTaskMapper.updateById(failure);
+        }
+    }
 }
 

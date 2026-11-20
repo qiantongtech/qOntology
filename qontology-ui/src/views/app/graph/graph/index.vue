@@ -88,23 +88,36 @@
             </el-autocomplete>
           </div>
         </div>
-        <!--  ----TODO 图例 --------------  -->
-        <!--                <div class="tool" @click="toolShow = !toolShow">-->
-        <!--                    <div class="tool-mask" v-if="toolShow">-->
-        <!--                        <div class="mask-item" v-for="item in toolData" :key="item.label">-->
-        <!--                            <div-->
-        <!--                                class="mask-icon"-->
-        <!--                                :style="{-->
-        <!--                                    background: item.icon,-->
-        <!--                                    border: '2px solid ' + 'rgba(0,0,0, 0.3)'-->
-        <!--                                }"-->
-        <!--                            ></div>-->
-        <!--                            <div class="mask-label ellipsis" :title="item.label">-->
-        <!--                                {{ item.label }}-->
-        <!--                            </div>-->
-        <!--                        </div>-->
-        <!--                    </div>-->
-        <!--                </div>-->
+        <div v-if="legendItems.length" class="graph-legend">
+          <el-tooltip content="对象类型图例" effect="light" placement="right">
+            <button
+              type="button"
+              aria-label="对象类型图例"
+              :aria-expanded="legendVisible"
+              @click="legendVisible = !legendVisible"
+              class="graph-legend__toggle"
+            ></button>
+          </el-tooltip>
+          <ul
+            v-if="legendVisible"
+            tabindex="0"
+            aria-label="对象类型颜色"
+            class="graph-legend__list"
+          >
+            <li
+              v-for="item in legendItems"
+              :key="item.key"
+              class="graph-legend__item"
+            >
+              <span
+                aria-hidden="true"
+                class="graph-legend__swatch"
+                :style="item.swatchStyle"
+              ></span>
+              <span :title="item.label" class="ellipsis">{{ item.label }}</span>
+            </li>
+          </ul>
+        </div>
         <!-- 视图容器 -->
         <div
           :class="['graph-container', { 'is-detail-visible': detailShow }]"
@@ -416,6 +429,7 @@
 
 <script setup name="GraphView">
 import {
+  computed,
   ref,
   watch,
   nextTick,
@@ -633,6 +647,27 @@ let graphData = ref({
 const nodes = ref([]);
 const edges = ref([]);
 const schemaList = ref({ data: { rows: [] } });
+const legendVisible = ref(false);
+
+// 同一类型在不同抽取结果中可能保留不同的颜色。
+const legendItems = computed(() => {
+  const items = new Map();
+  for (const node of nodes.value) {
+    const schemaName =
+      typeof node.schemaName === "string" ? node.schemaName.trim() : "";
+    const label = schemaName || "其他";
+    const color = node.rowBackground.toLowerCase();
+    const key = JSON.stringify([label, color]);
+    if (!items.has(key)) {
+      items.set(key, {
+        key,
+        label,
+        swatchStyle: { "--graph-legend-color": color },
+      });
+    }
+  }
+  return Array.from(items.values());
+});
 
 /** 查询图谱数据；作为抽取结果子组件时通知父页面统一查询。 */
 function getGraphData(params) {
@@ -920,8 +955,6 @@ const nodeDialogClose = () => {
   relationGraph.resetColor();
 };
 
-// tool图例
-const toolData = ref([]);
 // #region 右侧弹框数据
 // 折叠面板
 const currentNodeData = ref();
@@ -940,21 +973,9 @@ const detailClose = () => {
 };
 // #endregion
 
-onMounted(async () => {
+onMounted(() => {
   // getDictTypeList();
   // getDictDataList();
-  // 获取schema&tool图例
-  // schemaList.value = await listSchema({
-  //     pageNum: 1,
-  //     pageSize: 10000,
-  //     graphId: graphId.value
-  // });
-  schemaList.value.data.rows.map((item) => {
-    toolData.value.push({
-      label: item.name,
-      icon: item.color,
-    });
-  });
   if (componentProps.embedded) {
     renderGraphData(componentProps.graphDataSource);
     return;
@@ -1869,6 +1890,78 @@ function openTagMultiple() {
 </script>
 
 <style scoped lang="scss">
+.graph-legend {
+  position: absolute;
+  bottom: 10px;
+  left: var(--graph-actions-left);
+  z-index: 1;
+}
+
+.graph-legend__list {
+  position: absolute;
+  bottom: calc(100% + var(--qt-space-2));
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qt-space-3);
+  width: 151px;
+  max-height: min(214px, 40vh);
+  margin: 0;
+  padding: var(--qt-space-3) var(--qt-space-4);
+  border: 1px solid var(--qt-graph-panel-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+  background: var(--qt-graph-panel-background);
+  font-family: var(--qt-font-family);
+  font-size: var(--qt-font-size-small);
+  line-height: 18px;
+  color: var(--qt-graph-panel-text);
+  list-style: none;
+  overflow: hidden auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+  }
+}
+
+.graph-legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--qt-space-2);
+}
+
+.graph-legend__swatch {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--qt-overlay-shadow);
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: var(--graph-legend-color);
+}
+
+.graph-legend__toggle {
+  display: block;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent url("@/assets/ke/images/tool.png") center / contain no-repeat;
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    background-color: var(--qt-graph-overlay-highlight);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--qt-graph-panel-text);
+    outline-offset: 2px;
+  }
+}
+
 .graph-view {
   // 与关系视图、时序视图保持同一尺寸区间，切换页签时不再出现高度跳动和滚动条
   display: flex;
@@ -1947,6 +2040,8 @@ function openTagMultiple() {
   }
 
   .graph-wrap {
+    --graph-tree-width: 250px;
+    --graph-actions-left: calc(var(--graph-tree-width) + 10px + 15px);
     position: relative;
     width: 100%;
     height: 100%;
@@ -1965,7 +2060,7 @@ function openTagMultiple() {
       top: 10px;
       bottom: 10px;
       left: 10px;
-      width: 250px;
+      width: var(--graph-tree-width);
       height: calc(100% - 20px);
       background: radial-gradient(
         100% 0% at 50% 50%,
@@ -2062,7 +2157,7 @@ function openTagMultiple() {
       top: 10px;
       right: unset;
       bottom: unset;
-      left: calc(250px + 10px + 15px);
+      left: var(--graph-actions-left);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2099,57 +2194,6 @@ function openTagMultiple() {
 
           .el-input__inner {
             color: var(--qt-text-inverse);
-          }
-        }
-      }
-    }
-
-    .tool {
-      cursor: pointer;
-      position: absolute;
-      left: calc(250px + 10px + 15px);
-      bottom: 10px;
-      width: 50px;
-      height: 50px;
-      background: url("@/assets/ke/images/tool.png") no-repeat;
-      background-size: 100% 100%;
-      z-index: 1;
-
-      .tool-mask {
-        width: 151px;
-        max-height: 214px;
-        background: var(--qt-graph-panel-background);
-        border-radius: 4px 4px 4px 4px;
-        border: 1px solid var(--qt-graph-panel-border);
-        position: absolute;
-        bottom: calc(100% + 8px);
-        left: 0;
-        box-sizing: border-box;
-        padding: 20px;
-        overflow: hidden auto;
-
-        &::-webkit-scrollbar {
-          width: 0px;
-        }
-
-        .mask-item {
-          display: flex;
-          align-items: center;
-          margin-bottom: 12px;
-
-          .mask-icon {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            margin-right: 8px;
-          }
-
-          .mask-label {
-            max-width: 100px;
-            line-height: 1;
-            font-family: var(--qt-font-family);
-            font-size: var(--qt-font-size-small);
-            color: var(--qt-graph-panel-text);
           }
         }
       }
