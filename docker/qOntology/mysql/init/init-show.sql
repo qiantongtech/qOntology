@@ -1,25 +1,25 @@
 /*
- Navicat Premium Data Transfer
+ Navicat Premium Dump SQL
 
- Source Server         : qontology开源版100
+ Source Server         : 本地数据库
  Source Server Type    : MySQL
- Source Server Version : 50744
- Source Host           : 192.168.0.100:33067
- Source Schema         : qontology
+ Source Server Version : 80043 (8.0.43)
+ Source Host           : localhost:3306
+ Source Schema         : test
 
  Target Server Type    : MySQL
- Target Server Version : 50744
+ Target Server Version : 80043 (8.0.43)
  File Encoding         : 65001
 
- Date: 06/11/2026 18:36:42
+ Date: 10/11/2026 17:41:04
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 CREATE DATABASE IF NOT EXISTS qontology
-  DEFAULT CHARACTER SET utf8mb4
-  DEFAULT COLLATE utf8mb4_unicode_ci;
+    DEFAULT CHARACTER SET utf8mb4
+    DEFAULT COLLATE utf8mb4_unicode_ci;
 USE qontology;
 
 -- ----------------------------
@@ -452,19 +452,19 @@ CREATE TABLE `app_unstruct_task`  (
 -- ----------------------------
 -- Records of app_unstruct_task
 -- ----------------------------
-INSERT INTO `app_unstruct_task` VALUES (1, 1001, '原材料采购合同数据抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:09', 25, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从原材料采购合同中抽取合同、物料、供应商、金额、交付条款等信息，构建合同实体与关联关系，支撑供应链知识图谱构建。');
-INSERT INTO `app_unstruct_task` VALUES (2, 1001, '供应商资质文档抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:14', 30, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从供应商资质文档抽取资质证书、有效期、经营范围、认证信息，构建供应商资质实体，完善供应商知识图谱。');
-INSERT INTO `app_unstruct_task` VALUES (3, 1001, '来料检验报告抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:19', 35, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从来料检验报告抽取物料信息、检验项、检验结果、不合格说明，建立质检实体，关联采购单据。');
-INSERT INTO `app_unstruct_task` VALUES (4, 1001, '仓储作业规程抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 3, NULL, NULL, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从仓储作业规程文档提取入库、出库、盘点作业规则、操作要求，构建仓储流程知识实体。');
-INSERT INTO `app_unstruct_task` VALUES (5, 1001, '供应商履约评价文档抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:29', 45, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从供应商履约评价文档抽取交付、质量、服务评分及评价说明，生成供应商评价知识。');
-INSERT INTO `app_unstruct_task` VALUES (6, 1001, '物料技术规格书抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:34', 50, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从物料技术规格书提取物料参数、性能指标、技术标准，构建物料技术属性知识。');
-INSERT INTO `app_unstruct_task` VALUES (7, 1001, '采购变更单文档抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:39', 55, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从采购变更单提取变更原因、变更内容、调整后的数量与交期，记录采购变更关系。');
-INSERT INTO `app_unstruct_task` VALUES (8, 1001, '仓库应急预案抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:44', 60, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从仓库应急预案文档提取风险类型、处置流程、责任人，构建仓储应急知识图谱。');
-INSERT INTO `app_unstruct_task` VALUES (9, 1001, '采购谈判纪要抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:49', 65, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从采购谈判纪要提取谈判对象、价格、交付约定、附加条款，沉淀采购谈判知识。');
-INSERT INTO `app_unstruct_task` VALUES (10, 1001, '库存盘点报告抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:54', 70, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从库存盘点报告抽取盘点物料、账实差异、差异原因及处理意见，构建盘点相关知识。');
-INSERT INTO `app_unstruct_task` VALUES (11, 1001, '运输交付单文档抽取', 'ces.ttl', '/2026/10/23/6adad6b7d9e0dd27052e7269.ttl', 2, '2026-11-06 13:34:59', 75, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-06 13:33:44', '从运输交付单提取承运方、物料、运输时间、签收信息，搭建物流交付链路知识。');
-INSERT INTO `app_unstruct_task` VALUES (12, 1001, '供应链采购与仓储协同抽取', 'ces.ttl', '/2026/10/23/6adaee20d9e0784f1cbeb76a.ttl', 2, '2026-11-06 13:34:51', 70, 1, '2026-10-23 13:22:42', 2, 2, '吴同', '吴同', 1, 0, '吴同', 2, '2026-10-23 13:19:25', '吴同', NULL, '2026-11-06 16:27:39', '从采购、仓储相关文本中抽取协同节点、物料、单据、动作、异常等关键信息并结构化输出，支撑流程校验与风险识别。');
-INSERT INTO `app_unstruct_task` VALUES (13, 1001, '供应链采购与仓储协同业务实例描述文档抽取', 'ces.ttl', '/2026/10/23/6adb039be4b07a35261640c9.ttl', 2, '2026-11-06 13:34:54', 75, 1, '2026-10-23 14:56:52', 2, 2, '吴同', '吴同', 1, 0, '吴同', 2, '2026-10-23 14:50:07', '吴同', NULL, '2026-11-06 13:35:06', '该文档为供应链采购仓储业务自然语言样例，依托 ces.txt 本体抽取，包含多家企业、人员、多笔订单、物料、出入库、物流、质检场景，可从中抽取实体、属性、关系三元组，附带本体抽取映射说明。');
+INSERT INTO `app_unstruct_task` VALUES (1, 1001, '原材料采购合同数据抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:09', 25, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从原材料采购合同中抽取合同、物料、供应商、金额、交付条款等信息，构建合同实体与关联关系，支撑供应链知识图谱构建。');
+INSERT INTO `app_unstruct_task` VALUES (2, 1001, '供应商资质文档抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:14', 30, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从供应商资质文档抽取资质证书、有效期、经营范围、认证信息，构建供应商资质实体，完善供应商知识图谱。');
+INSERT INTO `app_unstruct_task` VALUES (3, 1001, '来料检验报告抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:19', 35, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从来料检验报告抽取物料信息、检验项、检验结果、不合格说明，建立质检实体，关联采购单据。');
+INSERT INTO `app_unstruct_task` VALUES (4, 1001, '仓储作业规程抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 3, NULL, NULL, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从仓储作业规程文档提取入库、出库、盘点作业规则、操作要求，构建仓储流程知识实体。');
+INSERT INTO `app_unstruct_task` VALUES (5, 1001, '供应商履约评价文档抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:29', 45, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从供应商履约评价文档抽取交付、质量、服务评分及评价说明，生成供应商评价知识。');
+INSERT INTO `app_unstruct_task` VALUES (6, 1001, '物料技术规格书抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:34', 50, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从物料技术规格书提取物料参数、性能指标、技术标准，构建物料技术属性知识。');
+INSERT INTO `app_unstruct_task` VALUES (7, 1001, '采购变更单文档抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:39', 55, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从采购变更单提取变更原因、变更内容、调整后的数量与交期，记录采购变更关系。');
+INSERT INTO `app_unstruct_task` VALUES (8, 1001, '仓库应急预案抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:44', 60, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从仓库应急预案文档提取风险类型、处置流程、责任人，构建仓储应急知识图谱。');
+INSERT INTO `app_unstruct_task` VALUES (9, 1001, '采购谈判纪要抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:49', 65, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从采购谈判纪要提取谈判对象、价格、交付约定、附加条款，沉淀采购谈判知识。');
+INSERT INTO `app_unstruct_task` VALUES (10, 1001, '库存盘点报告抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:54', 70, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从库存盘点报告抽取盘点物料、账实差异、差异原因及处理意见，构建盘点相关知识。');
+INSERT INTO `app_unstruct_task` VALUES (11, 1001, '运输交付单文档抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:59', 75, 0, NULL, NULL, 2, '吴同', NULL, 1, 0, '吴同', 2, '2026-10-23 11:38:51', '吴同', 2, '2026-11-20 14:57:28', '从运输交付单提取承运方、物料、运输时间、签收信息，搭建物流交付链路知识。');
+INSERT INTO `app_unstruct_task` VALUES (12, 1001, '供应链采购与仓储协同抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:51', 70, 1, '2026-10-23 13:22:42', 2, 2, '吴同', '吴同', 1, 0, '吴同', 2, '2026-10-23 13:19:25', '吴同', NULL, '2026-11-20 14:57:28', '从采购、仓储相关文本中抽取协同节点、物料、单据、动作、异常等关键信息并结构化输出，支撑流程校验与风险识别。');
+INSERT INTO `app_unstruct_task` VALUES (13, 1001, '供应链采购与仓储协同业务实例描述文档抽取', 'ces.ttl', '/2026/11/19/6afe9c1884562a8ced3fae43.ttl', 2, '2026-11-06 13:34:54', 75, 1, '2026-10-23 14:56:52', 2, 2, '吴同', '吴同', 1, 0, '吴同', 2, '2026-10-23 14:50:07', '吴同', NULL, '2026-11-20 14:57:28', '该文档为供应链采购仓储业务自然语言样例，依托 ces.txt 本体抽取，包含多家企业、人员、多笔订单、物料、出入库、物流、质检场景，可从中抽取实体、属性、关系三元组，附带本体抽取映射说明。');
 
 -- ----------------------------
 -- Table structure for app_unstruct_task_doc_rel
@@ -1024,6 +1024,8 @@ INSERT INTO `basic_project_version` VALUES (16, 16, 'v2.0.0', '重大版本升�
 INSERT INTO `basic_project_version` VALUES (17, 1, 'v1.1.0', '迭代优化版本，基于v1.0.0补充出入库单据联动逻辑、物料批次追溯属性与供应商资质关联关系，优化零部件与成品的BOM组成层级定义', 'v1.0.0', 1, b'0', '吴同', 1, '2026-10-25 10:12:36', '吴同', NULL, '2026-10-25 10:12:36', NULL);
 INSERT INTO `basic_project_version` VALUES (18, 1, 'v2.0.0', '重大架构升级版本，重构库存多层级管控模型，新增跨仓调拨、在途库存、安全库存阈值定义，扩展多组织采购协同与多仓库联动能力', 'v1.1.0', 1, b'0', '吴同', 1, '2026-10-28 14:30:18', '吴同', NULL, '2026-10-28 14:30:18', '核心版本升级，向下兼容v1.x历史数据');
 
+
+
 -- ----------------------------
 -- Table structure for om_ai_adopt_log
 -- ----------------------------
@@ -1446,6 +1448,7 @@ DROP TABLE IF EXISTS `om_ai_file`;
 CREATE TABLE `om_ai_file`  (
                                `id` bigint NOT NULL AUTO_INCREMENT COMMENT '文件ID',
                                `task_id` bigint NOT NULL COMMENT 'AI建模任务ID',
+                               `source_file_id` bigint NULL DEFAULT NULL COMMENT '系统文件编号；用户上传文件为空',
                                `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '原始文件名称',
                                `file_url` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '文件存储地址',
                                `file_ext` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '文件扩展名',
@@ -1463,13 +1466,14 @@ CREATE TABLE `om_ai_file`  (
                                `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                                `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
                                PRIMARY KEY (`id`) USING BTREE,
-                               INDEX `idx_om_ai_file_task`(`task_id` ASC, `del_flag` ASC) USING BTREE
+                               INDEX `idx_om_ai_file_task`(`task_id` ASC, `del_flag` ASC) USING BTREE,
+                               INDEX `idx_om_ai_file_source`(`source_file_id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'AI辅助建模文件' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of om_ai_file
 -- ----------------------------
-INSERT INTO `om_ai_file` VALUES (1, 1, '采购业务文档.docx', '/2026/10/31/6ae5ddc5eefcfb2beff78a88.docx', 'docx', 15813, NULL, 2, NULL, 27, b'0', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:23:36', NULL);
+INSERT INTO `om_ai_file` VALUES (1, 1, NULL, '采购业务文档.docx', '/2026/10/31/6ae5ddc5eefcfb2beff78a88.docx', 'docx', 15813, NULL, 2, NULL, 27, b'0', 1, '吴同', '2026-10-31 20:23:34', NULL, '吴同', '2026-10-31 20:23:36', NULL);
 
 -- ----------------------------
 -- Table structure for om_ai_object
@@ -1479,6 +1483,7 @@ CREATE TABLE `om_ai_object`  (
                                  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                                  `task_id` bigint NOT NULL COMMENT 'AI建模任务ID',
                                  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '名称',
+                                 `color` varchar(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '#3B68C2' COMMENT '对象类型颜色',
                                  `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述',
                                  `parent_candidate_id` bigint NULL DEFAULT NULL COMMENT '父对象类型候选ID',
                                  `order_num` bigint NULL DEFAULT 0 COMMENT '显示顺序',
@@ -1501,10 +1506,10 @@ CREATE TABLE `om_ai_object`  (
 -- ----------------------------
 -- Records of om_ai_object
 -- ----------------------------
-INSERT INTO `om_ai_object` VALUES (1, 1, '采购订单', '记录采购业务需求的单据，包含状态、金额及指定供应商等信息', NULL, 0, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
-INSERT INTO `om_ai_object` VALUES (2, 1, '供应商', '提供物料或服务的外部组织实体，具有唯一编码与分类属性', NULL, 0, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
-INSERT INTO `om_ai_object` VALUES (3, 1, '物料', '被采购的物资实体，具有唯一编码，用于需求统计与分类管理', NULL, 0, 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
-INSERT INTO `om_ai_object` VALUES (4, 1, '采购明细', '订单内具体物料的采购记录，包含数量与单价，归属于特定订单', 1, 0, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-10-31 20:27:13', NULL);
+INSERT INTO `om_ai_object` VALUES (1, 1, '采购订单', '#E27E87', '记录采购业务需求的单据，包含状态、金额及指定供应商等信息', NULL, 1, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-11-20 14:57:28', NULL);
+INSERT INTO `om_ai_object` VALUES (2, 1, '供应商', '#5A23FC', '提供物料或服务的外部组织实体，具有唯一编码与分类属性', NULL, 2, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-11-20 14:57:28', NULL);
+INSERT INTO `om_ai_object` VALUES (3, 1, '物料', '#1B3857', '被采购的物资实体，具有唯一编码，用于需求统计与分类管理', NULL, 3, 0, NULL, NULL, 0.90000, b'0', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-11-20 14:57:28', NULL);
+INSERT INTO `om_ai_object` VALUES (4, 1, '采购明细', '#79ADBF', '订单内具体物料的采购记录，包含数量与单价，归属于特定订单', 1, 4, 0, NULL, NULL, 0.95000, b'0', 1, '吴同', '2026-10-31 20:27:13', NULL, NULL, '2026-11-20 14:57:28', NULL);
 
 -- ----------------------------
 -- Table structure for om_ai_object_target
@@ -1698,6 +1703,7 @@ CREATE TABLE `om_ai_task`  (
                                `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '任务描述',
                                `workspace_id` bigint NULL DEFAULT NULL COMMENT '工作区ID',
                                `version_id` bigint NOT NULL COMMENT '项目版本ID',
+                               `file_source` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'UPLOAD' COMMENT '文件来源：UPLOAD用户上传，SYSTEM系统文件',
                                `status` tinyint NOT NULL DEFAULT 0 COMMENT '0待执行 1解析中 2解析成功 3解析失败',
                                `current_stage` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '当前阶段',
                                `candidate_count` int NOT NULL DEFAULT 0 COMMENT '候选数据数量',
@@ -1719,17 +1725,17 @@ CREATE TABLE `om_ai_task`  (
 -- ----------------------------
 -- Records of om_ai_task
 -- ----------------------------
-INSERT INTO `om_ai_task` VALUES (1, '采购业务抽取', '解析采购申请单、采购订单、入库单、采购发票、供应商对账单据，抽取供应商、物料、采购数量、单价、金额、交付周期、结算方式等实体，构建采购领域知识图谱本体关系', 1001, 1, 2, 'FINISH', 37, '2026-10-31 20:23:34', '2026-10-31 20:32:33', NULL, b'0', 1, '吴同', '2026-10-31 20:23:33', NULL, '吴同', '2026-10-31 22:50:36', NULL);
-INSERT INTO `om_ai_task` VALUES (2, '销售订单业务抽取', '针对销售订单、发货单、回款单据做本体抽取，识别客户、商品、订单、回款关系，构建销售业务知识图谱', 1001, 1, 2, 'FINISH', 42, '2026-10-31 19:23:34', '2026-10-31 19:32:33', NULL, b'0', 1, '吴同', '2026-10-31 19:23:33', NULL, '吴同', '2026-10-31 19:32:33', NULL);
-INSERT INTO `om_ai_task` VALUES (3, '库存出入库业务抽取', '解析入库单、出库单、盘点单数据，提取物料、仓库、批次、数量变动信息，建立库存流转本体模型', 1001, 1, 2, 'FINISH', 31, '2026-10-31 18:23:34', '2026-10-31 18:32:33', NULL, b'0', 1, '吴同', '2026-10-31 18:23:33', NULL, '吴同', '2026-10-31 18:32:33', NULL);
-INSERT INTO `om_ai_task` VALUES (4, '生产工单业务抽取', '读取生产工单、工序流转卡、报工记录，抽取产品、工序、班组、设备、产量等生产核心实体与关联关系', 1001, 1, 2, 'PARSE', 55, '2026-10-31 17:23:34', NULL, NULL, b'0', 1, '吴同', '2026-10-31 17:23:33', NULL, '吴同', '2026-10-31 22:49:27', NULL);
-INSERT INTO `om_ai_task` VALUES (5, '财务应收单据抽取', '对接应收台账、发票、收款核销记录，识别客户应收、账期、核销流水，构建财务应收领域本体', 1001, 1, 0, 'WAIT', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 16:23:33', NULL, '吴同', '2026-10-31 22:51:08', NULL);
-INSERT INTO `om_ai_task` VALUES (6, '财务应付单据抽取', '解析采购发票、付款申请、付款回单，抽取供应商、应付账款、付款计划、核销关系数据', 1001, 1, 3, 'FAIL', 0, '2026-10-31 15:23:34', '2026-10-31 15:28:11', '源文件格式异常，部分Excel单元格存在合并单元格，字段无法正常拆分识别', b'0', 1, '吴同', '2026-10-31 15:23:33', NULL, '吴同', '2026-10-31 22:51:10', NULL);
-INSERT INTO `om_ai_task` VALUES (7, '人力资源人事抽取', '解析员工档案、劳动合同、考勤、绩效数据，抽取人员、岗位、部门、考勤绩效相关实体关系', 1001, 1, 2, 'FINISH', 47, '2026-10-31 14:23:34', '2026-10-31 14:32:33', NULL, b'0', 1, '吴同', '2026-10-31 14:23:33', NULL, '吴同', '2026-10-31 14:32:33', NULL);
-INSERT INTO `om_ai_task` VALUES (8, '设备运维工单抽取', '解析设备台账、维修工单、保养计划、故障记录，提取设备、故障类型、维保人员、备件更换信息', 1001, 1, 3, 'FAIL', 0, '2026-10-31 13:23:34', '2026-10-31 13:29:05', '模型调用超时，大模型接口响应长时间无返回，任务执行中断', b'0', 1, '吴同', '2026-10-31 13:23:33', NULL, '吴同', '2026-10-31 22:51:12', NULL);
-INSERT INTO `om_ai_task` VALUES (9, '质量检验单据抽取', '解析来料检验、过程检验、成品检验报告，抽取检验项、检验结果、不良原因、检验批次信息', 1001, 1, 2, 'PARSE', 39, '2026-10-31 12:23:34', NULL, NULL, b'0', 1, '吴同', '2026-10-31 12:23:33', NULL, '吴同', '2026-10-31 22:49:24', NULL);
-INSERT INTO `om_ai_task` VALUES (10, '仓储调拨单抽取', '解析仓库调拨、移库单、出库调拨单据，识别调出仓库、调入仓库、物料、调拨数量、调拨原因', 1001, 1, 0, 'WAIT', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 11:23:33', NULL, '吴同', '2026-10-31 22:51:13', NULL);
-INSERT INTO `om_ai_task` VALUES (11, '项目合同信息抽取', '解析项目合同、变更单、结算单，抽取项目、甲方乙方、合同金额、交付节点、结算进度信息', 1001, 1, 3, 'FAIL', 0, '2026-10-31 10:23:34', '2026-10-31 10:27:42', '文档内缺少预设本体中必须的合同编号字段，校验不通过直接终止解析', b'0', 1, '吴同', '2026-10-31 10:23:33', NULL, '吴同', '2026-10-31 22:51:16', NULL);
+INSERT INTO `om_ai_task` VALUES (1, '采购业务抽取', '解析采购申请单、采购订单、入库单、采购发票、供应商对账单据，抽取供应商、物料、采购数量、单价、金额、交付周期、结算方式等实体，构建采购领域知识图谱本体关系', 1001, 1, 'UPLOAD', 2, 'FINISH', 37, '2026-10-31 20:23:34', '2026-10-31 20:32:33', NULL, b'0', 1, '吴同', '2026-10-31 20:23:33', NULL, '吴同', '2026-10-31 22:50:36', NULL);
+INSERT INTO `om_ai_task` VALUES (2, '销售订单业务抽取', '针对销售订单、发货单、回款单据做本体抽取，识别客户、商品、订单、回款关系，构建销售业务知识图谱', 1001, 1, 'UPLOAD', 2, 'FINISH', 42, '2026-10-31 19:23:34', '2026-10-31 19:32:33', NULL, b'0', 1, '吴同', '2026-10-31 19:23:33', NULL, '吴同', '2026-10-31 19:32:33', NULL);
+INSERT INTO `om_ai_task` VALUES (3, '库存出入库业务抽取', '解析入库单、出库单、盘点单数据，提取物料、仓库、批次、数量变动信息，建立库存流转本体模型', 1001, 1, 'UPLOAD', 2, 'FINISH', 31, '2026-10-31 18:23:34', '2026-10-31 18:32:33', NULL, b'0', 1, '吴同', '2026-10-31 18:23:33', NULL, '吴同', '2026-10-31 18:32:33', NULL);
+INSERT INTO `om_ai_task` VALUES (4, '生产工单业务抽取', '读取生产工单、工序流转卡、报工记录，抽取产品、工序、班组、设备、产量等生产核心实体与关联关系', 1001, 1, 'UPLOAD', 2, 'PARSE', 55, '2026-10-31 17:23:34', NULL, NULL, b'0', 1, '吴同', '2026-10-31 17:23:33', NULL, '吴同', '2026-10-31 22:49:27', NULL);
+INSERT INTO `om_ai_task` VALUES (5, '财务应收单据抽取', '对接应收台账、发票、收款核销记录，识别客户应收、账期、核销流水，构建财务应收领域本体', 1001, 1, 'UPLOAD', 0, 'WAIT', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 16:23:33', NULL, '吴同', '2026-10-31 22:51:08', NULL);
+INSERT INTO `om_ai_task` VALUES (6, '财务应付单据抽取', '解析采购发票、付款申请、付款回单，抽取供应商、应付账款、付款计划、核销关系数据', 1001, 1, 'UPLOAD', 3, 'FAIL', 0, '2026-10-31 15:23:34', '2026-10-31 15:28:11', '源文件格式异常，部分Excel单元格存在合并单元格，字段无法正常拆分识别', b'0', 1, '吴同', '2026-10-31 15:23:33', NULL, '吴同', '2026-10-31 22:51:10', NULL);
+INSERT INTO `om_ai_task` VALUES (7, '人力资源人事抽取', '解析员工档案、劳动合同、考勤、绩效数据，抽取人员、岗位、部门、考勤绩效相关实体关系', 1001, 1, 'UPLOAD', 2, 'FINISH', 47, '2026-10-31 14:23:34', '2026-10-31 14:32:33', NULL, b'0', 1, '吴同', '2026-10-31 14:23:33', NULL, '吴同', '2026-10-31 14:32:33', NULL);
+INSERT INTO `om_ai_task` VALUES (8, '设备运维工单抽取', '解析设备台账、维修工单、保养计划、故障记录，提取设备、故障类型、维保人员、备件更换信息', 1001, 1, 'UPLOAD', 3, 'FAIL', 0, '2026-10-31 13:23:34', '2026-10-31 13:29:05', '模型调用超时，大模型接口响应长时间无返回，任务执行中断', b'0', 1, '吴同', '2026-10-31 13:23:33', NULL, '吴同', '2026-10-31 22:51:12', NULL);
+INSERT INTO `om_ai_task` VALUES (9, '质量检验单据抽取', '解析来料检验、过程检验、成品检验报告，抽取检验项、检验结果、不良原因、检验批次信息', 1001, 1, 'UPLOAD', 2, 'PARSE', 39, '2026-10-31 12:23:34', NULL, NULL, b'0', 1, '吴同', '2026-10-31 12:23:33', NULL, '吴同', '2026-10-31 22:49:24', NULL);
+INSERT INTO `om_ai_task` VALUES (10, '仓储调拨单抽取', '解析仓库调拨、移库单、出库调拨单据，识别调出仓库、调入仓库、物料、调拨数量、调拨原因', 1001, 1, 'UPLOAD', 0, 'WAIT', 0, NULL, NULL, NULL, b'0', 1, '吴同', '2026-10-31 11:23:33', NULL, '吴同', '2026-10-31 22:51:13', NULL);
+INSERT INTO `om_ai_task` VALUES (11, '项目合同信息抽取', '解析项目合同、变更单、结算单，抽取项目、甲方乙方、合同金额、交付节点、结算进度信息', 1001, 1, 'UPLOAD', 3, 'FAIL', 0, '2026-10-31 10:23:34', '2026-10-31 10:27:42', '文档内缺少预设本体中必须的合同编号字段，校验不通过直接终止解析', b'0', 1, '吴同', '2026-10-31 10:23:33', NULL, '吴同', '2026-10-31 22:51:16', NULL);
 
 -- ----------------------------
 -- Table structure for om_ai_term
@@ -2180,6 +2186,7 @@ CREATE TABLE `om_object_type`  (
                                    `workspace_id` bigint NOT NULL COMMENT '工作区id',
                                    `version_id` bigint NULL DEFAULT NULL COMMENT '版本id',
                                    `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '对象类型名称',
+                                   `color` varchar(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '#3B68C2' COMMENT '对象类型颜色',
                                    `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述',
                                    `parent_id` bigint NULL DEFAULT 0 COMMENT '父级id',
                                    `ancestors` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '祖级列表',
@@ -2199,17 +2206,17 @@ CREATE TABLE `om_object_type`  (
 -- ----------------------------
 -- Records of om_object_type
 -- ----------------------------
-INSERT INTO `om_object_type` VALUES (1, 1001, 1, '出库单', '记录物料出库和发货信息的业务单据，用于追溯物料流向、承运主体及收货方。', 0, '0', 5, 1, 0, '吴同', 1, '2026-10-20 13:25:00', '吴同', 1, '2026-10-20 13:25:00', NULL);
-INSERT INTO `om_object_type` VALUES (2, 1001, 1, '入库单', '记录物料接收、验收及入库情况的业务单据，用于到货核对和仓储追溯。', 0, '0', 4, 1, 0, '吴同', 1, '2026-10-20 13:25:30', '吴同', 1, '2026-10-20 13:25:30', NULL);
-INSERT INTO `om_object_type` VALUES (3, 1001, 1, '采购订单', '记录采购物料、供应商、采购金额和交货约定的业务单据。', 0, '0', 3, 1, 0, '吴同', 1, '2026-10-20 13:26:00', '吴同', 1, '2026-10-20 13:26:00', NULL);
-INSERT INTO `om_object_type` VALUES (4, 1001, 1, '成品', '完成生产加工并可交付使用的产品，可以通过组成关系追溯其零部件。', 7, '0,7', 3, 1, 0, '吴同', 1, '2026-10-20 13:26:30', '吴同', 1, '2026-10-20 13:26:30', NULL);
-INSERT INTO `om_object_type` VALUES (5, 1001, 1, '零部件', '用于组成设备或产品的部件，需要维护规格型号、图号和质量要求等信息。', 7, '0,7', 2, 1, 0, '吴同', 1, '2026-10-20 13:27:00', '吴同', 1, '2026-10-20 13:27:00', NULL);
-INSERT INTO `om_object_type` VALUES (6, 1001, 1, '原材料', '用于生产加工的基础材料，需要维护材料类别、牌号、纯度和质量标准等信息。', 7, '0,7', 1, 1, 0, '吴同', 1, '2026-10-20 13:27:30', '吴同', 1, '2026-10-20 13:27:30', NULL);
-INSERT INTO `om_object_type` VALUES (7, 1001, 1, '物料', '生产经营活动中采购、储存、使用或销售的实物资源。', 0, '0', 2, 1, 0, '吴同', 1, '2026-10-20 13:28:00', '吴同', 1, '2026-10-20 13:28:00', NULL);
-INSERT INTO `om_object_type` VALUES (8, 1001, 1, '物流服务商', '提供运输、配送及相关物流服务的组织，承担出库发货的运输任务。', 11, '0,11', 3, 1, 0, '吴同', 1, '2026-10-20 13:28:30', '吴同', 1, '2026-10-20 13:28:30', NULL);
-INSERT INTO `om_object_type` VALUES (9, 1001, 1, '采购方', '负责采购物料、下达采购订单并接收货物的组织。', 11, '0,11', 2, 1, 0, '吴同', 1, '2026-10-20 13:29:00', '吴同', 1, '2026-10-20 13:29:00', NULL);
-INSERT INTO `om_object_type` VALUES (10, 1001, 1, '供应商', '向企业提供物料或服务的组织，负责采购订单中约定物料的供应。', 11, '0,11', 1, 1, 0, '吴同', 1, '2026-10-20 13:29:30', '吴同', 1, '2026-10-20 13:29:30', NULL);
-INSERT INTO `om_object_type` VALUES (11, 1001, 1, '组织', '具有明确职责和管理结构的业务主体，可承担采购、供应、物流和业务单据管理等活动。', 0, '0', 1, 1, 0, '吴同', 1, '2026-10-20 13:30:00', '吴同', 1, '2026-10-20 13:30:00', NULL);
+INSERT INTO `om_object_type` VALUES (1, 1001, 1, '出库单', '#289470', '记录物料出库和发货信息的业务单据，用于追溯物料流向、承运主体及收货方。', 0, '0', 5, 1, 0, '吴同', 1, '2026-10-20 13:25:00', '吴同', 1, '2026-10-20 13:25:00', NULL);
+INSERT INTO `om_object_type` VALUES (2, 1001, 1, '入库单', '#B58200', '记录物料接收、验收及入库情况的业务单据，用于到货核对和仓储追溯。', 0, '0', 4, 1, 0, '吴同', 1, '2026-10-20 13:25:30', '吴同', 1, '2026-10-20 13:25:30', NULL);
+INSERT INTO `om_object_type` VALUES (3, 1001, 1, '采购订单', '#B93C32', '记录采购物料、供应商、采购金额和交货约定的业务单据。', 0, '0', 3, 1, 0, '吴同', 1, '2026-10-20 13:26:00', '吴同', 1, '2026-10-20 13:26:00', NULL);
+INSERT INTO `om_object_type` VALUES (4, 1001, 1, '成品', '#2A8CB8', '完成生产加工并可交付使用的产品，可以通过组成关系追溯其零部件。', 7, '0,7', 3, 1, 0, '吴同', 1, '2026-10-20 13:26:30', '吴同', 1, '2026-10-20 13:26:30', NULL);
+INSERT INTO `om_object_type` VALUES (5, 1001, 1, '零部件', '#6B4296', '用于组成设备或产品的部件，需要维护规格型号、图号和质量要求等信息。', 7, '0,7', 2, 1, 0, '吴同', 1, '2026-10-20 13:27:00', '吴同', 1, '2026-10-20 13:27:00', NULL);
+INSERT INTO `om_object_type` VALUES (6, 1001, 1, '原材料', '#C46518', '用于生产加工的基础材料，需要维护材料类别、牌号、纯度和质量标准等信息。', 7, '0,7', 1, 1, 0, '吴同', 1, '2026-10-20 13:27:30', '吴同', 1, '2026-10-20 13:27:30', NULL);
+INSERT INTO `om_object_type` VALUES (7, 1001, 1, '物料', '#0E706E', '生产经营活动中采购、储存、使用或销售的实物资源。', 0, '0', 2, 1, 0, '吴同', 1, '2026-10-20 13:28:00', '吴同', 1, '2026-10-20 13:28:00', NULL);
+INSERT INTO `om_object_type` VALUES (8, 1001, 1, '物流服务商', '#A83F70', '提供运输、配送及相关物流服务的组织，承担出库发货的运输任务。', 11, '0,11', 3, 1, 0, '吴同', 1, '2026-10-20 13:28:30', '吴同', 1, '2026-10-20 13:28:30', NULL);
+INSERT INTO `om_object_type` VALUES (9, 1001, 1, '采购方', '#4068A8', '负责采购物料、下达采购订单并接收货物的组织。', 11, '0,11', 2, 1, 0, '吴同', 1, '2026-10-20 13:29:00', '吴同', 1, '2026-10-20 13:29:00', NULL);
+INSERT INTO `om_object_type` VALUES (10, 1001, 1, '供应商', '#358252', '向企业提供物料或服务的组织，负责采购订单中约定物料的供应。', 11, '0,11', 1, 1, 0, '吴同', 1, '2026-10-20 13:29:30', '吴同', 1, '2026-10-20 13:29:30', NULL);
+INSERT INTO `om_object_type` VALUES (11, 1001, 1, '组织', '#B16C27', '具有明确职责和管理结构的业务主体，可承担采购、供应、物流和业务单据管理等活动。', 0, '0', 1, 1, 0, '吴同', 1, '2026-10-20 13:30:00', '吴同', 1, '2026-10-20 13:30:00', NULL);
 
 -- ----------------------------
 -- Table structure for om_object_type_attribute

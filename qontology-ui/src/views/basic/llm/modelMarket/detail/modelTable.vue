@@ -1,17 +1,17 @@
 <!--
  Copyright © 2025-present Jiangsu Qiantong Technology Co., Ltd.
- 
+
  This file is part of qOntology Intelligent Agent Building Platform (Open Source Edition).
- 
+
  qOntology is licensed under Apache License 2.0 with additional qOntology terms.
  You may use qOntology for commercial purposes, but you may not remove, hide,
  modify, or replace the qOntology logo, copyright notices, license notices,
  or attribution information without a separate commercial license.
- 
+
  White-label use, OEM distribution, rebranding, or presenting qOntology as
  another product requires separate commercial authorization from
  Jiangsu Qiantong Technology Co., Ltd.
- 
+
  Business License: https://community.qontology.ai/business/policy.html
  See the LICENSE file in the project root for full license information.
 -->
@@ -20,7 +20,7 @@
     <template #type="{ row }">
       <dict-tag :options="ai_model_tag" :value="row.type" />
     </template>
-    <template #isEnable="{ row }">
+    <template #status="{ row }">
       <el-switch
         v-model="row.status"
         :active-value="1"
@@ -78,7 +78,7 @@ const tableStore = reactive({
     { label: "编号", prop: "id", align: "center", width: 85, sortable: true },
     { label: "模型名称", prop: "name", align: "center", sortable: true },
     { label: "模型类型", prop: "type", slot: "type", align: "center" },
-    { label: "启用/禁用", prop: "isEnable", slot: "isEnable", align: "center" },
+    { label: "启用/禁用", prop: "status", slot: "status", align: "center" },
     {
       label: "操作",
       slot: "handle",
