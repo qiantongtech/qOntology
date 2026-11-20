@@ -59,6 +59,13 @@
           <template #text="{ row, column_data }">{{
             row[column_data.prop] ?? "-"
           }}</template>
+          <template #color="{ row }">
+            <div
+              class="color-box"
+              :style="{ backgroundColor: row.color || '#3B68C2' }"
+              :title="row.color || '#3B68C2'"
+            ></div>
+          </template>
           <template #description="{ row }">{{
             row.description?.trim() || "-"
           }}</template>
@@ -199,6 +206,10 @@
               从术语表中选择
             </el-button>
           </div>
+        </qt-form-item>
+
+        <qt-form-item class="row-full" label="颜色" prop="color">
+          <el-color-picker v-model="form.color" class="color-picker-circle" />
         </qt-form-item>
 
         <qt-form-item class="row-full" label="显示顺序" prop="orderNum">
@@ -450,6 +461,8 @@ const columns = reactive([
     width: 100,
     sortable: "custom",
   },
+  // 颜色由插槽展示，避免空值占位符与默认色块同时渲染。
+  { label: "对象类型颜色", slot: "color", width: 120, minWidth: 120, align: "center" },
   { prop: "attributeCount", label: "属性数量", slot: "text", width: 90 },
   { prop: "relationCount", label: "关系数量", slot: "text", width: 90 },
   {
@@ -496,6 +509,7 @@ const emptyForm = () => ({
   workspaceId: 1001,
   versionId: versionId.value,
   name: "",
+  color: "#3B68C2",
   description: "",
   parentId: null,
   orderNum: 0,
@@ -505,6 +519,10 @@ const form = ref(emptyForm());
 // 以打开弹窗时的节点层级判断，清空普通节点父级不会立即隐藏控件
 const editingRoot = ref(false);
 const rules = {
+  color: [
+    { required: true, message: "请选择颜色", trigger: "change" },
+    { pattern: /^#[0-9a-fA-F]{6}$/, message: "颜色必须为 #RRGGBB 格式", trigger: "change" },
+  ],
   targetIds: [
     {
       type: "array",
@@ -691,6 +709,7 @@ async function handleUpdate(row) {
   form.value = {
     ...emptyForm(),
     ...response.data,
+    color: response.data.color || "#3B68C2",
     parentId: editingRoot.value ? 0 : response.data.parentId,
   };
   selectedTargets.value = targetsResponse.data || [];
@@ -736,6 +755,7 @@ async function submitForm() {
           ? 0
           : form.value.parentId,
       name: form.value.name.trim(),
+      color: form.value.color,
       description: (form.value.description ?? "").trim(),
     };
     await (data.id ? updateType(data) : addType(data));
@@ -913,6 +933,30 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
+/* 与 qknow-pro 概念列表一致，使用居中的实心圆展示颜色。 */
+.color-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 25px;
+  height: 25px;
+  margin: 0 auto;
+  border-radius: 50%;
+}
+
+/* 沿用 qknow-pro 概念配置的圆形颜色选择器。 */
+.color-picker-circle :deep(.el-color-picker__trigger) {
+  width: 30px;
+  height: 30px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.color-picker-circle :deep(.el-color-picker__color) {
+  overflow: hidden;
+  border-radius: 50%;
+}
+
 .toggle-expand-all .svg-icon {
   font-size: 12px;
   margin-right: 6px;

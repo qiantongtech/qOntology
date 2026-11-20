@@ -73,7 +73,7 @@ export default [
                 component: () => import('@/views/app/extractResults/index.vue'),
                 hidden: true,
                 name: 'AppExtractResults',
-                meta: {title: '抽取结果', activeMenu: '/app/graph/structTask'}
+                meta: {title: '抽取结果', activeMenu: '/app/graph/structTask', noCache: true}
             }
         ]
     }

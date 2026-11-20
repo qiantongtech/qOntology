@@ -11,6 +11,7 @@ import tech.qiantong.qontology.module.om.api.service.ProjectCopyContext;
 import tech.qiantong.qontology.module.om.dal.dataobject.object.OmObjectTypeDO;
 import tech.qiantong.qontology.module.om.dal.mapper.object.OmObjectTypeMapper;
 import tech.qiantong.qontology.module.om.api.service.IProjectRepeatable;
+import tech.qiantong.qontology.module.om.api.service.IOmObjectTypeColorApiService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,10 +22,21 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class OmObjectTypeApiServiceImpl implements IProjectRepeatable {
+public class OmObjectTypeApiServiceImpl implements IProjectRepeatable, IOmObjectTypeColorApiService {
 
     @Resource
     private OmObjectTypeMapper omObjectTypeMapper;
+
+    @Override
+    public Map<Long, String> getColors(java.util.Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) return java.util.Collections.emptyMap();
+        return omObjectTypeMapper.selectList(Wrappers.<OmObjectTypeDO>lambdaQuery()
+                .select(OmObjectTypeDO::getId, OmObjectTypeDO::getColor)
+                .eq(OmObjectTypeDO::getValidFlag, true)
+                .in(OmObjectTypeDO::getId, ids)).stream()
+                .filter(type -> type.getColor() != null && type.getColor().matches("#[0-9a-fA-F]{6}"))
+                .collect(Collectors.toMap(OmObjectTypeDO::getId, OmObjectTypeDO::getColor));
+    }
 
     /**
      * 复制

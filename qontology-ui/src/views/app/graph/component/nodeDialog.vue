@@ -60,11 +60,10 @@
               <template #title>
                 <div class="collapse-title">属性信息</div>
               </template>
-              <div class="collapse-con">
+              <div v-loading="attrLoading" class="collapse-con">
                 <qt-table
                   v-bind="attrTableStore"
                   ref="attrTableRef"
-                  v-loading="attrLoading"
                 >
                   <template #dataType="{ row }">
                     <dict-tag
@@ -163,7 +162,7 @@
                 <template #title>
                   <div class="collapse-title">关联数据源</div>
                 </template>
-                <div class="collapse-con">
+                <div v-loading="dataSourceLoading" class="collapse-con">
                   <div class="ds-info-grid">
                     <div class="text-left">
                       数据库名称:
@@ -185,7 +184,6 @@
                   <qt-table
                     v-bind="dataSourceTableStore"
                     ref="dataSourceTableRef"
-                    v-loading="dataSourceLoading"
                   />
                 </div>
               </el-collapse-item>
@@ -502,6 +500,8 @@ const nodeTechnicalFields = new Set([
   "paragraphIndex",
   "textIds",
   "schemaName",
+  "schemaIri",
+  "schemaColor",
   "fragment",
   "label",
   "rowBackground",

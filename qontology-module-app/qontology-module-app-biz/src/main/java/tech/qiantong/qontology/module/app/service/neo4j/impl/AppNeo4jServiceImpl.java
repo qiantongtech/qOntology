@@ -253,6 +253,11 @@ public class AppNeo4jServiceImpl implements AppNeo4jService {
             if (properties != null) {
                 properties.forEach((key, value) -> putDynamicProperty(graphEntity, key, value));
             }
+            // 视觉元数据单独保存，业务属性不能覆盖 TTL 的类型颜色。
+            graphEntity.getDynamicProperties().remove("schema_iri");
+            graphEntity.getDynamicProperties().remove("schema_color");
+            putDynamicProperty(graphEntity, "schema_iri", entityResult.get("schemaIri"));
+            putDynamicProperty(graphEntity, "schema_color", entityResult.get("schemaColor"));
         }
 
         GraphUpsertWrapper<GraphEntity> mergeWrapper = buildEntityMergeWrapper(

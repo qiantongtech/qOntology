@@ -1,6 +1,7 @@
 package tech.qiantong.qontology.module.app.service.appUnstructTask.impl;
 
 import com.alibaba.fastjson2.JSONObject;
+import tech.qiantong.qontology.module.app.service.extraction.ExtractionTypeColors;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -274,6 +275,7 @@ public class AppUnstructTaskServiceImpl extends ServiceImpl<AppUnstructTaskMappe
         if (StringUtils.isBlank(ttl)) {
             throw new ServiceException("TTL文件为空，无法执行抽取");
         }
+        Map<String, ExtractionTypeColors.TypeStyle> typeStyles = ExtractionTypeColors.parse(ttl);
         List<Long> docIdList = docRelDOList.stream()
                 .map(AppUnstructTaskDocRelDO::getDocId)
                 .collect(Collectors.toList());
@@ -304,6 +306,7 @@ public class AppUnstructTaskServiceImpl extends ServiceImpl<AppUnstructTaskMappe
                 appTaskLogService.recordStep(logId, step);
 
                 JSONObject result = extractionModelService.extract(ttl, segment);
+                ExtractionTypeColors.apply(result, typeStyles);
                 log.info("非结构化抽取标准结果：{}", result.toJSONString());
                 Long textId = saveTaskText(
                         unstructTaskDO, docRelDO.getDocId(), paragraphIndex, segment);

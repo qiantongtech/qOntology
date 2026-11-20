@@ -31,6 +31,8 @@ import javax.xml.stream.XMLStreamWriter;
  */
 abstract class OntologyDocumentWriter {
 
+    static final String UI_NAMESPACE = "https://qontology.ai/ontology/ui#";
+
     private static final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     private static final String XML = "http://www.w3.org/XML/1998/namespace";
 
@@ -50,6 +52,7 @@ abstract class OntologyDocumentWriter {
         prefixes.put("dct", "http://purl.org/dc/terms/");
         prefixes.put("xsd", "http://www.w3.org/2001/XMLSchema#");
         prefixes.put("ont", namespace);
+        if (turtle) prefixes.put("ui", UI_NAMESPACE);
         return turtle ? new TurtleWriter(prefixes) : new RdfXmlWriter(prefixes);
     }
 

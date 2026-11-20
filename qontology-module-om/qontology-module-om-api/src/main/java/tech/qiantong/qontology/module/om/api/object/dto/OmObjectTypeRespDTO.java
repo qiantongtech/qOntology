@@ -43,6 +43,9 @@ public class OmObjectTypeRespDTO {
     /** 对象类型名称 */
     private String name;
 
+    /** 对象类型颜色，格式为 #RRGGBB。 */
+    private String color;
+
     /** 描述 */
     private String description;
 

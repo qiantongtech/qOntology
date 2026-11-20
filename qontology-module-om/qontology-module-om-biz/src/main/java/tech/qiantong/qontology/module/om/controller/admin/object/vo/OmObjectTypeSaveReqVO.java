@@ -58,6 +58,10 @@ public class OmObjectTypeSaveReqVO extends BaseEntity {
     @Size(max = 128, message = "对象类型名称长度不能超过128个字符")
     private String name;
 
+    @Schema(description = "对象类型颜色，省略时沿用原值或默认色", example = "#3B68C2")
+    @jakarta.validation.constraints.Pattern(regexp = "^#[0-9a-fA-F]{6}$", message = "颜色必须为 #RRGGBB 格式")
+    private String color;
+
     @Schema(description = "描述", example = "")
     @Size(max = 512, message = "描述长度不能超过512个字符")
     private String description;

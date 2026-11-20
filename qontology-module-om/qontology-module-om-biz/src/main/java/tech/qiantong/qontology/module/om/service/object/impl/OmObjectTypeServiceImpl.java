@@ -108,6 +108,7 @@ public class OmObjectTypeServiceImpl
     public Long createOmObjectType(OmObjectTypeSaveReqVO createReqVO) {
         OmObjectTypeDO objectType = BeanUtils.toBean(createReqVO, OmObjectTypeDO.class);
         objectType.setId(null);
+        if (objectType.getColor() == null) objectType.setColor("#3B68C2");
         validateNameUnique(objectType);
         prepareTree(objectType);
         omObjectTypeMapper.insert(objectType);
