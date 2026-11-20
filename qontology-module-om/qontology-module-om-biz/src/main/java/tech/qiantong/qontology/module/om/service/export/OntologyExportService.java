@@ -158,6 +158,13 @@ public class OntologyExportService implements OntologyExportApi {
                 entity(x, "owl", "AnnotationProperty", ns + annotation);
                 x.endEntity();
             }
+            // 颜色是可选的可视化注解，目前仅随 TTL 导出。
+            if (turtle) {
+                entity(x, "owl", "AnnotationProperty", OntologyDocumentWriter.UI_NAMESPACE + "color");
+                text(x, "rdfs", "label", "对象类型颜色");
+                resource(x, "rdfs", "range", XSD + "string");
+                x.endEntity();
+            }
             for (Map.Entry<BusinessTypeKey, BasicDataTypeOptionDTO> entry : businessTypes.entrySet()) {
                 BusinessTypeKey key = entry.getKey();
                 BasicDataTypeOptionDTO type = entry.getValue();
@@ -180,6 +187,7 @@ public class OntologyExportService implements OntologyExportApi {
             for (OmObjectTypeDO type : types) {
                 entity(x, "owl", "Class", ns + "type_" + type.getId());
                 labels(x, type.getName(), type.getDescription());
+                if (turtle) text(x, "ui", "color", type.getColor());
                 if (type.getParentId() != null && type.getParentId() != 0) resource(
                     x,
                     "rdfs",

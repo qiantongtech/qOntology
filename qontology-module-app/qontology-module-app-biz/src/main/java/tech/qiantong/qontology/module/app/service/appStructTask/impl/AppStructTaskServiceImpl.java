@@ -72,6 +72,7 @@ import tech.qiantong.qontology.module.app.service.appTaskLog.IAppTaskLogService;
 import tech.qiantong.qontology.module.app.service.neo4j.AppNeo4jService;
 import tech.qiantong.qontology.module.app.controller.admin.graph.vo.AppGraphVO;
 import tech.qiantong.qontology.module.app.service.graph.AppGraphService;
+import tech.qiantong.qontology.module.om.api.service.IOmObjectTypeColorApiService;
 import tech.qiantong.qontology.quartz.domain.SysJob;
 import tech.qiantong.qontology.quartz.util.CronUtils;
 import tech.qiantong.qontology.quartz.util.ScheduleUtils;
@@ -127,6 +128,9 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
 
     @Resource
     private GraphisRepository graphisRepository;
+
+    @Resource
+    private IOmObjectTypeColorApiService objectTypeColorApiService;
 
     @Resource
     private IAppTaskLogService appTaskLogService;
@@ -289,6 +293,7 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
             }
 
             // 5. 先保存实体，再按表名与主键合并关系。
+            applyStructuredColorSnapshots(entities);
             entities.forEach(appNeo4jService::saveStructEntity);
             for (Map<String, Object> relation : relations) {
                 GraphEntity source = (GraphEntity) relation.get("source");
@@ -509,9 +514,36 @@ public class AppStructTaskServiceImpl extends ServiceImpl<AppStructTaskMapper, A
         return entity;
     }
 
-    /**
-     * 在实体列表中查找实体（根据表名和主键值）
-     */
+    /** 保存前批量获取映射类型颜色，作为本次抽取实体的 schema_color 快照。 */
+    private void applyStructuredColorSnapshots(List<GraphEntity> entities) {
+        Set<Long> ids = entities.stream().map(this::mappedTypeId)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, String> colors = ids.isEmpty() ? Collections.emptyMap() : objectTypeColorApiService.getColors(ids);
+        for (GraphEntity entity : entities) {
+            Long id = mappedTypeId(entity);
+            String color = id == null ? null : colors.get(id);
+            // 类型颜色属于元数据，不能沿用同名业务属性或上次抽取的无效值。
+            entity.getDynamicProperties().remove("schema_color");
+            entity.getDynamicProperties().remove("schemaColor");
+            if (color != null && color.matches("#[0-9a-fA-F]{6}")) {
+                entity.putDynamicProperties("schema_color", color);
+            }
+        }
+    }
+
+    /** 没有类型映射的目标实体或历史异常编号不参与颜色查询。 */
+    private Long mappedTypeId(GraphEntity entity) {
+        Object value = entity.getProperty("schema_id");
+        if (value == null || !value.toString().matches("[0-9]+")) return null;
+        try {
+            long id = Long.parseLong(value.toString());
+            return id > 0 ? id : null;
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+    }
+
+    /** 在实体列表中按表名和主键值查找实体。 */
     private GraphEntity findEntityInList(List<GraphEntity> entities, String tableName, Object primaryKeyValue) {
         for (GraphEntity entity : entities) {
             if (tableName.equals(entity.getDynamicProperties().get("table_name")) &&

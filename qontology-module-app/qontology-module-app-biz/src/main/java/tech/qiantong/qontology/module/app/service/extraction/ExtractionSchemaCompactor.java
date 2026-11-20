@@ -35,29 +35,7 @@ final class ExtractionSchemaCompactor {
     }
 
     private static String project(String ttl) {
-        Map<String, String> prefixes = new LinkedHashMap<>();
-        Map<String, Map<String, List<String>>> subjects = new LinkedHashMap<>();
-        for (String raw : ttl.split("\\R")) {
-            String line = raw.trim();
-            if (line.isEmpty() || line.startsWith("#")) {
-                continue;
-            }
-            Matcher prefix = PREFIX.matcher(line);
-            if (prefix.matches()) {
-                prefixes.put(prefix.group(1), prefix.group(2));
-                continue;
-            }
-            Matcher triple = TRIPLE.matcher(line);
-            if (!triple.matches()) {
-                throw new IllegalArgumentException("非逐行 Turtle");
-            }
-            String subject = iri(triple.group(1), prefixes);
-            String predicate = "a".equals(triple.group(2)) ? RDF + "type" : iri(triple.group(2), prefixes);
-            String object = triple.group(3);
-            String value = object.startsWith("\"") ? literal(object) : iri(object, prefixes);
-            subjects.computeIfAbsent(subject, ignored -> new LinkedHashMap<>())
-                    .computeIfAbsent(predicate, ignored -> new ArrayList<>()).add(value);
-        }
+        Map<String, Map<String, List<String>>> subjects = readSubjects(ttl);
 
         Map<String, String> names = new LinkedHashMap<>();
         subjects.forEach((id, fields) -> {
@@ -96,6 +74,7 @@ final class ExtractionSchemaCompactor {
                         return;
                     }
                     case RDFS + "label" -> { return; }
+                    case "https://qontology.ai/ontology/ui#color" -> { return; }
                     case RDFS + "comment" -> key = "description";
                     case RDFS + "domain" -> { key = "domain"; reference = true; }
                     case RDFS + "range" -> { key = "range"; reference = true; }
@@ -127,6 +106,34 @@ final class ExtractionSchemaCompactor {
         });
         String compact = JSON.toJSONString(schema);
         return compact.length() < ttl.length() ? compact : ttl;
+    }
+
+    /** 解析本平台逐行 Turtle；无法完整识别的语法交由调用方回退。 */
+    static Map<String, Map<String, List<String>>> readSubjects(String ttl) {
+        Map<String, String> prefixes = new LinkedHashMap<>();
+        Map<String, Map<String, List<String>>> subjects = new LinkedHashMap<>();
+        for (String raw : ttl.split("\\R")) {
+            String line = raw.trim();
+            if (line.isEmpty() || line.startsWith("#")) {
+                continue;
+            }
+            Matcher prefix = PREFIX.matcher(line);
+            if (prefix.matches()) {
+                prefixes.put(prefix.group(1), prefix.group(2));
+                continue;
+            }
+            Matcher triple = TRIPLE.matcher(line);
+            if (!triple.matches()) {
+                throw new IllegalArgumentException("非逐行 Turtle");
+            }
+            String subject = iri(triple.group(1), prefixes);
+            String predicate = "a".equals(triple.group(2)) ? RDF + "type" : iri(triple.group(2), prefixes);
+            String object = triple.group(3);
+            String value = object.startsWith("\"") ? literal(object) : iri(object, prefixes);
+            subjects.computeIfAbsent(subject, ignored -> new LinkedHashMap<>())
+                    .computeIfAbsent(predicate, ignored -> new ArrayList<>()).add(value);
+        }
+        return subjects;
     }
 
     private static boolean isSchema(Map<String, List<String>> fields) {

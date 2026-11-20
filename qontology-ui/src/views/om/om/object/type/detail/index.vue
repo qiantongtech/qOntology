@@ -26,6 +26,14 @@
                 mode="free"
                 @back="returnToList"
             >
+                <template #color>
+                    <span
+                        class="color-swatch"
+                        :style="{ backgroundColor: detail.color || '#3B68C2' }"
+                        role="img"
+                        aria-label="对象类型颜色"
+                    ></span>
+                </template>
                 <template #description>
                     <span
                         class="description-text"
@@ -78,13 +86,13 @@
     const detailItems = [
         { label: '属性数量', key: 'attributeCount' },
         { label: '关系数量', key: 'relationCount' },
+        { label: '颜色', key: 'color', slot: 'color' },
+        { label: '描述', key: 'description', span: 24, className: 'mt2 mb2', slot: 'description' },
         { label: '创建人', key: 'createBy', formatter: (name, record) => {
             const phone = creatorPhones.value[record.creatorId];
             return phone ? `${name || '-'} / ${phone}` : name || '-';
         } },
-        { label: '描述', key: 'description', span: 24, className: 'mt2 mb2', slot: 'description' },
         { label: '创建时间', key: 'createTime', type: 'time' },
-        { label: '更新时间', key: 'updateTime', type: 'time' },
         { label: '更新人', key: 'updateBy', formatter: (name, record) => {
             const phone = creatorPhones.value[record.creatorId];
             return phone ? `${name || '-'} / ${phone}` : name || '-';
@@ -157,6 +165,14 @@
 </script>
 
 <style scoped lang="scss">
+    .color-swatch {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+
     .description-text {
         display: -webkit-box;
         -webkit-box-orient: vertical;

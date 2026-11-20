@@ -461,7 +461,7 @@ import { filePreview } from "@/utils/kkFileView.js";
 
 import NodeDialog from "../component/nodeDialog.vue";
 import { G6Network } from "@/utils/graph/g6Network";
-import { pickColorByEntityId } from "@/utils/graph/entityColor";
+import { getEntityTypeColor } from "@/utils/graph/entityColor";
 
 const getAssetsFile = (url) => {
   return new URL(`/src/assets/ke/images/${url}`, import.meta.url).href;
@@ -663,7 +663,7 @@ function renderGraphData(sourceData) {
   // step：普通：0，特殊颜色：1，选中：2，相邻节点：-1
   nodes.value = data.entities.map((item) => {
     const entityName = item.name || "";
-    const fill = pickColorByEntityId(item.id);
+    const fill = getEntityTypeColor(item);
     return {
       ...item,
       id: item.id + "",

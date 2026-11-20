@@ -113,6 +113,12 @@
             <artifactId>qontology-module-basic-api</artifactId>
             <version>${qontology.version}</version>
         </dependency>
+        <!-- 按映射对象类型 ID 查询结构化图谱颜色 -->
+        <dependency>
+            <groupId>tech.qiantong</groupId>
+            <artifactId>qontology-module-om-api</artifactId>
+            <version>${qontology.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

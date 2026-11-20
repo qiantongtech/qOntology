@@ -69,7 +69,7 @@ import { getUnstructTaskTextList } from "@/api/app/unstructTask";
 // 引入graph方法
 import { VisNetwork, DEFAULT_OPTIONS } from "@/utils/graph/visNetwork";
 import { G6Network } from "@/utils/graph/g6Network";
-import { pickColorByEntityId } from "@/utils/graph/entityColor";
+import { getEntityTypeColor } from "@/utils/graph/entityColor";
 const route = useRoute();
 const nodeDialogRef = ref();
 
@@ -78,8 +78,6 @@ const relationRef = ref();
 let relationGraph = null;
 const relationData = reactive({
   loading: false,
-  // schema&tool图例
-  schemaList: { data: { rows: [] } },
   toolShow: false,
   toolData: [
     {
@@ -96,7 +94,6 @@ const relationData = reactive({
   searchData: [],
 });
 const {
-  schemaList,
   toolShow,
   toolData,
   loading,
@@ -258,11 +255,7 @@ const getGraphData = async () => {
       let data = response.data;
       // step：普通：0，特殊颜色：1，选中：2，相邻节点：-1
       nodes.value = data.entities.map((item) => {
-        const row = schemaList.value.data.rows.find(
-          (i) => item.schemaId == i.id
-        );
-        // 优先用概念配色，无概念颜色时按实体 id 哈希取色，避免默认深蓝与背景同色
-        const fill = row?.color || pickColorByEntityId(item.id);
+        const fill = getEntityTypeColor(item);
         return {
           ...item,
           id: item.id + "",
@@ -272,8 +265,8 @@ const getGraphData = async () => {
             background: fill,
             border: `${fill}4d`,
           },
-          borderWidth: row ? 15 : 0,
-          step: row ? 1 : 0,
+          borderWidth: 0,
+          step: 0,
           cluster: item.id + "",
         };
       });

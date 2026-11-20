@@ -88,8 +88,8 @@
 
 ### 1. 创建MySQL数据库并导入数据
 
-- 创建 MySQL 数据库：`qontology_dev`
-- 导入数据脚本：`latest初始化`
+- 首次部署时，创建 `qontology_dev`，并在该库中导入 [`latest初始化.sql`](sql/mysql/initialization/latest初始化.sql)。该脚本会重建表，已有环境应使用对应版本的升级脚本。
+- 在应用实际连接的库中执行 `SHOW COLUMNS FROM om_object_type LIKE 'color';`。如果查询为空，从 [`change.sql`](sql/mysql/change.sql) 中依次执行开头的 `ALTER TABLE om_object_type` 和 `UPDATE om_object_type`，添加颜色字段并为已有对象类型分配颜色。
 
 ### 2. 修改MySQL数据库连接配置
 
@@ -106,28 +106,45 @@ mysql:
   password: 数据库密码
 ```
 
-### 3. 创建Neo4j数据库并导入数据
+### 3. 创建 Neo4j 数据库并导入数据
 
-> - Neo4j版本要求4.4.x以上，推荐使用4.4.40版本。  
-> - 由于Neo4j建议使用java 11版本，系统使用java 17版本运行。推荐使用docker安装Neo4j，避免环境冲突问题。  
-> - 如果您坚持使用本地部署Neo4j，至少使用java 17及以上版本运行或配置两套java环境分别运行Neo4j及qOntology。
+演示数据位于 [`sql/neo4j/neo4j.dump`](sql/neo4j/neo4j.dump)，本地导入推荐使用 Neo4j 4.4.40。使用 Docker 部署时，启动脚本会在首次初始化 Neo4j 时自动导入安装包中的演示数据。
 
-#### 步骤 1: 关闭Neo4j服务
-- 进入Neo4j安装目录，在bin目录下，执行`./neo4j stop`将服务关掉。
+#### 步骤 1 停止本地 Neo4j 并备份
 
-#### 步骤 2: 复制演示数据
+进入 Neo4j 安装目录。在 Linux 或 macOS 上执行 `./bin/neo4j stop`，在 Windows 服务模式下执行 `.\bin\neo4j.bat stop`。如果 Neo4j 在前台控制台运行，在启动它的窗口中按 `Ctrl+C`，等待服务退出。
 
-- 停止 Neo4j 后，先备份 Neo4j 安装目录下已有的 `conf` 和 `data` 目录。
-- 将仓库 `sql/neo4j` 下的 `conf` 和 `data` 复制到 Neo4j 安装目录根目录，与 `bin` 同级。
+如果已有数据，先用 `neo4j-admin dump --database=neo4j --to=<备份文件路径>` 备份。Windows 对应命令为 `neo4j-admin.bat`。
 
-**注意**：复制仓库提供的 `conf` 后，如果启动 Neo4j 时提示事务日志保留策略（`db.tx_log.rotation.retention_policy`）校验失败，请打开 Neo4j 安装目录下的 `conf/neo4j.conf`，将该配置项替换为下方内容，保存后重新启动 Neo4j。
+#### 步骤 2 导入演示数据
 
-```properties
-db.tx_log.rotation.retention_policy=12 hours 500M
+在 Neo4j 安装目录执行对应命令，将示例中的 dump 路径替换为本地实际路径。
+
+Linux 或 macOS
+
+```bash
+./bin/neo4j-admin load --database=neo4j --from="/path/to/qOntology/sql/neo4j/neo4j.dump"
 ```
 
-#### 步骤 3: 启动Neo4j服务
-- 进入Neo4j安装目录，在bin目录下，执行`./neo4j start`启动服务
+Windows PowerShell
+
+```powershell
+.\bin\neo4j-admin.bat load --database=neo4j --from="D:\qOntology\sql\neo4j\neo4j.dump"
+```
+
+如果已存在 `neo4j` 数据库，确认备份可用且确实要替换后，在导入命令末尾加 `--force`。这会覆盖现有的 `neo4j` 数据库。
+
+如果本机使用 **Neo4j 5.x**，先在独立的 Neo4j 4.4.40 实例中导入并启动演示库，再正常停库，按官方指南迁移到 5.x。如果迁移仍提示 `Unable to find last transaction in log files`，可在该临时演示库中分两次提交创建和删除一个临时节点，再正常停库并重试迁移。[Neo4j 升级与迁移指南](https://neo4j.com/docs/upgrade-migration-guide/current/)
+
+迁移后用 5.x 重新导出 dump。要将它导入其他 5.x 实例，使用 `neo4j-admin database load --from-path=<dump 所在目录> neo4j`。如果要覆盖现有库，先执行 `neo4j-admin database dump --to-path=<备份目录> neo4j`，再用 `--overwrite-destination=true` 导入。
+
+#### 步骤 3 启动并验证
+
+在 Linux 或 macOS 上执行 `./bin/neo4j start`，在 Windows 上执行 `.\bin\neo4j.bat console` 启动。打开 Neo4j Browser，连接 `neo4j` 数据库并执行以下查询，确认节点数大于 0。浏览器默认地址为 [http://localhost:7474](http://localhost:7474)。
+
+```cypher
+MATCH (n) RETURN count(n) AS totalNodes;
+```
 
 ### 4. 修改Neo4j数据库连接配置
 
@@ -135,7 +152,7 @@ db.tx_log.rotation.retention_policy=12 hours 500M
 
 ```yaml
 neo4j:
-  uri: 数据库地址
+  uri: bolt://127.0.0.1:7687
   user: 数据库账号
   password: 数据库密码
 ```
@@ -146,9 +163,9 @@ neo4j:
 
 ```yaml
 server:
-  port: 端口            # 默认为8090
+  port: 8099           # 后端监听端口
   servlet:
-    context-path: /应用路径  # 应用访问路径，默认为空
+    context-path: /    # 应用访问路径
 ```
 
 ---
@@ -157,7 +174,7 @@ server:
 
 1. 使用 IntelliJ IDEA 或 Eclipse 导入项目。
 2. IDE 将自动加载 Maven 依赖，初次加载可能较慢。
-3. 运行 `tech.qiantong.qontology.server.QOntologyApplication.java`。启动成功后，可通过 `http://localhost:8090` 访问后端服务。
+3. 运行 `tech.qiantong.qontology.server.QOntologyApplication.java`。启动成功后，可通过 `http://localhost:8099` 访问后端服务。
 4. 出现以下提示，表示后端服务启动成功：
 
 ```
@@ -186,7 +203,7 @@ server: {
   open: true,
   proxy: {
     "/dev-api": {
-      target: "http://localhost:8090",
+      target: "http://localhost:8099",
       changeOrigin: true,
       rewrite: (p) => p.replace(/^\/dev-api/, ""),
     },
