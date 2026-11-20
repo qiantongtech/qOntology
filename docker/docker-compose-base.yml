@@ -83,7 +83,7 @@ services:
 
   neo4j:
     image: ${QONTOLOGY_HUB}/neo4j:4.4.40
-    # Linux 管理脚本注入 qtt 的 UID/GID；Windows 启动脚本仍使用镜像默认用户。
+    # Linux 管理脚本注入当前非 root 用户的 UID/GID；root 和 Windows 使用镜像默认用户。
     user: "${QONTOLOGY_NEO4J_UID:-7474}:${QONTOLOGY_NEO4J_GID:-7474}"
     profiles: ["all", "base"]
     restart: always

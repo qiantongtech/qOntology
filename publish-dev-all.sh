@@ -132,6 +132,7 @@ echo "🐳 正在远程启动 Docker 服务..."
 ssh "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     set -e
     cd ${REMOTE_DIR}/docker
+    sed -i 's/\r$//' qontology.sh reset.sh
     if [ ! -d qOntology/server/upload ]; then
         mkdir -p qOntology/server/upload
         cp -R qOntology/server/upload-init/. qOntology/server/upload/

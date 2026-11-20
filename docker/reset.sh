@@ -12,7 +12,7 @@ set -e  # 任意步骤失败时立即退出，避免只重置了一部分数据
 # 自动取得当前脚本所在目录，支持部署包安装到任意路径。
 COMPOSE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 PROJECT_NAME=${QONTOLOGY_PROJECT_NAME:-qontology}
-COMPOSE_CMD="docker compose"
+COMPOSE_KIND=plugin
 NEO4J_CHOWN=1
 case "$(uname -s)" in
     MINGW*|MSYS*|CYGWIN*)
@@ -21,10 +21,12 @@ case "$(uname -s)" in
         NEO4J_CHOWN=0
         ;;
     *)
-        NEO4J_HOST_USER=${QONTOLOGY_NEO4J_HOST_USER:-qtt}
-        id "$NEO4J_HOST_USER" >/dev/null 2>&1 || { echo "❌ 宿主机用户不存在：$NEO4J_HOST_USER"; exit 1; }
-        QONTOLOGY_NEO4J_UID=$(id -u "$NEO4J_HOST_USER")
-        QONTOLOGY_NEO4J_GID=$(id -g "$NEO4J_HOST_USER")
+        QONTOLOGY_NEO4J_UID=$(id -u)
+        QONTOLOGY_NEO4J_GID=$(id -g)
+        if [ "$QONTOLOGY_NEO4J_UID" -eq 0 ]; then
+            QONTOLOGY_NEO4J_UID=7474
+            QONTOLOGY_NEO4J_GID=7474
+        fi
         ;;
 esac
 export QONTOLOGY_NEO4J_UID QONTOLOGY_NEO4J_GID
@@ -32,15 +34,25 @@ export QONTOLOGY_NEO4J_UID QONTOLOGY_NEO4J_GID
 cd "$COMPOSE_DIR"
 
 # 统一封装 Compose 命令，后续不再依赖固定容器名称。
+compose_binary() {
+    if [ "$COMPOSE_KIND" = plugin ]; then docker compose "$@"; else docker-compose "$@"; fi
+}
 compose() {
-    $COMPOSE_CMD --project-directory "$COMPOSE_DIR" --env-file "$COMPOSE_DIR/.env" \
+    compose_binary --project-directory "$COMPOSE_DIR" --env-file "$COMPOSE_DIR/.env" \
         -p "$PROJECT_NAME" -f "$COMPOSE_DIR/docker-compose.yml" --profile all "$@"
+}
+version_ge() {
+    awk -v a="$1" -v b="$2" 'BEGIN {split(a,x,".");split(b,y,".");for(i=1;i<=3;i++){if(x[i]+0>y[i]+0)exit 0;if(x[i]+0<y[i]+0)exit 1}exit 0}'
 }
 
 # 基础环境和重置文件检查。
 command -v docker >/dev/null 2>&1 || { echo "❌ 未安装 Docker"; exit 1; }
 docker info >/dev/null 2>&1 || { echo "❌ Docker 未启动或无法访问"; exit 1; }
-docker compose version >/dev/null 2>&1 || { echo "❌ 需要 Docker Compose v2"; exit 1; }
+if docker compose version >/dev/null 2>&1; then COMPOSE_KIND=plugin
+elif command -v docker-compose >/dev/null 2>&1; then COMPOSE_KIND=standalone
+else echo "❌ 需要 Docker Compose v2（最低 2.20.2）"; exit 1; fi
+COMPOSE_VERSION=$(compose_binary version --short | sed 's/^v//;s/[^0-9.].*$//')
+version_ge "$COMPOSE_VERSION" 2.20.2 || { echo "❌ Docker Compose $COMPOSE_VERSION 过旧，最低需要 2.20.2"; exit 1; }
 [ -f "./.env" ] || { echo "❌ 缺少 .env 文件"; exit 1; }
 [ -f "./qOntology/mysql/init/init-show.sql" ] || { echo "❌ 缺少 init-show.sql"; exit 1; }
 [ -f "./qOntology/neo4j/neo4j.dump" ] || { echo "❌ 缺少 neo4j.dump"; exit 1; }
@@ -111,7 +123,7 @@ rm -rf "$NEO4J_DATA"
 mkdir -p "$NEO4J_DATA" "$NEO4J_DIR/logs"
 
 if [ "$NEO4J_CHOWN" -eq 1 ]; then
-    # 新目录可能由 root 创建，导入前统一为 qtt 的 UID/GID。
+    # 新目录可能由 root 创建，导入前统一为 Neo4j 运行用户的 UID/GID。
     MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' docker run --rm --user 0:0 \
         -v "$NEO4J_DIR:/neo4j-host" --entrypoint chown "$NEO4J_IMAGE" \
         -R "$QONTOLOGY_NEO4J_UID:$QONTOLOGY_NEO4J_GID" /neo4j-host
