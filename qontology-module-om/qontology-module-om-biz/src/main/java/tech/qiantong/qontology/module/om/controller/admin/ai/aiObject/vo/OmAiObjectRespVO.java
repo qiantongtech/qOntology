@@ -38,6 +38,8 @@ public class OmAiObjectRespVO implements Serializable {
     private Long taskId;
     @Schema(description = "对象类型名称")
     private String name;
+    @Schema(description = "对象类型颜色")
+    private String color;
     @Schema(description = "描述")
     private String description;
     @Schema(description = "父对象候选ID")

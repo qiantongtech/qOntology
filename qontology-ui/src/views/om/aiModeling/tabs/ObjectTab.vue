@@ -67,16 +67,20 @@
 
       <qt-table v-if="refreshTable" v-bind="tableStore" ref="tableRef">
         <!-- 纯文本列沿用统一 text 插槽渲染；null 占位符由 QtTable 统一输出，这里只补空字符串场景，避免叠成两个短横线。 -->
-        <template #text="{ row, column_data }"
-          >{{ row[column_data.prop] === "" ? "-" : row[column_data.prop] }}
+        <template #text="{ row, column_data }">{{ row[column_data.prop] === "" ? "-" : row[column_data.prop] }}
         </template>
         <!-- 描述与外部对象类型一致，空值统一展示为短横线；null 占位符由 QtTable 统一输出，避免叠成两个短横线。 -->
-        <template #description="{ row }"
-          >{{ row.description?.trim() === "" ? "-" : row.description?.trim() }}
+        <template #description="{ row }">{{ row.description?.trim() === "" ? "-" : row.description?.trim() }}
+        </template>
+        <template #color="{ row }">
+          <div
+            class="color-box"
+            :style="{ backgroundColor: row.color || '#3B68C2' }"
+            :title="row.color || '#3B68C2'"
+          ></div>
         </template>
         <!-- 创建时间与外部对象类型一致，格式到分钟。 -->
-        <template #createTime="{ row }"
-          >{{ proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
+        <template #createTime="{ row }">{{ proxy.parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}") || "-" }}
         </template>
         <!-- 创建人与项目管理一致，双行展示姓名和联系电话。 -->
         <template #creator="{ row }">
@@ -199,10 +203,12 @@
               :maxlength="128"
               placeholder="请输入对象类型名称"
             />
-            <el-button type="primary" @click="termPickerOpen = true"
-              >从术语表中选择
+            <el-button type="primary" @click="termPickerOpen = true">从术语表中选择
             </el-button>
           </div>
+        </qt-form-item>
+        <qt-form-item class="row-full" label="颜色" prop="color">
+          <el-color-picker v-model="form.color" class="color-picker-circle" />
         </qt-form-item>
         <qt-form-item class="row-full" label="显示顺序" prop="orderNum">
           <el-input-number
@@ -293,6 +299,9 @@
           <div class="form-readonly">
             {{ detail.orderNum ?? "-" }}
           </div>
+        </el-form-item>
+        <el-form-item label="颜色">
+          <div class="color-box" :style="{ backgroundColor: detail.color || '#3B68C2' }" :title="detail.color || '#3B68C2'"></div>
         </el-form-item>
         <el-form-item label="描述">
           <div class="form-readonly textarea">
@@ -431,7 +440,9 @@ function formatData(data) {
  */
 function buildTree(items) {
   const nodes = new Map(
-    items.map((item) => [String(item.id), { ...item, children: [] }])
+    [...items]
+      .sort((a, b) => (Number(a.orderNum) || 0) - (Number(b.orderNum) || 0) || Number(a.id) - Number(b.id))
+      .map((item) => [String(item.id), { ...item, children: [] }])
   );
   const roots = [];
   for (const node of nodes.values()) {
@@ -453,7 +464,7 @@ const tableStore = reactive({
       stripe: true,
       defaultExpandAll: true,
       treeProps: { children: "children" },
-      defaultSort: { prop: "createTime", order: "descending" },
+      defaultSort: { prop: "orderNum", order: "ascending" },
       onSelectionChange: handleSelectionChange,
     },
   },
@@ -492,7 +503,9 @@ const tableStore = reactive({
       width: 100,
       minWidth: 100,
       align: "center",
+      sortable: "custom",
     },
+    { label: "对象类型颜色", slot: "color", width: 120, minWidth: 120, align: "center" },
     {
       label: "采纳状态",
       prop: "adoptStatus",
@@ -554,6 +567,10 @@ const rules = {
     { max: 128, message: "名称不能超过128个字符", trigger: "blur" },
   ],
   orderNum: [{ required: true, message: "显示顺序不能为空", trigger: "blur" }],
+  color: [
+    { required: true, message: "请选择颜色", trigger: "change" },
+    { pattern: /^#[0-9a-fA-F]{6}$/, message: "颜色必须为 #RRGGBB 格式", trigger: "change" },
+  ],
   description: [
     { max: 256, message: "描述不能超过256个字符", trigger: "blur" },
   ],
@@ -600,7 +617,7 @@ function applyTerm(term) {
 }
 
 async function edit(row) {
-  form.value = { ...row, orderNum: row.orderNum ?? 0, targetIds: [] };
+  form.value = { ...row, color: row.color || "#3B68C2", orderNum: row.orderNum ?? 0, targetIds: [] };
   editingRoot.value =
     row.parentCandidateId == null || String(row.parentCandidateId) === "0";
   const response = await getCandidateTargets("object", row.id);
@@ -620,6 +637,7 @@ async function save() {
     id: form.value.id,
     taskId: props.taskId,
     name: form.value.name.trim(),
+    color: form.value.color,
     description: (form.value.description ?? "").trim(),
     parentCandidateId: form.value.parentCandidateId,
     orderNum: form.value.orderNum,
@@ -632,6 +650,25 @@ async function save() {
 </script>
 
 <style scoped lang="scss">
+.color-box {
+  width: 25px;
+  height: 25px;
+  margin: 0 auto;
+  border-radius: 50%;
+}
+
+.color-picker-circle :deep(.el-color-picker__trigger) {
+  width: 30px;
+  height: 30px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.color-picker-circle :deep(.el-color-picker__color) {
+  overflow: hidden;
+  border-radius: 50%;
+}
+
 .toggle-expand-all .svg-icon {
   font-size: 12px;
   margin-right: 6px;

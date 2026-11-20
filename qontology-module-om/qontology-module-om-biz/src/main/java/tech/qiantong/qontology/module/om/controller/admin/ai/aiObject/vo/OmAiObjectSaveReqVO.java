@@ -39,6 +39,9 @@ public class OmAiObjectSaveReqVO {
     @NotBlank(message = "对象类型名称不能为空")
     @Size(max = 128, message = "对象类型名称长度不能超过128个字符")
     private String name;
+    @Schema(description = "对象类型颜色", example = "#3B68C2")
+    @Pattern(regexp = "^#[0-9a-fA-F]{6}$", message = "颜色必须为 #RRGGBB 格式")
+    private String color;
     @Schema(description = "描述")
     @Size(max = 1000, message = "描述长度不能超过1000个字符")
     private String description;

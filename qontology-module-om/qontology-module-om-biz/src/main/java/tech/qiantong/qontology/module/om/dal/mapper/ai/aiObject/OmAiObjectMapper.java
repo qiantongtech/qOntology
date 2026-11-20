@@ -21,6 +21,7 @@ package tech.qiantong.qontology.module.om.dal.mapper.ai.aiObject;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.ibatis.annotations.Select;
 import tech.qiantong.qontology.module.om.controller.admin.ai.aiObject.vo.OmAiObjectPageReqVO;
 import tech.qiantong.qontology.module.om.dal.dataobject.ai.aiObject.OmAiObjectDO;
 import tech.qiantong.qontology.core.page.PageResult;
@@ -32,6 +33,9 @@ public interface OmAiObjectMapper extends BaseMapperX<OmAiObjectDO> {
     /** 查询任务下的候选对象类型索引。 */
     List<Map<String, Object>> selectCandidateIndex(Long taskId);
 
+    @Select("SELECT COALESCE(MAX(order_num), 0) FROM om_ai_object WHERE task_id = #{taskId} AND del_flag = 0")
+    Long selectMaxOrderNum(Long taskId);
+
     /** 根据分页条件查询AI候选对象类型。 */
     default PageResult<OmAiObjectDO> selectPage(OmAiObjectPageReqVO reqVO) {
         return selectPage(reqVO, new LambdaQueryWrapperX<OmAiObjectDO>()
@@ -39,8 +43,8 @@ public interface OmAiObjectMapper extends BaseMapperX<OmAiObjectDO> {
                 .eqIfPresent(OmAiObjectDO::getTaskId, reqVO.getTaskId())
                 .likeIfPresent(OmAiObjectDO::getName, reqVO.getName())
                 .eqIfPresent(OmAiObjectDO::getAdoptStatus, reqVO.getAdoptStatus())
-                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "create_time", "update_time"))
-                .orderByDesc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
-                        OmAiObjectDO::getCreateTime, OmAiObjectDO::getId));
+                .orderBy(reqVO.getOrderByColumn(), reqVO.getIsAsc(), Set.of("id", "order_num", "create_time", "update_time"))
+                .orderByAsc(reqVO.getOrderByColumn() == null || reqVO.getOrderByColumn().isBlank(),
+                        OmAiObjectDO::getOrderNum, OmAiObjectDO::getId));
     }
 }

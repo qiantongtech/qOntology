@@ -777,6 +777,7 @@ public class OmAiModelingServiceImpl implements IOmAiModelingService {
         request.setWorkspaceId(task.getWorkspaceId());
         request.setVersionId(task.getVersionId());
         request.setName(stringValue(row, "name"));
+        request.setColor(stringValue(row, "color"));
         request.setDescription(stringValue(row, "description"));
         request.setParentId(parentId);
         request.setOrderNum(Optional.ofNullable(nullableLongValue(row, "order_num")).orElse(0L));

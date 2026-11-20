@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
@@ -1271,6 +1272,7 @@ public class OmAiModelingAsyncProcessor {
         if (array == null) {
             return;
         }
+        long nextOrderNum = objectMapper.selectMaxOrderNum(taskId);
         for (Object value : array) {
             JSONObject object = (JSONObject) value;
             String name = cleanRequiredText(object.getString("name"));
@@ -1292,7 +1294,14 @@ public class OmAiModelingAsyncProcessor {
             OmAiObjectDO candidate = new OmAiObjectDO();
             candidate.setTaskId(taskId);
             candidate.setName(name);
+            String color = Optional.ofNullable(object.getString("color")).map(String::trim).orElse("");
+            if (!color.matches("#[0-9a-fA-F]{6}")) {
+                addWarning("对象类型“" + name + "”未返回有效颜色，已随机补充颜色。");
+                color = String.format(Locale.ROOT, "#%06X", ThreadLocalRandom.current().nextInt(0x1000000));
+            }
+            candidate.setColor(color.toUpperCase(Locale.ROOT));
             candidate.setDescription(object.getString("description"));
+            candidate.setOrderNum(++nextOrderNum);
             candidate.setAdoptStatus(OmAiAdoptStatusEnum.PENDING.getCode());
             candidate.setConfidence(object.getBigDecimal("confidence"));
             candidate.setDelFlag(false);
@@ -1645,7 +1654,7 @@ public class OmAiModelingAsyncProcessor {
     private String recoveryJsonSchema(OmAiExtractionRoundEnum round) {
         return switch (round) {
             case FOUNDATION -> "{targets:[{question,questionSource,businessScenarios,priority,acceptCriterion,candidateKey,evidenceBlockNos,confidence}],terms:[{stdName,enName,alias,abbr,source,description,candidateKey,evidenceBlockNos,confidence}],enumTypes:[{enumName,enumType,description,candidateKey,values:[{enumLabel,enumValue,enumSort,description}],evidenceBlockNos,confidence}]}";
-            case OBJECT -> "{objects:[{name,description,parentName,targetCandidateKeys,targetQuestions,evidenceBlockNos,confidence}]}";
+            case OBJECT -> "{objects:[{name,color,description,parentName,targetCandidateKeys,targetQuestions,evidenceBlockNos,confidence}]}";
             case MEMBERS -> "{attributes:[{objectCandidateId,objectName,name,code,description,suggestedTypeCategory,suggestedBasicTypeCode,businessTypeId,businessTypeSource,unit,decimalPlaces,format,enumType,enumSource,evidenceBlockNos,confidence}],relations:[{name,description,startObjectCandidateId,startObjectName,endObjectCandidateId,endObjectName,reversibleFlag,reverseName,targetCandidateKeys,targetQuestions,evidenceBlockNos,confidence}]}";
             case RULES -> "{axioms:[{name,description,type,level,objectCandidateId,objectName,otherObjectCandidateId,otherObjectName,relationName,domainCandidateId,domainObjectName,rangeCandidateId,rangeObjectName,attributeCandidateId,attributeName,evidenceBlockNos,confidence}],dataRules:[{name,description,type,level,conditionRelation,conditions:[{objectCandidateId,objectName,attributeCandidateId,attributeName,operator,value}],failureMessage,evidenceBlockNos,confidence}],issues:[{level,message,evidenceBlockNos}]}";
         };

@@ -1,11 +1,9 @@
--- AI 辅助建模任务记录文件来源，便于编辑回显和问题追踪。
--- 已有任务均按历史行为视为用户上传文件。
-ALTER TABLE `om_ai_task` ADD COLUMN `file_source` varchar(16) NOT NULL DEFAULT 'UPLOAD' COMMENT '文件来源：UPLOAD用户上传，SYSTEM系统文件'  AFTER `version_id`;
 
--- 系统文件按一对多关系记录在任务文件明细中，保留原始知识文件编号用于追溯。
+ALTER TABLE `om_ai_task` ADD COLUMN `file_source` varchar(16) NOT NULL DEFAULT 'UPLOAD' COMMENT '文件来源：UPLOAD用户上传，SYSTEM系统文件'  AFTER `version_id`;
 ALTER TABLE `om_ai_file`  ADD COLUMN `source_file_id` bigint NULL   COMMENT '系统文件编号；用户上传文件为空' AFTER `task_id`,   ADD INDEX `idx_om_ai_file_source` (`source_file_id`);
-ALTER TABLE `om_object_type`
-    ADD COLUMN `color` varchar(7) NOT NULL DEFAULT '#3B68C2' COMMENT '对象类型颜色' AFTER `name`;
+ALTER TABLE `om_ai_object` ADD COLUMN `color` varchar(7) NOT NULL DEFAULT '#3B68C2' COMMENT '对象类型颜色' AFTER `name`;
+
+ALTER TABLE `om_object_type` ADD COLUMN `color` varchar(7) NOT NULL DEFAULT '#3B68C2' COMMENT '对象类型颜色' AFTER `name`;
 
 -- 为历史对象类型分配固定颜色。
 UPDATE `om_object_type`
@@ -27,3 +25,9 @@ UPDATE `app_unstruct_task` SET `ttl_file_path` = '/2026/11/19/6afe9c1884562a8ced
 UPDATE `app_unstruct_task` SET `ttl_file_path` = '/2026/11/19/6afe9c1884562a8ced3fae43.ttl' WHERE id = '11';
 UPDATE `app_unstruct_task` SET `ttl_file_path` = '/2026/11/19/6afe9c1884562a8ced3fae43.ttl' WHERE id = '12';
 UPDATE `app_unstruct_task` SET `ttl_file_path` = '/2026/11/19/6afe9c1884562a8ced3fae43.ttl' WHERE id = '13';
+
+
+UPDATE `om_ai_object` SET `color` = CONCAT('#', LPAD(HEX(FLOOR(RAND() * 16777216)), 6, '0')), `order_num` = 1 WHERE `id` = 1;
+UPDATE `om_ai_object` SET `color` = CONCAT('#', LPAD(HEX(FLOOR(RAND() * 16777216)), 6, '0')), `order_num` = 2 WHERE `id` = 2;
+UPDATE `om_ai_object` SET `color` = CONCAT('#', LPAD(HEX(FLOOR(RAND() * 16777216)), 6, '0')), `order_num` = 3 WHERE `id` = 3;
+UPDATE `om_ai_object` SET `color` = CONCAT('#', LPAD(HEX(FLOOR(RAND() * 16777216)), 6, '0')), `order_num` = 4 WHERE `id` = 4;
