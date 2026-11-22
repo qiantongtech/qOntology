@@ -66,7 +66,7 @@ qOntology 是一款开源本体工程平台，聚焦 **业务语义治理与数�
 
 ## 产品功能架构
 
-![qData 数据中台开源版产品功能架构图](.gitee/functional-architecture.jpg)
+![qData 数据中台开源版产品功能架构图](.gitee/architecture.jpg)
 
 ## 系统配图
 
