@@ -58,11 +58,11 @@ qOntology 是一款面向企业级知识工程的开源本体工程平台，聚�
 
 ### 选择部署方式
 
-- **[Docker Compose 部署](https://docs.qontology.cn/docs/deploy/docker-compose-deployment.html)**：按文档配置并启动本地环境，适合快速体验与部署。
-- **[源码启动](https://docs.qontology.cn/docs/deploy/build-from-source.html)**：启动前后端开发环境，开展二次开发与功能扩展。
-- **[自主部署](https://docs.qontology.cn/docs/deploy/manual-deployment/)**：自行安装与管理服务，适合已有基础设施及个性化部署需求。
+- **[Docker Compose 部署](https://docs.qontology.cn/deploy/docker-compose-deployment.html)**：按文档配置并启动本地环境，适合快速体验与部署。
+- **[源码启动](https://docs.qontology.cn/deploy/build-from-source.html)**：启动前后端开发环境，开展二次开发与功能扩展。
+- **[自主部署](https://docs.qontology.cn/deploy/manual-deployment/)**：自行安装与管理服务，适合已有基础设施及个性化部署需求。
 
-环境要求、安装步骤、组件配置与常见问题，统一查阅[部署指南](https://docs.qontology.cn/docs/deploy/deploy-open-source.html)。
+环境要求、安装步骤、组件配置与常见问题，统一查阅[部署指南](https://docs.qontology.cn/deploy/deploy-open-source.html)。
 
 ## 产品功能架构
 
