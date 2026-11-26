@@ -1,4 +1,4 @@
-![qOntology Ontology Engineering Platform Banner](.gitee/banner.jpg)
+![qOntology Ontology Engineering Platform Banner](.gitee/banner-en.png)
 
 <p align="center">
  <img src="https://img.shields.io/badge/JDK-17+-brightgreen.svg" alt="JDK">
@@ -66,7 +66,7 @@ For environment requirements, installation steps, component configuration, and t
 
 ## Product Architecture
 
-![qOntology Ontology Engineering Platform Architecture](.gitee/architecture.jpg)
+![qOntology Ontology Engineering Platform Architecture](.gitee/architecture-en.png)
 
 ## Screenshots
 
