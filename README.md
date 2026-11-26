@@ -8,237 +8,178 @@
  <img src="https://img.shields.io/badge/qOntology-Ontology%20Engineering-blue.svg" alt="qOntology">
  <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt="Gitee Stars"/>
  <img src="https://img.shields.io/github/stars/qiantongtech/qOntology?label=Github%20Stars" alt="GitHub Stars"/>
-<a href="https://atomgit.com/qiantongtech/qOntology">
-  <img src="https://atomgit.com/qiantongtech/qOntology/star/badge.svg" alt="AtomGit Star"/>
-</a>
+ <a href="https://atomgit.com/qiantongtech/qOntology">
+  <img src="https://atomgit.com/qiantongtech/qOntology/star/badge.svg" alt="AtomGit Stars"/>
+ </a>
 </p>
 
 <p align="center">
   <a href="README.zh-CN.md">📖简体中文</a> | 📖English | <a href="README.ja-JP.md">📖日本語</a>
 </p>
 
-## 🌈 Platform Overview
+## Overview
 
-qOntology is an open-source ontology engineering platform for enterprise knowledge engineering. Grounded in ontology and aligned with Semantic Web standards such as OWL, RDF, and SHACL, it focuses on enterprise ontology governance and semantic governance. Through unified modeling and semantic asset management, qOntology connects knowledge graphs, enterprise operational ontologies, and ontology-driven AI to build a unified, open, and evolvable enterprise semantic infrastructure.
+**Unify business semantics and connect data around business objects to provide reusable business capabilities for applications and AI.**
 
-✨✨✨ **Online Documentation** ✨✨✨ <a href="https://docs.qontology.cn/" target="_blank">https://docs.qontology.cn/</a>
+qOntology is an open-source ontology engineering platform for enterprise knowledge engineering, focused on **business semantics governance and data integration**. It connects business objects, properties, relationships, and rules to real data in databases, APIs, and documents, giving developers a complete set of capabilities—from domain modeling and object construction to querying, computation, and business execution.
 
-✨✨✨ **Open-Source Edition Demo** ✨✨✨ <a href="https://demo.qontology.cn" target="_blank">https://demo.qontology.cn</a>
+Use qOntology to build domain models, organize business data across sources, and develop ontology-driven Q&A, agents, and business applications. You can also connect models, data, and business logic to existing systems through APIs, SDKs, or MCP. Multiple applications can reuse the same business definitions, object relationships, and invocation rules.
 
-Username: `qOntology`<br>
-Password: `qOntology123`
+✨✨✨**Documentation**✨✨✨ <a href="https://docs.qontology.cn/" target="_blank">https://docs.qontology.cn/</a>
 
-> If you find qOntology helpful, please give us a **Star ⭐️**. Your support motivates us to keep improving! 🚀
+✨✨✨**Live Demo**✨✨✨ <a href="https://demo.qontology.cn" target="_blank">https://demo.qontology.cn</a> — Username: `qOntology` Password: `qOntology123`
 
-## 🎯 What Can You Build with qOntology?
+> If you find qOntology useful, give us a **Star ⭐️**! Your support keeps us building and improving. 🚀
 
-You can use qOntology to plan and build:
+## Start with a Business Object
 
-- A unified terminology and concept system for domain-specific projects
-- Ontology models consisting of object types, properties, relationships, and constraints
-- Model coverage checks based on modeling goals expressed as competency questions (CQs)
-- Lightweight mappings from business data to object types and properties, with sample previews
-- Versioned, exchangeable ontology assets
-- Knowledge extraction workflows and knowledge graphs based on published ontologies
+In qOntology, an **object type** defines the meaning and structure of a category of business entities, while an **object instance** represents a specific real-world asset, order, or customer. Data mapping and knowledge extraction connect actual records to objects, while functions and Actions give those objects callable business capabilities.
 
-## ✨ Why Choose qOntology?
+For equipment maintenance, you can organize your business as follows:
 
-| Key Capability | Description |
-|----------------|-------------|
-| 🎯 Goal-Driven Modeling | Capture modeling goals as business questions (CQs) and check how well the ontology covers them. |
-| 📚 Unified Terminology and Semantics | Manage terms, aliases, data types, and enumerations to establish a consistent domain language. |
-| 🔗 Object Relationship Modeling | Maintain object types, properties, relationships, and basic SHACL constraints. |
-| ✅ Quality and Version Management | Validate model structure and basic constraints while preserving versions and change history. |
-| 🔄 Standard Format Exchange | The open-source edition is planned to support Turtle RDF/OWL and SHACL Turtle exports. |
-| 🧱 Modular Architecture | System administration, foundational management, and ontology modeling are organized into separate modules for easier capability expansion. |
-| ☕ Java-Friendly Technology Stack | Built on JDK 17 and Spring Boot 3, the backend supports private deployment and further customization. |
+| What to Organize Around Equipment | How to Model or Implement It |
+| --- | --- |
+| **Business definitions** | Define equipment, work orders, and maintenance providers, including equipment IDs, operating status, responsible organizations, and related work orders. |
+| **Real data** | Link information from equipment registers, work order tables, and maintenance documents to the same equipment object, preserving the sources of its properties and relationships. |
+| **Queries and calculations** | Find equipment with open work orders and use custom functions to calculate pending work order counts or maintenance priorities. |
+| **Business actions** | Wrap an integrated work order API as an Action, create follow-up tasks within the authorized scope, and inspect execution results and responses from external systems. |
 
-## 🍱 Typical Use Cases
+The same object model and business capabilities can serve business interfaces, external applications, and agents.
 
-| Use Case | Description |
-|----------|-------------|
-| **Domain Ontology Design** | Define object types, properties, relationships, and constraints, starting from modeling goals and terminology. |
-| **Business Semantic Governance** | Centrally manage project information, data types, enumerations, and business terminology. |
-| **Data Mapping Validation** | Map database table fields to the ontology and preview a small set of sample object instances. |
-| **Model Quality and Release Management** | Validate ontology structure and basic constraints, compare versions, and publish releases. |
-| **Knowledge Graph Development** | Visualize objects and their relationships based on ontologies and extraction results. |
+## Quick Start
 
-## 🚀 Core Strengths
+### Try It Online
 
-- **Comprehensive Modeling Elements**: Describe domain semantics through modeling goals, terms, object types, properties, relationships, and constraints.
-- **Clearly Defined Validation Scope**: The open-source edition focuses on source completeness, duplicate identifiers, cyclic inheritance, dangling relationships, type checks, and basic constraint checks.
-- **Traceable Model Evolution**: Compare changes to terms and ontology elements across versions, publish releases, and preserve change history.
-- **Lightweight Data Connectivity**: Use field mappings and previews of a small set of object instances to validate the correspondence between models and data.
-- **Open Exchange Formats**: The open-source edition is planned to support Turtle RDF/OWL and SHACL Turtle exports.
+Visit the [qOntology Demo](https://demo.qontology.cn) to explore the platform without installing anything.
 
-## ✨ Core Features
+**Username: `qOntology`　Password: `qOntology123`**
 
-| Feature Module | Description |
-|----------------|-------------|
-| System Administration | Manage users, roles, menus, departments, positions, dictionaries, parameters, notices, announcements, and logs. |
-| Project Management | Maintain basic ontology project information, including domain, scope, and namespace. |
-| Data Source and File Management | Register data sources; categorize, upload, and manage Word documents, PDFs with extractable text, and TXT files; store plain-text extraction results for each file. |
-| Data Types and Enumerations | Maintain platform-level data types and enumerations, reference them in projects, or define project-specific entries. |
-| Modeling Goals (CQs) | Record business questions, priorities, and acceptance criteria in natural language; link them to ontology elements and check coverage. |
-| Terminology Management | Manage definitions, aliases, sources, and mappings between terms and ontology elements. |
-| Object Types and Properties | Define object types and inheritance relationships; configure property data types, cardinality, default values, units, and enumerations. |
-| Object Relationships and Constraints | Define relationships between object types and configure basic SHACL constraints. |
-| Ontology Quality Validation | The open-source edition is planned to provide checks for source completeness, duplicate identifiers, cyclic inheritance, dangling relationships, types, and basic constraints. |
-| AI-Assisted Modeling | The open-source edition is planned to generate candidate ontologies from plain-text files for human review and confirmation. |
-| Version Management | Compare changes to terms and ontology elements, assess their impact on modeling goals, and publish versions after quality checks pass. |
-| Data Mapping Lite and Instance Preview | Create lightweight field mappings to object types and properties, and preview a small set of sample object instances. |
-| Import and Export | Manage model exchange tasks; the open-source edition is planned to export Turtle RDF/OWL and SHACL Turtle. |
-| Ontology Applications | Perform unstructured and structured data extraction based on published ontologies to build knowledge graphs. |
+Start by exploring the object types, properties, and relationships in a project. Then review extraction results and knowledge graphs to understand how business definitions connect to actual data.
 
-## 🛠️ Technology Stack
+### Choose a Deployment Method
 
-qOntology uses a decoupled frontend and backend architecture. The backend is built on JDK 17 and Spring Boot 3.5.8, while the frontend uses Vue 3 and Vite 5. The table below reflects the current project configuration. Some components are optional modules and do not need to be enabled in every deployment.
+- **[Docker Compose Deployment](https://docs.qontology.cn/deploy/docker-compose-deployment.html)**: Follow the guide to configure and start a local environment for quick evaluation and deployment.
+- **[Build from Source](https://docs.qontology.cn/deploy/build-from-source.html)**: Set up the backend and frontend development environments to customize and extend the platform.
+- **[Manual Deployment](https://docs.qontology.cn/deploy/manual-deployment/)**: Install and manage services yourself to accommodate existing infrastructure and custom deployment requirements.
 
-<table>
-  <tr>
-    <th>Category</th><th>Technology / Framework</th><th>Description</th>
-  </tr>
-  <tr>
-    <td rowspan="8">Backend</td><td>JDK 17</td><td>Backend runtime environment</td>
-  </tr>
-  <tr>
-    <td>Spring Boot 3.5.8</td><td>Core backend framework</td>
-  </tr>
-  <tr>
-    <td>Spring Security</td><td>Authentication and authorization</td>
-  </tr>
-  <tr>
-    <td>MyBatis Components</td><td>Relational database access and mapping</td>
-  </tr>
-  <tr>
-    <td>Spring Framework</td><td>Foundational infrastructure, including dependency injection and aspect-oriented programming</td>
-  </tr>
-  <tr>
-    <td>Quartz</td><td>Scheduled task execution (optional)</td>
-  </tr>
-  <tr>
-    <td>Neo4j Module</td><td>Graph database integration (optional)</td>
-  </tr>
-  <tr>
-    <td>Alibaba Druid</td><td>Database connection pooling for optimized database access performance</td>
-  </tr>
+For environment requirements, installation steps, component configuration, and troubleshooting, see the [Deployment Guide](https://docs.qontology.cn/docs/deploy/deploy-open-source.html).
 
-  <tr>
-    <td rowspan="8">Frontend</td><td>Vue 3</td><td>Progressive frontend framework</td>
-  </tr>
-  <tr>
-    <td>Vite</td><td>Fast build tool</td>
-  </tr>
-  <tr>
-    <td>Element Plus</td><td>UI component library</td>
-  </tr>
-  <tr>
-    <td>Axios</td><td>HTTP client library</td>
-  </tr>
-  <tr>
-    <td>Pinia</td><td>Frontend state management</td>
-  </tr>
-  <tr>
-    <td>Vue Router</td><td>Frontend routing</td>
-  </tr>
-  <tr>
-    <td>Vis Network / AntV</td><td>Graph and relationship network visualization components</td>
-  </tr>
-  <tr>
-    <td>ECharts</td><td>Data visualization library supporting multiple chart types</td>
-  </tr>
+## Product Architecture
 
-  <tr>
-    <td rowspan="5">Third-Party Dependencies</td><td>MySQL</td><td>Relational database</td>
-  </tr>
-  <tr>
-    <td>Neo4j</td><td>Graph database used when the corresponding modules are enabled</td>
-  </tr>
-  <tr>
-    <td>Redis</td><td>Caching and high-performance data retrieval</td>
-  </tr>
-  <tr>
-    <td>Swagger / OpenAPI</td><td>API documentation generation and testing tools</td>
-  </tr>
-  <tr>
-    <td>Docker (Optional)</td><td>Containerized deployment support</td>
-  </tr>
-</table>
+![qOntology Ontology Engineering Platform Architecture](.gitee/architecture.jpg)
 
-## 🏗️ Deployment Requirements
+## Screenshots
 
-Before deploying qOntology, prepare the following environments according to the modules you plan to enable:
+![Home](.gitee/system/home.png)
 
-<table>
-  <tr>
-    <th>Environment</th><th>Component</th><th>Recommended Version</th><th>Notes</th>
-  </tr>
-  <tr>
-    <td rowspan="6">Backend</td><td>JDK</td><td>17</td><td>Must match the Java version specified in the root POM</td>
-  </tr>
-  <tr>
-    <td>Maven</td><td>3.8+</td><td>Project build and dependency management</td>
-  </tr>
-  <tr>
-    <td>MySQL</td><td>A version compatible with the current driver and scripts</td><td>Relational database; review the initialization scripts first</td>
-  </tr>
-  <tr>
-    <td>Neo4j</td><td>A version compatible with the module configuration</td><td>Required only when using graph database capabilities</td>
-  </tr>
-  <tr>
-    <td>Redis</td><td>A version compatible with the current configuration</td><td>Caching service</td>
-  </tr>
-  <tr>
-    <td>Operating System</td><td>Windows / Linux / macOS</td><td>Runs on common operating systems</td>
-  </tr>
+![Ontology Modeling — Project Overview](.gitee/system/projectOverview.png)
 
-  <tr>
-    <td rowspan="3">Frontend</td><td>Node.js</td><td>18+</td><td>Development and build environment for Vite 5</td>
-  </tr>
-  <tr>
-    <td>npm / pnpm / yarn</td><td>Any one of these</td><td>Package manager</td>
-  </tr>
-  <tr>
-    <td>Vue 3 / Vite 5</td><td>As specified in package.json</td><td>Frontend development and build tools</td>
-  </tr>
-</table>
+![Basic Management — Create Project](.gitee/system/project.png)
 
-## 🚀 Quick Start
+![Ontology Modeling — Modeling Goal Details and Associated Object Types](.gitee/system/modelingGoal.png)
 
-👉 Click the link below for the complete installation and deployment guide:
+![Semantic Assets — Terminology Management](.gitee/system/term.png)
 
-[🧭 View the Quick Start Guide](QUICKSTART.md)
+![Ontology Modeling — Object Type Details and Property Configuration](.gitee/system/objectType.png)
 
-## 🚨 Commercial Licensing
+![Ontology Modeling — Object Relationship Editing and Modeling Goal Associations](.gitee/system/objectRelation.png)
 
-qOntology is planned to offer an **Open-Source Edition** and a **Professional Edition**. The Open-Source Edition focuses on domain modeling, basic quality validation, lightweight data mapping, sample previews, and standard format exports. The Professional Edition expands these capabilities with visual modeling, runtime objects, actions, functions, and ontology-driven business capabilities.
+![Ontology Applications — Knowledge Graph](.gitee/system/knowledgeGraph.png)
 
-👉 For **custom branding licenses** or **Professional Edition inquiries**, click the button to learn more: [💼 View Licensing Details](https://docs.qontology.cn/docs/overview/introduction.html#%F0%9F%9A%A8-%E5%95%86%E7%94%A8%E6%8E%88%E6%9D%83)
+![Ontology Applications — Unstructured Data Extraction Results](.gitee/system/unstructuredExtraction.png)
 
-## 👥 QQ Community
+![Ontology Applications — Structured Data Extraction Field Mapping](.gitee/system/structuredExtraction.png)
 
-Join the official qOntology QQ community for the latest updates, technical support, and discussions about using the platform.
+## Capabilities at a Glance
 
-> 👉 <a href="https://docs.qontology.cn/discuss.html">Click here to join the QQ community</a>
+| Module | Key Capabilities |
+| --- | --- |
+| **Workspace and Asset Management** | Organize projects and ontology spaces, manage project overviews and business materials, and maintain shared terminology, properties, types, reference data, and model and mapping templates. Support cross-project references and asset reuse. |
+| **Ontology Modeling** | Maintain semantic assets around business goals. Define object types, properties, relationships, ontology interface contracts, and constraints. Build models using a visual canvas and AI suggestions, with structural validation, goal coverage checks, and import/export support. |
+| **Data Integration and Knowledge Construction** | Connect data sources, manage datasets and ontology mappings, and perform knowledge extraction, entity alignment, conflict resolution, and quality validation to build business objects. Refresh or synchronize data according to connector capabilities, and track source lineage and task status. |
+| **Object and Knowledge Services** | Provide object search, detail views, relationship exploration, object sets, graph exploration, vector similarity search, and semantic queries. Expose services through REST APIs, SDKs, Modeling MCP, and Business Ontology MCP, with control over invocation scope, permissions, and logs. |
+| **Business Logic and Execution** | Implement calculations with TypeScript and Python functions. Configure metrics, rules, and Actions, with support for action testing, batch execution, approvals, and automation. Use the Execution Center to inspect parameters, status, results, and external responses, and handle runtime exceptions. |
+| **Ontology Applications** | Build intelligent Q&A, business agents, analytics dashboards, and scenario simulations. Combine list, detail, form, and chart components, and bind metrics and authorized Actions. Support application management, interaction configuration, previews, publishing, and access control. |
+| **Governance and Platform Management** | Manage organizations, roles, and resource permissions, including sensitive data controls, collaborative approvals, version releases, dependency checks, audit trails, service monitoring, and runtime configuration to support ongoing maintenance of models, data, and business capabilities. |
 
-## 🖼️ Screenshots
+For configuration, workflows, and API details, visit the [Documentation](https://docs.qontology.cn/).
 
-![System Home](.gitee/system/home.png)
+## Define Business Semantics
 
-![Ontology Modeling - Project Overview](.gitee/system/projectOverview.png)
+Start with business questions: What objects exist? How are they related? What rules must they follow? Capture these definitions in reusable models.
 
-![Foundational Management - Create Project](.gitee/system/project.png)
+- **Build domain models**: Define object types, inheritance, properties, object relationships, and constraints. Use ontology interface contracts to specify properties and semantics shared by multiple object types.
+- **Establish consistent business meaning**: Maintain terminology, aliases, shared properties, data types, enumerations, and reference data. Link modeling goals to the corresponding ontology elements and check how well the model covers business questions.
+- **Model visually with AI assistance**: Create and organize objects and relationships on a canvas. Generate candidate models from documents, database table fields, or natural language, add them to a draft after human review, and validate their structure and constraints.
+- **Organize and reuse model assets**: Manage materials and semantic assets by project, reference model and mapping templates, and exchange ontology definitions through import and export.
 
-![Ontology Modeling - Modeling Goal Details and Linked Object Types](.gitee/system/modelingGoal.png)
+## Connect Real Data
 
-![Semantic Assets - Terminology Management](.gitee/system/term.png)
+Connecting business models to actual objects requires clear object identities, field meanings, relationship sources, and rules for resolving values across sources. qOntology connects these configurations to the object construction process.
 
-![Ontology Modeling - Object Type Details and Properties](.gitee/system/objectType.png)
+- **Connect data and define mappings**: Connect databases, files, cloud storage, and business APIs, discover datasets, identify objects through business keys, and map source fields, foreign keys, and junction tables to object properties and relationships.
+- **Enrich business information from documents**: Extract candidate objects, properties, and relationships according to the ontology, inspect supporting source passages, and submit validated and confirmed results for object construction.
+- **Resolve entities and conflicting values**: Identify the same object across sources using business identifiers and property comparisons. Review matching evidence, configure property source priorities, resolve conflicts, and retain records of human confirmation.
+- **Build and update objects**: Generate object instances from mappings and extraction results. Configure scheduled refreshes, incremental updates, or on-demand reads according to connector capabilities, and inspect object update times and construction batches.
+- **Validate quality and trace sources**: Check required fields, uniqueness, types, and relationship integrity. Trace object properties back to source fields or document passages, and use lineage to locate mapping issues and upstream data problems.
 
-![Ontology Modeling - Relationship Editing and Linked Modeling Goals](.gitee/system/objectRelation.png)
+## Connect Applications and AI
 
-![Ontology Applications - Knowledge Graph](.gitee/system/knowledgeGraph.png)
+Applications can work with data through business objects: read information through object services, calculate and evaluate conditions through functions and rules, and use Actions to make business changes or invoke external services.
 
-![Ontology Applications - Unstructured Extraction Results](.gitee/system/unstructuredExtraction.png)
+### Query Objects and Reuse Business Calculations
 
-![Ontology Applications - Structured Extraction Field Mapping](.gitee/system/structuredExtraction.png)
+Retrieve business information through object search, detail views, and relationship traversal. Save query results or filter criteria as object sets for reuse in analysis and batch operations. Graph exploration, semantic queries, and vector similarity search help users discover related objects and source materials.
+
+Use **TypeScript and Python business functions** to read object properties, traverse relationships, and combine calculations, with declared inputs, outputs, and dependencies. Combine these functions with metrics and rules to make calculation definitions and decision logic available to dashboards, business interfaces, and agents.
+
+### Execute Business Operations with Actions
+
+Bind business functions, HTTP APIs, or MCP tools to **Actions**, configure parameters, preconditions, and execution permissions, and add confirmation or approval steps as needed. Actions can modify objects and relationships or invoke integrated external business systems.
+
+Test Actions, execute them in batches, and incorporate them into automated workflows. In the Execution Center, inspect input parameters, execution status, results, and external responses to diagnose failures and handle exceptions. Queries, calculations, and execution each have clearly defined entry points, keeping business operations traceable.
+
+### Choose How Applications and AI Connect
+
+| Integration Method | Scope |
+| --- | --- |
+| **REST API / SDK** | Query objects, traverse relationships, and invoke predefined Actions from existing applications. Call business functions through REST APIs to reuse ontology data and logic. |
+| **Modeling MCP** | Provide AI development tools with ontology discovery, semantic navigation, and controlled editing capabilities to help understand and maintain model definitions. |
+| **Business Ontology MCP** | Expose queries over real business objects, functions, and predefined Actions to agents, enabling access to business data and execution capabilities within authorized boundaries. |
+
+You can also build ontology applications directly in the platform: bring together intelligent Q&A, agents, analytics dashboards, and scenario simulations; combine object lists, detail views, forms, and charts; bind metrics and Actions; and publish interactive interfaces for specific business needs.
+
+For service configuration, invocation methods, and feature guides, see the [Documentation](https://docs.qontology.cn/).
+
+## Continuously Govern Models, Data, and Execution
+
+Models, data mappings, and applications evolve over time. qOntology connects the maintenance, release, and use of semantic assets so teams can manage these dependencies continuously.
+
+- **Versions and change impact**: Manage versions of models, mappings, functions, and Actions. Compare changes, check dependencies and compatibility, and identify potentially affected services and applications.
+- **Review and release**: Combine quality checks, release approvals, and historical records to manage changes and maintain traceable shared business definitions and invocation contracts.
+- **Layered permissions**: Manage collaboration by project and role, with separate controls for model editing, object and sensitive field access, and business action execution.
+- **Operations and auditing**: Inspect integration tasks, object construction records, and action execution logs. Track service calls and manual changes, and use logs, status information, and operational metrics to troubleshoot issues.
+
+## Development and Extension
+
+qOntology uses a decoupled frontend and backend architecture. Developers can start with domain models and data mappings, then add business functions, Actions, and integrations incrementally, or customize the frontend and backend code.
+
+| Layer | Technologies |
+| --- | --- |
+| Backend | JDK 17, Spring Boot 3, Spring Security, MyBatis-related components |
+| Frontend | Vue 3, Vite, Element Plus, Pinia, ECharts |
+| Data Storage and Infrastructure Services | MySQL, Redis, and Neo4j, as required by the enabled capabilities and deployment configuration |
+
+## QQ Community
+
+Join the official qOntology QQ group to discuss ontology modeling, data integration, API integration, and application development, report issues, and keep up with project updates.
+
+👉 **<a href="https://docs.qontology.cn/discuss.html">Join the QQ Group</a>**
+
+<a id="license-and-services"></a>
+
+## License and Commercial Services
+
+qOntology is maintained by [Jiangsu Qiantong Technology Co., Ltd.](https://qiantong.tech/) and is provided under the **Apache License 2.0 with additional project terms**. Commercial use is permitted. You must comply with [LICENSE](LICENSE) and retain the logos, copyright notices, license notices, and attribution it requires.
+
+An appropriate commercial license is required to remove or modify these identifiers, white-label the platform, offer it as an OEM solution, or repackage it as another product. For brand customization licensing, the Professional Edition, and technical services, see [Commercial Cooperation](https://docs.qontology.cn/business/policy.html).

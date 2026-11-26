@@ -8,9 +8,7 @@
  <img src="https://img.shields.io/badge/qOntology-Ontology%20Engineering-blue.svg" alt="qOntology">
  <img src="https://gitee.com/qiantongtech/qOntology/badge/star.svg" alt="Gitee Stars"/>
  <img src="https://img.shields.io/github/stars/qiantongtech/qOntology?label=Github%20Stars" alt=""/>
-<a href="https://atomgit.com/qiantongtech/qOntology">
-  <img src="https://atomgit.com/qiantongtech/qOntology/star/badge.svg" alt="AtomGit Star"/>
-</a>
+ <img src="https://atomgit.com/qiantongtech/qOntology/star/badge.svg" alt="AtomGit Star"/>
 </p>
 
 <p align="center">
@@ -70,25 +68,28 @@ qOntology 是一款面向企业级知识工程的开源本体工程平台，聚�
 
 ## 系统配图
 
-![系统首页](.gitee/system/home.png)
-
-![本体建模－项目概览](.gitee/system/projectOverview.png)
-
-![基础管理－新增项目](.gitee/system/project.png)
-
-![本体建模－建模目标详情与关联对象类型](.gitee/system/modelingGoal.png)
-
-![语义资产－术语管理](.gitee/system/term.png)
-
-![本体建模－对象类型详情与属性配置](.gitee/system/objectType.png)
-
-![本体建模－对象关系编辑与建模目标关联](.gitee/system/objectRelation.png)
-
-![本体应用－知识图谱](.gitee/system/knowledgeGraph.png)
-
-![本体应用－非结构化抽取结果](.gitee/system/unstructuredExtraction.png)
-
-![本体应用－结构化抽取字段映射](.gitee/system/structuredExtraction.png)
+<table>
+    <tr>
+        <td><img alt="系统首页" src=".gitee/system/home.png"/></td>
+        <td><img alt="本体建模－项目概览" src=".gitee/system/projectOverview.png"/></td>
+    </tr>
+    <tr>
+        <td><img alt="基础管理－新增项目" src=".gitee/system/project.png"/></td>
+        <td><img alt="本体建模－建模目标详情与关联对象类型" src=".gitee/system/modelingGoal.png"/></td>
+    </tr>
+    <tr>
+        <td><img alt="语义资产－术语管理" src=".gitee/system/term.png"/></td>
+        <td><img alt="本体建模－对象类型详情与属性配置" src=".gitee/system/objectType.png"/></td>
+    </tr>
+    <tr>
+        <td><img alt="本体建模－对象关系编辑与建模目标关联" src=".gitee/system/objectRelation.png"/></td>
+        <td><img alt="本体应用－知识图谱" src=".gitee/system/knowledgeGraph.png"/></td>
+    </tr>
+    <tr>
+        <td><img alt="本体应用－非结构化抽取结果" src=".gitee/system/unstructuredExtraction.png"/></td>
+        <td><img alt="本体应用－结构化抽取字段映射" src=".gitee/system/structuredExtraction.png"/></td>
+    </tr>
+</table>
 
 ## 能力概览
 
