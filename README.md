@@ -27,7 +27,7 @@ Use qOntology to build domain models, organize business data across sources, and
 
 ✨✨✨**Documentation**✨✨✨ <a href="https://docs.qontology.cn/" target="_blank">https://docs.qontology.cn/</a>
 
-✨✨✨**Live Demo**✨✨✨ <a href="https://demo.qontology.cn" target="_blank">https://demo.qontology.cn</a> — Username: `qOntology` Password: `qOntology123`
+✨✨✨**Open-Source Edition Demo**✨✨✨ <a href="https://demo.qontology.cn" target="_blank">https://demo.qontology.cn</a> (username: `qOntology` password: `qOntology123`)
 
 > If you find qOntology useful, give us a **Star ⭐️**! Your support keeps us building and improving. 🚀
 
